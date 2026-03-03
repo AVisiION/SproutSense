@@ -1,0 +1,143 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600" fill="none">
+  <!-- Background -->
+  <defs>
+    <radialGradient id="heroGlow1" cx="30%" cy="40%">
+      <stop offset="0%" style="stop-color:#22d3ee;stop-opacity:0.2"/>
+      <stop offset="100%" style="stop-color:#22d3ee;stop-opacity:0"/>
+    </radialGradient>
+    <radialGradient id="heroGlow2" cx="70%" cy="60%">
+      <stop offset="0%" style="stop-color:#22c55e;stop-opacity:0.2"/>
+      <stop offset="100%" style="stop-color:#22c55e;stop-opacity:0"/>
+    </radialGradient>
+    <linearGradient id="potGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#14b8a6"/>
+      <stop offset="100%" style="stop-color:#0d9488"/>
+    </linearGradient>
+  </defs>
+  
+  <rect width="800" height="600" fill="url(#heroGlow1)"/>
+  <rect width="800" height="600" fill="url(#heroGlow2)"/>
+  
+  <!-- Main plant pot setup (centered) -->
+  <g transform="translate(280, 150)">
+    <!-- Clay pot -->
+    <path d="M0 200 L-90 320 L90 320 L0 200 z" fill="url(#potGrad)" opacity="0.95"/>
+    <ellipse cy="200" rx="95" ry="22" fill="#14b8a6"/>
+    <ellipse cy="206" rx="88" ry="18" fill="#0a5f56" opacity="0.6"/>
+    
+    <!-- Soil -->
+    <ellipse cy="210" rx="85" ry="15" fill="#1e293b" opacity="0.9"/>
+    
+    <!-- Main plant stem -->
+    <path d="M0 200 Q-10 130 -15 60 Q-12 25 0 8" stroke="#22c55e" stroke-width="12" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+    
+    <!-- Leaves (multiple layers for depth) -->
+    <ellipse cx="-55" cy="100" rx="48" ry="28" fill="#16a34a" transform="rotate(-40 -55 100)" opacity="0.9"/>
+    <ellipse cx="-50" cy="95" rx="45" ry="26" fill="#22c55e" transform="rotate(-38 -50 95)"/>
+    
+    <ellipse cx="45" cy="125" rx="42" ry="24" fill="#15803d" transform="rotate(35 45 125)" opacity="0.9"/>
+    <ellipse cx="42" cy="120" rx="40" ry="22" fill="#4ade80" transform="rotate(33 42 120)"/>
+    
+    <ellipse cx="-38" cy="50" rx="50" ry="30" fill="#16a34a" transform="rotate(-25 -38 50)" opacity="0.9"/>
+    <ellipse cx="-35" cy="45" rx="48" ry="28" fill="#22c55e" transform="rotate(-22 -35 45)"/>
+    
+    <ellipse cx="35" cy="70" rx="40" ry="24" fill="#15803d" transform="rotate(28 35 70)" opacity="0.9"/>
+    <ellipse cx="33" cy="65" rx="38" ry="22" fill="#4ade80" transform="rotate(26 33 65)"/>
+    
+    <!-- Small buds at top -->
+    <circle cx="-8" cy="15" r="6" fill="#22c55e"/>
+    <circle cx="5" cy="10" r="5" fill="#4ade80"/>
+  </g>
+  
+  <!-- ESP32 Microcontroller -->
+  <g transform="translate(150, 420)">
+    <rect width="100" height="70" rx="8" fill="#1e293b" stroke="#22d3ee" stroke-width="3"/>
+    <text x="50" y="40" text-anchor="middle" fill="#22d3ee" font-family="monospace" font-size="20" font-weight="bold">ESP32</text>
+    
+    <!-- Pins -->
+    <g fill="#22d3ee">
+      <circle cx="20" cy="15" r="4"/>
+      <circle cx="40" cy="15" r="4"/>
+      <circle cx="60" cy="15" r="4"/>
+      <circle cx="80" cy="15" r="4"/>
+      <circle cx="20" cy="55" r="4"/>
+      <circle cx="40" cy="55" r="4"/>
+      <circle cx="60" cy="55" r="4"/>
+      <circle cx="80" cy="55" r="4"/>
+    </g>
+  </g>
+  
+  <!-- Sensor modules -->
+  <g transform="translate(480, 350)">
+    <!-- Moisture sensor -->
+    <g>
+      <rect width="80" height="100" rx="6" fill="#0f172a" stroke="#14b8a6" stroke-width="2.5" opacity="0.9"/>
+      <rect x="10" y="10" width="60" height="50" rx="4" fill="#14b8a6" opacity="0.3"/>
+      <text x="40" y="75" text-anchor="middle" fill="#14b8a6" font-size="12" font-weight="600">MOISTURE</text>
+      <text x="40" y="90" text-anchor="middle" fill="#14b8a6" font-size="10">SENSOR</text>
+      
+      <!-- Prongs -->
+      <rect x="22" y="105" width="4" height="25" fill="#94a3b8"/>
+      <rect x="54" y="105" width="4" height="25" fill="#94a3b8"/>
+    </g>
+  </g>
+  
+  <!-- Temperature/Humidity sensor -->
+  <g transform="translate(480, 210)">
+    <rect width="70" height="50" rx="6" fill="#0f172a" stroke="#22c55e" stroke-width="2.5" opacity="0.9"/>
+    <text x="35" y="25" text-anchor="middle" fill="#22c55e" font-size="10" font-weight="600">TEMP/</text>
+    <text x="35" y="38" text-anchor="middle" fill="#22c55e" font-size="10" font-weight="600">HUMIDITY</text>
+    <circle cx="20" cy="20" r="3" fill="#22c55e"/>
+    <circle cx="50" cy="30" r="3" fill="#22c55e"/>
+  </g>
+  
+  <!-- Water pump -->
+  <g transform="translate(100, 320)">
+    <rect width="60" height="60" rx="8" fill="#0f172a" stroke="#22d3ee" stroke-width="2.5" opacity="0.9"/>
+    <circle cx="30" cy="30" r="18" fill="#22d3ee" opacity="0.2" stroke="#22d3ee" stroke-width="2"/>
+    <text x="30" y="53" text-anchor="middle" fill="#22d3ee" font-size="9" font-weight="600">PUMP</text>
+    
+    <!-- Water drops -->
+    <g fill="#22d3ee" opacity="0.6">
+      <circle cx="30" cy="22" r="2"/>
+      <ellipse cx="30" cy="30" rx="3" ry="4"/>
+    </g>
+  </g>
+  
+  <!-- Connection wires with animation hint -->
+  <g stroke="#22d3ee" stroke-width="2.5" stroke-dasharray="6,4" opacity="0.6">
+    <path d="M250 455 Q350 455 480 400" fill="none"/>
+    <path d="M200 455 Q160 400 160 350" fill="none"/>
+    <path d="M250 460 Q400 460 480 240" fill="none"/>
+  </g>
+  
+  <!-- Data flow indicators -->
+  <g fill="#22d3ee" opacity="0.7">
+    <circle cx="320" cy="455" r="4">
+      <animate attributeName="opacity" values="0.3;1;0.3" dur="2s" repeatCount="indefinite"/>
+    </circle>
+    <circle cx="180" cy="380" r="4">
+      <animate attributeName="opacity" values="0.3;1;0.3" dur="2s" begin="0.5s" repeatCount="indefinite"/>
+    </circle>
+    <circle cx="400" cy="350" r="4">
+      <animate attributeName="opacity" values="0.3;1;0.3" dur="2s" begin="1s" repeatCount="indefinite"/>
+    </circle>
+  </g>
+  
+  <!-- Info labels -->
+  <g transform="translate(600, 100)">
+    <text y="0" fill="#22c55e" font-size="16" font-weight="600">✓ Real-time monitoring</text>
+    <text y="35" fill="#22d3ee" font-size="16" font-weight="600">✓ Auto watering</text>
+    <text y="70" fill="#4ade80" font-size="16" font-weight="600">✓ AI disease detect</text>
+    <text y="105" fill="#14b8a6" font-size="16" font-weight="600">✓ Cloud dashboard</text>
+  </g>
+  
+  <!-- Status indicator -->
+  <g transform="translate(50, 50)">
+    <rect width="140" height="45" rx="22.5" fill="#22c55e" opacity="0.2" stroke="#22c55e" stroke-width="2"/>
+    <circle cx="25" cy="22.5" r="8" fill="#22c55e">
+      <animate attributeName="opacity" values="1;0.5;1" dur="1.5s" repeatCount="indefinite"/>
+    </circle>
+    <text x="45" y="29" fill="#22c55e" font-size="16" font-weight="600">ACTIVE</text>
+  </g>
+</svg>

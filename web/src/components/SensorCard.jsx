@@ -1,0 +1,205 @@
+import React, { useState } from 'react';
+import { GlassIcon } from './GlassIcon';
+
+const SENSOR_HARDWARE = {
+  soilMoisture: {
+    label: 'Soil Moisture',
+    unit: '%',
+    icon: 'humidity',
+    color: '#22c55e',
+    hardware: {
+      model: 'Capacitive Soil Moisture Sensor v1.2',
+      type: 'Capacitive',
+      range: '0–100%',
+      voltage: '3.3V / 5V',
+      output: 'Analog (0–3.3V)',
+      accuracy: '±3%',
+      description: 'Measures volumetric water content using capacitance. More durable than resistive sensors — no corrosion.',
+    },
+    optimal: { min: 20, max: 80 },
+    status: (v) => v < 20 ? 'critical' : v < 40 ? 'warning' : 'good',
+  },
+  temperature: {
+    label: 'Temperature',
+    unit: '°C',
+    icon: 'temperature',
+    color: '#f59e0b',
+    hardware: {
+      model: 'DHT22 (AM2302)',
+      type: 'Digital Temp + Humidity',
+      range: '-40 to +80°C',
+      voltage: '3.3V – 5.5V',
+      output: 'Single-wire digital',
+      accuracy: '±0.5°C',
+      description: 'Combined temperature and humidity sensor. Uses single-wire protocol. Sampling rate: 0.5 Hz (every 2s).',
+    },
+    optimal: { min: 15, max: 35 },
+    status: (v) => v > 38 ? 'critical' : v > 32 ? 'warning' : 'good',
+  },
+  humidity: {
+    label: 'Humidity',
+    unit: '%',
+    icon: 'weather',
+    color: '#22d3ee',
+    hardware: {
+      model: 'DHT22 (AM2302)',
+      type: 'Digital Temp + Humidity',
+      range: '0–100% RH',
+      voltage: '3.3V – 5.5V',
+      output: 'Single-wire digital',
+      accuracy: '±2% RH',
+      description: 'Relative humidity measurement from the DHT22 sensor. Shared with temperature on the same IC.',
+    },
+    optimal: { min: 40, max: 80 },
+    status: (v) => v < 30 ? 'warning' : 'good',
+  },
+  light: {
+    label: 'Light Level',
+    unit: 'lux',
+    icon: 'light',
+    color: '#fbbf24',
+    hardware: {
+      model: 'BH1750FVI',
+      type: 'Ambient Light Sensor',
+      range: '1–65535 lux',
+      voltage: '2.4V – 3.6V',
+      output: 'I²C (addr: 0x23 / 0x5C)',
+      accuracy: '±20%',
+      description: 'Digital ambient light sensor with 16-bit ADC. Directly outputs lux values. Ideal for plant light monitoring.',
+    },
+    optimal: { min: 1000, max: 50000 },
+    status: (v) => v < 200 ? 'warning' : 'good',
+  },
+  pH: {
+    label: 'Soil pH',
+    unit: '',
+    icon: 'ph',
+    color: '#a78bfa',
+    hardware: {
+      model: 'Analog pH Sensor / Electrode',
+      type: 'Electrochemical',
+      range: '0–14 pH',
+      voltage: '5V',
+      output: 'Analog (0–3.4V)',
+      accuracy: '±0.1 pH',
+      description: 'Glass electrode pH probe with BNC connector. Requires regular calibration with pH 4.0 / 7.0 / 10.0 buffer solutions.',
+    },
+    optimal: { min: 5.5, max: 7.0 },
+    status: (v) => (v < 5.5 || v > 7.5) ? 'warning' : 'good',
+  },
+};
+
+function StatusBadge({ status }) {
+  const config = {
+    good: { label: 'Normal', color: '#10b981' },
+    warning: { label: 'Attention', color: '#f59e0b' },
+    critical: { label: 'Critical', color: '#ef4444' },
+  };
+  const c = config[status] || config.good;
+  return (
+    <span className="sensor-status-badge" style={{ background: `${c.color}20`, color: c.color, borderColor: `${c.color}40` }}>
+      {c.label}
+    </span>
+  );
+}
+
+function MiniBar({ value, min, max, color }) {
+  const pct = Math.min(100, Math.max(0, ((value - 0) / (max * 1.25)) * 100));
+  const inRange = value >= min && value <= max;
+  return (
+    <div className="sensor-mini-bar">
+      <div
+        className="sensor-mini-bar-fill"
+        style={{ width: `${pct}%`, background: inRange ? color : '#ef4444' }}
+      />
+    </div>
+  );
+}
+
+export function SensorCard({ sensors, isConnected }) {
+  const [expandedKey, setExpandedKey] = useState(null);
+
+  const entries = Object.entries(SENSOR_HARDWARE).map(([key, info]) => ({
+    key,
+    info,
+    value: sensors?.[key],
+    status: sensors?.[key] !== undefined ? info.status(sensors[key]) : 'good',
+  })).filter(e => e.value !== undefined || !sensors);
+
+  return (
+    <div className="card sensor-card-enhanced">
+      <div className="card-header-row">
+        <h2 className="card-title">
+          <GlassIcon name="sensors" className="card-title-icon" />
+          Live Sensor Data
+        </h2>
+        <span className={`sensor-connection-badge ${isConnected ? 'connected' : 'disconnected'}`}>
+          <span className="connection-dot-small" />
+          {isConnected ? 'ESP32 Live' : 'No Signal'}
+        </span>
+      </div>
+
+      {/* Sensor grid */}
+      <div className="sensor-enhanced-grid">
+        {entries.map(({ key, info, value, status }) => (
+          <div
+            key={key}
+            className={`sensor-enhanced-item${expandedKey === key ? ' expanded' : ''}`}
+            style={{ '--sensor-color': info.color }}
+          >
+            <button
+              className="sensor-item-btn"
+              onClick={() => setExpandedKey(k => k === key ? null : key)}
+              aria-expanded={expandedKey === key}
+            >
+              <div className="sensor-item-left">
+                <span className="sensor-item-icon">
+                  <GlassIcon name={info.icon} />
+                </span>
+                <div className="sensor-item-info">
+                  <span className="sensor-item-label">{info.label}</span>
+                  <span className="sensor-item-model">{info.hardware.model}</span>
+                </div>
+              </div>
+              <div className="sensor-item-right">
+                <span className="sensor-item-value">
+                  {value !== undefined ? `${value}${info.unit}` : '—'}
+                </span>
+                {value !== undefined && <StatusBadge status={status} />}
+              </div>
+            </button>
+
+            {value !== undefined && (
+              <MiniBar value={value} min={info.optimal.min} max={info.optimal.max} color={info.color} />
+            )}
+
+            {/* Expanded hardware info */}
+            {expandedKey === key && (
+              <div className="sensor-hardware-detail">
+                <p className="sensor-hw-desc">{info.hardware.description}</p>
+                <div className="sensor-hw-specs">
+                  <div className="sensor-hw-spec"><span>Type</span><strong>{info.hardware.type}</strong></div>
+                  <div className="sensor-hw-spec"><span>Range</span><strong>{info.hardware.range}</strong></div>
+                  <div className="sensor-hw-spec"><span>Accuracy</span><strong>{info.hardware.accuracy}</strong></div>
+                  <div className="sensor-hw-spec"><span>Voltage</span><strong>{info.hardware.voltage}</strong></div>
+                  <div className="sensor-hw-spec"><span>Output</span><strong>{info.hardware.output}</strong></div>
+                  <div className="sensor-hw-spec"><span>Optimal</span><strong>{info.optimal.min}–{info.optimal.max}{info.unit}</strong></div>
+                </div>
+              </div>
+            )}
+          </div>
+        ))}
+
+        {entries.length === 0 && (
+          <div className="sensor-no-data">
+            <GlassIcon name="wifi" />
+            <p>Waiting for sensor data from ESP32...</p>
+          </div>
+        )}
+      </div>
+
+      <p className="sensor-hint">Tap any sensor row to view hardware specifications.</p>
+    </div>
+  );
+}
+

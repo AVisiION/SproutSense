@@ -1,0 +1,87 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" fill="none">
+  <!-- Background gradient -->
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#050d14"/>
+      <stop offset="50%" style="stop-color:#091824"/>
+      <stop offset="100%" style="stop-color:#0f2535"/>
+    </linearGradient>
+    <radialGradient id="glow1" cx="20%" cy="50%">
+      <stop offset="0%" style="stop-color:#22d3ee;stop-opacity:0.3"/>
+      <stop offset="100%" style="stop-color:#22d3ee;stop-opacity:0"/>
+    </radialGradient>
+    <radialGradient id="glow2" cx="80%" cy="50%">
+      <stop offset="0%" style="stop-color:#22c55e;stop-opacity:0.3"/>
+      <stop offset="100%" style="stop-color:#22c55e;stop-opacity:0"/>
+    </radialGradient>
+  </defs>
+  
+  <rect width="1200" height="630" fill="url(#bg)"/>
+  <rect width="1200" height="630" fill="url(#glow1)"/>
+  <rect width="1200" height="630" fill="url(#glow2)"/>
+  
+  <!-- Plant pot illustration (left side) -->
+  <g transform="translate(200, 200)">
+    <!-- Pot -->
+    <path d="M0 150 L-60 230 L60 230 L0 150 z" fill="#14b8a6" opacity="0.9"/>
+    <ellipse cy="150" rx="65" ry="15" fill="#14b8a6"/>
+    
+    <!-- Soil -->
+    <ellipse cy="155" rx="60" ry="12" fill="#0f2535" opacity="0.8"/>
+    
+    <!-- Main plant stem -->
+    <path d="M0 150 Q-5 100 -10 50 Q-8 20 0 10" stroke="#22c55e" stroke-width="8" fill="none" stroke-linecap="round"/>
+    
+    <!-- Leaves -->
+    <ellipse cx="-35" cy="80" rx="30" ry="18" fill="#22c55e" transform="rotate(-30 -35 80)"/>
+    <ellipse cx="25" cy="100" rx="28" ry="16" fill="#4ade80" transform="rotate(25 25 100)"/>
+    <ellipse cx="-20" cy="40" rx="32" ry="20" fill="#22c55e" transform="rotate(-15 -20 40)"/>
+    <ellipse cx="20" cy="55" rx="26" ry="15" fill="#4ade80" transform="rotate(20 20 55)"/>
+    
+    <!-- ESP32 chip representation -->
+    <rect x="-80" y="180" width="40" height="30" rx="4" fill="#1e293b" stroke="#22d3ee" stroke-width="2"/>
+    <circle cx="-60" cy="190" r="3" fill="#22d3ee"/>
+    <circle cx="-60" cy="200" r="3" fill="#22d3ee"/>
+  </g>
+  
+  <!-- IoT visualization (right side) -->
+  <g transform="translate(800, 315)">
+    <!-- Sensor nodes -->
+    <circle cx="0" cy="-80" r="20" fill="#14b8a6" opacity="0.8"/>
+    <circle cx="80" cy="-40" r="18" fill="#22d3ee" opacity="0.8"/>
+    <circle cx="80" cy="40" r="18" fill="#22c55e" opacity="0.8"/>
+    <circle cx="0" cy="80" r="20" fill="#4ade80" opacity="0.8"/>
+    <circle cx="-80" cy="40" r="18" fill="#22d3ee" opacity="0.8"/>
+    <circle cx="-80" cy="-40" r="18" fill="#14b8a6" opacity="0.8"/>
+    
+    <!-- Connection lines -->
+    <line x1="0" y1="-80" x2="80" y2="-40" stroke="#22d3ee" stroke-width="2" opacity="0.5"/>
+    <line x1="80" y1="-40" x2="80" y2="40" stroke="#22d3ee" stroke-width="2" opacity="0.5"/>
+    <line x1="80" y1="40" x2="0" y2="80" stroke="#22d3ee" stroke-width="2" opacity="0.5"/>
+    <line x1="0" y1="80" x2="-80" y2="40" stroke="#22d3ee" stroke-width="2" opacity="0.5"/>
+    <line x1="-80" y1="40" x2="-80" y2="-40" stroke="#22d3ee" stroke-width="2" opacity="0.5"/>
+    <line x1="-80" y1="-40" x2="0" y2="-80" stroke="#22d3ee" stroke-width="2" opacity="0.5"/>
+    
+    <!-- Center hub -->
+    <circle r="30" fill="#050d14" stroke="#22c55e" stroke-width="3"/>
+    <text y="8" text-anchor="middle" fill="#22c55e" font-family="system-ui" font-size="20" font-weight="bold">AI</text>
+  </g>
+  
+  <!-- Title and tagline -->
+  <text x="600" y="80" text-anchor="middle" fill="white" font-family="system-ui" font-size="72" font-weight="bold">SproutSense</text>
+  <text x="600" y="130" text-anchor="middle" fill="#22d3ee" font-family="system-ui" font-size="32" font-weight="500">Smart IoT Plant Care System</text>
+  
+  <!-- Features badges -->
+  <g transform="translate(300, 500)">
+    <rect width="180" height="50" rx="25" fill="#14b8a6" opacity="0.3" stroke="#14b8a6" stroke-width="2"/>
+    <text x="90" y="33" text-anchor="middle" fill="#14b8a6" font-family="system-ui" font-size="18" font-weight="600">Auto Watering</text>
+  </g>
+  <g transform="translate(510, 500)">
+    <rect width="180" height="50" rx="25" fill="#22c55e" opacity="0.3" stroke="#22c55e" stroke-width="2"/>
+    <text x="90" y="33" text-anchor="middle" fill="#22c55e" font-family="system-ui" font-size="18" font-weight="600">AI Detection</text>
+  </g>
+  <g transform="translate(720, 500)">
+    <rect width="180" height="50" rx="25" fill="#22d3ee" opacity="0.3" stroke="#22d3ee" stroke-width="2"/>
+    <text x="90" y="33" text-anchor="middle" fill="#22d3ee" font-family="system-ui" font-size="18" font-weight="600">24×7 Monitor</text>
+  </g>
+</svg>
