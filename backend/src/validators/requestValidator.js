@@ -76,11 +76,21 @@ export const validateConfigUpdate = [
     .optional()
     .isFloat({ min: 0, max: 100 })
     .withMessage('Moisture threshold must be between 0 and 100'),
+
+  body('soilMoistureThreshold')
+    .optional()
+    .isFloat({ min: 0, max: 100 })
+    .withMessage('Soil moisture threshold must be between 0 and 100'),
   
   body('autoMode')
     .optional()
     .isBoolean()
     .withMessage('Auto mode must be a boolean'),
+
+  body('autoWaterEnabled')
+    .optional()
+    .isBoolean()
+    .withMessage('Auto water enabled must be a boolean'),
   
   body('wateringDurationMs')
     .optional()
@@ -96,6 +106,26 @@ export const validateConfigUpdate = [
     .optional()
     .isInt({ min: 1000, max: 3600000 })
     .withMessage('Sensor read interval must be between 1000ms and 3600000ms'),
+
+  body('espIp')
+    .optional({ checkFalsy: true })
+    .isIP()
+    .withMessage('ESP IP must be a valid IP address'),
+
+  body('deviceIp')
+    .optional({ checkFalsy: true })
+    .isIP()
+    .withMessage('Device IP must be a valid IP address'),
+
+  body('scheduleEnabled')
+    .optional()
+    .isBoolean()
+    .withMessage('Schedule enabled must be a boolean'),
+
+  body('scheduleTime')
+    .optional({ checkFalsy: true })
+    .matches(/^([01]\d|2[0-3]):([0-5]\d)$/)
+    .withMessage('Schedule time must be in HH:MM format'),
   
   validate
 ];

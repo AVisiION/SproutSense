@@ -55,11 +55,16 @@ const iconPaths = {
   calendar: 'M3 4h18a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2Z M16 2v4 M8 2v4 M3 10h18',
   leaf: 'M2 22c0-6 4-10 10-12S22 4 22 4c0 6-4 10-10 12S2 22 2 22Z',
   tag: 'M12 2H4a2 2 0 0 0-2 2v7.59a2 2 0 0 0 .59 1.42l8 8a2 2 0 0 0 2.82 0l7.59-7.59a2 2 0 0 0 0-2.83l-8-8A2 2 0 0 0 12 2Z M7 7h.01',
+  activity: 'M22 12h-4l-3 9L9 3l-3 9H2',
+  server: 'M4 4h16a2 2 0 0 1 2 2v4a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2Z M4 12h16a2 2 0 0 1 2 2v4a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2v-4a2 2 0 0 1 2-2Z M8 8h.01 M8 16h.01',
+  trash: 'M3 6h18 M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6 M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2 M10 11v6 M14 11v6',
+  clock: 'M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20Z M12 6v6l4 2',
 };
 
-export function GlassIcon({ name, className = '' }) {
+export function GlassIcon({ name, className = '', animated = false }) {
+  const animClass = animated ? 'glass-icon-animated' : '';
   return (
-    <span className={`glass-icon ${className}`.trim()} aria-hidden="true">
+    <span className={`glass-icon ${animClass} ${className}`.trim()} aria-hidden="true">
       <svg viewBox="0 0 24 24" fill="none" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
         <path d={iconPaths[name] || iconPaths.home} />
       </svg>

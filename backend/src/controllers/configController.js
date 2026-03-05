@@ -4,13 +4,66 @@ import { successResponse, errorResponse } from '../utils/helpers.js';
 import { HTTP_STATUS } from '../config/constants.js';
 import wsService from '../utils/websocketService.js';
 
+const DEFAULT_DEVICE_ID = 'ESP32-001';
+
+const resolveDeviceId = (req) => {
+  const id = req.params.deviceId || req.query.deviceId || req.body.deviceId;
+  return (typeof id === 'string' && id.trim()) ? id.trim() : DEFAULT_DEVICE_ID;
+};
+
+const normalizeConfigUpdates = (payload = {}) => {
+  const updates = { ...payload };
+
+  if (Object.prototype.hasOwnProperty.call(updates, 'autoWaterEnabled')) {
+    updates.autoMode = updates.autoWaterEnabled;
+    delete updates.autoWaterEnabled;
+  }
+
+  if (Object.prototype.hasOwnProperty.call(updates, 'soilMoistureThreshold')) {
+    updates.moistureThreshold = updates.soilMoistureThreshold;
+    delete updates.soilMoistureThreshold;
+  }
+
+  if (Object.prototype.hasOwnProperty.call(updates, 'deviceIp')) {
+    updates.espIp = updates.deviceIp;
+    delete updates.deviceIp;
+  }
+
+  if (Object.prototype.hasOwnProperty.call(updates, 'esp32IP')) {
+    updates.espIp = updates.esp32IP;
+    delete updates.esp32IP;
+  }
+
+  if (Object.prototype.hasOwnProperty.call(updates, 'scheduleEnabled')) {
+    updates.schedule = {
+      ...(updates.schedule || {}),
+      enabled: updates.scheduleEnabled,
+      times: updates.scheduleTime ? [updates.scheduleTime] : (updates.schedule?.times || [])
+    };
+    delete updates.scheduleEnabled;
+    delete updates.scheduleTime;
+  }
+
+  return updates;
+};
+
+const formatConfigResponse = (configDoc) => {
+  const data = configDoc?.toObject ? configDoc.toObject() : configDoc;
+  return {
+    ...data,
+    autoWaterEnabled: data?.autoMode ?? false,
+    soilMoistureThreshold: data?.moistureThreshold,
+    deviceIp: data?.espIp || ''
+  };
+};
+
 // Get system configuration
 export const getConfig = async (req, res, next) => {
   try {
-    const { deviceId = 'ESP32-001' } = req.query;
+    const deviceId = resolveDeviceId(req);
     const config = await SystemConfig.getConfig(deviceId);
 
-    successResponse(res, config);
+    successResponse(res, formatConfigResponse(config));
   } catch (error) {
     next(error);
   }
@@ -19,8 +72,8 @@ export const getConfig = async (req, res, next) => {
 // Update system configuration
 export const updateConfig = async (req, res, next) => {
   try {
-    const { deviceId = 'ESP32-001' } = req.query;
-    const updates = req.body;
+    const deviceId = resolveDeviceId(req);
+    const updates = normalizeConfigUpdates(req.body);
 
     const config = await SystemConfig.findOneAndUpdate(
       { deviceId },
@@ -31,7 +84,7 @@ export const updateConfig = async (req, res, next) => {
     // Emit to WebSocket clients
     wsService.broadcastConfigUpdated(config);
 
-    successResponse(res, config, 'Configuration updated');
+    successResponse(res, formatConfigResponse(config), 'Configuration updated');
   } catch (error) {
     next(error);
   }
@@ -40,7 +93,7 @@ export const updateConfig = async (req, res, next) => {
 // Get device status
 export const getStatus = async (req, res, next) => {
   try {
-    const { deviceId = 'ESP32-001' } = req.query;
+    const deviceId = resolveDeviceId(req);
     const status = await DeviceStatus.getStatus(deviceId);
 
     // Check if device is stale
@@ -82,7 +135,7 @@ export const updateStatus = async (req, res, next) => {
 // System health check
 export const getHealth = async (req, res, next) => {
   try {
-    const { deviceId = 'ESP32-001' } = req.query;
+    const deviceId = resolveDeviceId(req);
     
     const [config, status] = await Promise.all([
       SystemConfig.getConfig(deviceId),

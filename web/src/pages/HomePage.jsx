@@ -171,7 +171,7 @@ const HomePage = () => {
           </div>
           <div className="hero-image-container reveal-on-scroll" style={{ '--reveal-delay': '100ms' }}>
             <img 
-              src="/hero-setup.svg" 
+              src="/demo.jpg" 
               alt="SproutSense IoT Plant Care System - ESP32 microcontroller with soil moisture sensors, temperature/humidity monitoring, and automated water pump connected to plant pot" 
               className="hero-image"
             />
@@ -251,7 +251,7 @@ const HomePage = () => {
           <div className="features-grid">
             {features.map((feature, index) => (
               <div key={feature.title} className="feature-card scroll-flat star-border" style={{ '--reveal-delay': `${100 + index * 45}ms` }}>
-                <GlassIcon name={feature.icon} className="feature-icon" />
+                <GlassIcon name={feature.icon} className="feature-icon" animated />
                 <h3>{feature.title}</h3>
                 <p>{feature.description}</p>
               </div>

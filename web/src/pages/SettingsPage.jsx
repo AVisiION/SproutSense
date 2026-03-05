@@ -39,7 +39,7 @@ export default function SettingsPage({ theme, toggleTheme, onNotification }) {
     try {
       await configAPI.update(deviceId, {
         soilMoistureThreshold: undefined,
-        deviceIp: esp32IP,
+        espIp: esp32IP,
       });
       onNotification?.('Device config updated', 'success');
     } catch {
@@ -209,7 +209,7 @@ export default function SettingsPage({ theme, toggleTheme, onNotification }) {
               />
             </div>
             <button className="settings-btn-primary" onClick={handleSaveDeviceConfig} disabled={saving}>
-              <GlassIcon name={saving ? 'refresh' : 'check'} />
+              <GlassIcon name={saving ? 'refresh' : 'check'} animated={saving} />
               {saving ? 'Saving...' : 'Save Device Config'}
             </button>
           </div>
@@ -223,7 +223,7 @@ export default function SettingsPage({ theme, toggleTheme, onNotification }) {
           </div>
           <div className="settings-card-body settings-about">
             <div className="settings-about-logo">
-              <GlassIcon name="sprout" />
+              <GlassIcon name="sprout" animated />
               <span>SproutSense</span>
             </div>
             <div className="settings-about-grid">

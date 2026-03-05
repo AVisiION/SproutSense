@@ -188,7 +188,7 @@
   height: 16px;
 }
 
-/* Theme pill toggle */
+/* Theme pill toggle with enhanced animations */
 .theme-pill {
   display: flex;
   align-items: center;
@@ -201,17 +201,72 @@
   cursor: pointer;
   font-size: 0.85rem;
   font-weight: 500;
-  transition: background 0.2s, color 0.2s;
+  transition: 
+    background 0.4s cubic-bezier(0.25, 0.8, 0.25, 1),
+    color 0.4s cubic-bezier(0.25, 0.8, 0.25, 1),
+    border-color 0.4s cubic-bezier(0.25, 0.8, 0.25, 1),
+    transform 0.2s cubic-bezier(0.4, 0, 0.2, 1),
+    box-shadow 0.3s ease;
   white-space: nowrap;
+  position: relative;
+  overflow: hidden;
+}
+
+.theme-pill::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.3) 0%, transparent 70%);
+  transform: translate(-50%, -50%);
+  transition: width 0.6s, height 0.6s;
+}
+
+.theme-pill:active::before {
+  width: 200px;
+  height: 200px;
+}
+
+.theme-pill:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+}
+
+.theme-pill:active {
+  transform: scale(0.95);
 }
 
 .theme-pill.dark {
   background: rgba(20, 184, 166, 0.12);
 }
 
+.theme-pill.dark:hover {
+  background: rgba(20, 184, 166, 0.2);
+  box-shadow: 0 8px 20px rgba(20, 184, 166, 0.3);
+}
+
 .theme-pill.light {
   background: rgba(250, 204, 21, 0.12);
   border-color: #f59e0b;
+}
+
+.theme-pill.light:hover {
+  background: rgba(250, 204, 21, 0.2);
+  box-shadow: 0 8px 20px rgba(245, 158, 11, 0.3);
+}
+
+.theme-pill-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+.theme-pill:active .theme-pill-icon {
+  transform: rotate(360deg) scale(1.2);
 }
 
 .theme-pill-icon .glass-icon {

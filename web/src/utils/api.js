@@ -17,8 +17,15 @@ export const sensorAPI = {
     return response.data;
   },
   
-  getHistory: async (hours = 24) => {
-    const response = await api.get(`/sensors/history?hours=${hours}`);
+  getHistory: async (startDate, endDate) => {
+    // Support both date strings and hours parameter
+    let params = {};
+    if (typeof startDate === 'string' && typeof endDate === 'string') {
+      params = { start: startDate, end: endDate };
+    } else {
+      params = { hours: startDate || 24 };
+    }
+    const response = await api.get('/sensors/history', { params });
     return response.data;
   }
 };
@@ -50,13 +57,13 @@ export const wateringAPI = {
 
 // Config API
 export const configAPI = {
-  get: async (deviceId = 'esp32-001') => {
-    const response = await api.get(`/config/${deviceId}`);
+  get: async (deviceId = 'ESP32-001') => {
+    const response = await api.get('/config', { params: { deviceId } });
     return response.data;
   },
   
-  update: async (deviceId = 'esp32-001', config) => {
-    const response = await api.patch(`/config/${deviceId}`, config);
+  update: async (deviceId = 'ESP32-001', config) => {
+    const response = await api.post('/config', config, { params: { deviceId } });
     return response.data;
   }
 };

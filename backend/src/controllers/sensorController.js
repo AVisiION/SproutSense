@@ -23,9 +23,19 @@ export const getLatestSensors = async (req, res, next) => {
 // Get sensor history
 export const getSensorHistory = async (req, res, next) => {
   try {
-    const { deviceId = 'ESP32-001', hours = 24 } = req.query;
-    const startDate = new Date(Date.now() - hours * 60 * 60 * 1000);
-    const endDate = new Date();
+    const { deviceId = 'ESP32-001', hours, start, end } = req.query;
+    let startDate, endDate;
+    
+    if (start && end) {
+      // Use provided start and end dates
+      startDate = new Date(start);
+      endDate = new Date(end);
+    } else {
+      // Use hours parameter (default 24)
+      const hoursValue = parseInt(hours) || 24;
+      startDate = new Date(Date.now() - hoursValue * 60 * 60 * 1000);
+      endDate = new Date();
+    }
     
     const readings = await SensorReading.getRange(startDate, endDate, deviceId);
 

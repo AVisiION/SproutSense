@@ -27,7 +27,7 @@ export function Navbar({
         {/* SproutSense brand logo — shown when sidebar is collapsed or on mobile */}
         {(isSidebarCollapsed || isMobile) && (
           <NavLink to="/home" className="navbar-brand" aria-label="SproutSense Home">
-            <GlassIcon name="sprout" className="navbar-brand-icon" />
+            <GlassIcon name="sprout" className="navbar-brand-icon" animated />
             <span className="navbar-brand-text">SproutSense</span>
           </NavLink>
         )}
@@ -38,7 +38,7 @@ export function Navbar({
       <div className="navbar-right">
         {/* Backend Server connection status */}
         <span className={`navbar-connection ${isConnected ? 'connected' : 'disconnected'}`} title="Backend server connection">
-          <GlassIcon name="server" className="connection-icon" />
+          <GlassIcon name="server" className="connection-icon" animated={isConnected} />
           <span className="connection-text">
             {isConnected ? 'Backend' : 'Offline'}
           </span>
@@ -46,7 +46,7 @@ export function Navbar({
 
         {/* ESP32 Device connection status */}
         <span className={`navbar-connection ${deviceOnline ? 'connected' : 'disconnected'}`} title="ESP32 device status">
-          <GlassIcon name="wifi" className="connection-icon" />
+          <GlassIcon name="wifi" className="connection-icon" animated={deviceOnline} />
           <span className="connection-text">
             {deviceOnline ? 'ESP32' : 'No Device'}
           </span>
@@ -54,7 +54,7 @@ export function Navbar({
 
         {/* Alert Bell */}
         <NavLink to="/alerts" className="navbar-alert-btn" aria-label={`${alertCount} alerts`} title="View Alerts">
-          <GlassIcon name="bell" className="navbar-icon" />
+          <GlassIcon name="bell" className="navbar-icon" animated={alertCount > 0} />
           {alertCount > 0 && (
             <span className="navbar-alert-badge">{alertCount}</span>
           )}

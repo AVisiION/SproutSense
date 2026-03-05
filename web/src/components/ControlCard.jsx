@@ -110,18 +110,17 @@ export function ControlCard({
         <div className="control-field">
           <label className="control-label">Timed Watering</label>
           <div className="control-row">
-            <div className="control-input-group">
-              <input
-                type="number"
-                className="threshold-input"
-                min="5"
-                max="300"
-                step="5"
-                value={waterDuration}
-                onChange={e => setWaterDuration(Number(e.target.value))}
-              />
-              <span className="control-unit">sec</span>
-            </div>
+            <input
+              type="number"
+              className="control-input"
+              min="5"
+              max="300"
+              step="5"
+              value={waterDuration}
+              onChange={e => setWaterDuration(Number(e.target.value))}
+              placeholder="Duration"
+            />
+            <span className="control-unit">seconds</span>
             <button
               className="btn btn-primary"
               onClick={handleTimedWater}
@@ -155,18 +154,20 @@ export function ControlCard({
 
         <div className="control-field">
           <label className="control-label" htmlFor="moisture-threshold-input">
-            Moisture Threshold (%)
+            Moisture Threshold
           </label>
           <div className="control-row">
             <input
               id="moisture-threshold-input"
-              className="threshold-input"
+              className="control-input"
               type="number"
               min="0"
               max="100"
               value={moistureThreshold}
               onChange={e => onMoistureThresholdChange(Number(e.target.value))}
+              placeholder="0-100"
             />
+            <span className="control-unit">%</span>
             <button
               className="btn btn-success threshold-save-btn"
               onClick={onSaveMoistureThreshold}
@@ -203,7 +204,7 @@ export function ControlCard({
           <div className="control-row">
             <input
               type="time"
-              className="threshold-input"
+              className="control-input"
               value={scheduleTime}
               onChange={e => setScheduleTime(e.target.value)}
               disabled={!scheduleEnabled}
@@ -211,7 +212,7 @@ export function ControlCard({
             <button
               className="btn btn-success"
               onClick={handleSaveSchedule}
-              disabled={savingSchedule}
+              disabled={savingSchedule || !scheduleEnabled}
             >
               <GlassIcon name={savingSchedule ? 'refresh' : 'check'} className="btn-icon" />
               {savingSchedule ? 'Saving...' : 'Save'}

@@ -13,9 +13,11 @@ const router = express.Router();
 
 // GET /api/config - Get system configuration
 router.get('/', readLimiter, getConfig);
+router.get('/:deviceId', readLimiter, getConfig);
 
 // POST /api/config - Update system configuration
 router.post('/', validateConfigUpdate, updateConfig);
+router.patch('/:deviceId', validateConfigUpdate, updateConfig);
 
 // GET /api/status - Get device status
 router.get('/status', readLimiter, getStatus);

@@ -109,7 +109,25 @@ function App() {
     setAlerts(newAlerts);
   }, [sensors]);
 
-  const toggleTheme = () => setTheme(prev => prev === 'dark' ? 'light' : 'dark');
+  const toggleTheme = () => {
+    // Check if View Transitions API is supported
+    if (document.startViewTransition) {
+      document.startViewTransition(() => {
+        setTheme(prev => prev === 'dark' ? 'light' : 'dark');
+      });
+    } else {
+      // Fallback animation for browsers without View Transitions API
+      document.documentElement.classList.add('theme-transitioning');
+      
+      setTimeout(() => {
+        setTheme(prev => prev === 'dark' ? 'light' : 'dark');
+        
+        setTimeout(() => {
+          document.documentElement.classList.remove('theme-transitioning');
+        }, 600);
+      }, 50);
+    }
+  };
   const toggleSidebar = () => setIsSidebarCollapsed(prev => !prev);
   const closeSidebar = () => { if (isMobile) setIsSidebarCollapsed(true); };
 

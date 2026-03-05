@@ -17,6 +17,10 @@ const systemConfigSchema = new mongoose.Schema({
     type: Boolean,
     default: false
   },
+  espIp: {
+    type: String,
+    default: ''
+  },
   wateringDurationMs: {
     type: Number,
     default: 5000 // 5 seconds default

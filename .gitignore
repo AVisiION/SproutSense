@@ -1,9 +1,13 @@
+# ESP32 Arduino Files
+*.ino
+
 # Dependencies
 node_modules/
 package-lock.json
 
 # Environment variables
 .env
+.env.local
 
 # Logs
 logs/
@@ -23,4 +27,3 @@ Thumbs.db
 # Build
 dist/
 build/
-
