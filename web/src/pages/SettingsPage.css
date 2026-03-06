@@ -45,6 +45,7 @@
   background: var(--card-bg);
   border: var(--glass-border);
   border-radius: 16px;
+  -webkit-backdrop-filter: blur(var(--glass-blur));
   backdrop-filter: blur(var(--glass-blur));
   overflow: hidden;
 }
@@ -90,6 +91,13 @@
   border-radius: 8px;
   padding: 0.6rem 0.9rem;
   margin: 0;
+}
+
+.settings-warning {
+  display: block;
+  margin-top: 0.5rem;
+  color: var(--warning-color);
+  font-weight: 600;
 }
 
 .settings-row {

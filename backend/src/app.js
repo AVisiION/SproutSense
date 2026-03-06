@@ -20,10 +20,18 @@ import { requestLogger, notFound } from './middleware/commonMiddleware.js';
 connectDB();
 
 const app = express();
-app.set('trust proxy', 1);
+
+// Trust proxy in production (for reverse proxies like nginx, Render, Heroku)
+if (config.IS_PRODUCTION) {
+  app.set('trust proxy', 1);
+}
 
 // ── Security ─────────────────────────────────────────────────────────────────
-app.use(helmet());
+// Enhanced security headers
+app.use(helmet({
+  contentSecurityPolicy: config.IS_PRODUCTION,
+  crossOriginEmbedderPolicy: config.IS_PRODUCTION,
+}));
 
 const allowedOrigins = [
   'http://localhost:3000',
@@ -46,7 +54,8 @@ app.use(cors({
 }));
 
 // ── General middleware ────────────────────────────────────────────────────────
-app.use(morgan(config.NODE_ENV === 'development' ? 'dev' : 'combined'));
+// Use combined format for production, dev format for development
+app.use(morgan(config.IS_PRODUCTION ? 'combined' : 'dev'));
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 app.use(requestLogger);

@@ -10,7 +10,7 @@ import config from './config/config.js';
 import { WS_EVENT } from './config/constants.js';
 import SensorReading from './models/SensorReading.js';
 import wsService from './utils/websocketService.js';
-import { startTestSensorSimulation } from './utils/testDataGenerator.js';
+import { initTestMode, testModeState } from './utils/testModeManager.js';
 
 const PORT = config.PORT;
 
@@ -110,11 +110,9 @@ server.listen(PORT, () => {
   `);
   
   // Start test sensor data simulation for development
-  // if (config.NODE_ENV === 'development') {
-  //   console.log('📊 Starting test sensor data simulation...');
-  //   startTestSensorSimulation(5000); // Generate data every 5 seconds
-  //   console.log('✅ Test sensor simulation running - broadcasting data via WebSocket');
-  // }
+  if (config.IS_DEVELOPMENT) {
+    initTestMode(true);
+  }
 });
 
 // Handle unhandled promise rejections

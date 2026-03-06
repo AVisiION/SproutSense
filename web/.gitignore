@@ -6,6 +6,11 @@ package-lock.json
 dist
 *.local
 
+# Environment variables
+.env
+.env.*
+!.env.example
+
 # IDE
 .vscode/*
 !.vscode/extensions.json

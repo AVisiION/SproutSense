@@ -3,6 +3,7 @@ import DeviceStatus from '../models/DeviceStatus.js';
 import { successResponse, errorResponse } from '../utils/helpers.js';
 import { HTTP_STATUS } from '../config/constants.js';
 import wsService from '../utils/websocketService.js';
+import { testModeState, toggleTestMode as setTestMode } from '../utils/testModeManager.js';
 
 const DEFAULT_DEVICE_ID = 'ESP32-001';
 
@@ -152,6 +153,33 @@ export const getHealth = async (req, res, next) => {
     };
 
     successResponse(res, health);
+  } catch (error) {
+    next(error);
+  }
+};
+
+// Get test mode status
+export const getTestMode = async (req, res, next) => {
+  try {
+    successResponse(res, {
+      enabled: testModeState.enabled,
+      interval: testModeState.intervalId ? 'running' : 'stopped',
+      allowedInEnvironment: testModeState.allowedInEnvironment,
+      environment: process.env.NODE_ENV || 'development'
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// Toggle test mode
+export const toggleTestMode = async (req, res, next) => {
+  try {
+    const { enabled } = req.body;
+
+    const result = setTestMode(enabled);
+
+    successResponse(res, result);
   } catch (error) {
     next(error);
   }

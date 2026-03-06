@@ -1,13 +1,24 @@
+const isDevelopment = process.env.NODE_ENV !== 'production';
+const isProduction = process.env.NODE_ENV === 'production';
+
 export default {
   // Server Configuration
   PORT: process.env.PORT || 5000,
   NODE_ENV: process.env.NODE_ENV || 'development',
+  IS_DEVELOPMENT: isDevelopment,
+  IS_PRODUCTION: isProduction,
   
   // Database Configuration
   MONGODB_URI: process.env.MONGODB_URI || 'mongodb://localhost:27017/smart-watering',
   
   // CORS Configuration
   CORS_ORIGIN: process.env.CORS_ORIGIN || 'http://localhost:3000',
+  
+  // Test Mode Configuration
+  TEST_MODE: {
+    ENABLED: process.env.ENABLE_TEST_MODE === 'true' || isDevelopment,
+    DISABLED_IN_PRODUCTION: isProduction
+  },
   
   // ESP32 Configuration
   ESP32: {
@@ -19,7 +30,7 @@ export default {
   // Rate Limiting
   RATE_LIMIT: {
     WINDOW_MS: 15 * 60 * 1000, // 15 minutes
-    MAX_REQUESTS: 100, // Max requests per window
+    MAX_REQUESTS: parseInt(process.env.RATE_LIMIT_MAX) || (isProduction ? 100 : 200),
     MESSAGE: 'Too many requests, please try again later'
   },
   
@@ -69,7 +80,16 @@ export default {
   // Security
   SECURITY: {
     BCRYPT_ROUNDS: 10,
-    JWT_SECRET: process.env.JWT_SECRET || 'your-secret-key-change-in-production',
-    JWT_EXPIRE: '7d'
+    JWT_SECRET: process.env.JWT_SECRET || (isProduction ? undefined : 'dev-secret-key'),
+    JWT_EXPIRE: '7d',
+    REQUIRE_HTTPS: isProduction,
+    TRUST_PROXY: isProduction
+  },
+  
+  // Logging
+  LOGGING: {
+    LEVEL: isProduction ? 'info' : 'debug',
+    ENABLE_MORGAN: true,
+    ENABLE_CONSOLE: true
   }
 };

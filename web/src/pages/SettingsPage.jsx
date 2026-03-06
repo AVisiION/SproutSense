@@ -17,6 +17,10 @@ export default function SettingsPage({ theme, toggleTheme, onNotification }) {
     systemAlerts: true,
   });
   const [saving, setSaving] = useState(false);
+  const [testModeEnabled, setTestModeEnabled] = useState(false);
+  const [testModeLoading, setTestModeLoading] = useState(false);
+  const [testModeAllowed, setTestModeAllowed] = useState(true);
+  const [environment, setEnvironment] = useState('development');
 
   useEffect(() => {
     // Load saved keys from localStorage (never send to server unless needed)
@@ -24,7 +28,24 @@ export default function SettingsPage({ theme, toggleTheme, onNotification }) {
     setOpenaiKey(localStorage.getItem('openai_api_key') || '');
     setEsp32IP(localStorage.getItem('esp32_ip') || '192.168.1.100');
     setDeviceId(localStorage.getItem('device_id') || 'ESP32-001');
+    
+    // Load test mode status
+    loadTestModeStatus();
   }, []);
+
+  const loadTestModeStatus = async () => {
+    try {
+      const response = await fetch('/api/config/testmode');
+      if (response.ok) {
+        const data = await response.json();
+        setTestModeEnabled(data.data?.enabled || false);
+        setTestModeAllowed(data.data?.allowedInEnvironment !== false);
+        setEnvironment(data.data?.environment || 'development');
+      }
+    } catch (error) {
+      console.error('Failed to load test mode status:', error);
+    }
+  };
 
   const handleSaveKeys = () => {
     localStorage.setItem('gemini_api_key', geminiKey);
@@ -51,6 +72,36 @@ export default function SettingsPage({ theme, toggleTheme, onNotification }) {
 
   const toggleNotif = (key) => {
     setNotifications(prev => ({ ...prev, [key]: !prev[key] }));
+  };
+
+  const handleToggleTestMode = async () => {
+    setTestModeLoading(true);
+    try {
+      const response = await fetch('/api/config/testmode', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ enabled: !testModeEnabled })
+      });
+      
+      const data = await response.json();
+      
+      if (response.ok) {
+        // Check if test mode was actually enabled (might be blocked in production)
+        if (data.data?.error === 'PRODUCTION_MODE') {
+          onNotification?.('Test mode is disabled in production', 'warning');
+        } else {
+          setTestModeEnabled(data.data?.enabled || false);
+          onNotification?.(data.data?.message || 'Test mode updated', 'success');
+        }
+      } else {
+        onNotification?.(data.message || 'Failed to toggle test mode', 'error');
+      }
+    } catch (error) {
+      console.error('Failed to toggle test mode:', error);
+      onNotification?.('Error toggling test mode', 'error');
+    } finally {
+      setTestModeLoading(false);
+    }
   };
 
   return (
@@ -156,6 +207,40 @@ export default function SettingsPage({ theme, toggleTheme, onNotification }) {
               <GlassIcon name="check" />
               Save API Keys
             </button>
+          </div>
+        </div>
+
+        {/* Test Mode */}
+        <div className="settings-card">
+          <div className="settings-card-header">
+            <GlassIcon name="demo" />
+            <h2>Test Mode</h2>
+          </div>
+          <div className="settings-card-body">
+            <p className="settings-note">
+              Test mode generates realistic sensor data for development and testing without real hardware.
+              {!testModeAllowed && (
+                <span className="settings-warning"> ⚠️ Test mode is disabled in production.</span>
+              )}
+            </p>
+            <div className="settings-row">
+              <div className="settings-row-info">
+                <span className="settings-row-label">Enable Test Data Generator</span>
+                <span className="settings-row-desc">
+                  {testModeAllowed 
+                    ? 'Simulate live sensor readings' 
+                    : `Not available in ${environment} mode`}
+                </span>
+              </div>
+              <button
+                className={`toggle-switch ${testModeEnabled ? 'on' : 'off'}`}
+                onClick={handleToggleTestMode}
+                disabled={testModeLoading || !testModeAllowed}
+                aria-label="Toggle test mode"
+              >
+                <span className="toggle-knob" />
+              </button>
+            </div>
           </div>
         </div>
 

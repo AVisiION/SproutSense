@@ -101,10 +101,58 @@
 }
 
 /* Summary sparklines */
+.records-main-chart-card {
+  background: var(--card-bg);
+  border: var(--glass-border);
+  border-radius: 16px;
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.chart-header {
+  margin-bottom: 1.5rem;
+}
+
+.chart-header h2 {
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: var(--text-color);
+  margin: 0 0 0.3rem;
+}
+
+.chart-header p {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  margin: 0;
+}
+
+.chart-tooltip {
+  background: rgba(15, 15, 20, 0.95);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+  padding: 0.75rem 1rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+}
+
+.chart-tooltip-label {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  margin: 0 0 0.5rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.chart-tooltip p {
+  font-size: 0.85rem;
+  margin: 0.25rem 0;
+}
+
 .records-summary-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-  gap: 0.85rem;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 1rem;
   margin-bottom: 1.5rem;
 }
 
@@ -112,8 +160,14 @@
   background: var(--card-bg);
   border: var(--glass-border);
   border-radius: 14px;
-  padding: 1rem;
+  padding: 1.2rem;
   border-left: 3px solid var(--metric-color, var(--plant-teal));
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.records-summary-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
 .rsc-top {
@@ -130,33 +184,31 @@
 }
 
 .rsc-label {
-  font-size: 0.8rem;
+  font-size: 0.85rem;
   font-weight: 600;
   color: var(--text-secondary);
 }
 
-.rsc-sparkline {
-  margin-bottom: 0.5rem;
-  color: var(--metric-color, var(--plant-teal));
-}
-
-.sparkline {
-  display: block;
-  width: 100%;
-  height: 36px;
+.rsc-chart {
+  margin: 0.75rem -0.5rem;
+  height: 80px;
 }
 
 .rsc-stats {
   display: flex;
-  gap: 0.6rem;
-  font-size: 0.72rem;
+  gap: 0.75rem;
+  font-size: 0.75rem;
   color: var(--text-secondary);
   flex-wrap: wrap;
+  margin-top: 0.5rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--border-color);
 }
 
 .rsc-stats strong {
-  color: var(--text-color);
+  color: var(--metric-color, var(--text-color));
   font-weight: 600;
+  font-size: 0.85rem;
 }
 
 /* Table */
@@ -337,5 +389,21 @@
   .records-header {
     flex-direction: column;
     align-items: flex-start;
+  }
+  .records-main-chart-card {
+    padding: 1rem;
+  }
+  .records-summary-grid {
+    grid-template-columns: 1fr;
+  }
+  .chart-header h2 {
+    font-size: 1.1rem;
+  }
+  .records-table {
+    font-size: 0.8rem;
+  }
+  .records-table th,
+  .records-table td {
+    padding: 0.5rem;
   }
 }
