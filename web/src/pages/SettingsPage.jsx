@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { GlassIcon } from '../components/GlassIcon';
 import { configAPI } from '../utils/api';
 import './SettingsPage.css';
@@ -7,7 +7,7 @@ export default function SettingsPage({ theme, toggleTheme, onNotification }) {
   const [geminiKey, setGeminiKey] = useState('');
   const [openaiKey, setOpenaiKey] = useState('');
   const [esp32IP, setEsp32IP] = useState('192.168.1.100');
-  const [deviceId, setDeviceId] = useState('ESP32-001');
+  const [deviceId, setDeviceId] = useState('ESP32-SENSOR');
   const [refreshInterval, setRefreshInterval] = useState(5);
   const [retentionDays, setRetentionDays] = useState(30);
   const [notifications, setNotifications] = useState({
@@ -27,7 +27,7 @@ export default function SettingsPage({ theme, toggleTheme, onNotification }) {
     setGeminiKey(localStorage.getItem('gemini_api_key') || '');
     setOpenaiKey(localStorage.getItem('openai_api_key') || '');
     setEsp32IP(localStorage.getItem('esp32_ip') || '192.168.1.100');
-    setDeviceId(localStorage.getItem('device_id') || 'ESP32-001');
+    setDeviceId(localStorage.getItem('device_id') || 'ESP32-SENSOR');
     
     // Load test mode status
     loadTestModeStatus();
@@ -150,8 +150,8 @@ export default function SettingsPage({ theme, toggleTheme, onNotification }) {
           <div className="settings-card-body">
             {[
               { key: 'lowMoisture', label: 'Low Soil Moisture Alert', desc: 'Alert when moisture drops below threshold' },
-              { key: 'highTemp', label: 'High Temperature Alert', desc: 'Alert when temperature exceeds 38°C' },
-              { key: 'phAlert', label: 'pH Out of Range', desc: 'Alert when pH is outside 5.5–7.5' },
+              { key: 'highTemp', label: 'High Temperature Alert', desc: 'Alert when temperature exceeds 38 °C' },
+              { key: 'phAlert', label: 'pH Out of Range', desc: 'Alert when pH is outside 5.5-7.5' },
               { key: 'systemAlerts', label: 'System Alerts', desc: 'ESP32 connection status changes' },
             ].map(({ key, label, desc }) => (
               <div className="settings-row" key={key}>
@@ -220,7 +220,7 @@ export default function SettingsPage({ theme, toggleTheme, onNotification }) {
             <p className="settings-note">
               Test mode generates realistic sensor data for development and testing without real hardware.
               {!testModeAllowed && (
-                <span className="settings-warning"> ⚠️ Test mode is disabled in production.</span>
+                <span className="settings-warning"> Warning: Test mode is disabled in production.</span>
               )}
             </p>
             <div className="settings-row">
@@ -266,7 +266,7 @@ export default function SettingsPage({ theme, toggleTheme, onNotification }) {
               <input
                 type="text"
                 className="settings-input"
-                placeholder="ESP32-001"
+                placeholder="ESP32-SENSOR"
                 value={deviceId}
                 onChange={e => setDeviceId(e.target.value)}
               />
@@ -335,3 +335,4 @@ export default function SettingsPage({ theme, toggleTheme, onNotification }) {
     </div>
   );
 }
+

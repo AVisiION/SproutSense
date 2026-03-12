@@ -1,4 +1,4 @@
-import mongoose from 'mongoose';
+﻿import mongoose from 'mongoose';
 
 const sensorReadingSchema = new mongoose.Schema({
   soilMoisture: {
@@ -28,6 +28,21 @@ const sensorReadingSchema = new mongoose.Schema({
     required: true,
     min: 0
   },
+  flowRate: {
+    type: Number,
+    required: false,
+    min: 0
+  },
+  flowVolume: {
+    type: Number,
+    required: false,
+    min: 0
+  },
+  leafCount: {
+    type: Number,
+    required: false,
+    min: 0
+  },
   timestamp: {
     type: Date,
     default: Date.now,
@@ -35,7 +50,7 @@ const sensorReadingSchema = new mongoose.Schema({
   },
   deviceId: {
     type: String,
-    default: 'ESP32-001'
+    default: 'ESP32-SENSOR'
   }
 }, {
   timestamps: true
@@ -46,12 +61,12 @@ sensorReadingSchema.index({ timestamp: -1 });
 sensorReadingSchema.index({ deviceId: 1, timestamp: -1 });
 
 // Static method to get latest readings
-sensorReadingSchema.statics.getLatest = function(deviceId = 'ESP32-001') {
+sensorReadingSchema.statics.getLatest = function(deviceId = 'ESP32-SENSOR') {
   return this.findOne({ deviceId }).sort({ timestamp: -1 });
 };
 
 // Static method to get readings within time range
-sensorReadingSchema.statics.getRange = function(startDate, endDate, deviceId = 'ESP32-001') {
+sensorReadingSchema.statics.getRange = function(startDate, endDate, deviceId = 'ESP32-SENSOR') {
   return this.find({
     deviceId,
     timestamp: { $gte: startDate, $lte: endDate }
@@ -59,7 +74,7 @@ sensorReadingSchema.statics.getRange = function(startDate, endDate, deviceId = '
 };
 
 // Static method to get aggregated data (hourly averages)
-sensorReadingSchema.statics.getHourlyAverages = function(hours = 24, deviceId = 'ESP32-001') {
+sensorReadingSchema.statics.getHourlyAverages = function(hours = 24, deviceId = 'ESP32-SENSOR') {
   const startDate = new Date(Date.now() - hours * 60 * 60 * 1000);
   
   return this.aggregate([
@@ -82,6 +97,9 @@ sensorReadingSchema.statics.getHourlyAverages = function(hours = 24, deviceId = 
         avgHumidity: { $avg: '$humidity' },
         avgLight: { $avg: '$light' },
         avgPH: { $avg: '$pH' },
+        avgFlowRate: { $avg: '$flowRate' },
+        avgFlowVolume: { $avg: '$flowVolume' },
+        avgLeafCount: { $avg: '$leafCount' },
         count: { $sum: 1 }
       }
     },
@@ -92,3 +110,4 @@ sensorReadingSchema.statics.getHourlyAverages = function(hours = 24, deviceId = 
 const SensorReading = mongoose.model('SensorReading', sensorReadingSchema);
 
 export default SensorReading;
+

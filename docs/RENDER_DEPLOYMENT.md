@@ -1,53 +1,38 @@
-# Render Backend Deployment (with WebSocket)
+﻿# Render Deployment Guide (Current)
 
-## 1) Deploy backend on Render
+Use this for backend deployment to Render.
 
-Use the repository root `render.yaml` blueprint, or create the service manually with:
+## 1) Create Render Service
 
-- Service type: Web Service
-- Root Directory: `backend`
-- Build Command: `npm install`
-- Start Command: `npm start`
-- Health Check Path: `/api`
+- Connect repo AV-iot-ai/SproutSense
+- Root directory: backend
+- Build command: npm install
+- Start command: npm start
 
-If you deploy manually and `Root Directory` is not `backend`, Render may install the wrong package and startup will fail.
+## 2) Set Environment Variables
 
-## 2) Required environment variables (Render)
+Required:
+- MONGODB_URI
+- PORT
+- NODE_ENV=production
+- CORS_ORIGIN (frontend URL)
 
-Set these in the Render service:
+Optional (if used):
+- AI API keys
+- Weather API keys
 
-- `NODE_ENV=production`
-- `MONGODB_URI=<your-mongodb-atlas-uri>`
-- `CORS_ORIGIN=<your-frontend-url>`
-- `GEMINI_API_KEY=<optional-if-ai-used>`
+## 3) Deploy and Verify
 
-> Do not hardcode `PORT`. Render injects `PORT` automatically.
-> `MONGODB_URI` is required in Render. Without it, data endpoints cannot persist/fetch MongoDB records.
+- Check Render logs for server start
+- Verify /api health/basic endpoint
+- Verify sensor post endpoint from ESP32
 
-## 3) Frontend settings for WebSocket
+## 4) Frontend URL Update
 
-In your frontend hosting (Netlify/Vercel), set:
+Set frontend env VITE_API_BASE_URL to your Render backend URL + /api
 
-- `VITE_API_BASE_URL=https://<your-render-service>.onrender.com/api`
+## 5) Final Checks
 
-Optional (recommended for explicit control):
-
-- `VITE_WS_URL=wss://<your-render-service>.onrender.com/ws`
-
-If `VITE_WS_URL` is set, the app uses it directly.
-If not set, the app derives WebSocket URL from `VITE_API_BASE_URL`.
-
-## 4) Verify WebSocket is working
-
-After deployment:
-
-1. Open your frontend in browser.
-2. Open DevTools console.
-3. Confirm log includes `Connecting to WebSocket: wss://.../ws`.
-4. Confirm UI connection state changes to connected.
-
-## 5) Common issues
-
-- CORS blocked: ensure `CORS_ORIGIN` exactly matches frontend origin.
-- Wrong protocol: use `wss://` for HTTPS frontend.
-- Cold starts on free Render tier can delay first WebSocket connection.
+- Sensor data appears in dashboard
+- Watering endpoints work
+- No Blynk dependency in deployment path

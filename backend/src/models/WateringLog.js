@@ -1,4 +1,4 @@
-import mongoose from 'mongoose';
+﻿import mongoose from 'mongoose';
 
 const wateringLogSchema = new mongoose.Schema({
   startTime: {
@@ -40,7 +40,7 @@ const wateringLogSchema = new mongoose.Schema({
   },
   deviceId: {
     type: String,
-    default: 'ESP32-001'
+    default: 'ESP32-SENSOR'
   }
 }, {
   timestamps: true
@@ -59,7 +59,7 @@ wateringLogSchema.pre('save', function(next) {
 });
 
 // Static method to get today's watering count
-wateringLogSchema.statics.getTodayCount = function(deviceId = 'ESP32-001') {
+wateringLogSchema.statics.getTodayCount = function(deviceId = 'ESP32-SENSOR') {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
   
@@ -70,7 +70,7 @@ wateringLogSchema.statics.getTodayCount = function(deviceId = 'ESP32-001') {
 };
 
 // Static method to get total water used today
-wateringLogSchema.statics.getTodayVolume = function(deviceId = 'ESP32-001') {
+wateringLogSchema.statics.getTodayVolume = function(deviceId = 'ESP32-SENSOR') {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
   
@@ -92,7 +92,7 @@ wateringLogSchema.statics.getTodayVolume = function(deviceId = 'ESP32-001') {
 };
 
 // Static method to get watering history
-wateringLogSchema.statics.getHistory = function(days = 7, deviceId = 'ESP32-001') {
+wateringLogSchema.statics.getHistory = function(days = 7, deviceId = 'ESP32-SENSOR') {
   const startDate = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
   
   return this.find({
@@ -104,3 +104,4 @@ wateringLogSchema.statics.getHistory = function(days = 7, deviceId = 'ESP32-001'
 const WateringLog = mongoose.model('WateringLog', wateringLogSchema);
 
 export default WateringLog;
+

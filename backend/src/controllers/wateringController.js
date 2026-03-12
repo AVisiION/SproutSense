@@ -1,4 +1,4 @@
-import WateringLog from '../models/WateringLog.js';
+﻿import WateringLog from '../models/WateringLog.js';
 import SensorReading from '../models/SensorReading.js';
 import DeviceStatus from '../models/DeviceStatus.js';
 import SystemConfig from '../models/SystemConfig.js';
@@ -8,7 +8,7 @@ import { successResponse, errorResponse } from '../utils/helpers.js';
 import { HTTP_STATUS } from '../config/constants.js';
 import wsService from '../utils/websocketService.js';
 
-const getEsp32BaseUrl = async (deviceId = 'ESP32-001') => {
+const getEsp32BaseUrl = async (deviceId = 'ESP32-SENSOR') => {
   const systemConfig = await SystemConfig.getConfig(deviceId);
   const configuredIp = systemConfig?.espIp?.trim();
   const ipAddress = configuredIp || config.ESP32.IP;
@@ -24,7 +24,7 @@ const getEsp32BaseUrl = async (deviceId = 'ESP32-001') => {
 // Start watering
 export const startWatering = async (req, res, next) => {
   try {
-    const { deviceId = 'ESP32-001', triggerType = 'manual' } = req.body;
+    const { deviceId = 'ESP32-SENSOR', triggerType = 'manual' } = req.body;
     const esp32BaseUrl = await getEsp32BaseUrl(deviceId);
 
     // Get current soil moisture
@@ -64,7 +64,7 @@ export const startWatering = async (req, res, next) => {
 // Stop watering
 export const stopWatering = async (req, res, next) => {
   try {
-    const { deviceId = 'ESP32-001' } = req.body;
+    const { deviceId = 'ESP32-SENSOR' } = req.body;
     const esp32BaseUrl = await getEsp32BaseUrl(deviceId);
 
     // Find the active watering log
@@ -107,7 +107,7 @@ export const stopWatering = async (req, res, next) => {
 // Get watering history
 export const getWateringHistory = async (req, res, next) => {
   try {
-    const { deviceId = 'ESP32-001', days = 7 } = req.query;
+    const { deviceId = 'ESP32-SENSOR', days = 7 } = req.query;
     const history = await WateringLog.getHistory(parseInt(days), deviceId);
 
     successResponse(res, { count: history.length, history });
@@ -119,7 +119,7 @@ export const getWateringHistory = async (req, res, next) => {
 // Get today's watering stats
 export const getTodayStats = async (req, res, next) => {
   try {
-    const { deviceId = 'ESP32-001' } = req.query;
+    const { deviceId = 'ESP32-SENSOR' } = req.query;
     
     const count = await WateringLog.getTodayCount(deviceId);
     const volumeData = await WateringLog.getTodayVolume(deviceId);
@@ -139,7 +139,7 @@ export const getTodayStats = async (req, res, next) => {
 // Get device watering status
 export const getWateringStatus = async (req, res, next) => {
   try {
-    const { deviceId = 'ESP32-001' } = req.params;
+    const { deviceId = 'ESP32-SENSOR' } = req.params;
     const status = await DeviceStatus.findOne({ deviceId }) || await DeviceStatus.create({ deviceId });
 
     successResponse(res, {
@@ -178,3 +178,4 @@ export const updateWateringLog = async (req, res, next) => {
     next(error);
   }
 };
+

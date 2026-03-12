@@ -6,7 +6,13 @@ import {
   updateStatus,
   getHealth,
   getTestMode,
-  toggleTestMode
+  toggleTestMode,
+  clearSensorHistory,
+  clearWateringHistory,
+  clearDiseaseHistory,
+  clearAllHistory,
+  getDataRetentionPolicy,
+  updateDataRetentionPolicy
 } from '../controllers/configController.js';
 import { validateConfigUpdate, validateDeviceStatus } from '../validators/requestValidator.js';
 import { readLimiter } from '../middleware/rateLimiter.js';
@@ -30,6 +36,22 @@ router.get('/testmode', readLimiter, getTestMode);
 
 // POST /api/config/testmode - Toggle test mode
 router.post('/testmode', toggleTestMode);
+
+// POST /api/config/clear-sensor-history - Clear sensor readings history
+router.post('/clear-sensor-history', clearSensorHistory);
+
+// POST /api/config/clear-watering-history - Clear watering logs history
+router.post('/clear-watering-history', clearWateringHistory);
+
+// POST /api/config/clear-disease-history - Clear disease detection history
+router.post('/clear-disease-history', clearDiseaseHistory);
+
+// POST /api/config/clear-all-history - Clear all historical data
+router.post('/clear-all-history', clearAllHistory);
+
+// GET/PUT /api/config/data-retention - Manage retention policy
+router.get('/data-retention', readLimiter, getDataRetentionPolicy);
+router.put('/data-retention', updateDataRetentionPolicy);
 
 // GET /api/config - Get system configuration
 router.get('/', readLimiter, getConfig);

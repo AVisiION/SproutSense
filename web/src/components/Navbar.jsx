@@ -4,14 +4,12 @@ import { GlassIcon } from './GlassIcon';
 
 export function Navbar({ 
   currentPage, 
-  isConnected, 
   isMobile, 
   isSidebarCollapsed, 
   toggleSidebar, 
   theme, 
   toggleTheme,
   alertCount = 0,
-  deviceOnline = false,
 }) {
   return (
     <nav className="top-navbar">
@@ -36,22 +34,6 @@ export function Navbar({
       </div>
 
       <div className="navbar-right">
-        {/* Backend Server connection status */}
-        <span className={`navbar-connection ${isConnected ? 'connected' : 'disconnected'}`} title="Backend server connection">
-          <GlassIcon name="server" className="connection-icon" animated={isConnected} />
-          <span className="connection-text">
-            {isConnected ? 'Backend' : 'Offline'}
-          </span>
-        </span>
-
-        {/* ESP32 Device connection status */}
-        <span className={`navbar-connection ${deviceOnline ? 'connected' : 'disconnected'}`} title="ESP32 device status">
-          <GlassIcon name="wifi" className="connection-icon" animated={deviceOnline} />
-          <span className="connection-text">
-            {deviceOnline ? 'ESP32' : 'No Device'}
-          </span>
-        </span>
-
         {/* Alert Bell */}
         <NavLink to="/alerts" className="navbar-alert-btn" aria-label={`${alertCount} alerts`} title="View Alerts">
           <GlassIcon name="bell" className="navbar-icon" animated={alertCount > 0} />

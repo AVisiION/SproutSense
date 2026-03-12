@@ -1,4 +1,4 @@
-import SensorReading from '../models/SensorReading.js';
+﻿import SensorReading from '../models/SensorReading.js';
 import DeviceStatus from '../models/DeviceStatus.js';
 import { successResponse, errorResponse } from '../utils/helpers.js';
 import { HTTP_STATUS } from '../config/constants.js';
@@ -7,7 +7,7 @@ import wsService from '../utils/websocketService.js';
 // Get latest sensor readings
 export const getLatestSensors = async (req, res, next) => {
   try {
-    const { deviceId = 'ESP32-001' } = req.query;
+    const { deviceId = 'ESP32-SENSOR' } = req.query;
     const reading = await SensorReading.getLatest(deviceId);
     
     if (!reading) {
@@ -23,7 +23,7 @@ export const getLatestSensors = async (req, res, next) => {
 // Get sensor history
 export const getSensorHistory = async (req, res, next) => {
   try {
-    const { deviceId = 'ESP32-001', hours, start, end } = req.query;
+    const { deviceId = 'ESP32-SENSOR', hours, start, end } = req.query;
     let startDate, endDate;
     
     if (start && end) {
@@ -48,7 +48,7 @@ export const getSensorHistory = async (req, res, next) => {
 // Get hourly averages
 export const getHourlyAverages = async (req, res, next) => {
   try {
-    const { deviceId = 'ESP32-001', hours = 24 } = req.query;
+    const { deviceId = 'ESP32-SENSOR', hours = 24 } = req.query;
     const averages = await SensorReading.getHourlyAverages(parseInt(hours), deviceId);
 
     successResponse(res, averages);
@@ -63,18 +63,37 @@ export const createSensorReading = async (req, res, next) => {
     const {
       soilMoisture,
       pH,
+      ph,
       temperature,
       humidity,
       light,
-      deviceId = 'ESP32-001'
+      flowRate,
+      flowRateMlPerMin,
+      waterFlowRate,
+      flowVolume,
+      cycleVolumeML,
+      waterFlowVolume,
+      leafCount,
+      leaf_count,
+      canopyLeafCount,
+      deviceId = 'ESP32-SENSOR'
     } = req.body;
+
+    // Accept multiple field names used by different ESP32 firmware variants.
+    const normalizedPH = pH ?? ph;
+    const normalizedFlowRate = flowRate ?? flowRateMlPerMin ?? waterFlowRate;
+    const normalizedFlowVolume = flowVolume ?? cycleVolumeML ?? waterFlowVolume;
+    const normalizedLeafCount = leafCount ?? leaf_count ?? canopyLeafCount;
 
     const reading = await SensorReading.create({
       soilMoisture,
-      pH,
+      pH: normalizedPH,
       temperature,
       humidity,
       light,
+      flowRate: normalizedFlowRate,
+      flowVolume: normalizedFlowVolume,
+      leafCount: normalizedLeafCount,
       deviceId
     });
 
@@ -94,7 +113,7 @@ export const createSensorReading = async (req, res, next) => {
 // Get sensor statistics
 export const getSensorStats = async (req, res, next) => {
   try {
-    const { deviceId = 'ESP32-001', days = 7 } = req.query;
+    const { deviceId = 'ESP32-SENSOR', days = 7 } = req.query;
     const startDate = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
 
     const stats = await SensorReading.aggregate([
@@ -115,6 +134,13 @@ export const getSensorStats = async (req, res, next) => {
           maxTemperature: { $max: '$temperature' },
           avgHumidity: { $avg: '$humidity' },
           avgLight: { $avg: '$light' },
+          avgFlowRate: { $avg: '$flowRate' },
+          minFlowRate: { $min: '$flowRate' },
+          maxFlowRate: { $max: '$flowRate' },
+          totalFlowVolume: { $sum: { $ifNull: ['$flowVolume', 0] } },
+          avgLeafCount: { $avg: '$leafCount' },
+          minLeafCount: { $min: '$leafCount' },
+          maxLeafCount: { $max: '$leafCount' },
           totalReadings: { $sum: 1 }
         }
       }
@@ -125,3 +151,4 @@ export const getSensorStats = async (req, res, next) => {
     next(error);
   }
 };
+

@@ -1,11 +1,11 @@
-import mongoose from 'mongoose';
+﻿import mongoose from 'mongoose';
 
 const deviceStatusSchema = new mongoose.Schema({
   deviceId: {
     type: String,
     required: true,
     unique: true,
-    default: 'ESP32-001'
+    default: 'ESP32-SENSOR'
   },
   online: {
     type: Boolean,
@@ -70,7 +70,7 @@ deviceStatusSchema.methods.isStale = function() {
 };
 
 // Static method to get or create status
-deviceStatusSchema.statics.getStatus = async function(deviceId = 'ESP32-001') {
+deviceStatusSchema.statics.getStatus = async function(deviceId = 'ESP32-SENSOR') {
   let status = await this.findOne({ deviceId });
   
   if (!status) {
@@ -83,3 +83,4 @@ deviceStatusSchema.statics.getStatus = async function(deviceId = 'ESP32-001') {
 const DeviceStatus = mongoose.model('DeviceStatus', deviceStatusSchema);
 
 export default DeviceStatus;
+

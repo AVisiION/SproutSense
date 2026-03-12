@@ -18,12 +18,12 @@ if ($null -eq $mongoProcess) {
 # Start Backend
 Write-Host ""
 Write-Host "Starting Backend Server..." -ForegroundColor Cyan
-Start-Process powershell -ArgumentList "-NoExit", "-Command", "cd backend; Write-Host 'Backend Server (DEV)' -ForegroundColor Green; npm run dev"
+Start-Process powershell -ArgumentList "-NoExit", "-Command", "cd backend; Write-Host 'Backend Server (DEV - Legacy Watch)' -ForegroundColor Green; npm run dev -- -L"
 Start-Sleep -Seconds 3
 
 # Start Frontend
 Write-Host "Starting Frontend Dashboard..." -ForegroundColor Cyan
-Start-Process powershell -ArgumentList "-NoExit", "-Command", "cd web; Write-Host 'Frontend Dashboard (DEV)' -ForegroundColor Blue; npm run dev"
+Start-Process powershell -ArgumentList "-NoExit", "-Command", "cd web; Write-Host 'Frontend Dashboard (DEV - Polling Watch)' -ForegroundColor Blue; `$env:CHOKIDAR_USEPOLLING='true'; `$env:CHOKIDAR_INTERVAL='300'; npm run dev"
 Start-Sleep -Seconds 2
 
 Write-Host ""

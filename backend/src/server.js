@@ -1,4 +1,4 @@
-import dotenv from 'dotenv';
+﻿import dotenv from 'dotenv';
 dotenv.config();
 
 import http from 'http';
@@ -21,8 +21,8 @@ const server = http.createServer(app);
 const wss = new WebSocketServer({ server, path: config.WEBSOCKET.PATH });
 
 wss.on('connection', (ws, req) => {
-  console.log('✅ WebSocket client connected');
-  console.log(`📊 Total clients: ${wss.clients.size}`);
+  console.log('[OK] WebSocket client connected');
+  console.log(`[INFO] Total clients: ${wss.clients.size}`);
 
   ws.on('message', (message) => {
     try {
@@ -45,8 +45,8 @@ wss.on('connection', (ws, req) => {
   });
 
   ws.on('close', () => {
-    console.log('❌ WebSocket client disconnected');
-    console.log(`📊 Total clients: ${wss.clients.size}`);
+    console.log('[INFO] WebSocket client disconnected');
+    console.log(`[INFO] Total clients: ${wss.clients.size}`);
   });
 
   ws.on('error', (error) => {
@@ -68,11 +68,11 @@ wsService.init(wss);
 app.locals.wss = wss;
 app.locals.wsService = wsService;
 
-// ── Scheduled 5×/day sensor snapshots ──────────────────────────────────────
+// Scheduled 5x/day sensor snapshots
 // Times: 06:00, 10:00, 14:00, 18:00, 22:00
 cron.schedule('0 6,10,14,18,22 * * *', async () => {
   try {
-    const latest = await SensorReading.findOne({ deviceId: 'ESP32-001' }).sort({ timestamp: -1 });
+    const latest = await SensorReading.findOne({ deviceId: 'ESP32-SENSOR' }).sort({ timestamp: -1 });
     if (latest) {
       const snapshot = new SensorReading({
         deviceId: latest.deviceId,
@@ -80,33 +80,32 @@ cron.schedule('0 6,10,14,18,22 * * *', async () => {
         temperature: latest.temperature,
         humidity: latest.humidity,
         light: latest.light,
-        ph: latest.ph,
+        pH: latest.pH,
+        flowRate: latest.flowRate,
+        flowVolume: latest.flowVolume,
         waterLevel: latest.waterLevel,
         isAutoWatering: latest.isAutoWatering,
         timestamp: new Date()
       });
       await snapshot.save();
-      console.log(`[CRON] 📸 Sensor snapshot saved at ${new Date().toISOString()}`);
+      console.log(`[CRON] Sensor snapshot saved at ${new Date().toISOString()}`);
     } else {
-      console.log('[CRON] ⚠️  No sensor data available to snapshot');
+      console.log('[CRON] No sensor data available to snapshot');
     }
   } catch (err) {
-    console.error('[CRON] ❌ Snapshot error:', err.message);
+    console.error('[CRON] Snapshot error:', err.message);
   }
 });
 
 // Start server
 server.listen(PORT, () => {
   console.log(`
-┌─────────────────────────────────────────────────────┐
-│  🌱 Smart Watering System Backend                  │
-│                                                     │
-│  🚀 Server:     http://localhost:${PORT.toString().padEnd(8)}          │
-│  📡 WebSocket:  ws://localhost:${PORT}/ws              │
-│  🗄️  Database:   MongoDB                             │
-│  📝 Environment: ${config.NODE_ENV.padEnd(11)}                    │
-│  🛡️  Rate Limit: ${config.RATE_LIMIT.MAX_REQUESTS} req/${config.RATE_LIMIT.WINDOW_MS/1000/60}min               │
-└─────────────────────────────────────────────────────┘
+[START] Smart Watering System Backend
+Server:     http://localhost:${PORT}
+WebSocket:  ws://localhost:${PORT}/ws
+Database:   MongoDB
+Environment: ${config.NODE_ENV}
+Rate Limit: ${config.RATE_LIMIT.MAX_REQUESTS} req/${config.RATE_LIMIT.WINDOW_MS/1000/60}min
   `);
   
   // Start test sensor data simulation for development
@@ -117,6 +116,7 @@ server.listen(PORT, () => {
 
 // Handle unhandled promise rejections
 process.on('unhandledRejection', (err) => {
-  console.error('❌ Unhandled Rejection:', err);
+  console.error('[ERROR] Unhandled Rejection:', err);
   server.close(() => process.exit(1));
 });
+

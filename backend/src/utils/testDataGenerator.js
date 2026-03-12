@@ -1,4 +1,4 @@
-import wsService from './websocketService.js';
+﻿import wsService from './websocketService.js';
 import SensorReading from '../models/SensorReading.js';
 
 // Simulated sensor values that change over time
@@ -7,7 +7,10 @@ const sensorState = {
   temperature: 24,
   humidity: 58,
   light: 5000,
-  pH: 6.8
+  pH: 6.8,
+  flowRate: 0,
+  flowVolume: 0,
+  leafCount: 18
 };
 
 // Range for random variations
@@ -16,7 +19,9 @@ const sensorRanges = {
   temperature: { min: 15, max: 35, changeRate: 0.2 },
   humidity: { min: 30, max: 80, changeRate: 0.3 },
   light: { min: 100, max: 30000, changeRate: 500 },
-  pH: { min: 5.5, max: 7.5, changeRate: 0.05 }
+  pH: { min: 5.5, max: 7.5, changeRate: 0.05 },
+  flowRate: { min: 0, max: 900, changeRate: 65 },
+  leafCount: { min: 1, max: 400, changeRate: 1.5 }
 };
 
 // Helper function to keep value within bounds
@@ -67,6 +72,24 @@ export function generateTestSensorData() {
     sensorRanges.pH.changeRate
   );
 
+  sensorState.flowRate = getRandomWalk(
+    sensorState.flowRate,
+    sensorRanges.flowRate.min,
+    sensorRanges.flowRate.max,
+    sensorRanges.flowRate.changeRate
+  );
+
+  sensorState.leafCount = getRandomWalk(
+    sensorState.leafCount,
+    sensorRanges.leafCount.min,
+    sensorRanges.leafCount.max,
+    sensorRanges.leafCount.changeRate
+  );
+
+  // Integrate flow over one simulation step to estimate dispensed volume.
+  const intervalSeconds = 5;
+  sensorState.flowVolume = Math.max(0, sensorState.flowVolume + (sensorState.flowRate / 60) * intervalSeconds);
+
   // Round values appropriately
   return {
     soilMoisture: Math.round(sensorState.soilMoisture * 10) / 10,
@@ -74,14 +97,17 @@ export function generateTestSensorData() {
     humidity: Math.round(sensorState.humidity * 10) / 10,
     light: Math.round(sensorState.light),
     pH: Math.round(sensorState.pH * 100) / 100,
+    flowRate: Math.round(sensorState.flowRate * 10) / 10,
+    flowVolume: Math.round(sensorState.flowVolume * 10) / 10,
+    leafCount: Math.max(0, Math.round(sensorState.leafCount)),
     timestamp: new Date(),
-    deviceId: 'ESP32-001'
+    deviceId: 'ESP32-SENSOR'
   };
 }
 
 // Start generating test sensor data periodically
 export function startTestSensorSimulation(intervalMs = 5000) {
-  console.log(`📊 Starting test sensor simulation (updates every ${intervalMs}ms)`);
+  console.log(`[INFO] Starting test sensor simulation (updates every ${intervalMs}ms)`);
 
   const interval = setInterval(async () => {
     try {
@@ -93,15 +119,18 @@ export function startTestSensorSimulation(intervalMs = 5000) {
       // Broadcast via WebSocket
       wsService.broadcastSensorUpdate(testData);
 
-      console.log(`✅ Test sensor data sent:`, {
+      console.log('[OK] Test sensor data sent:', {
         moisture: `${testData.soilMoisture}%`,
-        temp: `${testData.temperature}°C`,
+        temp: `${testData.temperature} °C`,
         humidity: `${testData.humidity}%`,
         light: `${testData.light}lux`,
-        ph: testData.pH
+        ph: testData.pH,
+        flowRate: `${testData.flowRate} mL/min`,
+        flowVolume: `${testData.flowVolume} mL`,
+        leafCount: `${testData.leafCount} leaves`
       });
     } catch (error) {
-      console.error('❌ Error generating test sensor data:', error.message);
+      console.error('[ERROR] Error generating test sensor data:', error.message);
     }
   }, intervalMs);
 
@@ -111,5 +140,6 @@ export function startTestSensorSimulation(intervalMs = 5000) {
 // Stop test sensor simulation
 export function stopTestSensorSimulation(intervalId) {
   clearInterval(intervalId);
-  console.log('🛑 Test sensor simulation stopped');
+  console.log('[INFO] Test sensor simulation stopped');
 }
+

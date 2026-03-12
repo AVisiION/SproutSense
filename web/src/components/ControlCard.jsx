@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import { GlassIcon } from './GlassIcon';
 import { configAPI, wateringAPI } from '../utils/api';
+import SoilMoistureGauge from "./SoilMoistureGauge";
 
 export function ControlCard({
   pumpActive,
@@ -10,6 +11,14 @@ export function ControlCard({
   onMoistureThresholdChange,
   onSaveMoistureThreshold,
   isThresholdSaving,
+  plantGrowthEnabled,
+  onPlantGrowthEnabledChange,
+  plantGrowthStage,
+  onPlantGrowthStageChange,
+  aiInsightsMode,
+  onAiInsightsModeChange,
+  onSaveAiControls,
+  isAiControlSaving,
   sensors,
   onNotification,
 }) {
@@ -23,17 +32,17 @@ export function ControlCard({
     const next = !autoWater;
     setAutoWater(next);
     try {
-      await configAPI.update('ESP32-001', { autoWaterEnabled: next });
+      await configAPI.update('ESP32-SENSOR', { autoWaterEnabled: next });
       onNotification?.(`Auto-watering ${next ? 'enabled' : 'disabled'}`, 'success');
     } catch {
       onNotification?.('Failed to update auto-water setting', 'error');
       setAutoWater(!next); // revert
     }
   };
-
+<SoilMoistureGauge value={soilMoisture} />
   const handleTimedWater = async () => {
     try {
-      await wateringAPI.start({ duration: waterDuration });
+      await wateringAPI.start('ESP32-SENSOR', waterDuration);
       onNotification?.(`Watering for ${waterDuration}s`, 'success');
     } catch {
       onNotification?.('Failed to start timed watering', 'error');
@@ -43,7 +52,7 @@ export function ControlCard({
   const handleSaveSchedule = async () => {
     setSavingSchedule(true);
     try {
-      await configAPI.update('ESP32-001', {
+      await configAPI.update('ESP32-SENSOR', {
         scheduleEnabled,
         scheduleTime,
       });
@@ -76,8 +85,8 @@ export function ControlCard({
           <GlassIcon name={needsWater ? 'watering' : 'check'} />
           <span>
             {needsWater
-              ? `Soil moisture ${soilMoisture}% — below threshold (${moistureThreshold}%), watering recommended`
-              : `Soil moisture ${soilMoisture}% — adequate`}
+              ? `Soil moisture ${soilMoisture}% - below threshold (${moistureThreshold}%), watering recommended`
+              : `Soil moisture ${soilMoisture}% - adequate`}
           </span>
         </div>
       )}
@@ -220,7 +229,76 @@ export function ControlCard({
           </div>
         </div>
       </div>
+
+      {/* AI Growth Controls */}
+      <div className="control-section">
+        <h3 className="control-section-title">
+          <GlassIcon name="leaf" /> Plant Growth & AI Insights
+        </h3>
+
+        <div className="control-toggle-row">
+          <div className="control-toggle-info">
+            <span className="control-label">Plant Growth Tracking</span>
+            <span className="control-hint">Enable growth-stage context for automations and AI</span>
+          </div>
+          <button
+            className={`toggle-switch ${plantGrowthEnabled ? 'on' : 'off'}`}
+            onClick={() => onPlantGrowthEnabledChange?.(!plantGrowthEnabled)}
+            aria-label="Toggle plant growth tracking"
+          >
+            <span className="toggle-knob" />
+          </button>
+        </div>
+
+        <div className="control-field">
+          <label className="control-label" htmlFor="plant-growth-stage-select">
+            Plant Growth Stage
+          </label>
+          <div className="control-row">
+            <select
+              id="plant-growth-stage-select"
+              className="control-input"
+              value={plantGrowthStage}
+              onChange={e => onPlantGrowthStageChange?.(e.target.value)}
+              disabled={!plantGrowthEnabled}
+            >
+              <option value="seedling">Seedling</option>
+              <option value="vegetative">Vegetative</option>
+              <option value="flowering">Flowering</option>
+              <option value="fruiting">Fruiting</option>
+            </select>
+          </div>
+        </div>
+
+        <div className="control-field">
+          <label className="control-label" htmlFor="ai-insights-mode-select">
+            AI Disease Insights Mode
+          </label>
+          <div className="control-row">
+            <select
+              id="ai-insights-mode-select"
+              className="control-input"
+              value={aiInsightsMode}
+              onChange={e => onAiInsightsModeChange?.(e.target.value)}
+            >
+              <option value="live_feed">Live Feed</option>
+              <option value="snapshots">Snapshots</option>
+            </select>
+            <button
+              className="btn btn-success"
+              onClick={onSaveAiControls}
+              disabled={isAiControlSaving}
+            >
+              <GlassIcon name={isAiControlSaving ? 'refresh' : 'check'} className="btn-icon" />
+              {isAiControlSaving ? 'Saving...' : 'Save'}
+            </button>
+          </div>
+        </div>
+      </div>
+
+      
     </div>
   );
 }
+
 

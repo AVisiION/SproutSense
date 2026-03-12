@@ -1,4 +1,4 @@
-// API Response status codes
+﻿// API Response status codes
 export const HTTP_STATUS = {
   OK: 200,
   CREATED: 201,
@@ -51,7 +51,9 @@ export const SENSOR_TYPE = {
   TEMPERATURE: 'temperature',
   HUMIDITY: 'humidity',
   LIGHT: 'light',
-  PH: 'pH'
+  PH: 'pH',
+  FLOW_RATE: 'flowRate',
+  FLOW_VOLUME: 'flowVolume'
 };
 
 // WebSocket event types
@@ -62,6 +64,8 @@ export const WS_EVENT = {
   WATERING_STOPPED: 'watering_stopped',
   CONFIG_UPDATED: 'config_updated',
   DEVICE_STATUS_CHANGED: 'device_status_changed',
+  DISEASE_ALERT: 'disease_alert',
+  AI_UPDATE: 'ai_update',
   ERROR: 'error',
   PING: 'ping',
   PONG: 'pong'
@@ -79,7 +83,7 @@ export const ERROR_CODE = {
 };
 
 // Default device ID
-export const DEFAULT_DEVICE_ID = 'ESP32-001';
+export const DEFAULT_DEVICE_ID = 'ESP32-SENSOR';
 
 // Time constants
 export const TIME = {
@@ -111,5 +115,14 @@ export const VALIDATION = {
   LIGHT: {
     MIN: 0,
     MAX: 100000
+  },
+  FLOW_RATE: {
+    MIN: 0,
+    MAX: 10000
+  },
+  FLOW_VOLUME: {
+    MIN: 0,
+    MAX: 1000000
   }
 };
+

@@ -1,14 +1,15 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { configAPI, sensorAPI } from '../utils/api';
 import { GlassIcon } from './GlassIcon';
 
-export function ConfigCard({ onNotification }) {
+export function ConfigCard({ onNotification, systemStatus: externalSystemStatus }) {
   const [autoMode, setAutoMode] = useState(false);
   const [loading, setLoading] = useState(false);
   const [systemStatus, setSystemStatus] = useState({
     backend: 'checking',
     database: 'checking',
     esp32: 'checking',
+    esp32Cam: 'checking',
     uptime: 0,
   });
   const [stats, setStats] = useState({
@@ -18,33 +19,40 @@ export function ConfigCard({ onNotification }) {
   });
   const [clearing, setClearing] = useState(false);
 
+  const extractReadings = (result) => {
+    if (Array.isArray(result)) return result;
+    if (Array.isArray(result?.data)) return result.data;
+    if (Array.isArray(result?.readings)) return result.readings;
+    if (Array.isArray(result?.data?.readings)) return result.data.readings;
+    return [];
+  };
+
+  const formatNextCleanupMessage = (result, label) => {
+    const recordsDeleted = result?.recordsDeleted || 0;
+    const nextCleanupDate = result?.nextCleanup ? new Date(result.nextCleanup) : null;
+    const hasValidNextCleanup = nextCleanupDate && !Number.isNaN(nextCleanupDate.getTime());
+
+    return hasValidNextCleanup
+      ? `Cleared ${recordsDeleted} ${label}. Next cleanup: ${nextCleanupDate.toLocaleDateString()}`
+      : `Cleared ${recordsDeleted} ${label}.`;
+  };
+
   useEffect(() => {
     // Load initial config
     const fetchConfig = async () => {
       try {
-        const config = await configAPI.get();
-        setAutoMode(config?.autoWaterEnabled || false);
-        
-        // Backend is online if we got here
-        setSystemStatus(prev => ({
-          ...prev,
-          backend: 'online',
-          database: 'online',
-        }));
+        const configResponse = await configAPI.get();
+        const configData = configResponse?.data || configResponse;
+        setAutoMode(configData?.autoWaterEnabled || false);
       } catch (error) {
         console.error('Failed to load config:', error);
-        setSystemStatus(prev => ({
-          ...prev,
-          backend: 'offline',
-          database: 'offline',
-        }));
       }
     };
 
     const fetchStats = async () => {
       try {
         const result = await sensorAPI.getHistory(24);
-        const readings = Array.isArray(result) ? result : (result?.data || []);
+        const readings = extractReadings(result);
         setStats({
           totalReadings: readings.length,
           todayReadings: readings.filter(r => {
@@ -67,42 +75,21 @@ export function ConfigCard({ onNotification }) {
     fetchConfig();
     fetchStats();
 
-    // Check ESP32 status periodically
-    const checkESP32 = async () => {
-      try {
-        const result = await sensorAPI.getLatest();
-        const data = result?.data || result;
-        const timestamp = data?.timestamp;
-        
-        if (!timestamp) {
-          setSystemStatus(prev => ({ ...prev, esp32: 'offline' }));
-          return;
-        }
-        
-        const lastReading = new Date(timestamp);
-        const now = new Date();
-        const diffMinutes = (now - lastReading) / 1000 / 60;
-        
-        setSystemStatus(prev => ({
-          ...prev,
-          esp32: diffMinutes < 2 ? 'online' : 'offline',
-        }));
-      } catch (error) {
-        console.error('ESP32 status check failed:', error);
-        setSystemStatus(prev => ({ ...prev, esp32: 'offline' }));
-      }
-    };
-
-    checkESP32();
-    const interval = setInterval(checkESP32, 10000);
-
-    return () => clearInterval(interval);
+    return undefined;
   }, []);
+
+  useEffect(() => {
+    if (!externalSystemStatus) return;
+    setSystemStatus((prev) => ({
+      ...prev,
+      ...externalSystemStatus,
+    }));
+  }, [externalSystemStatus]);
 
   const handleSaveAutoMode = async () => {
     setLoading(true);
     try {
-      await configAPI.update('ESP32-001', {
+      await configAPI.update('ESP32-SENSOR', {
         autoWaterEnabled: autoMode
       });
       onNotification?.(`Auto-watering ${autoMode ? 'enabled' : 'disabled'}`, 'success');
@@ -115,18 +102,97 @@ export function ConfigCard({ onNotification }) {
   };
 
   const handleClearHistory = async () => {
-    if (!window.confirm('Are you sure you want to clear all sensor history? This cannot be undone.')) {
-      return;
-    }
-    
+    // Show dialog with options to clear different history types
+    const clearOptions = `Select which history to clear:
+
+  - Sensor Readings (older than 90 days)
+  - Watering Logs (older than 365 days)
+  - Disease Detections (older than 180 days)
+
+Options:
+1. Clear Sensor Readings only
+2. Clear Watering Logs only
+3. Clear Disease History only
+4. Clear ALL history
+0. Cancel`;
+
+    const choice = window.prompt(clearOptions, '');
+    if (choice === null) return; // User cancelled
+
     setClearing(true);
     try {
-      // TODO: Implement DELETE endpoint in backend
-      // Example: await api.delete('/sensors/history')
-      onNotification?.('History clearing feature coming soon', 'info');
+      let result;
+      const confirmMsg = (type, days) => 
+        window.confirm(`Clear ${type} older than ${days} days?\nThis cannot be undone.`);
+
+      switch (choice.trim()) {
+        case '1': // Sensor readings
+          if (!confirmMsg('sensor readings', 90)) {
+            setClearing(false);
+            return;
+          }
+          result = await configAPI.clearSensorHistory('ESP32-SENSOR', 90);
+          onNotification?.(formatNextCleanupMessage(result, 'sensor readings'), 'success');
+          break;
+
+        case '2': // Watering logs
+          if (!confirmMsg('watering logs', 365)) {
+            setClearing(false);
+            return;
+          }
+          result = await configAPI.clearWateringHistory('ESP32-SENSOR', 365);
+          onNotification?.(formatNextCleanupMessage(result, 'watering logs'), 'success');
+          break;
+
+        case '3': // Disease history
+          if (!confirmMsg('disease detections', 180)) {
+            setClearing(false);
+            return;
+          }
+          result = await configAPI.clearDiseaseHistory('ESP32-SENSOR', 180);
+          onNotification?.(formatNextCleanupMessage(result, 'disease records'), 'success');
+          break;
+
+        case '4': // All history
+          if (!window.confirm('Clear ALL history?\nThis will delete:\n- Sensor readings (>90 days)\n- Watering logs (>365 days)\n- Disease detections (>180 days)\n\nThis cannot be undone!')) {
+            setClearing(false);
+            return;
+          }
+          result = await configAPI.clearAllHistory('ESP32-SENSOR');
+          const summary = result.summary || result;
+          onNotification?.(
+            `Cleared all history: ${summary.totalRecordsDeleted || 0} total records deleted`,
+            'success'
+          );
+          break;
+
+        case '0':
+          setClearing(false);
+          return;
+
+        default:
+          onNotification?.('Invalid option selected', 'error');
+          setClearing(false);
+          return;
+      }
+
+      // Refresh stats after clearing
+      const refreshedResult = await sensorAPI.getHistory(24);
+      const readings = extractReadings(refreshedResult);
+      setStats({
+        totalReadings: readings.length,
+        todayReadings: readings.filter(r => {
+          const readingDate = new Date(r.timestamp);
+          const today = new Date();
+          return readingDate.toDateString() === today.toDateString();
+        }).length,
+        lastUpdate: new Date().toLocaleString(),
+      });
+
     } catch (error) {
       console.error('Failed to clear history:', error);
-      onNotification?.('Failed to clear history', 'error');
+      const errorMsg = error.response?.data?.message || error.message || 'Unknown error';
+      onNotification?.(`Failed to clear history: ${errorMsg}`, 'error');
     } finally {
       setClearing(false);
     }
@@ -135,7 +201,7 @@ export function ConfigCard({ onNotification }) {
   const handleExportData = async () => {
     try {
       const result = await sensorAPI.getHistory(168); // 7 days
-      const readings = Array.isArray(result) ? result : (result?.data || []);
+      const readings = extractReadings(result);
       
       if (readings.length === 0) {
         onNotification?.('No data available to export', 'info');
@@ -226,10 +292,20 @@ export function ConfigCard({ onNotification }) {
           <div className="status-item">
             <div className="status-item-header">
               <GlassIcon name="esp32" />
-              <span className="status-item-label">ESP32 Device</span>
+              <span className="status-item-label">ESP32 Sensor Board</span>
             </div>
             <span className={`status-badge ${getStatusColor(systemStatus.esp32)}`}>
               {getStatusLabel(systemStatus.esp32)}
+            </span>
+          </div>
+
+          <div className="status-item">
+            <div className="status-item-header">
+              <GlassIcon name="image" />
+              <span className="status-item-label">ESP32-CAM</span>
+            </div>
+            <span className={`status-badge ${getStatusColor(systemStatus.esp32Cam)}`}>
+              {getStatusLabel(systemStatus.esp32Cam)}
             </span>
           </div>
         </div>
@@ -344,3 +420,4 @@ export function ConfigCard({ onNotification }) {
     </div>
   );
 }
+

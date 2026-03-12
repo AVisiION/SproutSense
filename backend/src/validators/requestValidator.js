@@ -42,6 +42,51 @@ export const validateSensorReading = [
     .optional()
     .isFloat({ min: VALIDATION.PH.MIN, max: VALIDATION.PH.MAX })
     .withMessage(`pH must be between ${VALIDATION.PH.MIN} and ${VALIDATION.PH.MAX}`),
+
+  body('ph')
+    .optional()
+    .isFloat({ min: VALIDATION.PH.MIN, max: VALIDATION.PH.MAX })
+    .withMessage(`ph must be between ${VALIDATION.PH.MIN} and ${VALIDATION.PH.MAX}`),
+
+  body('flowRate')
+    .optional()
+    .isFloat({ min: VALIDATION.FLOW_RATE.MIN, max: VALIDATION.FLOW_RATE.MAX })
+    .withMessage(`Flow rate must be between ${VALIDATION.FLOW_RATE.MIN} and ${VALIDATION.FLOW_RATE.MAX} mL/min`),
+
+  body('flowRateMlPerMin')
+    .optional()
+    .isFloat({ min: VALIDATION.FLOW_RATE.MIN, max: VALIDATION.FLOW_RATE.MAX })
+    .withMessage(`flowRateMlPerMin must be between ${VALIDATION.FLOW_RATE.MIN} and ${VALIDATION.FLOW_RATE.MAX} mL/min`),
+
+  body('waterFlowRate')
+    .optional()
+    .isFloat({ min: VALIDATION.FLOW_RATE.MIN, max: VALIDATION.FLOW_RATE.MAX })
+    .withMessage(`waterFlowRate must be between ${VALIDATION.FLOW_RATE.MIN} and ${VALIDATION.FLOW_RATE.MAX} mL/min`),
+
+  body('flowVolume')
+    .optional()
+    .isFloat({ min: VALIDATION.FLOW_VOLUME.MIN, max: VALIDATION.FLOW_VOLUME.MAX })
+    .withMessage(`Flow volume must be between ${VALIDATION.FLOW_VOLUME.MIN} and ${VALIDATION.FLOW_VOLUME.MAX} mL`),
+
+  body('cycleVolumeML')
+    .optional()
+    .isFloat({ min: VALIDATION.FLOW_VOLUME.MIN, max: VALIDATION.FLOW_VOLUME.MAX })
+    .withMessage(`cycleVolumeML must be between ${VALIDATION.FLOW_VOLUME.MIN} and ${VALIDATION.FLOW_VOLUME.MAX} mL`),
+
+  body('waterFlowVolume')
+    .optional()
+    .isFloat({ min: VALIDATION.FLOW_VOLUME.MIN, max: VALIDATION.FLOW_VOLUME.MAX })
+    .withMessage(`waterFlowVolume must be between ${VALIDATION.FLOW_VOLUME.MIN} and ${VALIDATION.FLOW_VOLUME.MAX} mL`),
+
+  body('leafCount')
+    .optional()
+    .isInt({ min: 0, max: 5000 })
+    .withMessage('Leaf count must be between 0 and 5000'),
+
+  body('leaf_count')
+    .optional()
+    .isInt({ min: 0, max: 5000 })
+    .withMessage('leaf_count must be between 0 and 5000'),
   
   body('deviceId')
     .optional()
@@ -126,6 +171,26 @@ export const validateConfigUpdate = [
     .optional({ checkFalsy: true })
     .matches(/^([01]\d|2[0-3]):([0-5]\d)$/)
     .withMessage('Schedule time must be in HH:MM format'),
+
+  body('plantGrowthEnabled')
+    .optional()
+    .isBoolean()
+    .withMessage('Plant growth enabled must be a boolean'),
+
+  body('plantGrowthStage')
+    .optional()
+    .isIn(['seedling', 'vegetative', 'flowering', 'fruiting'])
+    .withMessage('Plant growth stage must be one of: seedling, vegetative, flowering, fruiting'),
+
+  body('aiInsightsMode')
+    .optional()
+    .isIn(['live_feed', 'snapshots'])
+    .withMessage('AI insights mode must be one of: live_feed, snapshots'),
+
+  body('aiInsightsSource')
+    .optional()
+    .isIn(['live_feed', 'snapshots'])
+    .withMessage('AI insights source must be one of: live_feed, snapshots'),
   
   validate
 ];
