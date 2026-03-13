@@ -49,7 +49,7 @@
 
 
 // ========== WIFI CREDENTIALS ==========
-const char* WIFI_SSID     = "Connect";
+const char* WIFI_SSID     = "@Connect";
 const char* WIFI_PASSWORD = "qwertyomm";
 
 
