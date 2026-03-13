@@ -1,797 +1,572 @@
-/*!
- * ╔══════════════════════════════════════════════════════════╗
- * ║      SproutSense — Smart Plant Care System              ║
- * ║      ESP32-SENSOR-001 | Single-File Sketch              ║
- * ║      Version: 1.0.0 | Build: March 2026                 ║
- * ╚══════════════════════════════════════════════════════════╝
- *
- * FEATURES:
- *   ✓ 5 sensors: Soil Moisture, pH, Temp/Humidity (DHT22), Light (LDR)
- *   ✓ Water pump control via Relay (FSM with safety rules)
- *   ✓ Flow sensor volume tracking
- *   ✓ Blynk IoT dashboard (real-time monitoring + manual control)
- *   ✓ Weather-aware watering (OpenWeatherMap stub)
- *   ✓ Gemini AI plant advice stub (hourly)
- *   ✓ Non-blocking millis() architecture
- *   ✓ Auto WiFi/Blynk reconnection
- *   ✓ Serial debug commands (press 'h' in Serial Monitor)
- *
- * BOARD SETTINGS (Arduino IDE):
- *   Board           : ESP32 Dev Module
- *   Upload Speed    : 921600
- *   CPU Frequency   : 240 MHz
- *   Flash Size      : 4MB (32Mb)
- *   Partition Scheme: Huge APP (3MB No OTA/1MB SPIFFS)  ← IMPORTANT!
- *   Flash Mode      : QIO
- *
- * REQUIRED LIBRARIES (Install via Library Manager):
- *   - DHT sensor library (Adafruit)
- *   - Blynk (Blynk)
- *   - ArduinoJson (Benoit Blanchon)
- *
- * SETUP:
- *   1. Fill in your credentials in the SECRETS section below
- *   2. Select Partition: Huge APP in Arduino IDE Tools menu
- *   3. Upload and open Serial Monitor at 115200 baud
- */
+// =====================================================
+// SPROUTSENSE ESP32-SENSOR - FINAL VERSION
+// Static IP + TFT Display ST7735R
+// Fixes: backend field names, lux conversion, DHT warmup
+// =====================================================
+//
+// BOARD SETTINGS (Arduino IDE):
+//   Board           : ESP32 Dev Module
+//   Upload Speed    : 921600
+//   CPU Frequency   : 240 MHz
+//   Flash Size      : 4MB (32Mb)
+//   Partition Scheme: Huge APP (3MB No OTA/1MB SPIFFS)  <- IMPORTANT!
+//   Flash Mode      : QIO
+//
+// REQUIRED LIBRARIES (Library Manager):
+//   - DHT sensor library     (Adafruit)
+//   - Adafruit GFX Library   (Adafruit)
+//   - Adafruit ST7735        (Adafruit)
+//   - Blynk                  (Blynk)
+//   - ArduinoJson            (Benoit Blanchon)
+//   - HTTPClient             (built-in ESP32)
+//
+// BACKEND FIELD NAMES (must match API schema):
+//   soilMoisture  -> 0-100 (%)
+//   ph            -> 0-14
+//   light         -> 0-100000 (lux)
+//   temperature   -> Celsius
+//   humidity      -> 0-100 (%)
+//   deviceId      -> "ESP32-SENSOR-001"
+// =====================================================
 
-// ============================================================================
-// LIBRARIES
-// ============================================================================
 
+#define BLYNK_TEMPLATE_ID   "TMPL3EXpwJqdb"
+#define BLYNK_TEMPLATE_NAME "SproutSense ESP32 Sensor"
+#define BLYNK_AUTH_TOKEN    "xezZsP-lFO0Dz5TxHpOfJvIDFcx-5IY3"
+
+#define BLYNK_PRINT Serial
+
+
+// ========== LIBRARIES ==========
 #include <WiFi.h>
-#include <DHT.h>
-#include <vector>
-
-#define BLYNK_TEMPLATE_ID   "YOUR_BLYNK_TEMPLATE_ID"
-#define BLYNK_TEMPLATE_NAME "SproutSense"
-#define BLYNK_AUTH_TOKEN    "YOUR_BLYNK_AUTH_TOKEN"
 #include <BlynkSimpleEsp32.h>
+#include <DHT.h>
+#include <HTTPClient.h>
+#include <ArduinoJson.h>
+#include <SPI.h>
+#include <Adafruit_GFX.h>
+#include <Adafruit_ST7735.h>
 
-// ============================================================================
-// ⚠️  SECRETS — FILL THESE IN BEFORE UPLOADING
-// ============================================================================
 
-#define WIFI_SSID               "YOUR_WIFI_SSID"
-#define WIFI_PASSWORD           "YOUR_WIFI_PASSWORD"
-#define OPENWEATHER_API_KEY     "YOUR_OPENWEATHER_API_KEY"
-#define OPENWEATHER_LOCATION    "Sambalpur,IN"
-#define GEMINI_API_KEY          "YOUR_GEMINI_API_KEY"
+// ========== WIFI CREDENTIALS ==========
+const char* WIFI_SSID     = "Connect";
+const char* WIFI_PASSWORD = "qwertyomm";
 
-// ============================================================================
-// PIN CONFIGURATION (ADC1 ONLY — WiFi-safe)
-// ============================================================================
 
-#define PIN_SOIL_MOISTURE_ANALOG  34   // ADC1_CH6 — Capacitive moisture sensor
-#define PIN_PH_SENSOR_ANALOG      35   // ADC1_CH7 — ZS-09 pH sensor
-#define PIN_LDR_SENSOR_ANALOG     32   // ADC1_CH4 — LDR light sensor
-#define PIN_DHT_SENSOR            4    // Digital — DHT22
-#define PIN_FLOW_SENSOR           27   // Digital interrupt — YF-S401
-#define PIN_RELAY_CH1             26   // Relay IN1 — Water pump
-#define PIN_RELAY_CH2             25   // Relay IN2 — Spare
+// ========== STATIC IP CONFIGURATION ==========
+#define STATICIP_ENABLED true
+const uint8_t STATIC_IP[]      = {192, 168, 1, 120};
+const uint8_t STATIC_GATEWAY[] = {192, 168, 1, 1};
+const uint8_t STATIC_SUBNET[]  = {255, 255, 255, 0};
+const uint8_t STATIC_DNS1[]    = {8, 8, 8, 8};
 
-#define DHT_SENSOR_TYPE           DHT22
 
-// ============================================================================
-// CONFIGURATION & THRESHOLDS
-// ============================================================================
+// ========== PIN CONFIGURATION (ADC1 SAFE) ==========
+#define PIN_SOIL_MOISTURE 35   // ADC1_CH7
+#define PIN_PH_SENSOR     34   // ADC1_CH6
+#define PIN_LDR           39   // ADC1_CH3
+#define PIN_DHT           13   // DHT22
+#define PIN_RELAY         14   // Pump relay
+#define PIN_FLOW_SENSOR   12   // Flow meter (interrupt)
 
-// Timing intervals (milliseconds)
-#define SENSOR_SAMPLING_INTERVAL_MS   5000UL      // Read sensors every 5s
-#define BLYNK_UPDATE_INTERVAL_MS      10000UL     // Push Blynk data every 10s
-#define HISTORY_LOG_INTERVAL_MS       60000UL     // Log history every 60s
-#define WEATHER_UPDATE_INTERVAL_MS    1800000UL   // Fetch weather every 30 min
-#define DHT_READ_INTERVAL_MS          2000UL      // DHT22 min read interval
+// TFT (ST7735R 128x160 SPI)
+#define PIN_TFT_CS   5
+#define PIN_TFT_RST  4
+#define PIN_TFT_DC   27
+// Hardware SPI: MOSI=23, SCLK=18 (fixed)
 
-// Feature flags
-#define ENABLE_HISTORY_LOGGING        true
-#define ENABLE_DISEASE_DETECTION      false       // Stub — requires ESP32-CAM
-#define ENABLE_GEMINI_ADVICE          true
-#define ENABLE_VOICE_CONTROL          false       // Stub
 
-// Moisture thresholds
-#define MOISTURE_THRESHOLD_PERCENT    30.0f       // Water when below this %
-#define MOISTURE_ADC_DRY              3200        // Raw ADC when fully dry
-#define MOISTURE_ADC_WET              1200        // Raw ADC when fully wet
-#define MOISTURE_SAMPLE_COUNT         5           // Samples to average
+// ========== SENSOR SETTINGS ==========
+#define DHT_TYPE           DHT22
+#define MOISTURE_THRESHOLD 30.0
+#define TARGET_WATER_ML    100.0
+#define PUMP_MAX_TIME      20000
 
-// pH calibration (2-point)
-#define PH_CALIBRATION_VOLTAGE_PH4    2.03f
-#define PH_CALIBRATION_VALUE_PH4      4.0f
-#define PH_CALIBRATION_VOLTAGE_PH7    2.52f
-#define PH_CALIBRATION_VALUE_PH7      7.0f
-#define PH_SAMPLE_COUNT               5
+// Moisture ADC calibration (adjust for your sensor)
+// Dry soil = higher ADC, Wet soil = lower ADC
+#define MOISTURE_ADC_DRY  2800
+#define MOISTURE_ADC_WET  1200
 
-// LDR
-#define LDR_SAMPLE_COUNT              5
+// LDR -> Lux conversion factor
+// LDR raw 0-4095 mapped to 0-100000 lux (backend expects lux)
+// Adjust LUX_MAX based on your LDR datasheet / calibration
+#define LUX_MAX 100000.0
 
-// Watering safety rules
-#define TARGET_WATER_VOLUME_ML        100.0f      // Target mL per cycle
-#define PUMP_MAX_RUNTIME_MS           20000UL     // 20s safety timeout
-#define WATERING_COOLDOWN_MS          600000UL    // 10 min cooldown between cycles
-#define MAX_WATERING_CYCLES_PER_HOUR  3
 
-// Flow sensor (YF-S401 ~5.5 pulses/mL)
-#define FLOW_SENSOR_PULSES_PER_ML     5.5f
+// ========== BACKEND API ==========
+// IMPORTANT: Field names must match backend schema exactly!
+const char* BACKEND_URL = "https://sproutsense-backend.onrender.com/api/sensors";
+const char* DEVICE_ID   = "ESP32-SENSOR-001";
 
-// Blynk Virtual Pins
-#define VPIN_SOIL_MOISTURE    V0
-#define VPIN_PH               V1
-#define VPIN_TEMPERATURE      V2
-#define VPIN_HUMIDITY         V3
-#define VPIN_LIGHT_LEVEL      V4
-#define VPIN_FLOW_VOLUME      V5
-#define VPIN_PUMP_CONTROL     V6
-#define VPIN_CAMERA_SNAPSHOT  V7
-#define VPIN_WATERING_COUNT   V8
-#define VPIN_LAST_WATERING    V9
 
-// Serial
-#define SERIAL_BAUD_RATE      115200
+// ========== OBJECTS ==========
+DHT dht(PIN_DHT, DHT_TYPE);
+Adafruit_ST7735 tft = Adafruit_ST7735(PIN_TFT_CS, PIN_TFT_DC, PIN_TFT_RST);
 
-// ============================================================================
-// WATERING FSM STATES
-// ============================================================================
 
-enum WateringState {
-  WATERING_IDLE,
-  WATERING_CHECK_CONDITIONS,
-  WATERING_WATERING,
-  WATERING_COOLDOWN
-};
+// ========== TFT COLORS ==========
+#define C_BLACK   0x0000
+#define C_WHITE   0xFFFF
+#define C_CYAN    0x07FF
+#define C_GREEN   0x07E0
+#define C_YELLOW  0xFFE0
+#define C_RED     0xF800
+#define C_ORANGE  0xFD20
+#define C_LGRAY   0xC618
+#define C_DGRAY   0x4208
 
-// ============================================================================
-// GLOBAL VARIABLES
-// ============================================================================
 
-// — DHT —
-DHT dht(PIN_DHT_SENSOR, DHT_SENSOR_TYPE);
-unsigned long lastDHTReadTime = 0;
-
-// — Sensor buffers —
-std::vector<int16_t> moistureReadings;
-std::vector<float>   phReadings;
-std::vector<int16_t> ldrReadings;
-
-struct {
-  float voltage1 = PH_CALIBRATION_VOLTAGE_PH4;
-  float pH1      = PH_CALIBRATION_VALUE_PH4;
-  float voltage2 = PH_CALIBRATION_VOLTAGE_PH7;
-  float pH2      = PH_CALIBRATION_VALUE_PH7;
-} phCalibration;
-
-// — Flow sensor —
+// ========== GLOBAL VARIABLES ==========
 volatile unsigned long flowPulseCount = 0;
-unsigned long flowPulseCountSnapshot  = 0;
-unsigned long flowMeasurementStartTime = 0;
 
-// — Watering FSM —
-WateringState currentState   = WATERING_IDLE;
-WateringState previousState  = WATERING_IDLE;
-unsigned long lastWateringTime    = 0;
-unsigned long pumpStartTime       = 0;
-unsigned long cooldownStartTime   = 0;
-unsigned long stateChangeTime     = 0;
-bool rainExpectedFlag       = false;
-bool manualPumpOverride     = false;
+unsigned long lastSensorRead  = 0;
+unsigned long lastBlynkSync   = 0;
+unsigned long lastBackendSync = 0;
+unsigned long lastTFTUpdate   = 0;
+unsigned long pumpStartTime   = 0;
 
-struct {
-  uint8_t cycleCount       = 0;
-  unsigned long hourStartTime = 0;
-} wateringHourTracker;
+// Cached sensor values (updated every 5s)
+float cachedMoisture = 0;
+float cachedPH       = 7.0;
+float cachedLux      = 0;
+float cachedTemp     = 0;
+float cachedHumidity = 0;
+bool  dhtValid       = false;
 
-struct {
-  float totalVolumeToday     = 0.0f;
-  float totalVolumeThisWeek  = 0.0f;
-  unsigned long dayStartTime = 0;
-  unsigned long weekStartTime = 0;
-} wateringStats;
+bool    pumpRunning = false;
+bool    manualPump  = false;
+uint8_t tftPage     = 0;
 
-// — Network —
-unsigned long systemStartTime    = 0;
-unsigned long lastWiFiAttemptTime = 0;
-bool wifiConnected  = false;
-bool blynkConnected = false;
-const unsigned long WIFI_RECONNECT_INTERVAL = 30000UL;
 
-// — AI Hooks —
-unsigned long lastDiseaseDetectionTime = 0;
-unsigned long lastGeminiRequestTime    = 0;
-char lastGeminiAdvice[512] = "Waiting for first advice...";
-int  pendingVoiceCommand   = 0;
-
-// — Loop timers —
-unsigned long lastSensorReadMs      = 0;
-unsigned long lastBlynkSyncMs       = 0;
-unsigned long lastHistoryLogMs      = 0;
-unsigned long lastWeatherUpdateMs   = 0;
-unsigned long lastDiagnosticPrintMs = 0;
-unsigned long lastGeminiAdviceMs    = 0;
-
-// ============================================================================
-// FLOW SENSOR ISR
-// ============================================================================
-
-void IRAM_ATTR flowSensorISR() {
+// ========== FLOW SENSOR ISR ==========
+void IRAM_ATTR flowISR() {
   flowPulseCount++;
 }
 
-// ============================================================================
-// SENSOR FUNCTIONS
-// ============================================================================
 
-void initializeSensors() {
-  dht.begin();
-  delay(100);
-  analogSetWidth(12);
-  pinMode(PIN_RELAY_CH1, OUTPUT);
-  pinMode(PIN_RELAY_CH2, OUTPUT);
-  digitalWrite(PIN_RELAY_CH1, LOW);
-  digitalWrite(PIN_RELAY_CH2, LOW);
-  moistureReadings.clear();
-  phReadings.clear();
-  ldrReadings.clear();
-  Serial.println("[SENSORS] Initialized");
+// ========== SENSOR READ FUNCTIONS ==========
+
+// Soil Moisture -> 0-100% (float)
+float readSoilMoisture() {
+  int raw = analogRead(PIN_SOIL_MOISTURE);
+  // map() returns long - cast to float properly
+  float percent = (float)(MOISTURE_ADC_DRY - raw) /
+                  (float)(MOISTURE_ADC_DRY - MOISTURE_ADC_WET) * 100.0;
+  return constrain(percent, 0.0, 100.0);
 }
 
-void initializeFlowSensor() {
-  pinMode(PIN_FLOW_SENSOR, INPUT);
-  attachInterrupt(digitalPinToInterrupt(PIN_FLOW_SENSOR), flowSensorISR, RISING);
-  flowPulseCount = 0;
-  flowPulseCountSnapshot = 0;
-  flowMeasurementStartTime = millis();
-  Serial.println("[FLOW] Interrupt attached");
-}
-
-float readSoilMoisturePercent() {
-  int16_t raw = analogRead(PIN_SOIL_MOISTURE_ANALOG);
-  if (raw < 0 || raw > 4095) return -1.0f;
-  moistureReadings.push_back(raw);
-  if (moistureReadings.size() > MOISTURE_SAMPLE_COUNT)
-    moistureReadings.erase(moistureReadings.begin());
-  float sum = 0;
-  for (int16_t r : moistureReadings) sum += r;
-  float avg = sum / moistureReadings.size();
-  float pct = 100.0f * (MOISTURE_ADC_DRY - avg) / (MOISTURE_ADC_DRY - MOISTURE_ADC_WET);
-  if (pct < 0) pct = 0;
-  if (pct > 100) pct = 100;
-  return pct;
-}
-
+// pH -> 0-14
 float readPH() {
   long sum = 0;
-  for (int i = 0; i < 5; i++) { sum += analogRead(PIN_PH_SENSOR_ANALOG); delayMicroseconds(100); }
-  float voltage = (sum / 5.0f / 4095.0f) * 3.3f;
-  phReadings.push_back(voltage);
-  if (phReadings.size() > PH_SAMPLE_COUNT) phReadings.erase(phReadings.begin());
-  float avgV = 0;
-  for (float v : phReadings) avgV += v;
-  avgV /= phReadings.size();
-  return phCalibration.pH1 +
-    (avgV - phCalibration.voltage1) *
-    (phCalibration.pH2 - phCalibration.pH1) /
-    (phCalibration.voltage2 - phCalibration.voltage1);
+  for (int i = 0; i < 5; i++) {
+    sum += analogRead(PIN_PH_SENSOR);
+    delayMicroseconds(200);
+  }
+  float voltage = ((sum / 5.0) / 4095.0) * 3.3;
+  float ph = 7.0 - ((voltage - 2.5) / 0.18);
+  return constrain(ph, 0.0, 14.0);
 }
 
-bool readDHT(float& tempC, float& humidity) {
-  unsigned long now = millis();
-  if ((now - lastDHTReadTime) < DHT_READ_INTERVAL_MS) return false;
+// Light -> lux (0 to LUX_MAX)
+// Backend expects "light" field in lux (0-100000)
+float readLux() {
+  int raw = analogRead(PIN_LDR);
+  return (raw / 4095.0) * LUX_MAX;
+}
+
+// Light -> percent (for TFT display only)
+float readLightPercent() {
+  int raw = analogRead(PIN_LDR);
+  return (raw / 4095.0) * 100.0;
+}
+
+// Update all cached sensor values
+void updateAllSensors() {
+  cachedMoisture = readSoilMoisture();
+  cachedPH       = readPH();
+  cachedLux      = readLux();
+
+  // DHT22: read with isnan check
   float t = dht.readTemperature();
   float h = dht.readHumidity();
-  if (isnan(t) || isnan(h)) return false;
-  tempC = t; humidity = h;
-  lastDHTReadTime = now;
-  return true;
-}
-
-float readLightLevelPercent() {
-  int16_t raw = analogRead(PIN_LDR_SENSOR_ANALOG);
-  if (raw < 0 || raw > 4095) return -1.0f;
-  ldrReadings.push_back(raw);
-  if (ldrReadings.size() > LDR_SAMPLE_COUNT) ldrReadings.erase(ldrReadings.begin());
-  float sum = 0;
-  for (int16_t r : ldrReadings) sum += r;
-  return (sum / ldrReadings.size() / 4095.0f) * 100.0f;
-}
-
-float readFlowRateMlPerMin() {
-  unsigned long now = millis();
-  unsigned long elapsed = now - flowMeasurementStartTime;
-  if (elapsed < 1000) return 0.0f;
-  unsigned long pulses = flowPulseCount - flowPulseCountSnapshot;
-  float rate = (pulses / FLOW_SENSOR_PULSES_PER_ML) / (elapsed / 1000.0f) * 60.0f;
-  flowPulseCountSnapshot = flowPulseCount;
-  flowMeasurementStartTime = now;
-  return rate;
-}
-
-float getCurrentCycleVolumeML() {
-  return (float)flowPulseCount / FLOW_SENSOR_PULSES_PER_ML;
-}
-
-void resetFlowSensorCounter() {
-  flowPulseCount = 0;
-  flowPulseCountSnapshot = 0;
-  flowMeasurementStartTime = millis();
-}
-
-bool performSensorSelfTest() {
-  Serial.println("[SELF-TEST] Running...");
-  bool ok = true;
-  float m = readSoilMoisturePercent();
-  Serial.printf("  Moisture: %.1f%% %s\n", m, (m>=0&&m<=100)?"PASS":"FAIL");
-  if (m<0||m>100) ok=false;
-  float pH = readPH();
-  Serial.printf("  pH: %.2f %s\n", pH, (pH>=0&&pH<=14)?"PASS":"FAIL");
-  if (pH<0||pH>14) ok=false;
-  float t, h;
-  if (readDHT(t, h)) { Serial.printf("  DHT: %.1f°C %.0f%% PASS\n", t, h); }
-  else { Serial.println("  DHT: FAIL (first read ok — may need 2s)"); }
-  float l = readLightLevelPercent();
-  Serial.printf("  Light: %.1f%% %s\n", l, (l>=0&&l<=100)?"PASS":"FAIL");
-  if (l<0||l>100) ok=false;
-  Serial.printf("[SELF-TEST] Result: %s\n", ok?"PASS":"FAIL — check wiring!");
-  return ok;
-}
-
-void printAllSensorReadings() {
-  Serial.println("\n===== SENSOR READINGS =====");
-  Serial.printf("Soil Moisture : %.1f %%\n", readSoilMoisturePercent());
-  Serial.printf("pH            : %.2f\n",  readPH());
-  float t=0, h=0;
-  if (readDHT(t,h)) { Serial.printf("Temperature   : %.1f °C\n", t); Serial.printf("Humidity      : %.0f %%\n", h); }
-  else { Serial.println("DHT           : No valid reading (yet)"); }
-  Serial.printf("Light Level   : %.1f %%\n", readLightLevelPercent());
-  Serial.printf("Flow Rate     : %.1f mL/min\n", readFlowRateMlPerMin());
-  Serial.printf("Cycle Volume  : %.1f mL\n",  getCurrentCycleVolumeML());
-  Serial.println("===========================");
-}
-
-// ============================================================================
-// WATERING FSM
-// ============================================================================
-
-void relayPumpOn()  { digitalWrite(PIN_RELAY_CH1, HIGH); }
-void relayPumpOff() { digitalWrite(PIN_RELAY_CH1, LOW);  }
-bool isPumpRunning() { return digitalRead(PIN_RELAY_CH1) == HIGH; }
-
-void initializeWatering() {
-  relayPumpOff();
-  currentState = WATERING_IDLE;
-  stateChangeTime = millis();
-  wateringHourTracker.cycleCount = 0;
-  wateringHourTracker.hourStartTime = millis();
-  wateringStats.dayStartTime  = millis();
-  wateringStats.weekStartTime = millis();
-  Serial.println("[WATERING] Initialized");
-}
-
-uint8_t getWateringCyclesThisHour() {
-  if ((millis() - wateringHourTracker.hourStartTime) >= 3600000UL) {
-    wateringHourTracker.cycleCount = 0;
-    wateringHourTracker.hourStartTime = millis();
+  if (!isnan(t) && !isnan(h)) {
+    cachedTemp     = t;
+    cachedHumidity = h;
+    dhtValid       = true;
   }
-  return wateringHourTracker.cycleCount;
+  // If isnan: keep last valid values, dhtValid stays true after first success
 }
 
-float getTotalVolumeDispensedToday()    { return wateringStats.totalVolumeToday; }
-unsigned long getLastWateringTime()     { return lastWateringTime; }
-
-const char* getWateringStateString() {
-  switch(currentState) {
-    case WATERING_IDLE:             return "IDLE";
-    case WATERING_CHECK_CONDITIONS: return "CHECK_CONDITIONS";
-    case WATERING_WATERING:         return "WATERING";
-    case WATERING_COOLDOWN:         return "COOLDOWN";
-    default:                        return "UNKNOWN";
-  }
-}
-
-void manualPumpOn() {
-  manualPumpOverride = true;
-  if (currentState == WATERING_IDLE) {
-    currentState = WATERING_WATERING;
-    stateChangeTime = pumpStartTime = millis();
-    resetFlowSensorCounter();
-    relayPumpOn();
-    Serial.println("[MANUAL] Pump ON");
-  }
-}
-
-void manualPumpOff() {
-  manualPumpOverride = false;
-  if (currentState == WATERING_WATERING) {
-    relayPumpOff();
-    float vol = getCurrentCycleVolumeML();
-    wateringStats.totalVolumeToday += vol;
-    lastWateringTime = millis();
-    currentState = WATERING_COOLDOWN;
-    cooldownStartTime = millis();
-    Serial.printf("[MANUAL] Pump OFF — dispensed %.1f mL\n", vol);
-  }
-}
-
-void updateWateringLogic() {
-  unsigned long now = millis();
-
-  // Reset daily stats
-  if ((now - wateringStats.dayStartTime) >= 86400000UL) {
-    wateringStats.totalVolumeToday = 0.0f;
-    wateringStats.dayStartTime = now;
-  }
-
-  switch (currentState) {
-
-    case WATERING_IDLE: {
-      if (manualPumpOverride) {
-        currentState = WATERING_WATERING;
-        stateChangeTime = pumpStartTime = now;
-        resetFlowSensorCounter();
-        relayPumpOn();
-        break;
-      }
-      float m = readSoilMoisturePercent();
-      if (m >= 0 && m < MOISTURE_THRESHOLD_PERCENT) {
-        currentState = WATERING_CHECK_CONDITIONS;
-        stateChangeTime = now;
-        Serial.println("[FSM] IDLE -> CHECK_CONDITIONS");
-      }
-      break;
-    }
-
-    case WATERING_CHECK_CONDITIONS: {
-      if (cooldownStartTime != 0 && (now - cooldownStartTime) < WATERING_COOLDOWN_MS) {
-        currentState = WATERING_IDLE; break;
-      }
-      if ((now - wateringHourTracker.hourStartTime) >= 3600000UL) {
-        wateringHourTracker.cycleCount = 0;
-        wateringHourTracker.hourStartTime = now;
-      }
-      if (wateringHourTracker.cycleCount >= MAX_WATERING_CYCLES_PER_HOUR) {
-        currentState = WATERING_IDLE;
-        Serial.println("[FSM] Max cycles/hr reached");
-        break;
-      }
-      if (rainExpectedFlag) {
-        currentState = WATERING_IDLE;
-        Serial.println("[FSM] Rain expected — skip");
-        break;
-      }
-      currentState = WATERING_WATERING;
-      stateChangeTime = pumpStartTime = now;
-      resetFlowSensorCounter();
-      relayPumpOn();
-      wateringHourTracker.cycleCount++;
-      Serial.printf("[FSM] Starting cycle #%u\n", wateringHourTracker.cycleCount);
-      break;
-    }
-
-    case WATERING_WATERING: {
-      float vol   = getCurrentCycleVolumeML();
-      bool target = (vol >= TARGET_WATER_VOLUME_ML);
-      bool tmoout = ((now - pumpStartTime) >= PUMP_MAX_RUNTIME_MS);
-      if (target || tmoout) {
-        relayPumpOff();
-        manualPumpOverride = false;
-        wateringStats.totalVolumeToday += vol;
-        lastWateringTime = now;
-        currentState = WATERING_COOLDOWN;
-        cooldownStartTime = now;
-        Serial.printf("[FSM] Done: %.1f mL %s\n", vol, tmoout?"(TIMEOUT)":"(target)");
-      }
-      break;
-    }
-
-    case WATERING_COOLDOWN: {
-      if ((now - cooldownStartTime) >= WATERING_COOLDOWN_MS) {
-        currentState = WATERING_IDLE;
-        Serial.println("[FSM] Cooldown done -> IDLE");
-      }
-      break;
-    }
-  }
-
-  if (currentState != previousState) {
-    previousState = currentState;
-    Serial.printf("[WATERING] State: %s\n", getWateringStateString());
-  }
-}
-
-void testRelayModule() {
-  Serial.println("[RELAY] Testing ON...");
-  relayPumpOn(); delay(2000);
-  relayPumpOff();
-  Serial.println("[RELAY] Test done");
-}
-
-void printWateringStatus() {
-  Serial.println("\n===== WATERING STATUS =====");
-  Serial.printf("State          : %s\n",  getWateringStateString());
-  Serial.printf("Pump Running   : %s\n",  isPumpRunning()?"YES":"NO");
-  Serial.printf("Cycle Volume   : %.1f mL\n", getCurrentCycleVolumeML());
-  Serial.printf("Cycles/hr      : %u / %u\n", getWateringCyclesThisHour(), MAX_WATERING_CYCLES_PER_HOUR);
-  Serial.printf("Volume Today   : %.1f mL\n", getTotalVolumeDispensedToday());
-  Serial.printf("Rain Expected  : %s\n",  rainExpectedFlag?"YES":"NO");
-  if (lastWateringTime==0) Serial.println("Last Watering  : Never");
-  else Serial.printf("Last Watering  : %lu s ago\n", (millis()-lastWateringTime)/1000);
-  Serial.println("===========================");
-}
-
-// ============================================================================
-// BLYNK HANDLERS
-// ============================================================================
-
-BLYNK_CONNECTED() {
-  Serial.println("[BLYNK] Connected!");
-  blynkConnected = true;
-  Blynk.syncVirtual(VPIN_PUMP_CONTROL);
-}
-
-BLYNK_WRITE(VPIN_PUMP_CONTROL) {
-  int v = param.asInt();
-  if (v == 1) manualPumpOn();
-  else        manualPumpOff();
-  Serial.printf("[BLYNK] Pump %s\n", v?"ON":"OFF");
-}
-
-BLYNK_WRITE(VPIN_CAMERA_SNAPSHOT) {
-  if (param.asInt() == 1) {
-    Serial.println("[BLYNK] Camera snapshot req (stub — needs ESP32-CAM)");
-    Blynk.virtualWrite(VPIN_CAMERA_SNAPSHOT, 0);
-  }
-}
-
-// ============================================================================
-// NETWORK FUNCTIONS
-// ============================================================================
-
-void initializeNetwork() {
-  systemStartTime = millis();
-  WiFi.mode(WIFI_STA);
-  WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
-  Blynk.config(BLYNK_AUTH_TOKEN);
-  Serial.printf("[WIFI] Connecting to %s", WIFI_SSID);
-  int attempts = 0;
-  while (WiFi.status() != WL_CONNECTED && attempts < 20) {
-    delay(500); Serial.print("."); attempts++;
-  }
-  if (WiFi.status() == WL_CONNECTED) {
-    wifiConnected = true;
-    Serial.printf("\n[WIFI] Connected! IP: %s\n", WiFi.localIP().toString().c_str());
+void readAndPrintSensors() {
+  updateAllSensors();
+  Serial.printf("M:%.1f%% | pH:%.2f | Lux:%.0f | T:", cachedMoisture, cachedPH, cachedLux);
+  if (dhtValid) {
+    Serial.printf("%.1fC | H:%.1f%%\n", cachedTemp, cachedHumidity);
   } else {
-    Serial.println("\n[WIFI] Timeout — will retry in loop");
+    Serial.println("-- DHT not ready");
   }
 }
 
-void updateNetworkStatus() {
-  unsigned long now = millis();
-  if (WiFi.status() == WL_CONNECTED) {
-    if (!wifiConnected) {
-      wifiConnected = true;
-      Serial.printf("[WIFI] Reconnected! IP: %s\n", WiFi.localIP().toString().c_str());
-    }
-  } else {
-    if (wifiConnected) { wifiConnected = false; Serial.println("[WIFI] Disconnected!"); }
-    if ((now - lastWiFiAttemptTime) > WIFI_RECONNECT_INTERVAL) {
-      WiFi.disconnect(); delay(100);
-      WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
-      lastWiFiAttemptTime = now;
-      Serial.println("[WIFI] Reconnecting...");
-    }
-  }
-  if (Blynk.connected()) {
-    if (!blynkConnected) { blynkConnected = true; Serial.println("[BLYNK] Synced!"); }
-    Blynk.run();
-  } else {
-    if (blynkConnected) { blynkConnected = false; Serial.println("[BLYNK] Disconnected!"); }
-    if (wifiConnected) Blynk.connect();
-  }
-}
 
-bool isWiFiConnected()  { return WiFi.status() == WL_CONNECTED; }
-bool isBlynkSynced()    { return Blynk.connected(); }
-unsigned long getUptimeSeconds() { return (millis() - systemStartTime) / 1000; }
-
-void publishSensorDataToBlynk() {
-  if (!Blynk.connected()) return;
-  float m = readSoilMoisturePercent();
-  float pH = readPH();
-  float l = readLightLevelPercent();
-  float t=0, h=0;
-  bool dhtOk = readDHT(t, h);
-  if (m >= 0)   Blynk.virtualWrite(VPIN_SOIL_MOISTURE, (int)m);
-  Blynk.virtualWrite(VPIN_PH, pH);
-  if (dhtOk)    { Blynk.virtualWrite(VPIN_TEMPERATURE, t); Blynk.virtualWrite(VPIN_HUMIDITY, (int)h); }
-  if (l >= 0)   Blynk.virtualWrite(VPIN_LIGHT_LEVEL, (int)l);
-  Blynk.virtualWrite(VPIN_FLOW_VOLUME, (int)getCurrentCycleVolumeML());
-  Blynk.virtualWrite(VPIN_WATERING_COUNT, (int)getWateringCyclesThisHour());
-  Serial.println("[BLYNK] Sensor data pushed");
-}
-
-void sendBlynkNotification(const char* title, const char* msg) {
-  if (!Blynk.connected()) return;
-  String n = String(title) + ": " + String(msg);
-  Blynk.notify(n.c_str());
-  Serial.printf("[NOTIF] %s\n", n.c_str());
-}
-
-void printNetworkStatus() {
-  Serial.println("\n===== NETWORK STATUS =====");
-  if (isWiFiConnected())
-    Serial.printf("WiFi  : CONNECTED (%s) | IP: %s | RSSI: %d dBm\n",
-      WiFi.SSID().c_str(), WiFi.localIP().toString().c_str(), WiFi.RSSI());
-  else Serial.println("WiFi  : DISCONNECTED");
-  Serial.printf("Blynk : %s\n", isBlynkSynced()?"SYNCED":"DISCONNECTED");
-  unsigned long u = getUptimeSeconds();
-  Serial.printf("Uptime: %lu h %lu m\n", u/3600, (u%3600)/60);
-  Serial.println("===========================");
-}
-
-// ============================================================================
-// AI HOOKS (STUBS)
-// ============================================================================
-
-void initializeAIHooks() {
-  lastDiseaseDetectionTime = 0;
-  lastGeminiRequestTime    = 0;
-  strcpy(lastGeminiAdvice, "Waiting for first advice...");
-  pendingVoiceCommand = 0;
-  Serial.println("[AI] Hooks initialized (stubs)");
-}
-
-bool requestGeminiAdvice() {
-  // TODO: Implement HTTPS POST to Gemini API
-  // Build prompt with current sensor data and send to:
-  //   https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=GEMINI_API_KEY
-  Serial.println("[GEMINI] Advice stub — fill in API call");
-  strcpy(lastGeminiAdvice, "[STUB] Keep moisture 40-50%, ensure 6-8h light daily.");
-  lastGeminiRequestTime = millis();
-  return true;
-}
-
-bool getLastGeminiAdvice(char* buf, size_t maxLen) {
-  if (!lastGeminiRequestTime) return false;
-  strncpy(buf, lastGeminiAdvice, maxLen - 1);
-  buf[maxLen - 1] = '\0';
-  return true;
-}
-
-bool shouldRunDiseaseDetection() {
-  if (!lastDiseaseDetectionTime) return true;
-  return ((millis() - lastDiseaseDetectionTime) >= 86400000UL);
-}
-
-bool isPendingVoiceCommand()    { return pendingVoiceCommand != 0; }
-int  getPendingVoiceCommandType() { return pendingVoiceCommand; }
-void clearPendingVoiceCommand() { pendingVoiceCommand = 0; }
-
-// ============================================================================
-// SETUP
-// ============================================================================
-
+// ========== SETUP ==========
 void setup() {
-  Serial.begin(SERIAL_BAUD_RATE);
+  Serial.begin(115200);
   delay(1000);
 
-  Serial.println("\n╔══════════════════════════════════════╗");
-  Serial.println(  "║  SproutSense ESP32-SENSOR-001 v1.0  ║");
-  Serial.println(  "╚══════════════════════════════════════╝\n");
+  Serial.println("\n========================================");
+  Serial.println("  SPROUTSENSE ESP32-SENSOR v1.0");
+  Serial.println("  Device: ESP32-SENSOR-001");
+  Serial.println("========================================\n");
 
-  initializeSensors();
-  initializeFlowSensor();
-  initializeWatering();
-  initializeAIHooks();
-  initializeNetwork();
+  // TFT
+  tft.initR(INITR_BLACKTAB);
+  tft.setRotation(1);
+  tft.fillScreen(C_BLACK);
+  tft.setTextColor(C_CYAN);
+  tft.setTextSize(1);
+  tft.setCursor(5, 5);
+  tft.println("SproutSense v1.0");
+  tft.println("Initializing...");
+  Serial.println("[TFT] Initialized");
 
-  lastSensorReadMs = lastBlynkSyncMs = lastHistoryLogMs =
-  lastWeatherUpdateMs = lastDiagnosticPrintMs = lastGeminiAdviceMs = millis();
+  // GPIO
+  pinMode(PIN_RELAY, OUTPUT);
+  digitalWrite(PIN_RELAY, LOW);
+  pinMode(PIN_FLOW_SENSOR, INPUT_PULLUP);
+  attachInterrupt(digitalPinToInterrupt(PIN_FLOW_SENSOR), flowISR, FALLING);
 
-  performSensorSelfTest();
+  // ADC
+  analogSetWidth(12);
+  analogSetAttenuation(ADC_11db);
 
-  Serial.println("\n[SETUP] Ready! Press 'h' in Serial Monitor for debug commands.\n");
+  // DHT - begin + warm-up reads to avoid isnan on first call
+  dht.begin();
+  delay(2500);   // DHT22 needs ~2s before first valid read
+  // Attempt initial DHT read
+  for (int i = 0; i < 3; i++) {
+    float t = dht.readTemperature();
+    float h = dht.readHumidity();
+    if (!isnan(t) && !isnan(h)) {
+      cachedTemp = t; cachedHumidity = h; dhtValid = true;
+      Serial.printf("[DHT] Warmup OK: %.1fC %.1f%%\n", t, h);
+      break;
+    }
+    delay(2000);
+  }
+  if (!dhtValid) Serial.println("[DHT] Warmup failed - check wiring on GPIO13");
+
+  Serial.println("[SENSORS] Ready");
+
+  // WiFi Static IP
+  WiFi.mode(WIFI_STA);
+
+#if STATICIP_ENABLED
+  IPAddress localIP(STATIC_IP[0],      STATIC_IP[1],      STATIC_IP[2],      STATIC_IP[3]);
+  IPAddress gateway(STATIC_GATEWAY[0], STATIC_GATEWAY[1], STATIC_GATEWAY[2], STATIC_GATEWAY[3]);
+  IPAddress subnet (STATIC_SUBNET[0],  STATIC_SUBNET[1],  STATIC_SUBNET[2],  STATIC_SUBNET[3]);
+  IPAddress dns1   (STATIC_DNS1[0],    STATIC_DNS1[1],    STATIC_DNS1[2],    STATIC_DNS1[3]);
+  if (!WiFi.config(localIP, gateway, subnet, dns1)) {
+    Serial.println("[WIFI] Static IP config failed - using DHCP");
+  } else {
+    Serial.printf("[WIFI] Static IP: %d.%d.%d.%d\n",
+      STATIC_IP[0], STATIC_IP[1], STATIC_IP[2], STATIC_IP[3]);
+  }
+#endif
+
+  WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
+  Serial.printf("[WIFI] Connecting to %s", WIFI_SSID);
+  tft.setCursor(5, 30);
+  tft.setTextColor(C_WHITE);
+  tft.print("WiFi: "); tft.print(WIFI_SSID);
+
+  int attempts = 0;
+  while (WiFi.status() != WL_CONNECTED && attempts < 30) {
+    delay(500); Serial.print("."); tft.print("."); attempts++;
+  }
+
+  if (WiFi.status() == WL_CONNECTED) {
+    Serial.printf("\n[WIFI] Connected! IP: %s\n", WiFi.localIP().toString().c_str());
+    tft.setCursor(5, 45); tft.setTextColor(C_GREEN);
+    tft.printf("IP: %s\n", WiFi.localIP().toString().c_str());
+  } else {
+    Serial.println("\n[WIFI] Timeout - retrying in loop");
+    tft.setCursor(5, 45); tft.setTextColor(C_RED);
+    tft.println("WiFi Failed!");
+  }
+
+  // Blynk
+  Blynk.config(BLYNK_AUTH_TOKEN);
+  Blynk.connect();
+  Serial.println("[BLYNK] Configured");
+  tft.setCursor(5, 60); tft.setTextColor(C_YELLOW);
+  tft.println("Blynk: Ready");
+
+  delay(2000);
+  tft.fillScreen(C_BLACK);
+
+  Serial.println("\n>>> SYSTEM READY <<<");
+  Serial.println("Commands: h=help | s=sensors | p=pump on | o=pump off\n");
 }
 
-// ============================================================================
-// MAIN LOOP
-// ============================================================================
 
+// ========== MAIN LOOP ==========
 void loop() {
   unsigned long now = millis();
 
-  // Network (critical — every loop tick)
-  updateNetworkStatus();
+  if (WiFi.status() == WL_CONNECTED) Blynk.run();
 
-  // Sensor read every 5s
-  if ((now - lastSensorReadMs) >= SENSOR_SAMPLING_INTERVAL_MS) {
-    lastSensorReadMs = now;
-    float m = readSoilMoisturePercent();
-    float pH = readPH();
-    float l = readLightLevelPercent();
-    float t=0, h=0;
-    bool dhtOk = readDHT(t, h);
-    float fr = readFlowRateMlPerMin();
-    Serial.printf("[SENSORS] M:%.0f%% pH:%.1f T:%d°C H:%d%% L:%.0f%% Flow:%.1fmL/min\n",
-      m, pH, dhtOk?(int)t:0, dhtOk?(int)h:0, l, fr);
+  // Sensors every 5s
+  if (now - lastSensorRead >= 5000) {
+    lastSensorRead = now;
+    readAndPrintSensors();
+    checkAutoWatering();
   }
 
-  // Watering FSM — non-blocking
-  updateWateringLogic();
-
-  // Blynk push every 10s
-  if ((now - lastBlynkSyncMs) >= BLYNK_UPDATE_INTERVAL_MS) {
-    lastBlynkSyncMs = now;
-    if (isBlynkSynced()) publishSensorDataToBlynk();
+  // Blynk sync every 10s
+  if (now - lastBlynkSync >= 10000) {
+    lastBlynkSync = now;
+    syncToBlynk();
   }
 
-  // History log every 60s
-  if ((now - lastHistoryLogMs) >= HISTORY_LOG_INTERVAL_MS && ENABLE_HISTORY_LOGGING) {
-    lastHistoryLogMs = now;
-    float m=readSoilMoisturePercent(), pH=readPH(), l=readLightLevelPercent(), t=0, h=0;
-    readDHT(t, h);
-    Serial.printf("[HISTORY] M:%.1f pH:%.2f T:%.1f H:%.0f L:%.1f\n", m, pH, t, h, l);
+  // Backend sync every 15s
+  if (now - lastBackendSync >= 15000) {
+    lastBackendSync = now;
+    sendToBackend();
   }
 
-  // Weather stub every 30 min
-  if ((now - lastWeatherUpdateMs) >= WEATHER_UPDATE_INTERVAL_MS) {
-    lastWeatherUpdateMs = now;
-    if (isWiFiConnected()) Serial.println("[WEATHER] Stub — implement OpenWeatherMap fetch");
+  // TFT update every 5s
+  if (now - lastTFTUpdate >= 5000) {
+    lastTFTUpdate = now;
+    updateTFTDisplay();
+    tftPage = (tftPage + 1) % 4;
   }
 
-  // Gemini advice every 1 hour
-  if (ENABLE_GEMINI_ADVICE && (now - lastGeminiAdviceMs) >= 3600000UL) {
-    lastGeminiAdviceMs = now;
-    if (isBlynkSynced()) {
-      requestGeminiAdvice();
-      char adv[256];
-      if (getLastGeminiAdvice(adv, sizeof(adv)))
-        sendBlynkNotification("Plant Care", adv);
-    }
-  }
+  updatePumpLogic();
 
-  // Diagnostics every 2 min
-  if ((now - lastDiagnosticPrintMs) >= 120000UL) {
-    lastDiagnosticPrintMs = now;
-    printNetworkStatus();
-    printAllSensorReadings();
-    printWateringStatus();
-  }
+  if (Serial.available()) handleSerialCommand(Serial.read());
 
-  // Serial debug commands
-  if (Serial.available()) {
-    char cmd = Serial.read();
-    switch (cmd) {
-      case 'h': case '?':
-        Serial.println("\n[DEBUG] Commands: s=sensors, w=watering, c=network, p=pump ON, q=pump OFF, r=relay test, t=self-test, m=memory, d=full diag");
-        break;
-      case 's': printAllSensorReadings(); break;
-      case 'w': printWateringStatus();    break;
-      case 'c': printNetworkStatus();     break;
-      case 'p': manualPumpOn();           break;
-      case 'q': manualPumpOff();          break;
-      case 'r': testRelayModule();        break;
-      case 't': performSensorSelfTest();  break;
-      case 'd':
-        printNetworkStatus();
-        printAllSensorReadings();
-        printWateringStatus();
-        Serial.printf("Uptime: %lu h\n", getUptimeSeconds()/3600);
-        break;
-      case 'm':
-        Serial.printf("Free RAM: %u bytes | Min: %u bytes\n",
-          ESP.getFreeHeap(), ESP.getMinFreeHeap());
-        break;
-    }
-  }
-
-  yield();
+  delay(100);
 }
 
-// ============================================================================
-// FATAL ERROR HANDLER
-// ============================================================================
 
-void IRAM_ATTR onFatalError() {
-  relayPumpOff();   // Safety: cut pump power
-  delay(1000);
-  ESP.restart();
+// ========== TFT DISPLAY ==========
+void updateTFTDisplay() {
+  float volume = flowPulseCount / 5.5;
+
+  tft.fillScreen(C_BLACK);
+  tft.setTextSize(1);
+  tft.setCursor(2, 2);
+  tft.setTextColor(C_CYAN);
+  tft.print("SPROUTSENSE ");
+  tft.setTextColor(C_DGRAY);
+  tft.printf("P%u/4", tftPage + 1);
+  tft.drawLine(0, 12, 160, 12, C_DGRAY);
+
+  switch (tftPage) {
+    case 0:  // Soil & Environment
+      tft.setCursor(5, 18); tft.setTextColor(C_YELLOW); tft.println("SOIL & ENVIRONMENT");
+      tft.setCursor(5, 32); tft.setTextColor(cachedMoisture < 30 ? C_RED : C_GREEN);
+      tft.printf("Moisture : %.1f%%\n", cachedMoisture);
+      tft.setCursor(5, 46); tft.setTextColor((cachedPH < 5.5 || cachedPH > 7.5) ? C_ORANGE : C_GREEN);
+      tft.printf("pH       : %.2f\n", cachedPH);
+      tft.setCursor(5, 60); tft.setTextColor(cachedLux < 2000 ? C_RED : C_GREEN);
+      tft.printf("Light    : %.0f lux\n", cachedLux);
+      tft.setCursor(5, 76); tft.setTextColor(C_DGRAY);
+      tft.print("Auto-water at <30%");
+      break;
+
+    case 1:  // Climate
+      tft.setCursor(5, 18); tft.setTextColor(C_YELLOW); tft.println("CLIMATE");
+      if (dhtValid) {
+        tft.setTextSize(2);
+        tft.setCursor(10, 36); tft.setTextColor(C_CYAN);
+        tft.printf("%.1f C\n", cachedTemp);
+        tft.setTextSize(1);
+        tft.setCursor(5, 62); tft.setTextColor(C_LGRAY); tft.println("Temperature");
+        tft.setTextSize(2);
+        tft.setCursor(10, 78); tft.setTextColor(C_GREEN);
+        tft.printf("%.1f%%\n", cachedHumidity);
+        tft.setTextSize(1);
+        tft.setCursor(5, 104); tft.setTextColor(C_LGRAY); tft.println("Humidity");
+      } else {
+        tft.setCursor(5, 50); tft.setTextColor(C_RED);
+        tft.println("DHT22 Error");
+        tft.println("Check GPIO 13!");
+      }
+      break;
+
+    case 2:  // Watering
+      tft.setCursor(5, 18); tft.setTextColor(C_YELLOW); tft.println("WATERING SYSTEM");
+      tft.setCursor(5, 32); tft.setTextColor(pumpRunning ? C_GREEN : C_LGRAY);
+      tft.printf("Pump   : %s\n", pumpRunning ? "ON" : "OFF");
+      tft.setCursor(5, 46); tft.setTextColor(C_CYAN);
+      tft.printf("Volume : %.1f mL\n", volume);
+      tft.setCursor(5, 60); tft.setTextColor(C_DGRAY); tft.println("Target : 100 mL");
+      if (pumpRunning) {
+        tft.setCursor(5, 76); tft.setTextColor(C_ORANGE);
+        tft.printf("Runtime: %lus", (millis() - pumpStartTime) / 1000);
+      }
+      break;
+
+    case 3:  // Network
+      tft.setCursor(5, 18); tft.setTextColor(C_YELLOW); tft.println("NETWORK");
+      tft.setCursor(5, 32);
+      tft.setTextColor(WiFi.status() == WL_CONNECTED ? C_GREEN : C_RED);
+      tft.printf("WiFi   : %s\n", WiFi.status() == WL_CONNECTED ? "OK" : "FAIL");
+      if (WiFi.status() == WL_CONNECTED) {
+        tft.setCursor(5, 46); tft.setTextColor(C_LGRAY);
+        tft.print("IP: "); tft.println(WiFi.localIP().toString().c_str());
+        tft.setCursor(5, 60); tft.setTextColor(C_LGRAY);
+        tft.printf("RSSI   : %d dBm\n", WiFi.RSSI());
+      }
+      tft.setCursor(5, 74);
+      tft.setTextColor(Blynk.connected() ? C_GREEN : C_RED);
+      tft.printf("Blynk  : %s\n", Blynk.connected() ? "OK" : "FAIL");
+      tft.setCursor(5, 88); tft.setTextColor(C_CYAN);
+      tft.printf("Uptime : %lu min\n", millis() / 60000);
+      break;
+  }
 }
+
+
+// ========== AUTO WATERING ==========
+void checkAutoWatering() {
+  if (pumpRunning || manualPump) return;
+  if (cachedMoisture < MOISTURE_THRESHOLD) {
+    startPump();
+    Serial.printf("[AUTO WATER] Moisture %.1f%% < %.0f%%\n", cachedMoisture, MOISTURE_THRESHOLD);
+  }
+}
+
+void startPump() {
+  digitalWrite(PIN_RELAY, HIGH);
+  pumpRunning    = true;
+  pumpStartTime  = millis();
+  flowPulseCount = 0;
+  Serial.println("[PUMP] ON");
+}
+
+void stopPump() {
+  digitalWrite(PIN_RELAY, LOW);
+  pumpRunning = false;
+  Serial.printf("[PUMP] OFF | Volume: %.1f mL\n", flowPulseCount / 5.5);
+}
+
+void updatePumpLogic() {
+  if (!pumpRunning) return;
+  float volume = flowPulseCount / 5.5;
+  unsigned long runtime = millis() - pumpStartTime;
+  if (volume >= TARGET_WATER_ML) {
+    Serial.println("[PUMP] Target reached"); stopPump();
+  } else if (runtime >= PUMP_MAX_TIME) {
+    Serial.println("[PUMP] Safety timeout!"); stopPump();
+  }
+}
+
+
+// ========== BLYNK ==========
+void syncToBlynk() {
+  if (!Blynk.connected()) return;
+  Blynk.virtualWrite(V0, (int)cachedMoisture);
+  Blynk.virtualWrite(V1, cachedPH);
+  Blynk.virtualWrite(V2, dhtValid ? (int)cachedTemp     : 0);
+  Blynk.virtualWrite(V3, dhtValid ? (int)cachedHumidity : 0);
+  Blynk.virtualWrite(V4, (int)(cachedLux / LUX_MAX * 100)); // percent for display
+  Blynk.virtualWrite(V5, (int)(flowPulseCount / 5.5));
+  Blynk.virtualWrite(V6, pumpRunning ? 1 : 0);
+  Serial.println("[BLYNK] Synced");
+}
+
+BLYNK_WRITE(V6) {
+  int v = param.asInt();
+  if (v == 1) { manualPump = true;  startPump(); }
+  else        { manualPump = false; stopPump();  }
+  Serial.printf("[BLYNK] Pump %s\n", v ? "ON" : "OFF");
+}
+
+BLYNK_CONNECTED() {
+  Serial.println("[BLYNK] Connected!");
+  Blynk.syncVirtual(V6);
+}
+
+
+// ========== BACKEND SYNC ==========
+// Field names match backend schema (SensorReading model)
+void sendToBackend() {
+  if (WiFi.status() != WL_CONNECTED) {
+    Serial.println("[BACKEND] Skipped - no WiFi");
+    return;
+  }
+
+  // Build JSON with CORRECT field names for the backend schema
+  StaticJsonDocument<512> doc;
+  doc["deviceId"]     = DEVICE_ID;                               // "ESP32-SENSOR-001"
+  doc["soilMoisture"] = round(cachedMoisture * 10) / 10.0;      // 0-100 %
+  doc["ph"]           = round(cachedPH * 100) / 100.0;          // 0-14  (NOT "phLevel"!)
+  doc["light"]        = (int)cachedLux;                          // lux 0-100000 (NOT "lightLevel"!)
+  doc["temperature"]  = dhtValid ? (round(cachedTemp * 10) / 10.0)     : 0;
+  doc["humidity"]     = dhtValid ? (round(cachedHumidity * 10) / 10.0) : 0;
+
+  String payload;
+  serializeJson(doc, payload);
+
+  Serial.println("[BACKEND] Sending: " + payload);
+
+  HTTPClient http;
+  http.begin(BACKEND_URL);
+  http.addHeader("Content-Type", "application/json");
+  http.setTimeout(8000);  // 8s timeout (Render cold start can be slow)
+
+  int code = http.POST(payload);
+  String response = http.getString();
+
+  if (code == 200 || code == 201) {
+    Serial.println("[BACKEND] OK (" + String(code) + ")");
+  } else {
+    Serial.printf("[BACKEND] Error %d: %s\n", code, response.c_str());
+  }
+  http.end();
+}
+
+
+// ========== SERIAL COMMANDS ==========
+void handleSerialCommand(char cmd) {
+  switch (cmd) {
+    case 'h':
+      Serial.println("\n=== COMMANDS ===");
+      Serial.println("s = Sensors  | p = Pump ON  | o = Pump OFF");
+      Serial.println("w = WiFi     | b = Blynk    | t = TFT test");
+      Serial.println("m = Memory   | d = Debug all");
+      break;
+    case 's': readAndPrintSensors(); break;
+    case 'p': manualPump = true;  startPump(); break;
+    case 'o': manualPump = false; stopPump();  break;
+    case 'w':
+      Serial.printf("[WIFI] %s | IP: %s | RSSI: %d dBm\n",
+        WiFi.status() == WL_CONNECTED ? "OK" : "FAIL",
+        WiFi.localIP().toString().c_str(), WiFi.RSSI());
+      break;
+    case 'b':
+      Serial.printf("[BLYNK] %s\n", Blynk.connected() ? "Connected" : "Disconnected");
+      break;
+    case 't':
+      for (int i = 0; i < 4; i++) { tftPage = i; updateTFTDisplay(); delay(2000); }
+      break;
+    case 'm':
+      Serial.printf("[MEM] Free: %u | Min: %u bytes\n",
+        ESP.getFreeHeap(), ESP.getMinFreeHeap());
+      break;
+    case 'd':
+      readAndPrintSensors();
+      Serial.printf("[PUMP] %s | Vol: %.1f mL\n",
+        pumpRunning ? "ON" : "OFF", flowPulseCount / 5.5);
+      Serial.printf("[WIFI] %s | [BLYNK] %s\n",
+        WiFi.status() == WL_CONNECTED ? "OK" : "FAIL",
+        Blynk.connected() ? "OK" : "FAIL");
+      break;
+  }
+}
+
+// =====================================================
+// END OF SPROUTSENSE ESP32-SENSOR.INO
+// =====================================================
