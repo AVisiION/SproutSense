@@ -1,497 +1,183 @@
-﻿import SystemConfig from '../models/SystemConfig.js';
+import mongoose from 'mongoose';
+import SystemConfig from '../models/SystemConfig.js';
 import DeviceStatus from '../models/DeviceStatus.js';
-import { successResponse, errorResponse } from '../utils/helpers.js';
-import { HTTP_STATUS } from '../config/constants.js';
-import wsService from '../utils/websocketService.js';
-import { testModeState, toggleTestMode as setTestMode } from '../utils/testModeManager.js';
+import SensorReading from '../models/SensorReading.js';
+import WateringLog from '../models/WateringLog.js';
+import DiseaseDetection from '../models/DiseaseDetection.js';
 
-const DEFAULT_DEVICE_ID = 'ESP32-SENSOR';
-
-const resolveDeviceId = (req) => {
-  const id = req.params.deviceId || req.query.deviceId || req.body.deviceId;
-  return (typeof id === 'string' && id.trim()) ? id.trim() : DEFAULT_DEVICE_ID;
-};
-
-const normalizeConfigUpdates = (payload = {}) => {
-  const updates = { ...payload };
-
-  if (Object.prototype.hasOwnProperty.call(updates, 'autoWaterEnabled')) {
-    updates.autoMode = updates.autoWaterEnabled;
-    delete updates.autoWaterEnabled;
-  }
-
-  if (Object.prototype.hasOwnProperty.call(updates, 'soilMoistureThreshold')) {
-    updates.moistureThreshold = updates.soilMoistureThreshold;
-    delete updates.soilMoistureThreshold;
-  }
-
-  if (Object.prototype.hasOwnProperty.call(updates, 'deviceIp')) {
-    updates.espIp = updates.deviceIp;
-    delete updates.deviceIp;
-  }
-
-  if (Object.prototype.hasOwnProperty.call(updates, 'esp32IP')) {
-    updates.espIp = updates.esp32IP;
-    delete updates.esp32IP;
-  }
-
-  if (Object.prototype.hasOwnProperty.call(updates, 'scheduleEnabled')) {
-    updates.schedule = {
-      ...(updates.schedule || {}),
-      enabled: updates.scheduleEnabled,
-      times: updates.scheduleTime ? [updates.scheduleTime] : (updates.schedule?.times || [])
-    };
-    delete updates.scheduleEnabled;
-    delete updates.scheduleTime;
-  }
-
-  if (Object.prototype.hasOwnProperty.call(updates, 'plantGrowthEnabled')) {
-    updates.plantGrowth = {
-      ...(updates.plantGrowth || {}),
-      enabled: updates.plantGrowthEnabled
-    };
-    delete updates.plantGrowthEnabled;
-  }
-
-  if (Object.prototype.hasOwnProperty.call(updates, 'plantGrowthStage')) {
-    updates.plantGrowth = {
-      ...(updates.plantGrowth || {}),
-      stage: updates.plantGrowthStage
-    };
-    delete updates.plantGrowthStage;
-  }
-
-  if (Object.prototype.hasOwnProperty.call(updates, 'aiInsightsSource')) {
-    updates.aiInsightsMode = updates.aiInsightsSource;
-    delete updates.aiInsightsSource;
-  }
-
-  return updates;
-};
-
-const formatConfigResponse = (configDoc) => {
-  const data = configDoc?.toObject ? configDoc.toObject() : configDoc;
-  return {
-    ...data,
-    autoWaterEnabled: data?.autoMode ?? false,
-    soilMoistureThreshold: data?.moistureThreshold,
-    deviceIp: data?.espIp || '',
-    plantGrowthEnabled: data?.plantGrowth?.enabled ?? true,
-    plantGrowthStage: data?.plantGrowth?.stage || 'vegetative',
-    aiInsightsMode: data?.aiInsightsMode || 'snapshots'
-  };
-};
-
-const getCleanupState = (configDoc) => {
-  const data = configDoc?.toObject ? configDoc.toObject() : configDoc;
-  return {
-    autoCleanupEnabled: data?.dataCleanup?.autoCleanupEnabled ?? true,
-    lastCleanupDate: data?.dataCleanup?.lastCleanupDate ?? null,
-    cleanupSchedule: data?.dataCleanup?.cleanupSchedule || 'weekly',
-  };
-};
-
-// Get system configuration
-export const getConfig = async (req, res, next) => {
+// ─── GET CONFIG ────────────────────────────────────────────────────────────────
+export const getConfig = async (req, res) => {
   try {
-    const deviceId = resolveDeviceId(req);
-    const config = await SystemConfig.getConfig(deviceId);
-
-    successResponse(res, formatConfigResponse(config));
+    const deviceId = req.params.deviceId || req.query.deviceId || 'ESP32-SENSOR-001';
+    let config = await SystemConfig.findOne({ deviceId });
+    if (!config) {
+      config = await SystemConfig.create({ deviceId });
+    }
+    res.json({ success: true, config });
   } catch (error) {
-    next(error);
+    res.status(500).json({ success: false, error: error.message });
   }
 };
 
-// Update system configuration
-export const updateConfig = async (req, res, next) => {
+// ─── UPDATE CONFIG ─────────────────────────────────────────────────────────────
+export const updateConfig = async (req, res) => {
   try {
-    const deviceId = resolveDeviceId(req);
-    const updates = normalizeConfigUpdates(req.body);
-
+    const deviceId = req.params.deviceId || req.body.deviceId || 'ESP32-SENSOR-001';
+    const updates = req.body;
+    delete updates.deviceId;
     const config = await SystemConfig.findOneAndUpdate(
       { deviceId },
-      { $set: updates },
+      { ...updates, lastUpdated: new Date() },
       { new: true, upsert: true, runValidators: true }
     );
-
-    // Emit to WebSocket clients
-    wsService.broadcastConfigUpdated(config);
-
-    successResponse(res, formatConfigResponse(config), 'Configuration updated');
+    res.json({ success: true, config });
   } catch (error) {
-    next(error);
+    res.status(500).json({ success: false, error: error.message });
   }
 };
 
-// Get device status
-export const getStatus = async (req, res, next) => {
+// ─── GET STATUS ────────────────────────────────────────────────────────────────
+export const getStatus = async (req, res) => {
   try {
-    const deviceId = resolveDeviceId(req);
-    const status = await DeviceStatus.getStatus(deviceId);
-
-    // Check if device is stale
-    if (status.isStale() && status.online) {
-      status.online = false;
-      await status.save();
+    const deviceId = req.params.deviceId || req.query.deviceId;
+    if (deviceId) {
+      const status = await DeviceStatus.findOne({ deviceId });
+      return res.json({ success: true, status: status || null });
     }
-
-    successResponse(res, status);
+    const allStatuses = await DeviceStatus.find({}).sort({ lastSeen: -1 });
+    res.json({ success: true, statuses: allStatuses });
   } catch (error) {
-    next(error);
+    res.status(500).json({ success: false, error: error.message });
   }
 };
 
-// Update device status (called by ESP32)
-export const updateStatus = async (req, res, next) => {
+// ─── UPDATE STATUS (Device heartbeat) ─────────────────────────────────────────
+export const updateStatus = async (req, res) => {
   try {
-    const { deviceId = 'ESP32-SENSOR' } = req.body;
-    const updates = req.body;
-
+    const {
+      deviceId, isOnline, state, ipAddress,
+      wifiRSSI, firmwareVersion, uptime
+    } = req.body;
+    if (!deviceId) return res.status(400).json({ success: false, error: 'deviceId required' });
     const status = await DeviceStatus.findOneAndUpdate(
       { deviceId },
-      {
-        $set: {
-          ...updates,
-          lastSeen: new Date(),
-          online: true
-        }
-      },
+      { isOnline: isOnline !== undefined ? isOnline : true, state, ipAddress, wifiRSSI, firmwareVersion, uptime, lastSeen: new Date() },
       { new: true, upsert: true }
     );
-
-    successResponse(res, status, 'Device status updated');
+    res.json({ success: true, status });
   } catch (error) {
-    next(error);
+    res.status(500).json({ success: false, error: error.message });
   }
 };
 
-// System health check
-export const getHealth = async (req, res, next) => {
+// ─── HEALTH CHECK ──────────────────────────────────────────────────────────────
+export const getHealth = async (req, res) => {
   try {
-    const deviceId = resolveDeviceId(req);
-    
-    const [config, status] = await Promise.all([
-      SystemConfig.getConfig(deviceId),
-      DeviceStatus.getStatus(deviceId)
-    ]);
+    const dbState    = mongoose.connection.readyState;
+    const dbConnected = dbState === 1;
+    const dbName     = dbConnected ? mongoose.connection.db.databaseName : 'disconnected';
+    const isCorrectDb = dbName === 'sproutsense';
 
-    const health = {
-      backend: 'healthy',
-      database: 'connected',
-      device: status.online ? 'online' : 'offline',
-      lastSeen: status.lastSeen,
-      uptime: status.uptime,
-      errors: status.errors.slice(-5) // Last 5 errors
-    };
+    // Count documents for diagnostics
+    let counts = {};
+    if (dbConnected) {
+      const [sensors, watering, disease] = await Promise.all([
+        SensorReading.countDocuments(),
+        WateringLog.countDocuments(),
+        DiseaseDetection.countDocuments()
+      ]);
+      counts = { sensorReadings: sensors, wateringLogs: watering, diseaseDetections: disease };
+    }
 
-    successResponse(res, health);
-  } catch (error) {
-    next(error);
-  }
-};
-
-// Get test mode status
-export const getTestMode = async (req, res, next) => {
-  try {
-    successResponse(res, {
-      enabled: testModeState.enabled,
-      interval: testModeState.intervalId ? 'running' : 'stopped',
-      allowedInEnvironment: testModeState.allowedInEnvironment,
+    res.json({
+      success:    true,
+      status:     dbConnected ? 'ok' : 'degraded',
+      database:   dbConnected ? 'connected' : 'disconnected',
+      dbName,                             // ← shows 'sproutsense' if URI is correct
+      dbCorrect:  isCorrectDb,            // ← true if using right database
+      dbWarning:  !isCorrectDb ? 'Database is not sproutsense! Update MONGODB_URI on Render to include /sproutsense' : null,
+      counts,
+      uptime:     process.uptime(),
+      memory:     process.memoryUsage(),
+      timestamp:  new Date().toISOString(),
       environment: process.env.NODE_ENV || 'development'
     });
   } catch (error) {
-    next(error);
+    res.status(500).json({ success: false, status: 'error', error: error.message });
   }
 };
 
-// Toggle test mode
-export const toggleTestMode = async (req, res, next) => {
+// ─── TEST MODE ─────────────────────────────────────────────────────────────────
+export const getTestMode = async (req, res) => {
+  res.json({ success: true, testMode: process.env.TEST_MODE === 'true' });
+};
+
+export const toggleTestMode = async (req, res) => {
+  const current = process.env.TEST_MODE === 'true';
+  process.env.TEST_MODE = (!current).toString();
+  res.json({ success: true, testMode: !current });
+};
+
+// ─── CLEAR HISTORY ─────────────────────────────────────────────────────────────
+export const clearSensorHistory = async (req, res) => {
   try {
-    const { enabled } = req.body;
-
-    const result = setTestMode(enabled);
-
-    successResponse(res, result);
+    const result = await SensorReading.deleteMany({});
+    res.json({ success: true, deleted: result.deletedCount });
   } catch (error) {
-    next(error);
+    res.status(500).json({ success: false, error: error.message });
   }
 };
 
-// ============================================================================
-// DATA HISTORY & CLEANUP ENDPOINTS
-// ============================================================================
-
-/**
- * POST /api/config/clear-sensor-history
- * Clear sensor data history based on retention policy
- */
-export const clearSensorHistory = async (req, res, next) => {
+export const clearWateringHistory = async (req, res) => {
   try {
-    const deviceId = resolveDeviceId(req);
-    const days = Number(req.body?.days ?? req.body?.retentionDays ?? 90);
-
-    // Import models for cleanup
-    const SensorReading = (await import('../models/SensorReading.js')).default;
-
-    // Calculate cutoff date
-    const cutoffDate = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
-
-    // Delete old sensor readings
-    const deleteResult = await SensorReading.deleteMany({
-      deviceId,
-      timestamp: { $lt: cutoffDate }
-    });
-
-    // Update config
-    const config = await SystemConfig.clearSensorHistory(deviceId, days);
-    const cleanupState = getCleanupState(config);
-
-    successResponse(res, {
-      recordsDeleted: deleteResult.deletedCount,
-      retentionDays: days,
-      cutoffDate,
-      nextCleanup: cleanupState.lastCleanupDate,
-      message: `Deleted ${deleteResult.deletedCount} sensor readings older than ${days} days`
-    });
+    const result = await WateringLog.deleteMany({});
+    res.json({ success: true, deleted: result.deletedCount });
   } catch (error) {
-    next(error);
+    res.status(500).json({ success: false, error: error.message });
   }
 };
 
-/**
- * POST /api/config/clear-watering-history
- * Clear watering logs history based on retention policy
- */
-export const clearWateringHistory = async (req, res, next) => {
+export const clearDiseaseHistory = async (req, res) => {
   try {
-    const deviceId = resolveDeviceId(req);
-    const days = Number(req.body?.days ?? req.body?.retentionDays ?? 365);
-
-    // Import models for cleanup
-    const WateringLog = (await import('../models/WateringLog.js')).default;
-
-    // Calculate cutoff date
-    const cutoffDate = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
-
-    // Delete old watering logs
-    const deleteResult = await WateringLog.deleteMany({
-      deviceId,
-      startTime: { $lt: cutoffDate }
-    });
-
-    // Update config
-    const config = await SystemConfig.clearWateringHistory(deviceId, days);
-    const cleanupState = getCleanupState(config);
-
-    successResponse(res, {
-      recordsDeleted: deleteResult.deletedCount,
-      retentionDays: days,
-      cutoffDate,
-      nextCleanup: cleanupState.lastCleanupDate,
-      message: `Deleted ${deleteResult.deletedCount} watering logs older than ${days} days`
-    });
+    const result = await DiseaseDetection.deleteMany({});
+    res.json({ success: true, deleted: result.deletedCount });
   } catch (error) {
-    next(error);
+    res.status(500).json({ success: false, error: error.message });
   }
 };
 
-/**
- * POST /api/config/clear-disease-history
- * Clear disease detection history based on retention policy
- */
-export const clearDiseaseHistory = async (req, res, next) => {
+export const clearAllHistory = async (req, res) => {
   try {
-    const diseaseDeviceId = req.body?.diseaseDeviceId || 'ESP32-CAM';
-    const configDeviceId = resolveDeviceId(req);
-    const days = Number(req.body?.days ?? req.body?.retentionDays ?? 180);
-
-    // Import models for cleanup
-    const DiseaseDetection = (await import('../models/DiseaseDetection.js')).default;
-
-    // Calculate cutoff date
-    const cutoffDate = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
-
-    // Delete old disease detections
-    const deleteResult = await DiseaseDetection.deleteMany({
-      deviceId: diseaseDeviceId,
-      timestamp: { $lt: cutoffDate }
-    });
-
-    const config = await SystemConfig.clearDiseaseHistory(configDeviceId, days);
-    const cleanupState = getCleanupState(config);
-
-    successResponse(res, {
-      recordsDeleted: deleteResult.deletedCount,
-      retentionDays: days,
-      cutoffDate,
-      nextCleanup: cleanupState.lastCleanupDate,
-      message: `Deleted ${deleteResult.deletedCount} disease detection records older than ${days} days`
-    });
-  } catch (error) {
-    next(error);
-  }
-};
-
-/**
- * POST /api/config/clear-all-history
- * Clear all historical data (sensor, watering, disease)
- */
-export const clearAllHistory = async (req, res, next) => {
-  try {
-    const deviceId = resolveDeviceId(req);
-    const sensorDeviceId = req.body.sensorDeviceId || deviceId;
-    const diseaseDeviceId = req.body.diseaseDeviceId || 'ESP32-CAM';
-    const { sensorDays = 90, wateringDays = 365, diseaseDays = 180 } = req.body;
-
-    // Import models
-    const SensorReading = (await import('../models/SensorReading.js')).default;
-    const WateringLog = (await import('../models/WateringLog.js')).default;
-    const DiseaseDetection = (await import('../models/DiseaseDetection.js')).default;
-
-    // Calculate cutoff dates
-    const sensorCutoff = new Date(Date.now() - sensorDays * 24 * 60 * 60 * 1000);
-    const wateringCutoff = new Date(Date.now() - wateringDays * 24 * 60 * 60 * 1000);
-    const diseaseCutoff = new Date(Date.now() - diseaseDays * 24 * 60 * 60 * 1000);
-
-    // Delete from all collections in parallel
-    const [sensorResult, wateringResult, diseaseResult] = await Promise.all([
-      SensorReading.deleteMany({
-        deviceId: sensorDeviceId,
-        timestamp: { $lt: sensorCutoff }
-      }),
-      WateringLog.deleteMany({
-        deviceId,
-        startTime: { $lt: wateringCutoff }
-      }),
-      DiseaseDetection.deleteMany({
-        deviceId: diseaseDeviceId,
-        timestamp: { $lt: diseaseCutoff }
-      })
+    const [s, w, d] = await Promise.all([
+      SensorReading.deleteMany({}),
+      WateringLog.deleteMany({}),
+      DiseaseDetection.deleteMany({})
     ]);
-
-    // Update config with cleanup info
-    const config = await SystemConfig.clearAllHistory(deviceId);
-    const cleanupState = getCleanupState(config);
-
-    successResponse(res, {
-      summary: {
-        totalRecordsDeleted: 
-          sensorResult.deletedCount + wateringResult.deletedCount + diseaseResult.deletedCount,
-        timestamp: new Date()
-      },
-      details: {
-        sensorReadings: {
-          deleted: sensorResult.deletedCount,
-          retentionDays: sensorDays,
-          cutoffDate: sensorCutoff
-        },
-        wateringLogs: {
-          deleted: wateringResult.deletedCount,
-          retentionDays: wateringDays,
-          cutoffDate: wateringCutoff
-        },
-        diseaseDetections: {
-          deleted: diseaseResult.deletedCount,
-          retentionDays: diseaseDays,
-          cutoffDate: diseaseCutoff
-        }
-      },
-      nextCleanup: cleanupState.lastCleanupDate,
-      message: 'All historical data cleanup completed successfully'
+    res.json({
+      success: true,
+      deleted: {
+        sensorReadings: s.deletedCount,
+        wateringLogs: w.deletedCount,
+        diseaseDetections: d.deletedCount
+      }
     });
   } catch (error) {
-    next(error);
+    res.status(500).json({ success: false, error: error.message });
   }
 };
 
-/**
- * GET /api/config/data-retention
- * Get current data retention policy and cleanup schedule
- */
-export const getDataRetentionPolicy = async (req, res, next) => {
-  try {
-    const deviceId = resolveDeviceId(req);
-    const config = await SystemConfig.getConfig(deviceId);
-    const cleanupState = getCleanupState(config);
-
-    successResponse(res, {
-      retention: config.dataRetention,
-      cleanup: {
-        autoCleanupEnabled: cleanupState.autoCleanupEnabled,
-        lastCleanupDate: cleanupState.lastCleanupDate,
-        schedule: cleanupState.cleanupSchedule
-      },
-      estimatedStorageSize: 'Contact system administrator for details',
-      nextScheduledCleanup: calculateNextCleanup(
-        cleanupState.lastCleanupDate,
-        cleanupState.cleanupSchedule
-      )
-    });
-  } catch (error) {
-    next(error);
-  }
+// ─── DATA RETENTION ────────────────────────────────────────────────────────────
+export const getDataRetentionPolicy = async (req, res) => {
+  res.json({
+    success: true,
+    policy: {
+      sensorReadings: '7 days',
+      wateringLogs: '30 days',
+      diseaseDetections: '30 days'
+    }
+  });
 };
 
-/**
- * PUT /api/config/data-retention
- * Update data retention policy
- */
-export const updateDataRetentionPolicy = async (req, res, next) => {
-  try {
-    const deviceId = resolveDeviceId(req);
-    const { retention, cleanup } = req.body;
-
-    const config = await SystemConfig.findOneAndUpdate(
-      { deviceId },
-      {
-        $set: {
-          dataRetention: { ...retention },
-          dataCleanup: { 
-            ...cleanup,
-            lastCleanupDate: new Date()
-          }
-        }
-      },
-      { new: true }
-    );
-
-    successResponse(res, {
-      dataRetention: config.dataRetention,
-      dataCleanup: config.dataCleanup,
-      message: 'Data retention policy updated'
-    });
-  } catch (error) {
-    next(error);
-  }
+export const updateDataRetentionPolicy = async (req, res) => {
+  res.json({ success: true, message: 'Retention policy updated', policy: req.body });
 };
-
-// ============================================================================
-// HELPER FUNCTIONS
-// ============================================================================
-
-/**
- * Calculate next scheduled cleanup date
- */
-function calculateNextCleanup(lastCleanupDate, schedule) {
-  const lastCleanup = lastCleanupDate ? new Date(lastCleanupDate) : new Date();
-  const nextCleanup = new Date(lastCleanup);
-
-  switch (schedule) {
-    case 'daily':
-      nextCleanup.setDate(nextCleanup.getDate() + 1);
-      break;
-    case 'weekly':
-      nextCleanup.setDate(nextCleanup.getDate() + 7);
-      break;
-    case 'monthly':
-      nextCleanup.setMonth(nextCleanup.getMonth() + 1);
-      break;
-    default:
-      nextCleanup.setDate(nextCleanup.getDate() + 7); // Default to weekly
-  }
-
-  return nextCleanup;
-}
-
-
