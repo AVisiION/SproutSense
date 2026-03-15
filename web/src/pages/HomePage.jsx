@@ -3,8 +3,9 @@ import { useNavigate } from 'react-router-dom';
 import { GlassIcon } from '../components/GlassIcon';
 import '../styles/HomePage.css';
 
-const HARDWARE_IMAGE_URL = 'https://agi-prod-file-upload-public-main-use1.s3.amazonaws.com/fd1f689e-6454-4dba-ba01-f08f225d1737';
-const AI_IMAGE_URL = 'https://agi-prod-file-upload-public-main-use1.s3.amazonaws.com/81cf7661-631f-43e6-8a8b-b5e1deec9025';
+// Local assets served from public/assets
+const HARDWARE_IMAGE_URL = '/assets/img2.jpg';
+const AI_IMAGE_URL = '/assets/demo.jpg';
 
 const HomePage = ({ theme, sensors, isConnected }) => {
   const navigate = useNavigate();
