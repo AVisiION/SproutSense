@@ -106,6 +106,88 @@ const HowItWorks = () => {
   );
 };
 
+const FoodImpactSection = () => {
+  const problems = [
+    {
+      title: 'Water wastage in irrigation',
+      text:
+        'Traditional flood irrigation can waste more than half of the applied water through evaporation and runoff, especially in hot regions.',
+    },
+    {
+      title: 'Nutrient imbalance & soil fatigue',
+      text:
+        'Overuse of chemical fertilisers and under-monitoring of pH/NPK lead to nutrient lock-out, poor yields and long-term soil damage.',
+    },
+    {
+      title: 'Late detection of plant diseases',
+      text:
+        'Farmers often notice diseases only after visible wilting or leaf loss, when yield loss is already high and treatment is costly.',
+    },
+  ];
+
+  const solutions = [
+    {
+      title: 'Precision irrigation from sensors',
+      text:
+        'Soil-moisture thresholds and live readings trigger watering only when needed, reducing overwatering and saving water.',
+    },
+    {
+      title: 'Continuous soil health tracking',
+      text:
+        'pH, NPK and climate sensors show when fertiliser or amendments are actually required, preventing waste and protecting soil.',
+    },
+    {
+      title: 'On-device AI disease alerts',
+      text:
+        'ESP32-CAM with Edge Impulse models flags leaf diseases at an early stage so farmers can act before losses compound.',
+    },
+  ];
+
+  return (
+    <section className="food-section">
+      <div className="section-container">
+        <h2 className="section-title">Food System Problems & How SproutSense Helps</h2>
+        <p className="food-intro">
+          Modern food production struggles with water scarcity, unpredictable weather and fast-spreading plant diseases.
+          SproutSense turns every pot, plot or polyhouse into a monitored, data-driven environment instead of guesswork.
+        </p>
+
+        <div className="food-section-grid">
+          <div className="food-card">
+            <h3>Current Challenges</h3>
+            <ul className="food-list">
+              {problems.map((item) => (
+                <li key={item.title} className="food-list-item">
+                  <span className="food-dot" />
+                  <div>
+                    <p className="food-list-title">{item.title}</p>
+                    <p className="food-list-text">{item.text}</p>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          <div className="food-card">
+            <h3>How SproutSense Responds</h3>
+            <ul className="food-list">
+              {solutions.map((item) => (
+                <li key={item.title} className="food-list-item">
+                  <span className="food-dot food-dot-success" />
+                  <div>
+                    <p className="food-list-title">{item.title}</p>
+                    <p className="food-list-text">{item.text}</p>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+};
+
 const HomePage = ({ theme, sensors, isConnected }) => {
   const navigate = useNavigate();
   const [isVisible, setIsVisible] = useState(false);
@@ -361,6 +443,9 @@ const HomePage = ({ theme, sensors, isConnected }) => {
 
       {/* HOW IT WORKS */}
       <HowItWorks />
+
+      {/* FOOD SYSTEM IMPACT */}
+      <FoodImpactSection />
 
       {/* FEATURES */}
       <section className="features-section-new">
