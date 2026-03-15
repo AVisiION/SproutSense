@@ -218,7 +218,7 @@ export default function AnalyticsPage() {
       {/* Header */}
       <div className="records-header">
         <div className="records-header-left">
-          <GlassIcon name="records" />
+          <GlassIcon name="analytics" />
           <div>
             <h1 className="records-title">Analytics & History</h1>
             <p className="records-subtitle">

@@ -29,7 +29,7 @@ const sidebarCategories = [
     label: 'Monitor',
     items: [
       { path: '/sensors', label: 'Sensors', icon: 'sensors' },
-      { path: '/analytics', label: 'Analytics', icon: 'records' },
+      { path: '/analytics', label: 'Analytics', icon: 'analytics' },
       { path: '/alerts', label: 'Alerts', icon: 'bell' },
     ]
   },

@@ -44,6 +44,8 @@
     var(--hero-gradient-mid) 50%,
     var(--hero-gradient-end) 100%);
   border-radius: 0 0 40px 40px;
+    background: url('/assets/img2.png') center/cover no-repeat;
+
   overflow: hidden;
 }
 
