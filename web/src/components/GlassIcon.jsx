@@ -64,10 +64,14 @@ const iconPaths = {
   clock: 'M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20Z M12 6v6l4 2',
 };
 
-export function GlassIcon({ name, className = '', animated = false }) {
+export function GlassIcon({ name, className = '', animated = false, size = 'md' }) {
   const animClass = animated ? 'glass-icon-animated' : '';
+  const sizeClass = `glass-icon-${size}`;
   return (
-    <span className={`glass-icon ${animClass} ${className}`.trim()} aria-hidden="true">
+    <span
+      className={`glass-icon ${animClass} ${sizeClass} ${className}`.trim()}
+      aria-hidden="true"
+    >
       <svg viewBox="0 0 24 24" fill="none" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
         <path d={iconPaths[name] || iconPaths.home} />
       </svg>
