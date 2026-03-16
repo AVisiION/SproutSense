@@ -72,7 +72,7 @@ export function GlassIcon({ name, className = '', animated = false, size = 'md' 
       className={`glass-icon ${animClass} ${sizeClass} ${className}`.trim()}
       aria-hidden="true"
     >
-      <svg viewBox="0 0 24 24" fill="none" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="100%" height="100%" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round">
         <path d={iconPaths[name] || iconPaths.home} />
       </svg>
     </span>

@@ -171,55 +171,7 @@ const HomePage = ({ theme, sensors, isConnected }) => {
             </div>
           </div>
 
-          {/* RIGHT SIDE: CREATIVE SYSTEM CARDS (no images) */}
-          <div className="hero-media">
-            <div className="hero-media-card hero-media-hardware">
-              <div className="hero-media-chip">
-                <GlassIcon name="esp32" />
-                <span>ESP32-SENSOR-001</span>
-              </div>
-              <p className="hero-media-text">
-                Reads soil moisture, temperature, humidity, pH, NPK and controls the water pump with safe ADC1 pins and
-                external relay supply.
-              </p>
-              <div className="hero-media-tags">
-                <span>Soil</span>
-                <span>Climate</span>
-                <span>pH</span>
-                <span>Pump</span>
-              </div>
-            </div>
-
-            <div className="hero-media-card hero-media-ai">
-              <div className="hero-media-chip hero-media-chip-ai">
-                <GlassIcon name="ai" />
-                <span>ESP32-CAM-001</span>
-              </div>
-              <p className="hero-media-text">
-                Captures leaf images and runs Edge Impulse models on-device for early disease detection in 9 classes.
-              </p>
-              <div className="hero-media-tags">
-                <span>Disease</span>
-                <span>Leaf Spot</span>
-                <span>Rust</span>
-              </div>
-            </div>
-
-            <div className="hero-media-status-card">
-              <div className="hero-status-row">
-                <GlassIcon name="esp32" />
-                <span>Dual ESP32 nodes online</span>
-              </div>
-              <div className="hero-status-row">
-                <GlassIcon name="watering" />
-                <span>Smart watering ready</span>
-              </div>
-              <div className="hero-status-row">
-                <GlassIcon name="server" />
-                <span>Cloud dashboard & MongoDB</span>
-              </div>
-            </div>
-          </div>
+          {/* RIGHT SIDE removed: simplified hero layout for better focus and readability */}
         </div>
       </section>
 
