@@ -1,0 +1,519 @@
+/*
+ * SproutSense — Responsive Overflow Fixes v2.1
+ * Industry-grade mobile-first patches
+ * Imported at the END of App.css / main.jsx to override
+ */
+
+/* ============================================================
+   1. GLOBAL OVERFLOW PREVENTION
+   ============================================================ */
+
+html, body {
+  overflow-x: hidden !important;
+  max-width: 100vw;
+}
+
+/* All flex/grid children must allow shrinking */
+.app-shell > *,
+.main-content > *,
+.dashboard > *,
+.sensor-grid > *,
+.control-section > *,
+.card > * {
+  min-width: 0;
+}
+
+/* Images & media never overflow their container */
+img, video, svg, canvas, iframe {
+  max-width: 100%;
+  height: auto;
+}
+
+/* ============================================================
+   2. APP SHELL — SIDEBAR LAYOUT
+   ============================================================ */
+
+.app-shell {
+  display: grid;
+  grid-template-columns: 260px 1fr;
+  min-height: 100vh;
+  position: relative;
+  overflow-x: hidden;
+}
+
+.main-content {
+  min-width: 0;          /* CRITICAL: prevents main content from overflowing grid */
+  overflow-x: hidden;
+  width: 100%;
+}
+
+/* ============================================================
+   3. CONTAINER & PAGE PADDING
+   ============================================================ */
+
+.container {
+  width: 100%;
+  max-width: 1500px;
+  margin: 0 auto;
+  padding-left: max(1.5rem, env(safe-area-inset-left));
+  padding-right: max(1.5rem, env(safe-area-inset-right));
+  box-sizing: border-box;
+}
+
+/* ============================================================
+   4. TOP NAVBAR — NO WRAP / NO OVERFLOW
+   ============================================================ */
+
+.top-navbar {
+  flex-wrap: nowrap;
+  overflow: hidden;
+}
+
+.navbar-left {
+  min-width: 0;
+  overflow: hidden;
+}
+
+.navbar-page-title {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+  flex: 1;
+}
+
+.navbar-brand-text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.navbar-right {
+  flex-shrink: 0;
+}
+
+/* ============================================================
+   5. DASHBOARD GRID — SAFE AUTO-FIT
+   ============================================================ */
+
+.dashboard {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr));
+  gap: 1.5rem;
+  width: 100%;
+}
+
+/* ============================================================
+   6. SENSOR GRID — PREVENT CARD BLOWOUT
+   ============================================================ */
+
+.sensor-grid {
+  display: grid;
+  gap: 0.75rem;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 210px), 1fr));
+  width: 100%;
+}
+
+.sensor-item {
+  min-width: 0;
+  word-break: break-word;
+  overflow-wrap: break-word;
+}
+
+.sensor-item .value {
+  word-break: break-word;
+  overflow-wrap: break-word;
+  max-width: 100%;
+}
+
+/* ============================================================
+   7. CARD — SAFE OVERFLOW
+   ============================================================ */
+
+.card {
+  overflow: hidden;     /* clip any child that overflows */
+  word-break: break-word;
+  overflow-wrap: break-word;
+  min-width: 0;
+}
+
+/* ============================================================
+   8. BUTTONS — SAFE FLEX
+   ============================================================ */
+
+.btn {
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.controls {
+  flex-wrap: wrap;
+}
+
+/* ============================================================
+   9. TABLE OVERFLOW SCROLL
+   ============================================================ */
+
+.table-responsive,
+.graph-container,
+.graph-display,
+.chart-wrapper {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+table {
+  min-width: 400px; /* force scroll before squish */
+  width: 100%;
+  border-collapse: collapse;
+}
+
+/* ============================================================
+   10. INPUT / FORM OVERFLOW
+   ============================================================ */
+
+input, textarea, select {
+  max-width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+.threshold-input,
+.control-input,
+.config-form input[type="number"] {
+  max-width: 100%;
+  min-width: 0;
+  width: 100%;
+}
+
+/* ============================================================
+   11. NOTIFICATION — MOBILE SAFE
+   ============================================================ */
+
+.notification {
+  max-width: min(400px, calc(100vw - 2rem));
+  word-break: break-word;
+  overflow-wrap: break-word;
+}
+
+/* ============================================================
+   12. RECHARTS RESPONSIVE WRAPPER
+   ============================================================ */
+
+.recharts-responsive-container {
+  min-width: 0 !important;
+  overflow: hidden;
+}
+
+.recharts-wrapper {
+  overflow: hidden;
+}
+
+/* ============================================================
+   13. SIDEBAR MOBILE DRAWER
+   ============================================================ */
+
+@media (max-width: 768px) {
+  /* Full-page single column */
+  .app-shell {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* Sidebar slides off-screen when collapsed on mobile */
+  .app-shell.sidebar-collapsed .sidebar {
+    transform: translateX(-100%) !important;
+    pointer-events: none;
+  }
+
+  /* Sidebar visible on mobile = overlay drawer */
+  .app-shell:not(.sidebar-collapsed) .sidebar {
+    transform: translateX(0);
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 100vh;
+    width: 280px;
+    z-index: 999;
+    box-shadow: 4px 0 24px rgba(0,0,0,0.35);
+  }
+
+  /* Dim backdrop when sidebar is open */
+  .app-shell:not(.sidebar-collapsed) .sidebar-overlay {
+    display: block !important;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.55);
+    z-index: 998;
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    animation: fadeIn 0.25s ease;
+  }
+
+  /* Main content fills full width */
+  .main-content {
+    grid-column: 1 / -1;
+    width: 100%;
+  }
+
+  .container {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+
+  /* Top navbar tighter on mobile */
+  .top-navbar {
+    padding: 0.75rem 1rem;
+    min-height: 3.75rem;
+    margin-bottom: 1rem;
+  }
+
+  /* Hide connection text label on small screens */
+  .connection-text {
+    display: none;
+  }
+
+  /* Dashboard single column */
+  .dashboard {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+
+  /* Sensor grid 2-col on mobile */
+  .sensor-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  /* Stacked controls */
+  .controls {
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  .controls .btn {
+    width: 100%;
+  }
+
+  /* Control row wrap */
+  .control-row {
+    flex-wrap: wrap;
+  }
+
+  .control-row .btn {
+    flex: 1 1 120px;
+  }
+
+  .control-input {
+    max-width: 100%;
+    width: 100%;
+  }
+
+  /* Threshold row stacks */
+  .threshold-row {
+    flex-direction: column;
+  }
+
+  .threshold-save-btn {
+    width: 100%;
+  }
+
+  /* Notifications position on mobile */
+  .notification {
+    left: 1rem;
+    right: 1rem;
+    top: 1rem;
+    max-width: calc(100vw - 2rem);
+  }
+
+  /* Config grid single col */
+  .status-grid,
+  .stats-grid,
+  .config-actions,
+  .config-info-grid {
+    grid-template-columns: 1fr;
+  }
+
+  /* Sensor enhanced items */
+  .sensor-hw-specs {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  /* Welcome card */
+  .welcome-card {
+    padding: 2rem 1.25rem;
+  }
+
+  .welcome-title {
+    font-size: 1.85rem;
+  }
+
+  .quick-links {
+    flex-direction: column;
+  }
+
+  .quick-link-btn {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+/* ============================================================
+   14. SMALL MOBILE — ≤480px
+   ============================================================ */
+
+@media (max-width: 480px) {
+  .app-shell:not(.sidebar-collapsed) .sidebar {
+    width: 265px;
+  }
+
+  .top-navbar {
+    padding: 0.65rem 0.75rem;
+    min-height: 3.5rem;
+  }
+
+  .navbar-title,
+  .navbar-page-title {
+    font-size: 0.9rem;
+  }
+
+  .container {
+    padding-left: 0.75rem;
+    padding-right: 0.75rem;
+  }
+
+  /* Sensor grid single col on very small */
+  .sensor-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .sensor-item .value {
+    font-size: 1.35rem;
+  }
+
+  .card {
+    padding: 1rem;
+    border-radius: 0.85rem;
+  }
+
+  .card h2 {
+    font-size: 1rem;
+  }
+
+  .btn {
+    font-size: 0.9rem;
+    padding: 0.75rem 1rem;
+  }
+
+  .welcome-card {
+    padding: 1.5rem 1rem;
+  }
+
+  .welcome-title {
+    font-size: 1.5rem;
+  }
+
+  .sensor-hw-specs {
+    grid-template-columns: 1fr;
+  }
+
+  /* Remove expensive transforms on tiny screens */
+  .card:hover,
+  .btn:hover:not(:disabled),
+  .sidebar-link:hover,
+  .sensor-item:hover {
+    transform: none !important;
+  }
+}
+
+/* ============================================================
+   15. LANDSCAPE MOBILE
+   ============================================================ */
+
+@media (max-width: 768px) and (orientation: landscape) {
+  .sidebar {
+    overflow-y: auto;
+  }
+
+  .app-shell:not(.sidebar-collapsed) .sidebar {
+    width: 240px;
+  }
+
+  .sensor-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+/* ============================================================
+   16. SAFE-AREA INSETS (iPhone notch/home indicator)
+   ============================================================ */
+
+@supports (padding: max(0px)) {
+  .container {
+    padding-left: max(1rem, env(safe-area-inset-left));
+    padding-right: max(1rem, env(safe-area-inset-right));
+  }
+
+  .top-navbar {
+    padding-left: max(1rem, env(safe-area-inset-left));
+    padding-right: max(1rem, env(safe-area-inset-right));
+  }
+
+  .sidebar {
+    padding-bottom: max(1.75rem, env(safe-area-inset-bottom));
+  }
+}
+
+/* ============================================================
+   17. TOUCH INTERACTION OPTIMIZATION
+   ============================================================ */
+
+@media (hover: none) and (pointer: coarse) {
+  * {
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  button, a, .btn, .sidebar-link, .quick-link-btn {
+    touch-action: manipulation;
+    cursor: pointer;
+  }
+
+  /* Larger tap targets on touch devices */
+  .navbar-toggle,
+  .navbar-theme-toggle,
+  .navbar-alert-btn {
+    min-width: 44px;
+    min-height: 44px;
+  }
+
+  .sidebar-link {
+    min-height: 48px;
+  }
+}
+
+/* ============================================================
+   18. PRINT MEDIA
+   ============================================================ */
+
+@media print {
+  .sidebar,
+  .top-navbar,
+  .navbar-toggle,
+  .btn,
+  .notification {
+    display: none !important;
+  }
+
+  .app-shell {
+    grid-template-columns: 1fr;
+  }
+
+  .main-content {
+    padding: 0;
+  }
+
+  .card {
+    break-inside: avoid;
+    box-shadow: none;
+    border: 1px solid #ccc;
+  }
+}
