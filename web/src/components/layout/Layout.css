@@ -1,0 +1,56 @@
+/**
+ * Layout.css — components/layout/
+ * Governs the app-shell grid that pairs the fixed sidebar with main content.
+ *
+ * Key rule: .container gets margin-left equal to sidebar width so content
+ * is never hidden behind the fixed sidebar on desktop.
+ */
+
+/* ─────────────────────────────────────────
+   MAIN CONTENT AREA
+   Offset by 260px to clear the fixed sidebar
+   ───────────────────────────────────────── */
+.container {
+  margin-left: 260px;           /* Must match sidebar width */
+  max-width: 1500px;
+  padding: 2rem;
+  padding-left: max(2rem, env(safe-area-inset-left));
+  padding-right: max(2rem, env(safe-area-inset-right));
+  transition: margin-left 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Collapsed sidebar: narrow offset */
+.app-shell.sidebar-collapsed .container {
+  margin-left: 72px;
+}
+
+/* ─────────────────────────────────────────
+   TABLET
+   ───────────────────────────────────────── */
+@media (max-width: 1024px) {
+  .container {
+    margin-left: 240px;
+    padding: 1.5rem;
+  }
+
+  .app-shell.sidebar-collapsed .container {
+    margin-left: 72px;
+  }
+}
+
+/* ─────────────────────────────────────────
+   MOBILE — sidebar overlays, no left margin needed
+   ───────────────────────────────────────── */
+@media (max-width: 768px) {
+  .container {
+    margin-left: 0 !important;  /* Sidebar is overlaid, not inline */
+    padding: 1rem;
+    max-width: 100%;
+  }
+}
+
+@media (max-width: 480px) {
+  .container {
+    padding: 0.75rem;
+  }
+}

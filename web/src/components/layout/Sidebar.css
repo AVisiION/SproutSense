@@ -1,0 +1,409 @@
+/**
+ * Sidebar.css — components/layout/
+ * Styles for the main navigation sidebar.
+ *
+ * Sections:
+ *  1. Desktop fixed sidebar
+ *  2. Collapsed (icon-only) mode
+ *  3. Mobile slide-in sidebar
+ *  4. Brand, nav links, categories
+ *  5. System status pills at the bottom
+ */
+
+/* ─────────────────────────────────────────
+   1. DESKTOP — sidebar is FIXED to the left
+   ───────────────────────────────────────── */
+.sidebar {
+  position: fixed;              /* Fixed: stays on screen while content scrolls */
+  top: 0;
+  left: 0;
+  width: 260px;
+  height: 100vh;                /* Full viewport height */
+  padding: 1.75rem 1.25rem;
+  background: var(--sidebar-bg, rgba(15, 23, 42, 0.98));
+  border-right: 1px solid var(--sidebar-border, var(--border-color));
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 2px 0 12px rgba(0, 0, 0, 0.05);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+  display: flex;
+  flex-direction: column;
+  z-index: 999;
+  overflow-y: auto;
+  /* Hide scrollbar visually */
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.sidebar::-webkit-scrollbar {
+  display: none;
+}
+
+/* Push main content to the right to avoid overlap with fixed sidebar */
+.app-shell {
+  display: grid;
+  grid-template-columns: 260px 1fr;
+  min-height: 100vh;
+  transition: grid-template-columns 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+}
+
+/* ─────────────────────────────────────────
+   2. COLLAPSED MODE (desktop icon-only)
+   ───────────────────────────────────────── */
+@media (min-width: 769px) {
+  .app-shell.sidebar-collapsed {
+    grid-template-columns: 72px 1fr; /* Narrow column for icon-only sidebar */
+  }
+
+  .app-shell.sidebar-collapsed .sidebar {
+    width: 72px;
+    padding: 1.75rem 0.6rem;
+  }
+
+  /* Hide text labels and category headings when collapsed */
+  .app-shell.sidebar-collapsed .sidebar-brand-text,
+  .app-shell.sidebar-collapsed .sidebar-cat-label,
+  .app-shell.sidebar-collapsed .sidebar-label,
+  .app-shell.sidebar-collapsed .sidebar-system-status {
+    opacity: 0;
+    width: 0;
+    overflow: hidden;
+    pointer-events: none;
+  }
+
+  .app-shell.sidebar-collapsed .sidebar-brand {
+    justify-content: center;
+  }
+
+  .app-shell.sidebar-collapsed .sidebar-link {
+    justify-content: center;
+    padding: 0.75rem;
+    position: relative;
+  }
+
+  /* Tooltip: show label on hover when sidebar is icon-only */
+  .app-shell.sidebar-collapsed .sidebar-label {
+    position: absolute;
+    left: 100%;
+    margin-left: 0.75rem;
+    background: var(--card-bg);
+    border: var(--glass-border);
+    padding: 0.4rem 0.85rem;
+    border-radius: 0.5rem;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    white-space: nowrap;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    z-index: 200;
+    width: auto;
+    opacity: 0;
+    transform: translateX(0);
+    font-size: 0.85rem;
+  }
+
+  .app-shell.sidebar-collapsed .sidebar-link:hover .sidebar-label {
+    opacity: 1;
+    transform: translateX(6px);
+  }
+}
+
+/* ─────────────────────────────────────────
+   3. MOBILE — fixed, slides in from left
+   ───────────────────────────────────────── */
+@media (max-width: 768px) {
+  .app-shell {
+    grid-template-columns: 1fr; /* Single column on mobile */
+  }
+
+  .sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 280px;
+    height: 100vh;
+    transform: translateX(0);   /* Default: visible */
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    border-right: 1px solid var(--sidebar-border);
+    border-bottom: none;
+    box-shadow: 4px 0 24px rgba(0, 0, 0, 0.2);
+  }
+
+  /* Collapsed on mobile: slide out to the left */
+  .app-shell.sidebar-collapsed .sidebar {
+    transform: translateX(-100%);
+  }
+
+  /* Backdrop overlay when mobile sidebar is open */
+  .app-shell:not(.sidebar-collapsed) .sidebar-overlay {
+    display: block;
+  }
+}
+
+@media (max-width: 480px) {
+  .sidebar {
+    width: 260px; /* Slightly narrower on very small phones */
+  }
+}
+
+/* ─────────────────────────────────────────
+   4. BRAND, NAV LINKS, CATEGORIES
+   ───────────────────────────────────────── */
+
+/* Brand logo area */
+.sidebar-brand {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0 0.25rem;
+  margin-bottom: 1.75rem;
+  text-decoration: none;
+}
+
+.sidebar-brand-icon {
+  width: 1.6rem;
+  height: 1.6rem;
+  color: var(--plant-teal);
+  flex-shrink: 0;
+}
+
+.sidebar-brand-icon svg {
+  width: 1.4rem;
+  height: 1.4rem;
+  stroke: currentColor;
+  animation: float 3s ease-in-out infinite;
+}
+
+.sidebar-brand-text {
+  font-size: 1.3rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  background: linear-gradient(135deg, var(--plant-cyan), var(--plant-green));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  white-space: nowrap;
+  overflow: hidden;
+  transition: opacity 0.3s, width 0.3s;
+}
+
+/* Category group heading */
+.sidebar-category {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  margin-bottom: 0.75rem;
+}
+
+.sidebar-cat-label {
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--text-tertiary);
+  padding: 0 0.5rem;
+  margin-bottom: 0.2rem;
+  white-space: nowrap;
+  overflow: hidden;
+  transition: opacity 0.25s;
+}
+
+/* Nav scroll area */
+.sidebar-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  flex: 1;
+  overflow-y: auto;
+  -ms-overflow-style: none;
+}
+
+.sidebar-nav::-webkit-scrollbar { display: none; }
+
+/* Individual nav link */
+.sidebar-link {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  border: var(--glass-border);
+  background: rgba(255, 255, 255, 0.05);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+  color: var(--text-secondary);
+  padding: 0.75rem 0.85rem;
+  border-radius: 0.85rem;
+  cursor: pointer;
+  text-align: left;
+  font-weight: 500;
+  font-size: 0.95rem;
+  text-decoration: none;
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transform-style: preserve-3d;
+  perspective: 1000px;
+}
+
+.sidebar-link::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(20, 184, 166, 0.18), transparent);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  z-index: -1;
+  border-radius: 0.85rem;
+}
+
+.sidebar-link:hover {
+  color: var(--text-color);
+  transform: translateX(3px);
+  background: rgba(20, 184, 166, 0.08);
+  box-shadow: 0 6px 18px var(--glow-teal);
+  border-color: rgba(20, 184, 166, 0.28);
+}
+
+.sidebar-link:hover::before  { opacity: 0.75; }
+.sidebar-link:hover .sidebar-icon { transform: scale(1.15) rotate(5deg) translateZ(20px); }
+
+.sidebar-link.active {
+  background: rgba(20, 184, 166, 0.15);
+  color: var(--plant-teal);
+  font-weight: 600;
+  transform: translateX(3px);
+  border-color: rgba(20, 184, 166, 0.32);
+  box-shadow: 0 6px 22px var(--glow-teal),
+              inset 0 0 16px rgba(20, 184, 166, 0.08);
+}
+
+.sidebar-link.active .sidebar-icon { transform: scale(1.1); }
+.sidebar-link:active { transform: translateX(2px) translateZ(5px) scale(0.98); }
+
+/* Icon wrapper (holds badge/dot too) */
+.sidebar-icon-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.sidebar-icon {
+  width: 1.25rem;
+  height: 1.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.15rem;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transform-style: preserve-3d;
+}
+
+.sidebar-icon svg {
+  width: 1.1rem;
+  height: 1.1rem;
+  stroke: currentColor;
+}
+
+.sidebar-label {
+  white-space: nowrap;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Alert badge on Alerts link */
+.sidebar-badge {
+  position: absolute;
+  top: -5px;
+  right: -6px;
+  min-width: 16px;
+  height: 16px;
+  border-radius: 8px;
+  background: #ef4444;
+  color: #fff;
+  font-size: 0.62rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 3px;
+  line-height: 1;
+  box-shadow: 0 0 6px rgba(239, 68, 68, 0.6);
+}
+
+/* Online/offline status dot on device links */
+.sidebar-status-dot {
+  position: absolute;
+  bottom: -4px;
+  right: -5px;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  border: 1px solid rgba(5, 13, 20, 0.5);
+}
+
+.sidebar-status-dot.online  { background: #22c581; box-shadow: 0 0 8px rgba(34, 197, 94, 0.7); }
+.sidebar-status-dot.offline { background: #ef4444; box-shadow: 0 0 8px rgba(239, 68, 68, 0.7); }
+
+/* ─────────────────────────────────────────
+   5. SYSTEM STATUS PILLS (bottom of sidebar)
+   ───────────────────────────────────────── */
+.sidebar-system-status {
+  margin-top: 0.85rem;
+  border: var(--glass-border);
+  border-radius: 0.85rem;
+  padding: 0.7rem;
+  background: rgba(255, 255, 255, 0.04);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
+.sidebar-system-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.65rem;
+}
+
+.sidebar-system-label {
+  font-size: 0.78rem;
+  color: var(--text-secondary);
+  font-weight: 600;
+}
+
+.sidebar-system-pill {
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  border-radius: 999px;
+  padding: 0.18rem 0.5rem;
+  border: 1px solid transparent;
+}
+
+.sidebar-system-pill.online   { color: #22c55e; border-color: rgba(34,197,94,0.32);   background: rgba(34,197,94,0.12);  }
+.sidebar-system-pill.offline  { color: #ef4444; border-color: rgba(239,68,68,0.32);   background: rgba(239,68,68,0.12);  }
+.sidebar-system-pill.checking { color: #eab308; border-color: rgba(234,179,8,0.32);   background: rgba(234,179,8,0.12);  }
+
+/* Mobile sidebar overlay backdrop */
+.sidebar-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 998;
+  -webkit-backdrop-filter: blur(4px);
+  backdrop-filter: blur(4px);
+  animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0px);  }
+  50%       { transform: translateY(-6px); }
+}
