@@ -1,3 +1,4 @@
+
 :root {
   /* Core Colors — IoT Plant Theme */
   --primary-color:  #0ea5e9;   /* sky / water blue */
@@ -1100,6 +1101,26 @@ a:focus-visible {
     padding-left: var(--layout-horizontal-padding);
     padding-right: var(--layout-horizontal-padding);
     width: 100%;
+  }
+}
+
+/* Desktop: make sensor card match navbar width (1333px) — apply custom sizing */
+@media (min-width: 1024px) {
+  .top-navbar,
+  .sensor-grid
+  {
+    max-width: 1400px;
+    width: 100%;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  /* User-specified sensor card sizing for desktop */
+  .sensor-card-enhanced {
+    max-width: 1400px;
+    width: 100%;
+    margin-left: 4rem;
+    margin-right: 0rem;
   }
 }
 
