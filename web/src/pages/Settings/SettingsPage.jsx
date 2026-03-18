@@ -1,7 +1,10 @@
-﻿import React, { useState, useEffect } from 'react';
-import { GlassIcon } from '../components/bits/GlassIcon';
-import { configAPI } from '../utils/api';
+﻿import React from 'react';
+import { useState, useEffect } from 'react';
 import './SettingsPage.css';
+// Make sure it uses ../../
+import { configAPI } from '../../utils/api';
+import { GlassIcon } from '../../components/bits/GlassIcon';
+
 
 export default function SettingsPage({ theme, toggleTheme, onNotification }) {
   const [geminiKey, setGeminiKey] = useState('');

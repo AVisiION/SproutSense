@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { GlassIcon } from '../components/bits/GlassIcon';
-import { AIRecommendation } from '../components/AIRecommendation';
+import { GlassIcon } from '../../components/bits/GlassIcon.jsx';
+import { AIRecommendation } from '../../components/AIRecommendation.jsx';
 import './AIChat.css';
 
 const SYSTEM_PROMPT = `You are SproutSense AI, an expert IoT plant monitoring assistant. 

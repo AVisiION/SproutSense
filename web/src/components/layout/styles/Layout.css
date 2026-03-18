@@ -1,29 +1,51 @@
 /**
  * layout.css — styles/
  * ─────────────────────────────────────────────────────
- * Main content layout constraints.
- * 
- * Defines width, padding, and constraints for the central
- * .container and all .section-* wrappers across breakpoints.
+ * Main content layout constraints and Master Grid.
  */
 
+/* ─────────────────────────────────────────────────
+   MASTER APPLICATION GRID (.app-shell)
+   ───────────────────────────────────────────────── */
+.app-shell {
+  display: flex;
+  min-height: 100vh;
+  width: 100vw;
+  overflow: hidden; /* Prevent body scroll, let container scroll */
+  background-color: var(--bg-color);
+  color: var(--text-color);
+}
+
+/* ─────────────────────────────────────────────────
+   MAIN SCROLLING AREA (.container)
+   ───────────────────────────────────────────────── */
 .container {
-  max-width: 1500px;
-  margin: 0 auto;
-  padding: 2rem;
+  flex: 1; 
+  display: flex;
+  flex-direction: column;
+  min-width: 0; 
+  height: 100vh;
+  overflow-y: auto; /* Keeps the scrolling functionality */
+  position: relative;
+  
+  /* Constraints */
+  max-width: 100%;
   padding-left: max(var(--layout-horizontal-padding), env(safe-area-inset-left));
   padding-right: max(var(--layout-horizontal-padding), env(safe-area-inset-right));
+
+  /* ── HIDE SCROLLBAR ── */
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* Internet Explorer 10+ and Edge */
+}
+
+/* ── HIDE SCROLLBAR (Chrome, Safari, and Opera) ── */
+.container::-webkit-scrollbar {
+  display: none;
 }
 
 /* ─────────────────────────────────────────────────
    DESKTOP (Large & Extra Large)
    ───────────────────────────────────────────────── */
-@media (min-width: 1440px) {
-  .container {
-    max-width: 1520px;
-  }
-}
-
 @media (min-width: 1024px) {
   section,
   .section-container,
@@ -34,7 +56,7 @@
   .overview-grid,
   .graph-container,
   .graph-display,
-  .container {
+  .dashboard-section {
     max-width: 1500px;
     margin-left: auto;
     margin-right: auto;
@@ -55,7 +77,7 @@
   .overview-grid,
   .graph-container,
   .graph-display,
-  .container {
+  .dashboard-section {
     max-width: 1400px;
   }
 }
@@ -68,7 +90,6 @@
     padding: 1.5rem;
   }
 
-  /* Ensure page sections and graphs constrain on tablet */
   section,
   .section-container,
   .section-card,
@@ -78,7 +99,7 @@
   .overview-grid,
   .graph-container,
   .graph-display,
-  .container {
+  .dashboard-section {
     max-width: 1100px;
     margin-left: auto;
     margin-right: auto;
@@ -96,7 +117,6 @@
     padding: 1rem;
   }
 
-  /* Make section containers fluid and compact on small tablets */
   section,
   .section-container,
   .section-card,
@@ -106,7 +126,7 @@
   .overview-grid,
   .graph-container,
   .graph-display,
-  .container {
+  .dashboard-section {
     max-width: 100%;
     margin-left: 0.5rem;
     margin-right: 0.5rem;
@@ -124,7 +144,6 @@
     padding: 0.75rem;
   }
 
-  /* Tighten section spacing for very small screens */
   section,
   .section-container,
   .section-card,
@@ -134,7 +153,7 @@
   .overview-grid,
   .graph-container,
   .graph-display,
-  .container {
+  .dashboard-section {
     max-width: 100%;
     margin-left: 0.35rem;
     margin-right: 0.35rem;

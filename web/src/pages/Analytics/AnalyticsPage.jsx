@@ -1,10 +1,10 @@
 import "./AnalyticsPage.css";
 import React, { useState, useEffect, useCallback, useMemo } from "react";
-
-// Add an extra '../' to these imports:
+// Notice the double dots `../../` because we moved down into the /Analytics/ folder!
 import { aiAPI, sensorAPI } from "../../utils/api";
 import { formatDiseaseName } from "../../utils/formatters";
 import { GlassIcon } from "../../components/bits/GlassIcon";
+
 
 
 import {

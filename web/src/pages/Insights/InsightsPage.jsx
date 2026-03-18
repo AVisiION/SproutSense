@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
-import { GlassIcon } from '../components/bits/GlassIcon';
-import { formatDiseaseName } from '../utils/formatters';
+import { GlassIcon } from '../../components/bits/GlassIcon.jsx';
+import { formatDiseaseName } from '../../utils/formatters';
 import './InsightsPage.css';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000';

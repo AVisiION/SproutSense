@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { GlassIcon } from '../components/bits/GlassIcon';
+import { GlassIcon } from '../../components/bits/GlassIcon.jsx';
 import './AlertsPage.css';
 
 const SEVERITY_ORDER = { error: 0, warning: 1, info: 2 };

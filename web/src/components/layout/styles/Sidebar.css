@@ -9,16 +9,20 @@
  *  4. Brand, nav links, categories
  *  5. System status pills at the bottom
  */
+/**
+ * Sidebar.css — components/layout/
+ */
 
 /* ─────────────────────────────────────────
-   1. DESKTOP — sidebar is FIXED to the left
+   1. DESKTOP — sidebar structure
    ───────────────────────────────────────── */
 .sidebar {
-  position: fixed;              /* Fixed: stays on screen while content scrolls */
-  top: 0;
-  left: 0;
-  width: 260px;
-  height: 100vh;                /* Full viewport height */
+  /* We remove position: fixed. Flexbox handles the layout now! */
+  position: relative; 
+  width: var(--sidebar-width, 260px);
+  min-width: var(--sidebar-width, 260px);
+  height: 100vh;
+  flex-shrink: 0; /* Important: stops sidebar from squishing */
   padding: 1.75rem 1.25rem;
   background: var(--sidebar-bg, rgba(15, 23, 42, 0.98));
   border-right: 1px solid var(--sidebar-border, var(--border-color));
@@ -28,37 +32,26 @@
   backdrop-filter: blur(10px);
   display: flex;
   flex-direction: column;
-  z-index: 999;
+  z-index: 100;
   overflow-y: auto;
-  /* Hide scrollbar visually */
-  .sidebar::-webkit-scrollbar {
-    display: none;
-  }  -ms-overflow-style: none;
+  -ms-overflow-style: none;
 }
 
 .sidebar::-webkit-scrollbar {
   display: none;
 }
 
-/* Push main content to the right to avoid overlap with fixed sidebar */
-.app-shell {
-  display: grid;
-  grid-template-columns: 260px 1fr;
-  min-height: 100vh;
-  transition: grid-template-columns 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-  position: relative;
-}
+/* Remove old .app-shell grid definitions! */
+
 
 /* ─────────────────────────────────────────
    2. COLLAPSED MODE (desktop icon-only)
    ───────────────────────────────────────── */
 @media (min-width: 769px) {
-  .app-shell.sidebar-collapsed {
-    grid-template-columns: 72px 1fr; /* Narrow column for icon-only sidebar */
-  }
-
+  /* When the parent app-shell has the collapsed class, shrink the sidebar */
   .app-shell.sidebar-collapsed .sidebar {
     width: 72px;
+    min-width: 72px;
     padding: 1.75rem 0.6rem;
   }
 
@@ -108,16 +101,13 @@
   }
 }
 
+
 /* ─────────────────────────────────────────
    3. MOBILE — fixed, slides in from left
    ───────────────────────────────────────── */
 @media (max-width: 768px) {
-  .app-shell {
-    grid-template-columns: 1fr; /* Single column on mobile */
-  }
-
   .sidebar {
-    position: fixed;
+    position: fixed; /* On mobile, it IS fixed so it floats over content */
     top: 0;
     left: 0;
     width: 280px;
@@ -125,11 +115,11 @@
     transform: translateX(0);   /* Default: visible */
     transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     border-right: 1px solid var(--sidebar-border);
-    border-bottom: none;
-    box-shadow: 4px 0 24px rgba(0, 0, 0, 0.2);
+    box-shadow: 4px 0 24px rgba(0, 0, 0, 0.5);
+    z-index: 999;
   }
 
-  /* Collapsed on mobile: slide out to the left */
+  /* Collapsed on mobile: slide completely off screen */
   .app-shell.sidebar-collapsed .sidebar {
     transform: translateX(-100%);
   }
@@ -145,6 +135,9 @@
     width: 260px; /* Slightly narrower on very small phones */
   }
 }
+
+/* ... Keep Section 4 and 5 exactly as they were! ... */
+
 
 /* ─────────────────────────────────────────
    4. BRAND, NAV LINKS, CATEGORIES

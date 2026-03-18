@@ -2,7 +2,7 @@
 @import './styles/variables.css';
 @import './styles/global.css';
 @import './styles/theme-transitions.css';
-@import './styles/layout.css';
+@import './components/layout/styles/Layout.css';
 @import './styles/card.css';
 @import './styles/buttons.css';
 @import './styles/forms.css';

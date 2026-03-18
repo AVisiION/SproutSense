@@ -35,18 +35,17 @@ import { GlassIcon }       from './components/bits/GlassIcon';   // Make sure th
 
 
 // ── Pages ────────────────────────────────────────────────────────────────
-import HomePage      from './pages/Home/HomePage';
-import SettingsPage  from './pages/Settings/SettingsPage';
-import AnalyticsPage from './pages/Analytics/AnalyticsPage';
-import AlertsPage    from './pages/Alerts/AlertsPage';       // <-- Update this
-import AIChat        from './pages/AIChat/AIChat';           // <-- Update this
-import InsightsPage  from './pages/Insights/InsightsPage';   // <-- Update this
-
+import HomePage      from './pages/Home/HomePage.jsx';
+import SettingsPage  from './pages/Settings/SettingsPage.jsx';
+import AnalyticsPage from './pages/Analytics/AnalyticsPage.jsx';
+import AlertsPage    from './pages/Alerts/AlertsPage.jsx';
+import AIChat        from './pages/AIChat/AIChat.jsx';
+import InsightsPage  from './pages/Insights/InsightsPage.jsx';
 
 // ── Styles ─────────────────────────────────────────────────────────────────
 import './App.css';
-import './components/layout/Sidebar.css';
-import './components/layout/Layout.css';
+import './components/layout/styles/Sidebar.css';
+import './components/layout/styles/Layout.css';
 
 // ───────────────────────────────────────────────────────────────────────────
 // SIDEBAR NAVIGATION STRUCTURE
