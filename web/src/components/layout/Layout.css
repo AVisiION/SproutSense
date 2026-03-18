@@ -1,56 +1,139 @@
 /**
- * Layout.css — components/layout/
- * Governs the app-shell grid that pairs the fixed sidebar with main content.
- *
- * Key rule: .container gets margin-left equal to sidebar width so content
- * is never hidden behind the fixed sidebar on desktop.
+ * Layout.css
+ * ─────────────────────────────────────────────────────
+ * Main app layout structure.
+ * 
+ * Architecture:
+ *  - Desktop (992px+): Fixed sidebar on left, main content takes remaining width
+ *  - Tablet/Mobile (<992px): Full-width stack, sidebar toggles via overlay
+ * 
+ * Depends on: variables.css
+ * Used in: App.jsx (applies grid layout to .app-shell)
  */
 
-/* ─────────────────────────────────────────
-   MAIN CONTENT AREA
-   Offset by 260px to clear the fixed sidebar
-   ───────────────────────────────────────── */
+/* ═══════════════════════════════════════════════════
+   APP SHELL — Main grid container
+   ═══════════════════════════════════════════════════ */
+
+.app-shell {
+  display: grid;
+  min-height: 100vh;
+  position: relative;
+}
+
+/* Desktop: Fixed sidebar + main content */
+@media (min-width: 992px) {
+  .app-shell {
+    grid-template-columns: var(--sidebar-width) 1fr;
+    grid-template-rows: 1fr;
+  }
+
+  .app-shell.sidebar-collapsed {
+    /* Sidebar still takes width but collapses visually */
+    grid-template-columns: var(--sidebar-width) 1fr;
+  }
+}
+
+/* Tablet/Mobile: Sidebar overlays */
+@media (max-width: 991.98px) {
+  .app-shell {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto 1fr;
+  }
+}
+
+/* ─────────────────────────────────────────────────
+   SIDEBAR — Fixed on desktop, overlay on mobile
+   ───────────────────────────────────────────────── */
+
+.sidebar {
+  background-color: var(--sidebar-bg);
+  border-right: 1px solid var(--border-color);
+  padding: var(--padding-lg);
+  overflow-y: auto;
+  z-index: 1000;
+}
+
+/* Desktop: Fixed position */
+@media (min-width: 992px) {
+  .sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: var(--sidebar-width);
+    height: 100vh;
+    border-right: 1px solid rgba(255, 255, 255, 0.08);
+  }
+
+  .app-shell.sidebar-collapsed .sidebar {
+    /* Even when collapsed, sidebar still fixed — just visually hidden via CSS */
+    position: fixed;
+    width: var(--sidebar-width);
+  }
+}
+
+/* Tablet/Mobile: Fixed overlay (z-index above backdrop) */
+@media (max-width: 991.98px) {
+  .sidebar {
+    position: fixed;
+    top: 0;
+    left: -100%;
+    width: 260px;
+    height: 100vh;
+    transition: left var(--duration-normal) var(--ease-out);
+    box-shadow: var(--shadow-lg);
+  }
+
+  .app-shell:not(.sidebar-collapsed) .sidebar {
+    left: 0;
+  }
+}
+
+/* ─────────────────────────────────────────────────
+   SIDEBAR OVERLAY BACKDROP — Click to close on mobile
+   ───────────────────────────────────────────────── */
+
+.sidebar-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 999;
+  display: none;
+}
+
+@media (max-width: 991.98px) {
+  .sidebar-overlay {
+    display: block;
+  }
+}
+
+/* ─────────────────────────────────────────────────
+   MAIN CONTENT CONTAINER
+   ───────────────────────────────────────────────── */
+
 .container {
-  margin-left: 260px;           /* Must match sidebar width */
-  max-width: 1500px;
-  padding: 2rem;
-  padding-left: max(2rem, env(safe-area-inset-left));
-  padding-right: max(2rem, env(safe-area-inset-right));
-  transition: margin-left 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  overflow-y: auto;
+  background-color: var(--bg-color);
 }
 
-/* Collapsed sidebar: narrow offset */
-.app-shell.sidebar-collapsed .container {
-  margin-left: 72px;
-}
-
-/* ─────────────────────────────────────────
-   TABLET
-   ───────────────────────────────────────── */
-@media (max-width: 1024px) {
+/* Desktop: Content area to the right of fixed sidebar */
+@media (min-width: 992px) {
   .container {
-    margin-left: 240px;
-    padding: 1.5rem;
-  }
-
-  .app-shell.sidebar-collapsed .container {
-    margin-left: 72px;
+    grid-column: 2;
+    margin-left: 0;
   }
 }
 
-/* ─────────────────────────────────────────
-   MOBILE — sidebar overlays, no left margin needed
-   ───────────────────────────────────────── */
-@media (max-width: 768px) {
+/* Tablet/Mobile: Full width */
+@media (max-width: 991.98px) {
   .container {
-    margin-left: 0 !important;  /* Sidebar is overlaid, not inline */
-    padding: 1rem;
-    max-width: 100%;
-  }
-}
-
-@media (max-width: 480px) {
-  .container {
-    padding: 0.75rem;
+    grid-column: 1;
+    grid-row: 2;
   }
 }
