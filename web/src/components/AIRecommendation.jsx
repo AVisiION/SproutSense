@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { aiAPI } from '../utils/api';
-import { GlassIcon } from './GlassIcon';
+import { GlassIcon } from './bits/GlassIcon';
 
 export function AIRecommendation({ showHeader = true, sensors = null }) {
   const [recommendation, setRecommendation] = useState(null);

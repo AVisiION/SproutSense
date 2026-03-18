@@ -165,7 +165,7 @@
      LAYOUT — Fixed dimensions
      ═══════════════════════════════════════════════════ */
   --sidebar-width: 260px;          /* Fixed sidebar width */
-  --topbar-height: 60px;           /* Topbar height */
+   --navbar-height: 60px;           /* Navbar height */
   --container-max-width: 1400px;   /* Content max-width */
   --container-padding: 2rem;       /* Default container padding */
 

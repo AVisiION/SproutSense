@@ -8,7 +8,7 @@
  *  3. <div className="container"> — right-side content area with margin offset
  *
  * The main content area receives `children` from App.jsx which contains
- * the <Topbar> and all <Routes>.
+ * the <Navbar> and all <Routes>.
  *
  * Props:
  *  - children           {ReactNode}
@@ -53,7 +53,7 @@ export function Layout({
         closeSidebar={closeSidebar}
       />
 
-      {/* ── Main content: topbar + routes ── */}
+      {/* ── Main content: navbar + routes ── */}
       <div className="container">
         {children}
       </div>

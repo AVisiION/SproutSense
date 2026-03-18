@@ -1,6 +1,6 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
-import { GlassIcon } from './GlassIcon';
+import { GlassIcon } from './bits/GlassIcon';
 
 export function Navbar({ 
   currentPage, 

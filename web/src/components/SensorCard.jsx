@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { GlassIcon } from './GlassIcon';
+import { GlassIcon } from './bits/GlassIcon';
 
 const SENSOR_HARDWARE = {
   soilMoisture: {

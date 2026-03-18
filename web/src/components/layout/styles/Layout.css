@@ -1,0 +1,145 @@
+/**
+ * layout.css — styles/
+ * ─────────────────────────────────────────────────────
+ * Main content layout constraints.
+ * 
+ * Defines width, padding, and constraints for the central
+ * .container and all .section-* wrappers across breakpoints.
+ */
+
+.container {
+  max-width: 1500px;
+  margin: 0 auto;
+  padding: 2rem;
+  padding-left: max(var(--layout-horizontal-padding), env(safe-area-inset-left));
+  padding-right: max(var(--layout-horizontal-padding), env(safe-area-inset-right));
+}
+
+/* ─────────────────────────────────────────────────
+   DESKTOP (Large & Extra Large)
+   ───────────────────────────────────────────────── */
+@media (min-width: 1440px) {
+  .container {
+    max-width: 1520px;
+  }
+}
+
+@media (min-width: 1024px) {
+  section,
+  .section-container,
+  .section-card,
+  .content-section,
+  .problem-grid,
+  .stats-section,
+  .overview-grid,
+  .graph-container,
+  .graph-display,
+  .container {
+    max-width: 1500px;
+    margin-left: auto;
+    margin-right: auto;
+    padding-left: var(--layout-horizontal-padding);
+    padding-right: var(--layout-horizontal-padding);
+    width: 100%;
+  }
+}
+
+/* Mid-range desktops (between main desktop and extra-large) */
+@media (min-width: 1025px) and (max-width: 1439px) {
+  section,
+  .section-container,
+  .section-card,
+  .content-section,
+  .problem-grid,
+  .stats-section,
+  .overview-grid,
+  .graph-container,
+  .graph-display,
+  .container {
+    max-width: 1400px;
+  }
+}
+
+/* ─────────────────────────────────────────────────
+   TABLET
+   ───────────────────────────────────────────────── */
+@media (max-width: 1024px) {
+  .container {
+    padding: 1.5rem;
+  }
+
+  /* Ensure page sections and graphs constrain on tablet */
+  section,
+  .section-container,
+  .section-card,
+  .content-section,
+  .problem-grid,
+  .stats-section,
+  .overview-grid,
+  .graph-container,
+  .graph-display,
+  .container {
+    max-width: 1100px;
+    margin-left: auto;
+    margin-right: auto;
+    padding-left: calc(var(--layout-horizontal-padding) * 0.75);
+    padding-right: calc(var(--layout-horizontal-padding) * 0.75);
+    width: 100%;
+  }
+}
+
+/* ─────────────────────────────────────────────────
+   MOBILE LANDSCAPE & SMALL TABLET
+   ───────────────────────────────────────────────── */
+@media (max-width: 768px) {
+  .container {
+    padding: 1rem;
+  }
+
+  /* Make section containers fluid and compact on small tablets */
+  section,
+  .section-container,
+  .section-card,
+  .content-section,
+  .problem-grid,
+  .stats-section,
+  .overview-grid,
+  .graph-container,
+  .graph-display,
+  .container {
+    max-width: 100%;
+    margin-left: 0.5rem;
+    margin-right: 0.5rem;
+    padding-left: 1rem;
+    padding-right: 1rem;
+    width: 100%;
+  }
+}
+
+/* ─────────────────────────────────────────────────
+   SMALL MOBILE DEVICES
+   ───────────────────────────────────────────────── */
+@media (max-width: 480px) {
+  .container {
+    padding: 0.75rem;
+  }
+
+  /* Tighten section spacing for very small screens */
+  section,
+  .section-container,
+  .section-card,
+  .content-section,
+  .problem-grid,
+  .stats-section,
+  .overview-grid,
+  .graph-container,
+  .graph-display,
+  .container {
+    max-width: 100%;
+    margin-left: 0.35rem;
+    margin-right: 0.35rem;
+    padding-left: 0.75rem;
+    padding-right: 0.75rem;
+    width: 100%;
+  }
+}

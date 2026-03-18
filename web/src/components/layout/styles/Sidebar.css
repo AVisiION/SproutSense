@@ -31,8 +31,9 @@
   z-index: 999;
   overflow-y: auto;
   /* Hide scrollbar visually */
-  scrollbar-width: none;
-  -ms-overflow-style: none;
+  .sidebar::-webkit-scrollbar {
+    display: none;
+  }  -ms-overflow-style: none;
 }
 
 .sidebar::-webkit-scrollbar {

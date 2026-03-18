@@ -1,5 +1,5 @@
 /**
- * Topbar.jsx — components/layout/
+ * Navbar.jsx — components/layout/
  * Top navigation bar shown above every page.
  *
  * Features:
@@ -21,9 +21,9 @@
  */
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { GlassIcon } from '../GlassIcon';
+import { GlassIcon } from '../bits/GlassIcon';
 
-export function Topbar({
+export function Navbar({
   currentPage,
   isMobile,
   isSidebarCollapsed,
@@ -105,4 +105,4 @@ export function Topbar({
   );
 }
 
-export default Topbar;
+export default Navbar;

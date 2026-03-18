@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { GlassIcon } from './GlassIcon';
-import ElasticSlider from './ElasticSlider';
+import { GlassIcon } from './bits/GlassIcon';
+import ElasticSlider from './bits/ElasticSlider';
 import { configAPI, wateringAPI } from '../utils/api';
 
 export function ControlCard({

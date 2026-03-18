@@ -8,7 +8,7 @@
  *  - Polling: sensor data every 5 s, disease detections every 60 s
  *  - Theme toggle with View Transitions API + CSS fallback
  *  - Route definitions via react-router-dom <Routes>
- *  - Renders <Layout> (sidebar + topbar + page content)
+ *  - Renders <Layout> (sidebar + navbar + page content)
  *
  * Import order:
  *  1. React + hooks
@@ -25,16 +25,16 @@ import { useWebSocket } from './hooks/useWebSocket';
 import { configAPI, sensorAPI, wateringAPI, aiAPI } from './utils/api';
 
 // ── Shared components ──────────────────────────────────────────────────────
-import { Navbar }          from './components/Navbar';         // top bar (legacy import — mapped to Topbar)
+import { Navbar }          from './components/Navbar';         // navbar (legacy import — mapped to Navbar)
 import { SensorCard }      from './components/SensorCard';
 import { ControlCard }     from './components/ControlCard';
 import { AIRecommendation }from './components/AIRecommendation';
 import { ConfigCard }      from './components/ConfigCard';
 import { Notification }    from './components/Notification';
-import { GlassIcon }       from './components/GlassIcon';
+import { GlassIcon }       from './components/bits/GlassIcon';
 
 // ── Pages (original flat paths — new sub-folder pages re-export these) ────
-import HomePage      from './pages/HomePage';
+import HomePage      from './pages/Home/HomePage';
 import SettingsPage  from './pages/SettingsPage';
 import AnalyticsPage from './pages/AnalyticsPage';
 import AlertsPage    from './pages/AlertsPage';
@@ -336,7 +336,7 @@ function App() {
   const toggleSidebar = () => setIsSidebarCollapsed(prev => !prev);
   const closeSidebar  = () => { if (isMobile) setIsSidebarCollapsed(true); };
 
-  // Active page title for the topbar
+  // Active page title for the navbar
   const pageTitle = allSidebarItems.find(i => i.path === location.pathname)?.label || 'SproutSense';
 
   // ── WebSocket ──────────────────────────────────────────────────────────

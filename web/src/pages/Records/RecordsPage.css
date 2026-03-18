@@ -1,18 +1,9 @@
-/**
- * RecordsPage.css — pages/Records/
- * Styles for the sensor history table page.
- *
- * Sections:
- *  1. Page header
- *  2. Filter bar
- *  3. Data table
- *  4. Pagination controls
- *  5. Responsive overrides
- */
+.analytics-page {
+  padding: 1.5rem 2rem 2rem;
+  max-width: 1200px;
+  margin: 0 auto;
+}
 
-/* ─────────────────────────────────────────
-   1. PAGE HEADER
-───────────────────────────────────────── */
 .records-header {
   display: flex;
   align-items: center;
@@ -22,109 +13,461 @@
   margin-bottom: 1.5rem;
 }
 
-.records-title {
-  font-size: 1.4rem;
-  font-weight: 700;
-  color: var(--text-color);
-  letter-spacing: -0.02em;
+.records-header-left {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
 }
 
-/* ─────────────────────────────────────────
-   2. FILTER BAR
-───────────────────────────────────────── */
-.records-filters {
+.records-header-left .glass-icon {
+  width: 48px;
+  height: 48px;
+  padding: 10px;
+  border-radius: 14px;
+  background: var(--glass-color);
+  border: var(--glass-border);
+  color: var(--plant-teal);
+  flex-shrink: 0;
+}
+
+.records-title {
+  font-size: 1.7rem;
+  font-weight: 700;
+  color: var(--text-color);
+  margin: 0;
+}
+
+.records-subtitle {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  margin: 0.2rem 0 0;
+}
+
+.records-header-right {
   display: flex;
-  gap: 0.75rem;
-  flex-wrap: wrap;
   align-items: center;
+  gap: 0.75rem;
+}
+
+.records-metric-switcher {
+  display: flex;
+  gap: 0.6rem;
+  overflow-x: auto;
+  padding-bottom: 0.25rem;
   margin-bottom: 1rem;
 }
 
-.records-filter-input,
-.records-filter-select {
+.records-metric-switcher::-webkit-scrollbar {
+  height: 6px;
+}
+
+.records-metric-switcher::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.18);
+  border-radius: 8px;
+}
+
+.records-metric-pill {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
   padding: 0.55rem 0.85rem;
-  background: rgba(255,255,255,0.05);
+  border-radius: 12px;
   border: var(--glass-border);
-  border-radius: 0.65rem;
+  background: linear-gradient(150deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.01));
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: transform 0.2s ease-out, border-color 0.3s ease, color 0.3s ease, background 0.3s ease, box-shadow 0.3s ease;
+}
+
+.records-metric-pill .glass-icon {
+  width: 15px;
+  height: 15px;
+}
+
+.records-metric-pill:hover {
+  transform: translateY(-1px);
   color: var(--text-color);
+}
+
+.records-metric-pill.active {
+  color: #fff;
+  border-color: var(--metric-pill-color);
+  background: linear-gradient(145deg, rgba(255, 255, 255, 0.14), rgba(255, 255, 255, 0.02));
+  box-shadow: inset 0 0 0 1px var(--metric-pill-color);
+}
+
+.records-range-tabs {
+  display: flex;
+  gap: 0.35rem;
+  background: var(--glass-color);
+  border: var(--glass-border);
+  border-radius: 10px;
+  padding: 0.25rem;
+}
+
+.records-range-tab {
+  padding: 0.35rem 0.7rem;
+  border: none;
+  border-radius: 7px;
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: 0.82rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+}
+
+.records-range-tab.active,
+.records-range-tab:hover {
+  background: var(--plant-teal);
+  color: #fff;
+}
+
+.records-refresh-btn {
+  width: 36px;
+  height: 36px;
+  border: var(--glass-border);
+  border-radius: 9px;
+  background: var(--glass-color);
+  color: var(--text-secondary);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.2s, background 0.2s;
+}
+
+.records-refresh-btn:hover {
+  color: var(--plant-cyan);
+  background: var(--glass-color-alt);
+}
+
+.records-refresh-btn .glass-icon {
+  width: 16px;
+  height: 16px;
+}
+
+/* Animations */
+@keyframes fadeSlideUp {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* Summary sparklines */
+.records-main-chart-card {
+  background: var(--card-bg);
+  border: var(--glass-border);
+  border-radius: 16px;
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+  animation: fadeSlideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.records-growth-card {
+  background: var(--card-bg);
+  border: var(--glass-border);
+  border-radius: 16px;
+  padding: 1.25rem;
+  margin-bottom: 1.5rem;
+}
+
+.records-growth-timeline {
+  margin-top: 0.9rem;
+  display: grid;
+  gap: 0.55rem;
+  max-height: 220px;
+  overflow-y: auto;
+  padding-right: 0.2rem;
+}
+
+.records-growth-item {
+  display: flex;
+  gap: 0.7rem;
+  align-items: flex-start;
+}
+
+.records-growth-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 999px;
+  background: #34d399;
+  margin-top: 0.4rem;
+  box-shadow: 0 0 0 4px rgba(52, 211, 153, 0.15);
+}
+
+.records-growth-content {
+  display: flex;
+  flex-direction: column;
+  gap: 0.12rem;
+  border-left: 1px solid rgba(255, 255, 255, 0.1);
+  padding-left: 0.6rem;
+}
+
+.records-growth-time {
+  font-size: 0.72rem;
+  color: var(--text-tertiary);
+}
+
+.records-growth-content strong {
   font-size: 0.9rem;
-  min-width: 140px;
-  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  color: var(--text-color);
 }
 
-.records-filter-input:focus,
-.records-filter-select:focus {
-  outline: none;
-  border-color: rgba(14,165,233,0.35);
-  box-shadow: 0 0 0 3px var(--glow-primary);
+.records-growth-content span {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
 }
 
-/* ─────────────────────────────────────────
-   3. DATA TABLE
-───────────────────────────────────────── */
+.records-growth-empty {
+  font-size: 0.84rem;
+  color: var(--text-tertiary);
+}
+
+.chart-container {
+  animation: fadeIn 0.35s ease-out;
+}
+
+.chart-header {
+  margin-bottom: 1.5rem;
+}
+
+.chart-header h2 {
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: var(--text-color);
+  margin: 0 0 0.3rem;
+}
+
+.chart-header p {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  margin: 0;
+}
+
+.records-focused-stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
+.records-focused-stat {
+  border: var(--glass-border);
+  border-radius: 12px;
+  padding: 0.7rem 0.8rem;
+  background: rgba(255, 255, 255, 0.02);
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  animation: fadeSlideUp 0.45s cubic-bezier(0.16, 1, 0.3, 1) backwards;
+}
+
+.records-focused-stat span {
+  font-size: 0.75rem;
+  color: var(--text-tertiary);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.records-focused-stat strong {
+  font-size: 1.02rem;
+  color: var(--text-color);
+}
+
+.chart-tooltip {
+  background: rgba(15, 15, 20, 0.95);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+  padding: 0.75rem 1rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+}
+
+.chart-tooltip-label {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  margin: 0 0 0.5rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.chart-tooltip p {
+  font-size: 0.85rem;
+  margin: 0.25rem 0;
+}
+
+/* Table */
+.records-table-card {
+  background: var(--card-bg);
+  border: var(--glass-border);
+  border-radius: 16px;
+  overflow: hidden;
+}
+
+.records-table-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 1.25rem;
+  border-bottom: var(--glass-border);
+  font-weight: 600;
+  color: var(--text-color);
+  font-size: 0.95rem;
+}
+
+.records-count {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  font-weight: 400;
+}
+
+.records-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  padding: 3rem;
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+}
+
+.records-spinner {
+  width: 20px;
+  height: 20px;
+  border: 2px solid var(--border-color);
+  border-top-color: var(--plant-teal);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.records-error {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1.5rem;
+  color: var(--danger-color);
+  font-size: 0.9rem;
+}
+
+.records-error .glass-icon {
+  width: 20px;
+  height: 20px;
+  color: var(--danger-color);
+}
+
+.records-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 3rem;
+  color: var(--text-secondary);
+  text-align: center;
+}
+
+.records-empty .glass-icon {
+  width: 40px;
+  height: 40px;
+  color: var(--text-tertiary);
+}
+
+.records-empty-hint {
+  font-size: 0.8rem;
+  color: var(--text-tertiary);
+}
+
 .records-table-wrap {
   overflow-x: auto;
-  border-radius: 1rem;
-  border: var(--glass-border);
 }
 
 .records-table {
   width: 100%;
   border-collapse: collapse;
-  font-size: 0.9rem;
+  font-size: 0.875rem;
 }
 
 .records-table th {
-  padding: 0.75rem 1rem;
+  padding: 0.7rem 1rem;
   text-align: left;
   font-size: 0.75rem;
-  font-weight: 700;
+  font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 0.06em;
-  color: var(--text-tertiary);
-  background: rgba(255,255,255,0.04);
+  letter-spacing: 0.05em;
+  color: var(--text-secondary);
+  background: rgba(255,255,255,0.02);
+  border-bottom: var(--glass-border);
   white-space: nowrap;
 }
 
 .records-table td {
-  padding: 0.75rem 1rem;
-  border-top: 1px solid var(--border-color);
-  color: var(--text-secondary);
+  padding: 0.65rem 1rem;
+  border-bottom: 1px solid var(--border-color);
+  color: var(--text-color);
   white-space: nowrap;
 }
 
-.records-table tr:hover td {
-  background: rgba(20,184,166,0.04);
-  color: var(--text-color);
+.records-table tr:last-child td {
+  border-bottom: none;
 }
 
-/* ─────────────────────────────────────────
-   4. PAGINATION
-───────────────────────────────────────── */
+.records-table tr:hover td {
+  background: rgba(255,255,255,0.02);
+}
+
+.records-ts {
+  color: var(--text-secondary);
+  font-size: 0.82rem;
+}
+
+.records-val.warn {
+  color: var(--warning-color);
+  font-weight: 600;
+}
+
+.records-device {
+  font-family: monospace;
+  font-size: 0.8rem;
+  color: var(--text-tertiary);
+}
+
+/* Pagination */
 .records-pagination {
   display: flex;
   align-items: center;
-  justify-content: flex-end;
-  gap: 0.5rem;
-  margin-top: 1rem;
-  flex-wrap: wrap;
+  justify-content: center;
+  gap: 1rem;
+  padding: 1rem;
+  border-top: var(--glass-border);
 }
 
 .records-page-btn {
-  padding: 0.4rem 0.85rem;
-  background: rgba(255,255,255,0.05);
+  padding: 0.4rem 0.9rem;
   border: var(--glass-border);
-  border-radius: 0.5rem;
-  color: var(--text-secondary);
+  border-radius: 8px;
+  background: var(--glass-color);
+  color: var(--text-color);
   font-size: 0.85rem;
   cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.records-page-btn:hover:not(:disabled) {
-  background: rgba(20,184,166,0.1);
-  color: var(--plant-teal);
-  border-color: rgba(20,184,166,0.3);
+  transition: background 0.2s;
 }
 
 .records-page-btn:disabled {
@@ -132,19 +475,39 @@
   cursor: not-allowed;
 }
 
-.records-page-btn.active {
-  background: rgba(20,184,166,0.18);
-  color: var(--plant-teal);
-  border-color: rgba(20,184,166,0.36);
-  font-weight: 600;
+.records-page-btn:not(:disabled):hover {
+  background: var(--glass-color-alt);
 }
 
-/* ─────────────────────────────────────────
-   5. RESPONSIVE
-───────────────────────────────────────── */
-@media (max-width: 768px) {
-  .records-header { flex-direction: column; align-items: flex-start; }
-  .records-filters { flex-direction: column; width: 100%; }
-  .records-filter-input,
-  .records-filter-select { width: 100%; }
+.records-page-info {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+}
+
+@media (max-width: 600px) {
+  /* File removed after migration to AnalyticsPage.css */
+    padding: 1rem;
+  }
+  .records-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .records-main-chart-card {
+    padding: 1rem;
+  }
+
+  .records-focused-stats {
+    grid-template-columns: 1fr;
+  }
+
+  .chart-header h2 {
+    font-size: 1.1rem;
+  }
+  .records-table {
+    font-size: 0.8rem;
+  }
+  .records-table th,
+  .records-table td {
+    padding: 0.5rem;
+  }
 }

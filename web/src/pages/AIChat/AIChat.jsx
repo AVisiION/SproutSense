@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { GlassIcon } from '../components/GlassIcon';
+import { GlassIcon } from '../components/bits/GlassIcon';
 import { AIRecommendation } from '../components/AIRecommendation';
 import './AIChat.css';
 

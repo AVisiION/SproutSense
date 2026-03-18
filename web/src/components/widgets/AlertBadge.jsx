@@ -2,7 +2,7 @@
  * AlertBadge.jsx — components/widgets/
  * Small pill badge that shows an alert type and message.
  *
- * Used inside AlertsPage list rows and the Topbar alert dropdown.
+ * Used inside AlertsPage list rows and the Navbar alert dropdown.
  *
  * Props:
  *  - type     {string}  — 'error' | 'warning' | 'info' | 'success'

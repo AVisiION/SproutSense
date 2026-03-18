@@ -1,0 +1,136 @@
+/**
+ * GlassIcon.css
+ * ─────────────────────────────────────────────────────
+ * Styles for the GlassIcon component and global icon animation utilities.
+ */
+
+.glass-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.65rem;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.02));
+  border: var(--glass-border);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08),
+              inset 0 0 16px rgba(255, 255, 255, 0.04);
+  color: var(--plant-teal);
+  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1),
+              box-shadow 0.4s cubic-bezier(0.16, 1, 0.3, 1),
+              color 0.4s ease;
+  position: relative;
+  overflow: hidden;
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+}
+
+.glass-icon::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 50%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.2),
+    transparent
+  );
+  transform: skewX(-20deg);
+  transition: left 0.6s ease;
+}
+
+.glass-icon:hover {
+  transform: translateY(-2px) scale(1.05);
+  box-shadow: 0 6px 16px rgba(20, 184, 166, 0.2),
+              inset 0 0 20px rgba(255, 255, 255, 0.08);
+  color: var(--plant-green);
+}
+
+.glass-icon:hover::before {
+  left: 200%;
+}
+
+/* Modifiers for icon animations */
+.glass-icon.animate-float {
+  animation: float 3s ease-in-out infinite;
+}
+
+.glass-icon.animate-spin {
+  animation: spin 4s linear infinite;
+}
+
+.glass-icon.animate-pulse {
+  animation: iconPulse 2s ease-in-out infinite;
+}
+
+/* ═══════════════════════════════════════════
+   GLOBAL ICON ANIMATION UTILITIES
+═══════════════════════════════════════════ */
+@keyframes float {
+  0%   { transform: translateY(0px); }
+  50%  { transform: translateY(-4px); }
+  100% { transform: translateY(0px); }
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+@keyframes iconPulse {
+  0% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.1); opacity: 0.8; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+@keyframes wave {
+  0%, 100% { transform: rotate(0deg); }
+  25% { transform: rotate(-15deg); }
+  75% { transform: rotate(15deg); }
+}
+
+@keyframes iconBounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
+}
+/* ═══════════════════════════════════════════
+   SVG SIZING UTILITIES
+═══════════════════════════════════════════ */
+
+.glass-icon svg {
+  width: 1.15rem;
+  height: 1.15rem;
+  flex-shrink: 0;
+}
+
+/* Modifiers */
+.glass-icon-sm svg {
+  width: 0.9rem;
+  height: 0.9rem;
+}
+
+.glass-icon-md svg {
+  width: 1.15rem;
+  height: 1.15rem;
+}
+
+.glass-icon-lg svg {
+  width: 1.45rem;
+  height: 1.45rem;
+}
+
+.glass-icon-xl svg {
+  width: 1.8rem;
+  height: 1.8rem;
+}
+
+/* Context-Specific Scaling */
+.metric-icon .glass-icon svg,
+.card-title-icon .glass-icon svg,
+.status-item-header .glass-icon svg,
+.config-info-item .glass-icon svg,
+.control-section-title .glass-icon svg {
+  width: 0.9rem;
+  height: 0.9rem;
+}

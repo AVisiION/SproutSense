@@ -1,0 +1,85 @@
+/**
+ * responsive.css — styles/
+ * ─────────────────────────────────────────────────────
+ * Global responsive utility classes, touch targets, and typography scaling.
+ */
+
+/* ─────────────────────────────────────────────────
+   FLUID TYPOGRAPHY SCALING
+   ───────────────────────────────────────────────── */
+html {
+  font-size: 16px; /* Base 1rem = 16px */
+}
+
+@media (max-width: 1024px) {
+  html {
+    font-size: 15px; /* Shrinks all rem-based sizes globally by ~6% */
+  }
+}
+
+@media (max-width: 768px) {
+  html {
+    font-size: 14px; /* Shrinks all rem-based sizes globally by ~12% */
+  }
+}
+
+/* ─────────────────────────────────────────────────
+   TOUCH DEVICE OPTIMIZATIONS (iOS/Android)
+   ───────────────────────────────────────────────── */
+@media (pointer: coarse) {
+  /* Ensure all interactive elements have minimum touch targets (Apple HIG standard) */
+  button, 
+  a, 
+  input[type="checkbox"], 
+  input[type="radio"], 
+  .sidebar-link {
+    min-height: 44px;
+    min-width: 44px;
+  }
+
+  /* Prevent awkward grey highlight box on tap */
+  * {
+    -webkit-tap-highlight-color: transparent;
+  }
+  
+  /* Faster double-tap behavior */
+  button, a {
+    touch-action: manipulation;
+  }
+}
+
+/* ─────────────────────────────────────────────────
+   VISIBILITY UTILITIES
+   ───────────────────────────────────────────────── */
+.hide-on-mobile {
+  display: block;
+}
+
+.hide-on-desktop {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .hide-on-mobile {
+    display: none !important;
+  }
+  
+  .hide-on-desktop {
+    display: block !important;
+  }
+  
+  /* Make utility grid containers fluid on mobile */
+  .grid-2-col, 
+  .grid-3-col, 
+  .grid-4-col {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+@media (min-width: 769px) and (max-width: 1024px) {
+  /* Gracefully stack utility grids on tablets */
+  .grid-3-col, 
+  .grid-4-col {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+}

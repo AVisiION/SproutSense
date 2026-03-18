@@ -1,5 +1,5 @@
 ﻿import React, { useState, useEffect } from 'react';
-import { GlassIcon } from '../components/GlassIcon';
+import { GlassIcon } from '../components/bits/GlassIcon';
 import { configAPI } from '../utils/api';
 import './SettingsPage.css';
 

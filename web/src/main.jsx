@@ -13,7 +13,7 @@ import { BrowserRouter } from 'react-router-dom';
 
 // ── Global styles (import FIRST so variables are available to all components)
 import './styles/variables.css';
-import './styles/globals.css';
+import './styles/global.css';
 
 import App from './App';
 

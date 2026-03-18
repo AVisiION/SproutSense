@@ -1,6 +1,6 @@
 ﻿import React, { useState, useEffect } from 'react';
 import { configAPI, sensorAPI } from '../utils/api';
-import { GlassIcon } from './GlassIcon';
+import { GlassIcon } from './bits/GlassIcon';
 
 export function ConfigCard({ onNotification, systemStatus: externalSystemStatus }) {
   const [autoMode, setAutoMode] = useState(false);
