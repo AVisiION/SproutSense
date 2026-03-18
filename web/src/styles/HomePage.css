@@ -92,6 +92,7 @@
   gap: 8px;
   padding: 8px 16px;
   background: rgba(255, 255, 255, 0.15);
+  -webkit-backdrop-filter: blur(10px);
   backdrop-filter: blur(10px);
   border-radius: 20px;
   color: white;
@@ -168,6 +169,7 @@
   background: rgba(11, 20, 17, 0.651);
   color: white;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+  -webkit-backdrop-filter: blur(10px);
   backdrop-filter: blur(10px);
 }
 
@@ -221,6 +223,7 @@
   border-radius: 999px;
   background: rgba(15, 23, 42, 0.9);
   border: 1px solid rgba(148, 163, 184, 0.7);
+  -webkit-backdrop-filter: blur(14px);
   backdrop-filter: blur(14px);
   display: flex;
   align-items: center;
