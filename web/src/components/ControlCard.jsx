@@ -95,49 +95,49 @@ export function ControlCard({
       {/* Manual Control */}
       <div className="control-section">
         <h3 className="control-section-title">
-          <GlassIcon name="pump" /> Manual Control
+          <GlassIcon name="water" /> Manual Control
         </h3>
-        <div className="control-row">
-          <button
-            className="btn btn-primary"
-            onClick={onStartWatering}
-            disabled={pumpActive}
-          >
-            <GlassIcon name="watering" className="btn-icon" />
-            Water Now
-          </button>
-          <button
-            className="btn btn-danger"
-            onClick={onStopWatering}
-            disabled={!pumpActive}
-          >
-            <GlassIcon name="close" className="btn-icon" />
-            Stop
-          </button>
+        
+        {/* ROW 1: Water Now & Stop Buttons */}
+        <div className="control-field">
+          <div className="control-row">
+            <button className="btn btn-primary" onClick={onStartWatering} disabled={pumpActive}>
+              <GlassIcon name="water" className="btn-icon" /> Water Now
+            </button>
+            <button className="btn btn-danger" onClick={onStopWatering} disabled={!pumpActive}>
+              <GlassIcon name="close" className="btn-icon" /> Stop
+            </button>
+          </div>
         </div>
 
-        {/* Timed watering */}
+        {/* ROW 2: Timed Watering */}
         <div className="control-field">
           <label className="control-label">Timed Watering</label>
-          <div className="control-row">
-            <ElasticSlider
-              defaultValue={waterDuration}
-              maxValue={300}
-              startingValue={5}
-              isStepped={true}
-              stepSize={5}
-              onChange={val => setWaterDuration(Math.round(val))}
-            />
-            <span className="control-unit">seconds</span>
+          
+          <div className="timer-control-row">
+            {/* The slider row */}
+            <div className="timer-slider-container">
+              <ElasticSlider
+                defaultValue={waterDuration}
+                maxValue={300}
+                startingValue={5}
+                isStepped={true}
+                stepSize={5}
+                onChange={val => setWaterDuration(Math.round(val))}
+                unit="seconds" 
+              />
+            </div>
+
+            {/* The Start Timer button (MUST be inside timer-control-row) */}
+          </div>
             <button
-              className="btn btn-primary"
+              className="btn btn-secondary start-timer-btn"
               onClick={handleTimedWater}
               disabled={pumpActive}
             >
               <GlassIcon name="schedule" className="btn-icon" />
               Start Timer
             </button>
-          </div>
         </div>
       </div>
 
@@ -165,15 +165,20 @@ export function ControlCard({
             Moisture Threshold
           </label>
           <div className="control-row">
-            <ElasticSlider
-              defaultValue={moistureThreshold}
-              maxValue={100}
-              startingValue={0}
-              isStepped={true}
-              stepSize={1}
-              onChange={val => onMoistureThresholdChange(Math.round(val))}
-            />
-            <span className="control-unit">%</span>
+            <div className="timer-slider-container">
+              <ElasticSlider
+                defaultValue={moistureThreshold}
+                maxValue={100}
+                startingValue={0}
+                isStepped={true}
+                stepSize={1}
+                onChange={val => onMoistureThresholdChange(Math.round(val))}
+                unit="%"
+              />
+            </div>
+            
+            {/* Save Button next to slider */}
+          </div>
             <button
               className="btn btn-success threshold-save-btn"
               onClick={onSaveMoistureThreshold}
@@ -182,7 +187,6 @@ export function ControlCard({
               <GlassIcon name="check" className="btn-icon" />
               {isThresholdSaving ? 'Saving...' : 'Save'}
             </button>
-          </div>
         </div>
       </div>
 
@@ -214,6 +218,7 @@ export function ControlCard({
               value={scheduleTime}
               onChange={e => setScheduleTime(e.target.value)}
               disabled={!scheduleEnabled}
+              style={{ flex: 1 }}
             />
             <button
               className="btn btn-success"
@@ -258,6 +263,7 @@ export function ControlCard({
               value={plantGrowthStage}
               onChange={e => onPlantGrowthStageChange?.(e.target.value)}
               disabled={!plantGrowthEnabled}
+              style={{ width: '100%' }}
             >
               <option value="seedling">Seedling</option>
               <option value="vegetative">Vegetative</option>
@@ -277,6 +283,7 @@ export function ControlCard({
               className="control-input"
               value={aiInsightsMode}
               onChange={e => onAiInsightsModeChange?.(e.target.value)}
+              style={{ flex: 1 }}
             >
               <option value="live_feed">Live Feed</option>
               <option value="snapshots">Snapshots</option>

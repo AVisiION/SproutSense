@@ -234,4 +234,13 @@
   --glow-plant: rgba(34, 197, 94, 0.16);
   --glow-teal: rgba(20, 184, 166, 0.14);
   --glow-warning: rgba(245, 158, 11, 0.16);
+
+ 
+  --container-max-narrow: 1473px;
+  --container-max-wide: 1800px;
+  --container-padding-mobile: 1rem;
+  --container-padding-desktop: 2rem;
+  --sidebar-collapsed-width: 80px;
 }
+
+

@@ -357,19 +357,37 @@
 /* ─────────────────────────────────────────────────
    RESPONSIVE OVERRIDES
    ───────────────────────────────────────────────── */
+@media (min-width: 1440px) and (max-width: 1600px){
+  .sensor-card-enhanced {
+    max-width: 1450px;
+    width: 105%;
+    margin-left: auto;
+    margin-right: auto;
+  }
+}
+@media (min-width: 1600px){
+  .sensor-card-enhanced {
+    max-width: 1600px;
+    width: 130%;
+    margin-left: auto;
+    margin-right: auto;
+  }
+}
 @media (min-width: 1024px) {
   .sensor-grid {
-    max-width: 1400px;
+    max-width: 1600px;
     width: 100%;
     margin-left: auto;
     margin-right: auto;
   }
+}
 
+@media (min-width: 1024px) and (max-width: 1439px) {
   .sensor-card-enhanced {
-    max-width: 1400px;
+    max-width: 1473px;
     width: 100%;
-    margin-left: 4rem;
-    margin-right: 0rem;
+    margin-left: auto;
+    margin-right: auto;
   }
 }
 
@@ -392,3 +410,97 @@
     font-size: 1.5rem;
   }
 }
+
+/* ═══════════════════════════════════════════
+   SPOTLIGHT SENSORS — 1700px+ TRANSFORM
+═══════════════════════════════════════════ */
+
+.sensor-grid {
+  display: grid;
+  gap: clamp(1rem, 2vw, 2rem);
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  width: 100%;
+  margin: 0 auto;
+  padding: clamp(1rem, 4vw, 2.5rem);
+}
+
+/* 1700px+ : GLOWING INDIVIDUAL CARDS */
+@media (min-width: 1700px) {
+  .sensor-grid {
+    grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+    gap: 2.5rem;
+    max-width: 1800px;
+  }
+  
+  .sensor-spotlight-card {
+    --spotlight-glow: rgba(255, 255, 255, 0.1);
+    margin-bottom: 0;
+  }
+  
+  .sensor-spotlight-card .sensor-enhanced-item {
+    border-radius: 1.75rem;
+    -webkit-backdrop-filter: blur(25px);
+    backdrop-filter: blur(25px);
+    box-shadow: 
+      0 30px 60px rgba(0, 0, 0, 0.25),
+      0 0 0 1px rgba(255, 255, 255, 0.15),
+      inset 0 1px 0 rgba(255, 255, 255, 0.2);
+    transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1);
+  }
+  
+  .sensor-spotlight-card:hover .sensor-enhanced-item {
+    transform: translateY(-8px);
+    box-shadow: 
+      0 45px 90px rgba(0, 0, 0, 0.35),
+      0 20px 40px rgba(20, 184, 166, 0.2);
+  }
+}
+
+/* Compact mode <1700px */
+@media (max-width: 1699px) {
+  .sensor-spotlight-card .sensor-enhanced-item {
+    border-radius: 0.85rem;
+  }
+}
+
+/* ═══════════════════════════════════════════
+   SMART ACCORDION TO STATIC CARD LOGIC
+═══════════════════════════════════════════ */
+
+/* 1. By default, hide the detail content */
+.sensor-hardware-detail {
+  display: none;
+}
+
+/* 2. Show it when user clicks (adds .expanded class) */
+.sensor-enhanced-item.expanded .sensor-hardware-detail {
+  display: block;
+}
+
+/* 3. At 1600px and up, transform into static cards */
+@media (min-width: 1600px) {
+  
+  /* Force the details to always be visible */
+  .sensor-hardware-detail {
+    display: block !important;
+  }
+  
+  /* Disable clicking/hovering on the header button */
+  .sensor-item-btn {
+    pointer-events: none;
+    cursor: default;
+  }
+  
+  /* Remove the background hover effect to make it look like a cohesive card */
+  .sensor-item-btn:hover {
+    background: rgba(255,255,255,0.04);
+    border-color: transparent;
+  }
+  
+  /* Hide the "Tap any sensor row..." hint because they are no longer tappable */
+  .hide-on-desktop {
+    display: none;
+  }
+}
+
+

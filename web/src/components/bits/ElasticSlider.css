@@ -1,36 +1,117 @@
+/* Container holding the entire slider component */
 .slider-container {
+  position: relative;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 1rem;
-  width: 12rem;
+  width: 100%;
+  padding-top: 1.5rem; /* Creates physical space for the floating number */
+
+  transform: scale(0.8);
+  transform-origin: center center; /* Ensures it scales evenly from the middle */
 }
 
+/* Wrapper for buttons + track */
 .slider-wrapper {
   display: flex;
+  align-items: center;
+  justify-content: space-between;
   width: 100%;
+  gap: 0.75rem; 
   touch-action: none;
   -webkit-user-select: none;
   user-select: none;
-  align-items: center;
-  justify-content: center;
-  gap: 1rem;
 }
 
+/* The Number Above the Track */
+.value-indicator {
+  position: absolute;
+  top: -5px; 
+  left: 50%;
+  transform: translateX(-50%); /* Keeps the number perfectly centered over the track */
+  font-size: 1.35rem; 
+  font-weight: 700;
+  color: var(--text-color, #ffffff);
+  letter-spacing: 0.05em;
+}
+
+/* Minus / Plus Buttons */
+.slider-btn {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 50%;
+  width: 34px !important;  /* Strictly locked width */
+  height: 34px !important; /* Strictly locked height */
+  flex-shrink: 0;          /* PREVENTS SQUISHING */
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  padding: 0;
+}
+
+.slider-btn:hover {
+  background: rgba(255, 255, 255, 0.15);
+  border-color: var(--plant-cyan, #0ea5e9);
+}
+
+.slider-btn:active {
+  transform: scale(0.92);
+}
+
+.icon {
+  width: 18px;
+  height: 18px;
+  color: var(--text-color, #fff);
+}
+
+/* The Track Area */
+.slider-root {
+  position: relative;
+  display: flex;
+  align-items: center;
+  flex-grow: 1; /* Lets the track take up whatever space is left between buttons */
+  height: 24px; 
+  cursor: grab;
+  touch-action: none;
+}
+
+.slider-root:active {
+  cursor: grabbing;
+}
+
+/* The actual line */
+.slider-track-wrapper {
+  width: 100%;
+  height: 10px; /* Nice thick track */
+  background-color: rgba(255, 255, 255, 0.1);
+  border-radius: 999px;
+  overflow: hidden;
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+/* The colored fill */
+.slider-range {
+  height: 100%;
+  background-color: var(--plant-cyan, #0ea5e9);
+  border-radius: 999px;
+}
+
+
+/* The actual draggable area */
 .slider-root {
   position: relative;
   display: flex;
   width: 100%;
-  max-width: 200px;
   flex-grow: 1;
   cursor: grab;
   touch-action: none;
-  
   -webkit-user-select: none;
   user-select: none;
   align-items: center;
-  padding: 1rem 0;
+  padding: 1.5rem 0; /* Extra padding top/bottom to make it easier to grab */
 }
 
 .slider-root:active {
@@ -40,57 +121,77 @@
 .slider-track-wrapper {
   display: flex;
   flex-grow: 1;
+  height: 12px; /* INCREASED THICKNESS of the track */
 }
 
 .slider-track {
   position: relative;
   height: 100%;
   flex-grow: 1;
-  overflow: hidden;
   border-radius: 9999px;
-  background-color: rgba(128, 128, 128, 0.4);
+  background-color: rgba(255, 255, 255, 0.1); /* Subtle glass background */
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.3); /* Adds depth */
 }
 
 .slider-range {
   position: absolute;
   height: 100%;
-  background-color: #888;
+  background-color: var(--plant-cyan, #0ea5e9); /* Brand color fill */
   border-radius: 9999px;
+  box-shadow: 0 0 10px rgba(14, 165, 233, 0.3); /* Subtle glow */
 }
 
+/* The floating number above/inside the slider */
 .value-indicator {
-  color: #808080;
+  color: var(--text-color, #ffffff);
   position: absolute;
-  transform: translateY(-1rem);
-  font-size: 0.75rem;
-  font-weight: 500;
+  top: -1.8rem; /* Pushes the number nicely above the track */
+  font-size: 1.25rem; /* MUCH BIGGER text */
+  font-weight: 700;
   letter-spacing: 0.05em;
+  text-align: center;
+  width: 100%;
 }
 
+/* +/- Icons inside the buttons */
 .icon {
-  width: 24px;
-  height: 24px;
-  color: #888;
+  width: 20px; /* Bigger icons */
+  height: 20px;
+  color: var(--text-secondary, #94a3b8);
+  transition: color 0.2s ease;
 }
 
 .icon.dark {
   color: #ddd;
 }
 
+/* Minus / Plus Buttons */
 .slider-btn {
-  background: transparent;
-  border: none;
-  padding: 6px;
+  background: rgba(255, 255, 255, 0.05); /* Slight button background */
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 50%; /* Circle buttons */
+  width: 36px; /* Fixed size */
+  height: 36px; /* Fixed size */
   display: inline-flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  color: #777;
+  transition: all 0.2s ease;
+  flex-shrink: 0; /* Prevents squishing */
+}
+
+.slider-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+}
+
+.slider-btn:hover .icon {
+  color: #fff;
 }
 
 .slider-btn:active {
-  transform: scale(0.96);
+  transform: scale(0.92);
 }
 
-.slider-btn-left { margin-right: 6px; }
-.slider-btn-right { margin-left: 6px; }
+.slider-btn-left { margin-right: 0.5rem; }
+.slider-btn-right { margin-left: 0.5rem; }

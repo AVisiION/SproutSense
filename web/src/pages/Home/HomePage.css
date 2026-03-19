@@ -262,7 +262,7 @@
 .section-header-center h2 {
   font-size: clamp(1.75rem, 3vw, 2.5rem);
   color: var(--text-color);
-  margin-bottom: 12px;
+  margin-bottom: 12px;  
 }
 
 .section-subtitle {

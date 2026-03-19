@@ -11,7 +11,7 @@
   display: flex;
   min-height: 100vh;
   width: 100vw;
-  overflow: hidden; /* Prevent body scroll, let container scroll */
+  overflow: hidden; 
   background-color: var(--bg-color);
   color: var(--text-color);
 }
@@ -25,49 +25,73 @@
   flex-direction: column;
   min-width: 0; 
   height: 100vh;
-  overflow-y: auto; /* Keeps the scrolling functionality */
+  overflow-y: auto; 
   position: relative;
   
-  /* Constraints */
   max-width: 100%;
   padding-left: max(var(--layout-horizontal-padding), env(safe-area-inset-left));
   padding-right: max(var(--layout-horizontal-padding), env(safe-area-inset-right));
 
-  /* ── HIDE SCROLLBAR ── */
-  scrollbar-width: none; /* Firefox */
-  -ms-overflow-style: none; /* Internet Explorer 10+ and Edge */
+  /* HIDE SCROLLBAR */
+  scrollbar-width: none; 
+  -ms-overflow-style: none; 
 }
 
-/* ── HIDE SCROLLBAR (Chrome, Safari, and Opera) ── */
 .container::-webkit-scrollbar {
   display: none;
 }
 
 /* ─────────────────────────────────────────────────
-   DESKTOP (Large & Extra Large)
+DASHBOARD SECTION (The wrapper for all pages)
    ───────────────────────────────────────────────── */
+.dashboard-section {
+  padding: var(--layout-horizontal-padding); /* Restored left/right padding */
+  max-width: var(--container-max-width, 1500px);
+  width: 100%;
+  margin: 0 auto; 
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  align-items: stretch; 
+}
+
+/* Force direct children to stretch to the edges of the section */
+.dashboard-section > * {
+  width: 100%;
+}
+
+/* Wide version for graphs */
+.dashboard-section-wide {
+  max-width: 1800px;
+}
+
+/* ─────────────────────────────────────────────────
+   DESKTOP FIXES & ULTRAWIDE SCREENS
+   ───────────────────────────────────────────────── */
+   
+/* Standard Desktop (1024px - 1599px) */
 @media (min-width: 1024px) {
-  section,
-  .section-container,
-  .section-card,
-  .content-section,
-  .problem-grid,
-  .stats-section,
-  .overview-grid,
-  .graph-container,
-  .graph-display,
   .dashboard-section {
-    max-width: 1500px;
+    max-width: var(--container-max-width, 1500px);
+    width: 100%;
     margin-left: auto;
     margin-right: auto;
     padding-left: var(--layout-horizontal-padding);
     padding-right: var(--layout-horizontal-padding);
-    width: 100%;
+  }
+
+  .dashboard-section-wide {
+    max-width: 1800px;
+    margin-left: auto;
+    margin-right: auto;
   }
 }
 
-/* Mid-range desktops (between main desktop and extra-large) */
-@media (min-width: 1025px) and (max-width: 1439px) {
+/* Ultrawide Monitors (1600px+) 
+   This allows your internal grids (like the Control Card) to stretch out side-by-side 
+   instead of getting squished by a 1500px parent limit.
+*/
+@media (min-width: 1600px) {
   section,
   .section-container,
   .section-card,
@@ -78,9 +102,17 @@
   .graph-container,
   .graph-display,
   .dashboard-section {
-    max-width: 1400px;
+    max-width: 1800px; /* Increased from 1500px */
+  }
+  
+  .dashboard-section-wide {
+    max-width: 2200px; /* Give even more room for graphs */
+  }
+  .control-card-enhanced{
+    width: 130%;
   }
 }
+
 
 /* ─────────────────────────────────────────────────
    TABLET
@@ -160,5 +192,22 @@
     padding-left: 0.75rem;
     padding-right: 0.75rem;
     width: 100%;
+  }
+}
+/* Fix centering of dashboard pages on desktop widths */
+@media (min-width: 1024px) {
+  .dashboard-section {
+    max-width: var(--container-max-width, 1500px);
+    width: 100%;
+    margin-left: auto;
+    margin-right: auto;
+    padding-left: var(--layout-horizontal-padding);
+    padding-right: var(--layout-horizontal-padding);
+  }
+
+  .dashboard-section-wide {
+    max-width: 1800px;
+    margin-left: auto;
+    margin-right: auto;
   }
 }

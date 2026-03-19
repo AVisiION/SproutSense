@@ -1,20 +1,3 @@
-/**
- * Sidebar.jsx — components/layout/
- * Main navigation sidebar for SproutSense.
- *
- * Responsibilities:
- *  - Renders category groups with nav links
- *  - Shows alert badge count on Alerts link
- *  - Shows online/offline status dots on Backend & Device links
- *  - Shows system status pills at the bottom (Backend, ESP32, ESP32-CAM)
- *
- * Props:
- *  - sidebarCategories  {Array}   — list of { label, items[] } objects
- *  - systemStatus       {Object}  — { backend, esp32, esp32Cam }
- *  - alerts             {Array}   — current active alerts list
- *  - closeSidebar       {fn}      — called on link click (closes on mobile)
- *  - isSidebarCollapsed {boolean}
- */
 import React from 'react';
 import { NavLink } from 'react-router-dom';
 import { GlassIcon } from '../bits/GlassIcon';
@@ -34,11 +17,12 @@ export function Sidebar({
   systemStatus,
   alerts,
   closeSidebar,
+  isSidebarCollapsed // Make sure to pass this prop if you want to hide things conditionally in JSX
 }) {
   return (
     <aside className="sidebar" role="navigation" aria-label="Main navigation">
-
-      {/* ── Brand logo ── */}
+      
+      {/* ── Brand logo (Hides when collapsed via CSS) ── */}
       <div className="sidebar-brand">
         <GlassIcon name="sprout" className="sidebar-brand-icon" />
         <span className="sidebar-brand-text">SproutSense</span>
@@ -97,7 +81,7 @@ export function Sidebar({
         ))}
       </nav>
 
-      {/* ── System status pills ── */}
+      {/* ── System status pills (Hides when collapsed) ── */}
       <div className="sidebar-system-status" aria-label="System status overview">
         <div className="sidebar-system-row">
           <span className="sidebar-system-label">Backend</span>

@@ -32,7 +32,7 @@ import { AIRecommendation }from './components/AIRecommendation';
 import { ConfigCard }      from './components/ConfigCard';
 import { Notification }    from './components/Notification';
 import { GlassIcon }       from './components/bits/GlassIcon';   // Make sure this matches your React Bits structure
-
+import SproutSenseLogo from './components/SproutSenseLogo'; 
 
 // ── Pages ────────────────────────────────────────────────────────────────
 import HomePage      from './pages/Home/HomePage.jsx';
@@ -708,6 +708,7 @@ function App() {
             onClose={closeNotification}
           />
         )}
+        
       </div>
     </div>
   );

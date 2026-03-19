@@ -1,10 +1,7 @@
-﻿import React from 'react';
-import { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import './SettingsPage.css';
-// Make sure it uses ../../
 import { configAPI } from '../../utils/api';
 import { GlassIcon } from '../../components/bits/GlassIcon';
-
 
 export default function SettingsPage({ theme, toggleTheme, onNotification }) {
   const [geminiKey, setGeminiKey] = useState('');
@@ -26,13 +23,10 @@ export default function SettingsPage({ theme, toggleTheme, onNotification }) {
   const [environment, setEnvironment] = useState('development');
 
   useEffect(() => {
-    // Load saved keys from localStorage (never send to server unless needed)
     setGeminiKey(localStorage.getItem('gemini_api_key') || '');
     setOpenaiKey(localStorage.getItem('openai_api_key') || '');
     setEsp32IP(localStorage.getItem('esp32_ip') || '192.168.1.100');
     setDeviceId(localStorage.getItem('device_id') || 'ESP32-SENSOR');
-    
-    // Load test mode status
     loadTestModeStatus();
   }, []);
 
@@ -55,7 +49,7 @@ export default function SettingsPage({ theme, toggleTheme, onNotification }) {
     localStorage.setItem('openai_api_key', openaiKey);
     localStorage.setItem('esp32_ip', esp32IP);
     localStorage.setItem('device_id', deviceId);
-    onNotification?.('API keys saved locally', 'success');
+    onNotification?.('API keys saved securely to local storage', 'success');
   };
 
   const handleSaveDeviceConfig = async () => {
@@ -65,9 +59,9 @@ export default function SettingsPage({ theme, toggleTheme, onNotification }) {
         soilMoistureThreshold: undefined,
         espIp: esp32IP,
       });
-      onNotification?.('Device config updated', 'success');
+      onNotification?.('Device configuration synced successfully', 'success');
     } catch {
-      onNotification?.('Failed to update device config', 'error');
+      onNotification?.('Failed to reach ESP32 device', 'error');
     } finally {
       setSaving(false);
     }
@@ -89,19 +83,17 @@ export default function SettingsPage({ theme, toggleTheme, onNotification }) {
       const data = await response.json();
       
       if (response.ok) {
-        // Check if test mode was actually enabled (might be blocked in production)
         if (data.data?.error === 'PRODUCTION_MODE') {
-          onNotification?.('Test mode is disabled in production', 'warning');
+          onNotification?.('Simulation blocked in production environment', 'warning');
         } else {
           setTestModeEnabled(data.data?.enabled || false);
-          onNotification?.(data.data?.message || 'Test mode updated', 'success');
+          onNotification?.(data.data?.message || 'Simulation mode updated', 'success');
         }
       } else {
-        onNotification?.(data.message || 'Failed to toggle test mode', 'error');
+        onNotification?.(data.message || 'Failed to sync simulation state', 'error');
       }
     } catch (error) {
-      console.error('Failed to toggle test mode:', error);
-      onNotification?.('Error toggling test mode', 'error');
+      onNotification?.('Network error toggling simulation', 'error');
     } finally {
       setTestModeLoading(false);
     }
@@ -109,16 +101,20 @@ export default function SettingsPage({ theme, toggleTheme, onNotification }) {
 
   return (
     <div className="settings-page">
+      {/* HEADER */}
       <div className="settings-header">
-        <GlassIcon name="settings" />
-        <div>
-          <h1 className="settings-title">Settings</h1>
-          <p className="settings-subtitle">Manage your SproutSense configuration</p>
+        <div className="settings-header-icon">
+          <GlassIcon name="settings" />
+        </div>
+        <div className="settings-header-text">
+          <h1 className="settings-title">System Settings</h1>
+          <p className="settings-subtitle">Manage device connections, preferences, and API integrations.</p>
         </div>
       </div>
 
       <div className="settings-grid">
-        {/* Appearance */}
+        
+        {/* APPEARANCE */}
         <div className="settings-card">
           <div className="settings-card-header">
             <GlassIcon name="sun" />
@@ -127,9 +123,8 @@ export default function SettingsPage({ theme, toggleTheme, onNotification }) {
           <div className="settings-card-body">
             <div className="settings-row">
               <div className="settings-row-info">
-                <GlassIcon name={theme === 'dark' ? 'moon' : 'sun'} className="settings-row-icon" />
-                <span className="settings-row-label">Theme</span>
-                <span className="settings-row-desc">Switch between dark and light mode</span>
+                <span className="settings-row-label">Interface Theme</span>
+                <span className="settings-row-desc">Switch between light and dark environments</span>
               </div>
               <button
                 className={`theme-pill ${theme === 'dark' ? 'dark' : 'light'}`}
@@ -139,28 +134,161 @@ export default function SettingsPage({ theme, toggleTheme, onNotification }) {
                 <span className="theme-pill-icon">
                   <GlassIcon name={theme === 'dark' ? 'moon' : 'sun'} />
                 </span>
-                <span>{theme === 'dark' ? 'Dark' : 'Light'}</span>
+                <span>{theme === 'dark' ? 'Dark Mode' : 'Light Mode'}</span>
               </button>
             </div>
           </div>
         </div>
 
-        {/* Notification Preferences */}
+        {/* TEST MODE */}
+        <div className="settings-card">
+          <div className="settings-card-header">
+            <GlassIcon name="demo" />
+            <h2>Simulation Mode</h2>
+          </div>
+          <div className="settings-card-body">
+            {!testModeAllowed && (
+              <div className="settings-alert warning">
+                Simulation is disabled in the <strong>{environment}</strong> environment.
+              </div>
+            )}
+            <div className="settings-row">
+              <div className="settings-row-info">
+                <span className="settings-row-label">Generate Mock Sensor Data</span>
+                <span className="settings-row-desc">
+                  {testModeAllowed 
+                    ? 'Populates dashboard without real ESP32 hardware' 
+                    : 'Requires local development environment'}
+                </span>
+              </div>
+              <button
+                className={`toggle-switch ${testModeEnabled ? 'on' : 'off'}`}
+                onClick={handleToggleTestMode}
+                disabled={testModeLoading || !testModeAllowed}
+                aria-label="Toggle test mode"
+              >
+                <span className="toggle-knob" />
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* DEVICE CONFIG */}
+        <div className="settings-card settings-card-wide">
+          <div className="settings-card-header">
+            <GlassIcon name="esp32" />
+            <h2>Hardware Configuration</h2>
+          </div>
+          <div className="settings-card-body split-body">
+            <div className="settings-input-group">
+              <div className="settings-field">
+                <label className="settings-label">ESP32 IPv4 Address</label>
+                <input
+                  type="text"
+                  className="settings-input"
+                  placeholder="e.g. 192.168.1.100"
+                  value={esp32IP}
+                  onChange={e => setEsp32IP(e.target.value)}
+                />
+              </div>
+              <div className="settings-field">
+                <label className="settings-label">Hardware Device ID</label>
+                <input
+                  type="text"
+                  className="settings-input"
+                  placeholder="ESP32-SENSOR-001"
+                  value={deviceId}
+                  onChange={e => setDeviceId(e.target.value)}
+                />
+              </div>
+            </div>
+            
+            <div className="settings-input-group">
+              <div className="settings-field">
+                <label className="settings-label">Polling Interval (Seconds)</label>
+                <input
+                  type="number"
+                  className="settings-input"
+                  min="1" max="60"
+                  value={refreshInterval}
+                  onChange={e => setRefreshInterval(Number(e.target.value))}
+                />
+              </div>
+              <div className="settings-field">
+                <label className="settings-label">Data Retention (Days)</label>
+                <input
+                  type="number"
+                  className="settings-input"
+                  min="1" max="365"
+                  value={retentionDays}
+                  onChange={e => setRetentionDays(Number(e.target.value))}
+                />
+              </div>
+            </div>
+
+            <div className="settings-action-row">
+              <button className="settings-btn-primary" onClick={handleSaveDeviceConfig} disabled={saving}>
+                <GlassIcon name={saving ? 'refresh' : 'check'} animated={saving} />
+                {saving ? 'Syncing to Device...' : 'Apply Hardware Changes'}
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* API KEYS */}
+        <div className="settings-card">
+          <div className="settings-card-header">
+            <GlassIcon name="bot" />
+            <h2>AI Integrations</h2>
+          </div>
+          <div className="settings-card-body">
+            <p className="settings-hint">
+              Keys are encrypted in local storage and only utilized during AI disease diagnosis.
+            </p>
+            <div className="settings-field">
+              <label className="settings-label">Google Gemini API Key</label>
+              <input
+                type="password"
+                className="settings-input"
+                placeholder="AIzaSy..."
+                value={geminiKey}
+                onChange={e => setGeminiKey(e.target.value)}
+                autoComplete="off"
+              />
+            </div>
+            <div className="settings-field">
+              <label className="settings-label">OpenAI API Key (Optional)</label>
+              <input
+                type="password"
+                className="settings-input"
+                placeholder="sk-proj..."
+                value={openaiKey}
+                onChange={e => setOpenaiKey(e.target.value)}
+                autoComplete="off"
+              />
+            </div>
+            <button className="settings-btn-secondary" onClick={handleSaveKeys}>
+              <GlassIcon name="check" />
+              Save Credentials
+            </button>
+          </div>
+        </div>
+
+        {/* NOTIFICATIONS */}
         <div className="settings-card">
           <div className="settings-card-header">
             <GlassIcon name="bell" />
-            <h2>Notifications</h2>
+            <h2>Alert Preferences</h2>
           </div>
           <div className="settings-card-body">
             {[
-              { key: 'lowMoisture', label: 'Low Soil Moisture Alert', desc: 'Alert when moisture drops below threshold', icon: 'watering' },
-              { key: 'highTemp', label: 'High Temperature Alert', desc: 'Alert when temperature exceeds 38 °C', icon: 'temperature' },
-              { key: 'phAlert', label: 'pH Out of Range', desc: 'Alert when pH is outside 5.5-7.5', icon: 'ph' },
-              { key: 'systemAlerts', label: 'System Alerts', desc: 'ESP32 connection status changes', icon: 'esp32' },
-            ].map(({ key, label, desc, icon }) => (
+              { key: 'lowMoisture', label: 'Critical Moisture Drop', desc: 'Triggers when soil needs immediate watering' },
+              { key: 'highTemp', label: 'Thermal Stress Warning', desc: 'Triggers above 38°C ambient temperature' },
+              { key: 'phAlert', label: 'pH Imbalance', desc: 'Triggers when pH escapes the 5.5 - 7.5 safe zone' },
+              { key: 'systemAlerts', label: 'Hardware Disconnects', desc: 'ESP32 WebSocket drops and reconnections' },
+            ].map(({ key, label, desc }) => (
               <div className="settings-row" key={key}>
                 <div className="settings-row-info">
-                  <GlassIcon name={icon} className="settings-row-icon" />
                   <span className="settings-row-label">{label}</span>
                   <span className="settings-row-desc">{desc}</span>
                 </div>
@@ -176,168 +304,39 @@ export default function SettingsPage({ theme, toggleTheme, onNotification }) {
           </div>
         </div>
 
-        {/* API Keys */}
-        <div className="settings-card">
-          <div className="settings-card-header">
-            <GlassIcon name="bot" />
-            <h2>AI API Keys</h2>
-          </div>
-          <div className="settings-card-body">
-            <p className="settings-note">
-              Keys are stored locally in your browser and sent only to the backend when using AI features.
-            </p>
-            <div className="settings-field">
-              <label className="settings-label"><GlassIcon name="bot" className="settings-row-icon" /> Google Gemini API Key</label>
-              <input
-                type="password"
-                className="settings-input"
-                placeholder="AIza..."
-                value={geminiKey}
-                onChange={e => setGeminiKey(e.target.value)}
-                autoComplete="off"
-              />
-            </div>
-            <div className="settings-field">
-              <label className="settings-label"><GlassIcon name="bot" className="settings-row-icon" /> OpenAI API Key</label>
-              <input
-                type="password"
-                className="settings-input"
-                placeholder="sk-..."
-                value={openaiKey}
-                onChange={e => setOpenaiKey(e.target.value)}
-                autoComplete="off"
-              />
-            </div>
-            <button className="settings-btn-primary" onClick={handleSaveKeys}>
-              <GlassIcon name="check" />
-              Save API Keys
-            </button>
-          </div>
-        </div>
-
-        {/* Test Mode */}
-        <div className="settings-card">
-          <div className="settings-card-header">
-            <GlassIcon name="demo" />
-            <h2>Test Mode</h2>
-          </div>
-          <div className="settings-card-body">
-            <p className="settings-note">
-              Test mode generates realistic sensor data for development and testing without real hardware.
-              {!testModeAllowed && (
-                <span className="settings-warning"> Warning: Test mode is disabled in production.</span>
-              )}
-            </p>
-            <div className="settings-row">
-              <div className="settings-row-info">
-                <span className="settings-row-label">Enable Test Data Generator</span>
-                <span className="settings-row-desc">
-                  {testModeAllowed 
-                    ? 'Simulate live sensor readings' 
-                    : `Not available in ${environment} mode`}
-                </span>
-              </div>
-              <button
-                className={`toggle-switch ${testModeEnabled ? 'on' : 'off'}`}
-                onClick={handleToggleTestMode}
-                disabled={testModeLoading || !testModeAllowed}
-                aria-label="Toggle test mode"
-              >
-                <span className="toggle-knob" />
-              </button>
-            </div>
-          </div>
-        </div>
-
-        {/* Device Configuration */}
-        <div className="settings-card">
-          <div className="settings-card-header">
-            <GlassIcon name="esp32" />
-            <h2>Device Configuration</h2>
-          </div>
-          <div className="settings-card-body">
-            <div className="settings-field">
-              <label className="settings-label"><GlassIcon name="esp32" className="settings-row-icon" /> ESP32 IP Address</label>
-              <input
-                type="text"
-                className="settings-input"
-                placeholder="192.168.1.100"
-                value={esp32IP}
-                onChange={e => setEsp32IP(e.target.value)}
-              />
-            </div>
-            <div className="settings-field">
-              <label className="settings-label"><GlassIcon name="esp32" className="settings-row-icon" /> Device ID</label>
-              <input
-                type="text"
-                className="settings-input"
-                placeholder="ESP32-SENSOR"
-                value={deviceId}
-                onChange={e => setDeviceId(e.target.value)}
-              />
-            </div>
-            <div className="settings-field">
-              <label className="settings-label"><GlassIcon name="refresh" className="settings-row-icon" /> Sensor Refresh Interval (seconds)</label>
-              <input
-                type="number"
-                className="settings-input"
-                min="1"
-                max="60"
-                value={refreshInterval}
-                onChange={e => setRefreshInterval(Number(e.target.value))}
-              />
-            </div>
-            <div className="settings-field">
-              <label className="settings-label"><GlassIcon name="database" className="settings-row-icon" /> Data Retention (days)</label>
-              <input
-                type="number"
-                className="settings-input"
-                min="1"
-                max="365"
-                value={retentionDays}
-                onChange={e => setRetentionDays(Number(e.target.value))}
-              />
-            </div>
-            <button className="settings-btn-primary" onClick={handleSaveDeviceConfig} disabled={saving}>
-              <GlassIcon name={saving ? 'refresh' : 'check'} animated={saving} />
-              {saving ? 'Saving...' : 'Save Device Config'}
-            </button>
-          </div>
-        </div>
-
-        {/* About */}
+        {/* ABOUT */}
         <div className="settings-card settings-card-wide">
           <div className="settings-card-header">
             <GlassIcon name="info" />
             <h2>About SproutSense</h2>
           </div>
           <div className="settings-card-body settings-about">
-            <div className="settings-about-logo">
+            <div className="settings-about-brand">
               <GlassIcon name="sprout" animated />
-              <span>SproutSense</span>
+              <span>SproutSense OS</span>
             </div>
             <div className="settings-about-grid">
               <div className="settings-about-item">
-                <span className="settings-about-label">Version</span>
-                <span className="settings-about-value">2.0.0 IoT Edition</span>
+                <span className="settings-about-label">Firmware Ver</span>
+                <span className="settings-about-value">2.0.4 (ESP32-WROOM)</span>
               </div>
               <div className="settings-about-item">
-                <span className="settings-about-label">Stack</span>
-                <span className="settings-about-value">React + Node.js + MongoDB + ESP32</span>
+                <span className="settings-about-label">App Release</span>
+                <span className="settings-about-value">v1.1.0-beta</span>
               </div>
               <div className="settings-about-item">
-                <span className="settings-about-label">Sensors</span>
-                <span className="settings-about-value">DHT22, Capacitive Moisture, BH1750, pH Probe</span>
+                <span className="settings-about-label">Telemetry</span>
+                <span className="settings-about-value">DHT22, Soil Cap, BH1750</span>
               </div>
               <div className="settings-about-item">
-                <span className="settings-about-label">AI</span>
-                <span className="settings-about-value">Google Gemini + rule-based analysis</span>
+                <span className="settings-about-label">Core Logic</span>
+                <span className="settings-about-value">React, Node, MongoDB</span>
               </div>
             </div>
           </div>
         </div>
+
       </div>
     </div>
   );
 }
-

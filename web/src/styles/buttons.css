@@ -10,7 +10,7 @@
   border: var(--glass-border);
   -webkit-backdrop-filter: blur(8px);
   backdrop-filter: blur(8px);
-  border-radius: 0.85rem;
+  border-radius: 1.85rem;
   font-size: 1rem;
   font-weight: 600;
   cursor: pointer;

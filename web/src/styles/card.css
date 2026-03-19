@@ -76,7 +76,8 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background: linear-gradient(130deg, rgba(14, 165, 233, 0.12) 0%, rgba(14, 165, 233, 0) 65%);
+  /* Removed blue - Changed to subtle teal */
+  background: linear-gradient(130deg, rgba(20, 184, 166, 0.08) 0%, rgba(20, 184, 166, 0) 65%);
   opacity: 0;
   transition: opacity 0.22s ease;
   border-radius: 1.25rem;
@@ -85,9 +86,10 @@
 
 .card:hover {
   transform: translateY(-3px);
-  border-color: rgba(14, 165, 233, 0.28);
+  /* Removed blue - Changed to plant-teal glow */
+  border-color: rgba(20, 184, 166, 0.25);
   box-shadow: 0 12px 28px rgba(2, 6, 23, 0.16),
-              0 0 0 1px rgba(14, 165, 233, 0.08);
+              0 0 0 1px rgba(20, 184, 166, 0.1);
 }
 
 .card:hover::before {
@@ -206,4 +208,29 @@
   .card h2 {
     font-size: 1rem;
   }
+}
+
+/* ═══════════════════════════════════════════
+   LIGHT THEME OVERRIDES
+═══════════════════════════════════════════ */
+
+/* Remove background, borders, and glass effects */
+.light-theme .card {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+}
+
+/* Remove the dark mode hover transformations and glows */
+.light-theme .card:hover {
+  transform: none !important;
+  border-color: transparent !important;
+  box-shadow: none !important;
+}
+
+/* Hide the linear gradient glow overlay on hover */
+.light-theme .card::before {
+  display: none !important;
 }

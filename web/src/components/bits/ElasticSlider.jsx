@@ -1,4 +1,4 @@
-import { animate, motion, useMotionValue, useMotionValueEvent, useTransform } from 'motion/react';
+import { animate, motion, useMotionValue, useMotionValueEvent, useTransform } from 'framer-motion';
 import { useEffect, useRef, useState } from 'react';
 import './ElasticSlider.css';
 
@@ -11,6 +11,7 @@ export default function ElasticSlider({
   className = '',
   isStepped = false,
   stepSize = 1,
+  unit = '', // <-- ADDED THE UNIT PROP HERE
   leftIcon = (
     <svg className="icon" viewBox="0 0 24 24" fill="currentColor" width="20" height="20" xmlns="http://www.w3.org/2000/svg">
       <path d="M11 5L6 9H2v6h4l5 4V5z" />
@@ -34,12 +35,13 @@ export default function ElasticSlider({
         leftIcon={leftIcon}
         rightIcon={rightIcon}
         onChange={onChange}
+        unit={unit} // <-- PASSED DOWN TO THE SLIDER COMPONENT
       />
     </div>
   );
 }
 
-function Slider({ defaultValue, startingValue, maxValue, isStepped, stepSize, leftIcon, rightIcon, onChange }) {
+function Slider({ defaultValue, startingValue, maxValue, isStepped, stepSize, leftIcon, rightIcon, onChange, unit }) {
   const [value, setValue] = useState(defaultValue);
   const sliderRef = useRef(null);
   const [region, setRegion] = useState('middle');
@@ -105,6 +107,13 @@ function Slider({ defaultValue, startingValue, maxValue, isStepped, stepSize, le
 
   return (
     <>
+      {/* THE NUMBER & UNIT RENDERED TOGETHER AT THE TOP */}
+      <p className="value-indicator">
+        {Math.round(value)} 
+        {/* Render unit next to number if one is provided */}
+        {unit && <span style={{ fontSize: '0.65em', fontWeight: 500, marginLeft: '4px', opacity: 0.8 }}>{unit}</span>}
+      </p>
+
       <motion.div
         onHoverStart={() => animate(scale, 1.2)}
         onHoverEnd={() => animate(scale, 1)}
@@ -112,22 +121,21 @@ function Slider({ defaultValue, startingValue, maxValue, isStepped, stepSize, le
         onTouchEnd={() => animate(scale, 1)}
         style={{
           scale,
-          opacity: useTransform(scale, [1, 1.2], [0.7, 1])
+          opacity: useTransform(scale, [1, 1.2], [0.8, 1])
         }}
         className="slider-wrapper"
       >
-          <button
-            className="slider-btn slider-btn-left"
-            onClick={() => {
-              // decrement by stepSize
-              const newValue = Math.max(startingValue, Math.round((value - (isStepped ? stepSize : 1))));
-              setValue(newValue);
-              if (typeof onChange === 'function') onChange(newValue);
-            }}
-            aria-label="Decrease"
-          >
-            <svg className="icon" viewBox="0 0 24 24" width="18" height="18" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><rect x="4" y="11" width="16" height="2" rx="1"/></svg>
-          </button>
+        <button
+          className="slider-btn slider-btn-left"
+          onClick={() => {
+            const newValue = Math.max(startingValue, Math.round((value - (isStepped ? stepSize : 1))));
+            setValue(newValue);
+            if (typeof onChange === 'function') onChange(newValue);
+          }}
+          aria-label="Decrease"
+        >
+          <svg className="icon" viewBox="0 0 24 24" width="18" height="18" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><rect x="4" y="11" width="16" height="2" rx="1"/></svg>
+        </button>
 
         <div
           ref={sliderRef}
@@ -168,7 +176,6 @@ function Slider({ defaultValue, startingValue, maxValue, isStepped, stepSize, le
         <button
           className="slider-btn slider-btn-right"
           onClick={() => {
-            // increment by stepSize
             const newValue = Math.min(maxValue, Math.round((value + (isStepped ? stepSize : 1))));
             setValue(newValue);
             if (typeof onChange === 'function') onChange(newValue);
@@ -178,7 +185,6 @@ function Slider({ defaultValue, startingValue, maxValue, isStepped, stepSize, le
           <svg className="icon" viewBox="0 0 24 24" width="18" height="18" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><rect x="11" y="4" width="2" height="16" rx="1"/><rect x="4" y="11" width="16" height="2" rx="1"/></svg>
         </button>
       </motion.div>
-      <p className="value-indicator">{Math.round(value)}</p>
     </>
   );
 }
