@@ -1,41 +1,22 @@
 // =====================================================
-// SPROUTSENSE ESP32-SENSOR — FINAL PRODUCTION v2.1
+// SPROUTSENSE ESP32-SENSOR — FINAL PRODUCTION v2.1 + BLYNK
 // Board: ESP32 Dev Module
 // Sensors: Soil Moisture, pH, LDR, DHT22
 // Actuators: Relay (GPIO 14) + Flow Sensor (GPIO 12)
 // Display: TFT ST7735R (SPI)
-// Backend: Render.com
-// =====================================================
-//
-// ARDUINO IDE SETTINGS:
-//   Board           : ESP32 Dev Module
-//   Upload Speed    : 921600
-//   CPU Frequency   : 240 MHz
-//   Flash Size      : 4MB (32Mb)
-//   Partition Scheme: Huge APP (3MB No OTA)
-//   Flash Mode      : QIO
-//
-// REQUIRED LIBRARIES:
-//   - DHT sensor library     (Adafruit)
-//   - Adafruit GFX Library   (Adafruit)
-//   - Adafruit ST7735        (Adafruit)
-//   - ArduinoJson            (Benoit Blanchon)
-//   - HTTPClient             (built-in ESP32)
-//
-// BACKEND FIELD NAMES (match schema exactly):
-//   soilMoisture  -> 0-100 (%)
-//   pH            -> 0-14   *** capital H! ***
-//   light         -> 0-100000 (lux)
-//   temperature   -> Celsius
-//   humidity      -> 0-100 (%)
-//   flowRate      -> mL/min  (calculated, not raw volume)
-//   flowVolume    -> mL dispensed total
-//   deviceId      -> "ESP32-SENSOR"
+// Backend: Render.com & Blynk IoT
 // =====================================================
 
+// ========== BLYNK CONFIGURATION ==========
+// IMPORTANT: These must be the VERY FIRST lines before any includes!
+#define BLYNK_TEMPLATE_ID "TMPL_YOUR_ID"
+#define BLYNK_TEMPLATE_NAME "SproutSense"
+#define BLYNK_AUTH_TOKEN "YOUR_BLYNK_AUTH_TOKEN"
+#define BLYNK_PRINT Serial
 
 // ========== LIBRARIES ==========
 #include <WiFi.h>
+#include <BlynkSimpleEsp32.h>
 #include <DHT.h>
 #include <HTTPClient.h>
 #include <ArduinoJson.h>
@@ -43,11 +24,9 @@
 #include <Adafruit_GFX.h>
 #include <Adafruit_ST7735.h>
 
-
 // ========== WIFI CREDENTIALS ==========
 const char* WIFI_SSID     = "@Connect";
 const char* WIFI_PASSWORD = "qwertyomm";
-
 
 // ========== STATIC IP (optional) ==========
 #define STATICIP_ENABLED true
@@ -56,28 +35,27 @@ const uint8_t STATIC_GATEWAY[] = {192, 168, 1,   1};
 const uint8_t STATIC_SUBNET[]  = {255, 255, 255, 0};
 const uint8_t STATIC_DNS1[]    = {8,   8,   8,   8};
 
-
 // ========== BACKEND URLs ==========
-// FIX 5A: Added HEARTBEAT_URL for device online/offline status on dashboard
 const char* BACKEND_URL   = "https://sproutsense-backend.onrender.com/api/sensors";
 const char* HEARTBEAT_URL = "https://sproutsense-backend.onrender.com/api/config/status";
 const char* DEVICE_ID     = "ESP32-SENSOR";
 
+// ========== BACKEND STATUS (for TFT) ==========
+bool   backendOk        = true;
+String backendLastError = "";
 
 // ========== PIN CONFIGURATION (ADC1 ONLY — WiFi safe) ==========
 #define PIN_SOIL_MOISTURE  35   // ADC1_CH7 — Capacitive moisture sensor
 #define PIN_PH_SENSOR      34   // ADC1_CH6 — Analog pH probe
 #define PIN_LDR            39   // ADC1_CH3 — LDR light sensor
-#define PIN_DHT            13   // Digital   — DHT22 temperature/humidity
-#define PIN_RELAY          14   // Output    — Relay CH1 → Water pump
+#define PIN_DHT            13   // Digital  — DHT22 temperature/humidity
+#define PIN_RELAY          14   // Output   — Relay CH1 → Water pump
 #define PIN_FLOW_SENSOR    12   // Interrupt — YF-S401 flow meter
 
 // TFT ST7735R (128x160) — Hardware SPI
-#define PIN_TFT_CS   5
-#define PIN_TFT_RST  4
-#define PIN_TFT_DC   27
-// MOSI = GPIO 23, SCLK = GPIO 18 (fixed hardware SPI)
-
+#define PIN_TFT_CS  5
+#define PIN_TFT_RST 4
+#define PIN_TFT_DC  27
 
 // ========== SENSOR SETTINGS ==========
 #define DHT_TYPE           DHT22
@@ -95,18 +73,15 @@ const char* DEVICE_ID     = "ESP32-SENSOR";
 // Flow sensor calibration
 #define FLOW_PULSES_PER_ML  5.5    // YF-S401: adjust if measurement drifts
 
-
 // ========== TIMING (milliseconds) ==========
 #define INTERVAL_SENSORS   5000    // Read sensors every 5s
 #define INTERVAL_BACKEND   15000   // Send to backend every 15s
-#define INTERVAL_TFT       5000    // Update TFT every 5s
+#define INTERVAL_TFT       4000    // Update TFT every 4s
 #define INTERVAL_HEARTBEAT 30000   // Heartbeat every 30s
-
 
 // ========== OBJECTS ==========
 DHT dht(PIN_DHT, DHT_TYPE);
 Adafruit_ST7735 tft = Adafruit_ST7735(PIN_TFT_CS, PIN_TFT_DC, PIN_TFT_RST);
-
 
 // ========== TFT COLORS ==========
 #define C_BLACK   0x0000
@@ -119,12 +94,8 @@ Adafruit_ST7735 tft = Adafruit_ST7735(PIN_TFT_CS, PIN_TFT_DC, PIN_TFT_RST);
 #define C_LGRAY   0xC618
 #define C_DGRAY   0x4208
 
-
 // ========== FORWARD DECLARATIONS ==========
-// FIX 6: Prevents "not declared in this scope" error since
-//        loop() calls handleSerialCommand() which is defined later
 void handleSerialCommand(char cmd);
-
 
 // ========== FLOW SENSOR (interrupt-driven) ==========
 volatile unsigned long flowPulseCount = 0;
@@ -141,7 +112,6 @@ void resetFlowCounter() {
   flowPulseCount = 0;
 }
 
-
 // ========== PUMP CONTROL ==========
 bool pumpRunning   = false;
 bool manualPump    = false;
@@ -152,12 +122,14 @@ void startPump() {
   digitalWrite(PIN_RELAY, HIGH);
   pumpRunning   = true;
   pumpStartTime = millis();
+  Blynk.virtualWrite(V5, 1); // Update Blynk switch to ON
   Serial.println("[PUMP] ON — target: " + String(TARGET_WATER_ML) + " mL");
 }
 
 void stopPump() {
   digitalWrite(PIN_RELAY, LOW);
   pumpRunning = false;
+  Blynk.virtualWrite(V5, 0); // Update Blynk switch to OFF
   Serial.printf("[PUMP] OFF — dispensed: %.1f mL in %lums\n",
     getFlowVolumeMl(), millis() - pumpStartTime);
 }
@@ -175,15 +147,26 @@ void updatePumpLogic() {
   }
 }
 
+// ========== BLYNK MANUAL PUMP CONTROL ==========
+// Triggers when you press the button (V5) in the Blynk app
+BLYNK_WRITE(V5) {
+  int pinValue = param.asInt();
+  if (pinValue == 1) {
+    manualPump = true;
+    startPump();
+  } else {
+    manualPump = false;
+    stopPump();
+  }
+}
 
 // ========== CACHED SENSOR VALUES ==========
 float cachedMoisture = 0;
 float cachedPH       = 7.0;
 float cachedLux      = 0;
-float cachedTemp     = 25.0;    // FIX 6: Sensible default (not 0) so first
-float cachedHumidity = 50.0;    //        backend POST has realistic fallback
+float cachedTemp     = 25.0;    
+float cachedHumidity = 50.0;    
 bool  dhtValid       = false;
-
 
 // ========== SENSOR READ FUNCTIONS ==========
 float readSoilMoisture() {
@@ -213,8 +196,7 @@ void updateAllSensors() {
   cachedLux      = readLux();
   float t = dht.readTemperature();
   float h = dht.readHumidity();
-  // Only update cache if DHT gives valid reading
-  // Keeps last known good values instead of overwriting with NaN
+  
   if (!isnan(t) && !isnan(h)) {
     cachedTemp = t; cachedHumidity = h; dhtValid = true;
   }
@@ -231,7 +213,6 @@ void printSensors() {
     getFlowVolumeMl(), pumpRunning ? "ON" : "OFF");
 }
 
-
 // ========== AUTO WATERING ==========
 void checkAutoWatering() {
   if (pumpRunning || manualPump) return;
@@ -242,10 +223,21 @@ void checkAutoWatering() {
   }
 }
 
+// ========== BLYNK SYNC ==========
+void sendToBlynk() {
+  if (WiFi.status() == WL_CONNECTED) {
+    Blynk.virtualWrite(V0, cachedMoisture);
+    Blynk.virtualWrite(V1, cachedPH);
+    Blynk.virtualWrite(V2, cachedLux);
+    if (dhtValid) {
+      Blynk.virtualWrite(V3, cachedTemp);
+      Blynk.virtualWrite(V4, cachedHumidity);
+    }
+    Blynk.virtualWrite(V6, getFlowVolumeMl());
+  }
+}
 
 // ========== HEARTBEAT ==========
-// FIX 5: Tells backend this device is ONLINE every 30s
-//        Without this, dashboard shows ESP32-SENSOR as OFFLINE always
 void sendHeartbeat() {
   if (WiFi.status() != WL_CONNECTED) return;
 
@@ -270,7 +262,6 @@ void sendHeartbeat() {
     code, pumpRunning ? "ON" : "OFF", millis() / 1000);
 }
 
-
 // ========== BACKEND SYNC ==========
 void sendToBackend() {
   if (WiFi.status() != WL_CONNECTED) {
@@ -278,8 +269,6 @@ void sendToBackend() {
     return;
   }
 
-  // FIX 3: Correct flowRate = mL/min (not volume)
-  //        Volume dispensed over runtime gives actual rate
   float flowRateMlPerMin = 0.0;
   if (pumpRunning) {
     float runtimeMin = (millis() - pumpStartTime) / 60000.0;
@@ -289,23 +278,18 @@ void sendToBackend() {
 
   StaticJsonDocument<512> doc;
   doc["deviceId"]     = DEVICE_ID;
-  doc["soilMoisture"] = round(cachedMoisture * 10) / 10.0;   // 0-100 %
-  doc["pH"]           = round(cachedPH * 100) / 100.0;       // capital H!
-  doc["light"]        = (int)cachedLux;                       // lux
-
-  // FIX 6: Always send last known good temp/humidity (cached)
-  //        Schema requires these fields — never skip or send fake 0
+  doc["soilMoisture"] = round(cachedMoisture * 10) / 10.0;
+  doc["pH"]           = round(cachedPH * 100) / 100.0;
+  doc["light"]        = (int)cachedLux;
   doc["temperature"]  = round(cachedTemp * 10) / 10.0;
   doc["humidity"]     = round(cachedHumidity * 10) / 10.0;
-
-  doc["flowRate"]     = round(flowRateMlPerMin * 10) / 10.0; // mL/min
-  doc["flowVolume"]   = round(getFlowVolumeMl() * 10) / 10.0;// total mL
+  doc["flowRate"]     = round(flowRateMlPerMin * 10) / 10.0;
+  doc["flowVolume"]   = round(getFlowVolumeMl() * 10) / 10.0;
 
   String payload;
   serializeJson(doc, payload);
   Serial.println("[BACKEND] Sending: " + payload);
 
-  // FIX 4: Retry up to 3 times — handles Render cold-start & WiFi hiccups
   int code = -1;
   for (int attempt = 0; attempt < 3 && code != 200 && code != 201; attempt++) {
     if (attempt > 0) {
@@ -315,10 +299,13 @@ void sendToBackend() {
     HTTPClient http;
     http.begin(BACKEND_URL);
     http.addHeader("Content-Type", "application/json");
-    http.setTimeout(10000); // 10s — Render cold starts can be slow
+    http.setTimeout(10000); 
     code = http.POST(payload);
+    
     if (code == 200 || code == 201) {
-      Serial.println("[BACKEND] OK (" + String(code) + ") — saved to sproutsense DB");
+      Serial.println("[BACKEND] OK (" + String(code) + ") — saved to DB");
+      backendOk = true;
+      backendLastError = "";
     } else {
       Serial.printf("[BACKEND] Attempt %d failed: %d\n", attempt + 1, code);
     }
@@ -327,9 +314,10 @@ void sendToBackend() {
 
   if (code != 200 && code != 201) {
     Serial.println("[BACKEND] All 3 attempts failed — data lost for this cycle");
+    backendOk = false;
+    backendLastError = "HTTP " + String(code);
   }
 }
-
 
 // ========== TFT DISPLAY ==========
 uint8_t tftPage = 0;
@@ -337,94 +325,118 @@ unsigned long lastTFTUpdate = 0;
 
 void updateTFTDisplay() {
   tft.fillScreen(C_BLACK);
+  
+  // --- 1. GLOBAL HEADER ---
   tft.setTextSize(1);
-  tft.setCursor(2, 2);
-  tft.setTextColor(C_CYAN);  tft.print("SPROUTSENSE ");
-  tft.setTextColor(C_DGRAY); tft.printf("P%u/4", tftPage + 1);
-  tft.drawLine(0, 12, 160, 12, C_DGRAY);
+  tft.setCursor(5, 4);
+  tft.setTextColor(C_CYAN);  tft.print("SPROUTSENSE");
+  tft.setCursor(130, 4);
+  tft.setTextColor(C_DGRAY); tft.printf("%u/4", tftPage + 1);
+  tft.drawLine(0, 14, 160, 14, C_DGRAY);
 
+  // --- 2. MAIN CONTENT AREA ---
   switch (tftPage) {
     case 0: // Soil & Light
-      tft.setCursor(5, 18); tft.setTextColor(C_YELLOW);  tft.println("SOIL & LIGHT");
-      tft.setCursor(5, 32);
+      tft.setCursor(5, 18); tft.setTextColor(C_YELLOW); tft.println("SOIL & LIGHT");
+      
+      tft.setCursor(5, 34); tft.setTextSize(2);
       tft.setTextColor(cachedMoisture < 30 ? C_RED : C_GREEN);
-      tft.printf("Moisture : %.1f%%\n", cachedMoisture);
-      tft.setCursor(5, 46);
+      tft.printf("%.0f%%\n", cachedMoisture);
+      tft.setCursor(5, 52); tft.setTextSize(1); tft.setTextColor(C_LGRAY); tft.print("Moisture");
+
+      tft.setCursor(85, 34); tft.setTextSize(2);
       tft.setTextColor((cachedPH < 5.5 || cachedPH > 7.5) ? C_ORANGE : C_GREEN);
-      tft.printf("pH       : %.2f\n", cachedPH);
-      tft.setCursor(5, 60);
+      tft.printf("%.1f\n", cachedPH);
+      tft.setCursor(85, 52); tft.setTextSize(1); tft.setTextColor(C_LGRAY); tft.print("pH Lvl");
+
+      tft.setCursor(5, 72); tft.setTextSize(2);
       tft.setTextColor(cachedLux < 2000 ? C_RED : C_GREEN);
-      tft.printf("Light    : %.0f lux\n", cachedLux);
+      tft.printf("%.0f\n", cachedLux);
+      tft.setCursor(5, 90); tft.setTextSize(1); tft.setTextColor(C_LGRAY); tft.print("Lux");
       break;
 
     case 1: // Climate
       tft.setCursor(5, 18); tft.setTextColor(C_YELLOW); tft.println("CLIMATE");
       if (dhtValid) {
-        tft.setTextSize(2);
-        tft.setCursor(10, 36); tft.setTextColor(C_CYAN);
+        tft.setCursor(5, 38); tft.setTextSize(2); tft.setTextColor(C_CYAN);
         tft.printf("%.1fC\n", cachedTemp);
-        tft.setTextSize(1);
-        tft.setCursor(5, 62); tft.setTextColor(C_LGRAY); tft.println("Temperature");
-        tft.setTextSize(2);
-        tft.setCursor(10, 78); tft.setTextColor(C_GREEN);
+        tft.setCursor(5, 56); tft.setTextSize(1); tft.setTextColor(C_LGRAY); tft.print("Temp");
+
+        tft.setCursor(85, 38); tft.setTextSize(2); tft.setTextColor(C_GREEN);
         tft.printf("%.0f%%\n", cachedHumidity);
-        tft.setTextSize(1);
-        tft.setCursor(5, 100); tft.setTextColor(C_LGRAY); tft.println("Humidity");
+        tft.setCursor(85, 56); tft.setTextSize(1); tft.setTextColor(C_LGRAY); tft.print("Hum");
       } else {
-        tft.setCursor(5, 36); tft.setTextColor(C_ORANGE);
-        tft.printf("%.1fC (cached)\n", cachedTemp);
+        tft.setCursor(5, 38); tft.setTextSize(1); tft.setTextColor(C_RED);
+        tft.println("DHT22 OFFLINE!");
         tft.setCursor(5, 52); tft.setTextColor(C_ORANGE);
-        tft.printf("%.0f%% (cached)\n", cachedHumidity);
-        tft.setCursor(5, 70); tft.setTextColor(C_RED);
-        tft.println("DHT22 offline!");
-        tft.println("Check GPIO 13");
+        tft.printf("Temp: %.1fC (cached)\n", cachedTemp);
+        tft.setCursor(5, 64);
+        tft.printf("Hum : %.0f%% (cached)\n", cachedHumidity);
       }
       break;
 
     case 2: // Watering
       tft.setCursor(5, 18); tft.setTextColor(C_YELLOW); tft.println("WATERING");
-      tft.setCursor(5, 32);
-      tft.setTextColor(pumpRunning ? C_GREEN : C_LGRAY);
-      tft.printf("Pump     : %s\n", pumpRunning ? "ON" : "OFF");
-      tft.setCursor(5, 46); tft.setTextColor(C_CYAN);
-      tft.printf("Volume   : %.1f mL\n", getFlowVolumeMl());
-      tft.setCursor(5, 60); tft.setTextColor(C_DGRAY);
-      tft.printf("Target   : %.0f mL\n", TARGET_WATER_ML);
-      tft.setCursor(5, 74); tft.setTextColor(C_DGRAY);
-      tft.printf("Threshold: %.0f%%\n", MOISTURE_THRESHOLD);
+      
+      tft.setCursor(5, 34); tft.setTextSize(2);
+      tft.setTextColor(pumpRunning ? C_CYAN : C_DGRAY);
+      tft.print(pumpRunning ? "PUMP ON" : "PUMP OFF");
+      
+      tft.setCursor(5, 56); tft.setTextSize(1); tft.setTextColor(C_LGRAY);
+      tft.printf("Vol: %.1f / %.0f mL\n", getFlowVolumeMl(), TARGET_WATER_ML);
+      tft.setCursor(5, 70); tft.setTextColor(C_DGRAY);
+      tft.printf("Auto-Trg : %.0f%%\n", MOISTURE_THRESHOLD);
+      
       if (pumpRunning) {
         tft.setCursor(5, 88); tft.setTextColor(C_ORANGE);
-        tft.printf("Runtime  : %lus", (millis() - pumpStartTime) / 1000);
+        tft.printf("Running  : %lus", (millis() - pumpStartTime) / 1000);
       }
       break;
 
     case 3: // Network
       tft.setCursor(5, 18); tft.setTextColor(C_YELLOW); tft.println("NETWORK");
-      tft.setCursor(5, 32);
+      
+      tft.setCursor(5, 32); tft.setTextSize(1);
       tft.setTextColor(WiFi.status() == WL_CONNECTED ? C_GREEN : C_RED);
-      tft.printf("WiFi  : %s\n",
-        WiFi.status() == WL_CONNECTED ? "OK" : "FAIL");
+      tft.printf("WiFi : %s\n", WiFi.status() == WL_CONNECTED ? "OK" : "FAIL");
       if (WiFi.status() == WL_CONNECTED) {
-        tft.setCursor(5, 46); tft.setTextColor(C_LGRAY);
+        tft.setCursor(5, 44); tft.setTextColor(C_LGRAY);
         tft.print(WiFi.localIP().toString().c_str());
-        tft.setCursor(5, 58); tft.setTextColor(C_LGRAY);
-        tft.printf("RSSI  : %d dBm", WiFi.RSSI());
       }
-      tft.setCursor(5, 72); tft.setTextColor(C_CYAN);
-      tft.printf("Uptime: %lu min", millis() / 60000);
-      // Show DHT status on network page too
-      tft.setCursor(5, 86); tft.setTextColor(dhtValid ? C_GREEN : C_RED);
-      tft.printf("DHT22 : %s", dhtValid ? "OK" : "ERR");
+      
+      tft.setCursor(5, 62); 
+      tft.setTextColor(backendOk ? C_GREEN : C_RED);
+      tft.print("Cloud: ");
+      if (backendOk) {
+        tft.print("SYNC OK");
+      } else {
+        tft.setCursor(5, 76); tft.setTextSize(2);
+        tft.print("ERR: ");
+        tft.print(backendLastError);
+        tft.setTextSize(1);
+      }
       break;
   }
-}
 
+  // --- 3. GLOBAL STATUS FOOTER ---
+  tft.drawLine(0, 112, 160, 112, C_DGRAY);
+  tft.setCursor(5, 118);
+  tft.setTextSize(1);
+  if (!backendOk) {
+    tft.setTextColor(C_RED); tft.print("! BACKEND OFFLINE !");
+  } else if (pumpRunning) {
+    tft.setTextColor(C_CYAN); tft.print(">>> WATERING <<<");
+  } else if (!dhtValid) {
+    tft.setTextColor(C_ORANGE); tft.print("! SENSOR WARNING !");
+  } else {
+    tft.setTextColor(C_GREEN); tft.print("SYSTEM NORMAL");
+  }
+}
 
 // ========== TIMERS ==========
 unsigned long lastSensorRead  = 0;
 unsigned long lastBackendSync = 0;
-unsigned long lastHeartbeat   = 0;   // FIX 5B: Heartbeat timer
-
+unsigned long lastHeartbeat   = 0;
 
 // ========== SETUP ==========
 void setup() {
@@ -432,7 +444,7 @@ void setup() {
   delay(1000);
   Serial.println("\n====================================");
   Serial.println("  SPROUTSENSE ESP32-SENSOR v2.1");
-  Serial.println("  Flow + Relay + TFT + Cloud");
+  Serial.println("  Flow + Relay + TFT + Cloud + Blynk");
   Serial.println("====================================\n");
 
   // TFT init
@@ -448,8 +460,6 @@ void setup() {
   digitalWrite(PIN_RELAY, LOW); // Pump OFF at boot
   pinMode(PIN_FLOW_SENSOR, INPUT_PULLUP);
   attachInterrupt(digitalPinToInterrupt(PIN_FLOW_SENSOR), flowISR, FALLING);
-  Serial.println("[INIT] Relay GPIO 14 — OFF");
-  Serial.println("[INIT] Flow sensor GPIO 12 — interrupt attached");
 
   // ADC
   analogSetWidth(12);
@@ -468,7 +478,6 @@ void setup() {
     }
     delay(2000);
   }
-  if (!dhtValid) Serial.println("[DHT] Warmup failed — using defaults, check GPIO 13");
 
   // WiFi
   WiFi.mode(WIFI_STA);
@@ -478,8 +487,6 @@ void setup() {
   IPAddress sn(STATIC_SUBNET[0],  STATIC_SUBNET[1],  STATIC_SUBNET[2],  STATIC_SUBNET[3]);
   IPAddress d1(STATIC_DNS1[0],    STATIC_DNS1[1],    STATIC_DNS1[2],    STATIC_DNS1[3]);
   WiFi.config(ip, gw, sn, d1);
-  Serial.printf("[WIFI] Static IP: %d.%d.%d.%d\n",
-    STATIC_IP[0], STATIC_IP[1], STATIC_IP[2], STATIC_IP[3]);
 #endif
   WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
   Serial.printf("[WIFI] Connecting to %s", WIFI_SSID);
@@ -487,13 +494,16 @@ void setup() {
   while (WiFi.status() != WL_CONNECTED && tries < 30) {
     delay(500); Serial.print("."); tries++;
   }
+  
   if (WiFi.status() == WL_CONNECTED) {
-    Serial.printf("\n[WIFI] Connected! IP: %s\n",
-      WiFi.localIP().toString().c_str());
+    Serial.printf("\n[WIFI] Connected! IP: %s\n", WiFi.localIP().toString().c_str());
     tft.setCursor(5, 35); tft.setTextColor(C_GREEN);
     tft.print(WiFi.localIP().toString().c_str());
-    // FIX 5: Send first heartbeat immediately after WiFi connects
     sendHeartbeat();
+    
+    // Initialize Blynk (non-blocking method)
+    Blynk.config(BLYNK_AUTH_TOKEN);
+    Serial.println("[BLYNK] Configured");
   } else {
     Serial.println("\n[WIFI] FAILED — will retry in loop");
     tft.setCursor(5, 35); tft.setTextColor(C_RED); tft.println("WiFi FAILED");
@@ -502,16 +512,16 @@ void setup() {
   delay(2000);
   tft.fillScreen(C_BLACK);
   Serial.println("\n>>> SPROUTSENSE v2.1 READY <<<");
-  Serial.println("Commands: h=help s=sensors p=pump-on o=pump-off w=wifi d=diag b=send");
-  Serial.println("Backend : " + String(BACKEND_URL));
-  Serial.println("Heartbt : " + String(HEARTBEAT_URL));
-  Serial.println("DB      : sproutsense (set MONGODB_URI on Render!)\n");
 }
-
 
 // ========== MAIN LOOP ==========
 void loop() {
   unsigned long now = millis();
+
+  // Handle Blynk communication
+  if (WiFi.status() == WL_CONNECTED) {
+    Blynk.run();
+  }
 
   // Auto-reconnect WiFi
   if (WiFi.status() != WL_CONNECTED) {
@@ -529,6 +539,7 @@ void loop() {
     updateAllSensors();
     printSensors();
     checkAutoWatering();
+    sendToBlynk(); // Sync realtime data to Blynk
   }
 
   // Send to backend every 15s
@@ -537,17 +548,26 @@ void loop() {
     sendToBackend();
   }
 
-  // FIX 5C: Heartbeat every 30s — shows device ONLINE on dashboard
+  // Heartbeat every 30s
   if (now - lastHeartbeat >= INTERVAL_HEARTBEAT) {
     lastHeartbeat = now;
     sendHeartbeat();
   }
 
-  // Update TFT every 5s
+  // Update TFT every 4s
   if (now - lastTFTUpdate >= INTERVAL_TFT) {
     lastTFTUpdate = now;
+    
+    // IF BACKEND FAILED: Force display to stay on Network Page (Page 3)
+    if (!backendOk) {
+      tftPage = 3; 
+    }
+
     updateTFTDisplay();
-    tftPage = (tftPage + 1) % 4;
+    
+    if (backendOk) {
+      tftPage = (tftPage + 1) % 4;
+    }
   }
 
   // Pump safety logic
@@ -558,9 +578,8 @@ void loop() {
     handleSerialCommand((char)Serial.read());
   }
 
-  delay(50); // Yield to RTOS
+  delay(50); 
 }
-
 
 // ========== SERIAL COMMANDS ==========
 void handleSerialCommand(char cmd) {
@@ -575,10 +594,6 @@ void handleSerialCommand(char cmd) {
       Serial.println("  f — Show flow sensor count");
       Serial.println("  w — WiFi status");
       Serial.println("  t — TFT page test (cycles all pages)");
-      Serial.println("  m — Memory info");
-      Serial.println("  d — Full diagnostics");
-      Serial.println("  b — Force backend send now");
-      Serial.println("  x — Force heartbeat now");
       break;
     case 's':
       updateAllSensors();
@@ -595,16 +610,13 @@ void handleSerialCommand(char cmd) {
     case 'r':
       Serial.println("[TEST] Relay click test...");
       digitalWrite(PIN_RELAY, HIGH); delay(1000); digitalWrite(PIN_RELAY, LOW);
-      Serial.println("[TEST] Done — heard a click? If not, check wiring");
       break;
     case 'f':
-      Serial.printf("[FLOW] Pulses: %lu | Volume: %.1f mL\n",
-        flowPulseCount, getFlowVolumeMl());
+      Serial.printf("[FLOW] Pulses: %lu | Volume: %.1f mL\n", flowPulseCount, getFlowVolumeMl());
       break;
     case 'w':
-      Serial.printf("[WIFI] %s | IP: %s | RSSI: %d dBm\n",
-        WiFi.status() == WL_CONNECTED ? "CONNECTED" : "DISCONNECTED",
-        WiFi.localIP().toString().c_str(), WiFi.RSSI());
+      Serial.printf("[WIFI] %s | IP: %s | RSSI: %d dBm\n", 
+        WiFi.status() == WL_CONNECTED ? "CONNECTED" : "DISCONNECTED", WiFi.localIP().toString().c_str(), WiFi.RSSI());
       break;
     case 't':
       Serial.println("[TFT] Cycling all 4 pages...");
@@ -612,44 +624,5 @@ void handleSerialCommand(char cmd) {
         tftPage = i; updateTFTDisplay(); delay(2000);
       }
       break;
-    case 'm':
-      Serial.printf("[MEM] Free heap: %u bytes | Min free: %u bytes\n",
-        ESP.getFreeHeap(), ESP.getMinFreeHeap());
-      break;
-    case 'd':
-      updateAllSensors(); printSensors();
-      Serial.printf("[PUMP] Running: %s | Volume: %.1f mL\n",
-        pumpRunning ? "YES" : "NO", getFlowVolumeMl());
-      Serial.printf("[FLOW] Pulses: %lu\n", flowPulseCount);
-      Serial.printf("[WIFI] %s | IP: %s | RSSI: %ddBm\n",
-        WiFi.status() == WL_CONNECTED ? "OK" : "FAIL",
-        WiFi.localIP().toString().c_str(), WiFi.RSSI());
-      Serial.printf("[DHT]  Valid: %s | Temp: %.1fC | Hum: %.1f%%\n",
-        dhtValid ? "YES" : "NO (cached)", cachedTemp, cachedHumidity);
-      Serial.printf("[MEM]  Free: %u | Min: %u\n",
-        ESP.getFreeHeap(), ESP.getMinFreeHeap());
-      break;
-    case 'b':
-      Serial.println("[BACKEND] Force sending now...");
-      sendToBackend();
-      break;
-    case 'x':
-      Serial.println("[HEARTBEAT] Force sending now...");
-      sendHeartbeat();
-      break;
   }
 }
-
-
-// =====================================================
-// END — SPROUTSENSE ESP32-SENSOR.INO v2.1
-// GPIO 12 = YF-S401 Flow Sensor (INTERRUPT, IRAM_ATTR)
-// GPIO 14 = Relay (Pump Control, external PSU required)
-//
-// FIXES APPLIED vs v2.0:
-//   FIX 3 — flowRate now calculated as actual mL/min
-//   FIX 4 — sendToBackend() retries 3x on failure
-//   FIX 5 — sendHeartbeat() keeps device ONLINE on dashboard
-//   FIX 6 — Forward declaration for handleSerialCommand()
-//            Cached temp/humidity defaults (25C/50%) not 0
-// =====================================================
