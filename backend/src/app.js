@@ -3,6 +3,7 @@ import cors from 'cors';
 import helmet from 'helmet';
 import morgan from 'morgan';
 import dotenv from 'dotenv';
+import compression from 'compression'; // <--- 1. NEW: Imported compression
 
 dotenv.config();
 
@@ -56,6 +57,9 @@ app.use(cors({
 // ── General middleware ────────────────────────────────────────────────────────
 // Use combined format for production, dev format for development
 app.use(morgan(config.IS_PRODUCTION ? 'combined' : 'dev'));
+
+app.use(compression()); // <--- 2. NEW: Compresses responses (makes chart data load much faster)
+
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 app.use(requestLogger);
@@ -83,13 +87,33 @@ app.get('/api', (req, res) => {
 });
 
 // ── Routes ────────────────────────────────────────────────────────────────────
+// Standard API routes
 app.use('/api/sensors', sensorRoutes);
 app.use('/api/water', wateringRoutes);
 app.use('/api/config', configRoutes);
 app.use('/api/ai', aiRoutes);
 
+// ============================================================================
+// 🚨 BULLETPROOF FALLBACK FOR MISSING /api PREFIX
+// If the frontend accidentally requests /sensors instead of /api/sensors,
+// this middleware intercepts it and reroutes it to the correct API router.
+// ============================================================================
+app.use('/sensors', sensorRoutes);
+app.use('/water', wateringRoutes);
+app.use('/config', configRoutes);
+app.use('/ai', aiRoutes);
+// ============================================================================
+
 // ── Error handling ────────────────────────────────────────────────────────────
-app.use(notFound);
+// If the route STILL isn't found, return a proper 404 JSON response
+app.use((req, res, next) => {
+  res.status(404).json({
+    success: false,
+    message: `Not Found - ${req.originalUrl}`,
+    hint: "Did you mean to include /api prefix?"
+  });
+});
+
 app.use(errorHandler);
 
 export default app;

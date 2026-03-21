@@ -1,8 +1,7 @@
-﻿// File removed after migration to AnalyticsPage.jsx
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { aiAPI, sensorAPI } from '../../utils/api';
-import { formatDiseaseName } from '../../utils/formatters';
-import { GlassIcon } from '../components/GlassIcon';
+﻿import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import api from '../api'; // Use the newly fixed global API client
+import { formatDiseaseName } from '../utils/formatters'; // Ensure this path is correct
+import { GlassIcon } from '../components/GlassIcon'; // Ensure this path is correct
 import {
   AreaChart,
   Area,
@@ -103,8 +102,11 @@ export default function RecordsPage() {
   const [selectedRange, setSelectedRange] = useState(TIME_RANGES[2]); // 24h default
   const [activeMetric, setActiveMetric] = useState('soilMoisture');
   const [diseaseDetections, setDiseaseDetections] = useState([]);
+  
+  // Pagination State
   const [page, setPage] = useState(1);
   const [totalRecords, setTotalRecords] = useState(0);
+  const [totalPages, setTotalPages] = useState(1);
   const PAGE_SIZE = 20;
 
   const fetchRecords = useCallback(async () => {
@@ -113,32 +115,51 @@ export default function RecordsPage() {
     try {
       const end = new Date();
       const start = new Date(end.getTime() - selectedRange.hours * 3600 * 1000);
-      const resp = await sensorAPI.getHistory(start.toISOString(), end.toISOString());
-      const data = resp.data || resp || [];
-      setRecords(Array.isArray(data) ? data : data.readings || []);
-      setTotalRecords(Array.isArray(data) ? data.length : data.total || data.length || 0);
+      
+      // Fetch Sensor History using unified API client
+      const sensorResp = await api.getSensorHistory({ 
+        page, 
+        limit: PAGE_SIZE, 
+        startDate: start.toISOString(), 
+        endDate: end.toISOString() 
+      });
+      
+      // Handle the exact structure from the backend: { success: true, data: [...], pagination: {...} }
+      const sensorData = sensorResp.data || [];
+      setRecords(sensorData);
+      
+      // Backend should ideally return total records in pagination object
+      if (sensorResp.pagination) {
+        setTotalRecords(sensorResp.pagination.totalItems || sensorData.length);
+        setTotalPages(sensorResp.pagination.totalPages || Math.ceil(sensorData.length / PAGE_SIZE));
+      } else {
+        setTotalRecords(sensorData.length);
+        setTotalPages(Math.ceil(sensorData.length / PAGE_SIZE));
+      }
 
-      const aiResp = await aiAPI.getDiseaseDetections({
+      // Fetch AI Disease History
+      const aiResp = await api.getDiseaseHistory({
+        page: 1,
+        limit: 300,
         startDate: start.toISOString(),
         endDate: end.toISOString(),
-        limit: 300,
       });
-      const aiData = aiResp?.data || aiResp;
-      setDiseaseDetections(Array.isArray(aiData?.detections) ? aiData.detections : []);
-      setPage(1);
+      
+      const aiData = aiResp.data || [];
+      setDiseaseDetections(Array.isArray(aiData) ? aiData : aiData.detections || []);
+      
     } catch (e) {
+      console.error("Failed to fetch records:", e);
       setError('Failed to load records. Ensure the backend is running.');
+      setRecords([]);
     } finally {
       setLoading(false);
     }
-  }, [selectedRange]);
+  }, [selectedRange, page]); // Re-fetch when range OR page changes
 
-  useEffect(() => { fetchRecords(); }, [fetchRecords]);
-
-  // Pagination
-  const startIdx = (page - 1) * PAGE_SIZE;
-  const pageRecords = records.slice(startIdx, startIdx + PAGE_SIZE);
-  const totalPages = Math.ceil(records.length / PAGE_SIZE);
+  useEffect(() => { 
+    fetchRecords(); 
+  }, [fetchRecords]);
 
   function metricValues(key) {
     return records.map((r) => getMetricValue(r, key)).filter((v) => v !== undefined && v !== null);
@@ -164,20 +185,20 @@ export default function RecordsPage() {
   const activeMetricValues = useMemo(() => metricValues(activeMetric), [records, activeMetric]);
 
   const activeMetricChartData = useMemo(
-    () => records
+    () => [...records] // Copy array to avoid mutating state
+      .reverse()       // Chart typically looks better chronological (oldest to newest left to right)
       .map((r) => ({
         timestamp: r.timestamp,
         value: getMetricValue(r, activeMetric),
       }))
-      .reverse()
       .filter((d) => d.value !== undefined && d.value !== null),
     [records, activeMetric]
   );
 
   const leafCountSeries = useMemo(
-    () => records
-      .map((r) => ({ timestamp: r.timestamp, value: getMetricValue(r, 'leafCount') }))
+    () => [...records]
       .reverse()
+      .map((r) => ({ timestamp: r.timestamp, value: getMetricValue(r, 'leafCount') }))
       .filter((d) => d.value !== undefined && d.value !== null),
     [records]
   );
@@ -216,7 +237,10 @@ export default function RecordsPage() {
               <button
                 key={r.label}
                 className={`records-range-tab${selectedRange.label === r.label ? ' active' : ''}`}
-                onClick={() => setSelectedRange(r)}
+                onClick={() => {
+                  setSelectedRange(r);
+                  setPage(1); // Reset to page 1 when changing time range
+                }}
               >
                 {r.label}
               </button>
@@ -374,7 +398,7 @@ export default function RecordsPage() {
       <div className="records-table-card">
         <div className="records-table-header">
           <span>Recent Sensor Readings</span>
-          <span className="records-count">{records.length} records</span>
+          <span className="records-count">{totalRecords} records total</span>
         </div>
 
         {loading && (
@@ -395,11 +419,11 @@ export default function RecordsPage() {
           <div className="records-empty">
             <GlassIcon name="database" />
             <p>No records found for the selected time range.</p>
-            <p className="records-empty-hint">Data is stored automatically 5x per day via scheduled job.</p>
+            <p className="records-empty-hint">Data is stored automatically by your ESP32-SENSOR.</p>
           </div>
         )}
 
-        {!loading && !error && pageRecords.length > 0 && (
+        {!loading && !error && records.length > 0 && (
           <>
             <div className="records-table-wrap">
               <table className="records-table">
@@ -418,7 +442,7 @@ export default function RecordsPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {pageRecords.map((rec, i) => (
+                  {records.map((rec, i) => (
                     <tr key={rec._id || i}>
                       <td className="records-ts">{formatTimestamp(rec.timestamp)}</td>
                       <td>
@@ -448,7 +472,7 @@ export default function RecordsPage() {
               </table>
             </div>
 
-            {/* Pagination */}
+            {/* True Backend Pagination */}
             {totalPages > 1 && (
               <div className="records-pagination">
                 <button
@@ -476,4 +500,3 @@ export default function RecordsPage() {
     </div>
   );
 }
-

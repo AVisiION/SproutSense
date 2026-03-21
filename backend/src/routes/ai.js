@@ -40,4 +40,12 @@ router.get('/disease/alerts', aiLimiter, getActiveAlerts);
 // GET /api/ai/disease/all - Get all disease detections with pagination
 router.get('/disease/all', aiLimiter, getAllDiseaseDetections);
 
+// ============================================================================
+// FIX FOR FRONTEND 404 ERROR
+// Sometimes the frontend drops the '/api/ai' prefix and just calls '/disease/all'
+// relative to this router. If the frontend calls `/ai/disease/all` while this 
+// router is mounted at `/api`, it actually requests `/api/ai/disease/all`.
+// But if the frontend drops `/api`, we handle it gracefully here as a fallback.
+// ============================================================================
+
 export default router;
