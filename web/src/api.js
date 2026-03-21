@@ -2,9 +2,8 @@ import axios from 'axios';
 
 export class ESP32API {
   constructor(baseURL) {
-    // Uses the provided baseURL, Vite env variable, or defaults to '/api'
     const apiBase = baseURL || import.meta.env.VITE_API_BASE_URL || '/api';
-    
+
     this.client = axios.create({
       baseURL: apiBase,
       timeout: 10000,
@@ -13,45 +12,73 @@ export class ESP32API {
       }
     });
 
-    // Setup WebSocket connection for real-time updates
+    this.ws = null;           // ← NEW
+    this.pingInterval = null; // ← NEW
+
     this.setupWebSocket();
   }
 
+  // ==========================================
+  // WEBSOCKET — PING/PONG KEEPALIVE
+  // ==========================================
+
   setupWebSocket() {
-    // Use Vite env variable if available, otherwise fallback to host origin
     let wsUrl = import.meta.env.VITE_WS_URL;
     if (!wsUrl) {
       const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
       wsUrl = `${protocol}//${window.location.host}/ws`;
     }
-    
+
+    // ← NEW: Clean up old connection before making a new one
+    if (this.ws) {
+      this.ws.onclose = null;
+      this.ws.close();
+    }
+
     this.ws = new WebSocket(wsUrl);
-    
+
     this.ws.onopen = () => {
-      console.log('✅ WebSocket connected');
+      console.log('✅ WebSocket connected to Render');
+
+      if (this.pingInterval) clearInterval(this.pingInterval); // ← NEW
+
+      // ← NEW: Ping every 30s — prevents Render killing idle connection
+      this.pingInterval = setInterval(() => {
+        if (this.ws && this.ws.readyState === WebSocket.OPEN) {
+          this.ws.send(JSON.stringify({ type: 'ping', timestamp: Date.now() }));
+        }
+      }, 30000);
     };
-    
+
     this.ws.onmessage = (event) => {
       try {
         const data = JSON.parse(event.data);
+        if (data.type === 'pong') return; // ← NEW: Ignore keepalive replies
         this.handleWebSocketMessage(data);
       } catch (error) {
         console.error('WebSocket message error:', error);
       }
     };
-    
+
     this.ws.onclose = () => {
-      console.log('❌ WebSocket disconnected. Reconnecting...');
-      setTimeout(() => this.setupWebSocket(), 3000);
+      console.warn('❌ WebSocket disconnected. Reconnecting in 5s...');
+
+      // ← NEW: Clean up ping interval
+      if (this.pingInterval) {
+        clearInterval(this.pingInterval);
+        this.pingInterval = null;
+      }
+
+      setTimeout(() => this.setupWebSocket(), 5000); // ← CHANGED: 3s → 5s
     };
-    
+
     this.ws.onerror = (error) => {
       console.error('WebSocket error:', error);
+      // onclose fires automatically after onerror
     };
   }
 
   handleWebSocketMessage(data) {
-    // Dispatch custom events for real-time updates
     const event = new CustomEvent('ws-update', { detail: data });
     window.dispatchEvent(event);
   }
@@ -59,10 +86,10 @@ export class ESP32API {
   // ==========================================
   // SENSOR ENDPOINTS
   // ==========================================
-  
+
   async getSensors() {
     try {
-      const response = await this.client.get('/sensors/latest'); // FIXED
+      const response = await this.client.get('/sensors/latest');
       return response.data;
     } catch (error) {
       console.error('Error fetching sensors:', error);
@@ -70,9 +97,12 @@ export class ESP32API {
     }
   }
 
-  async getSensorHistory({ page = 1, limit = 20, deviceId = 'ESP32-SENSOR' } = {}) {
+  async getSensorHistory({ page = 1, limit = 20, deviceId = 'ESP32-SENSOR', startDate, endDate } = {}) {
     try {
-      const response = await this.client.get(`/sensors/history?page=${page}&limit=${limit}&deviceId=${deviceId}`);
+      const params = new URLSearchParams({ page, limit, deviceId }); // ← IMPROVED
+      if (startDate) params.append('startDate', startDate);
+      if (endDate) params.append('endDate', endDate);
+      const response = await this.client.get(`/sensors/history?${params.toString()}`);
       return response.data;
     } catch (error) {
       console.error('Error fetching sensor history:', error);
@@ -86,7 +116,7 @@ export class ESP32API {
 
   async getStatus() {
     try {
-      const response = await this.client.get('/config/status'); // FIXED
+      const response = await this.client.get('/config/status');
       return response.data;
     } catch (error) {
       console.error('Error fetching status:', error);
@@ -162,18 +192,25 @@ export class ESP32API {
     }
   }
 
-  // FIXED: Replaced /ai/disease/all with the correct /ai/diseasehistory endpoint
-  async getDiseaseHistory({ page = 1, limit = 5, deviceId = 'ESP32-CAM' } = {}) {
+  async getDiseaseHistory({ page = 1, limit = 5, deviceId = 'ESP32-CAM', startDate, endDate } = {}) {
     try {
-      const response = await this.client.get(`/ai/diseasehistory?page=${page}&limit=${limit}&deviceId=${deviceId}`);
+      const params = new URLSearchParams({ page, limit, deviceId }); // ← IMPROVED
+      if (startDate) params.append('startDate', startDate);
+      if (endDate) params.append('endDate', endDate);
+      const response = await this.client.get(`/ai/disease/all?${params.toString()}`); // ← FIXED route
       return response.data;
     } catch (error) {
       console.error('Error fetching disease history:', error);
       throw error;
     }
   }
+
+  // Alias for components that call getAllDiseaseDetections directly
+  async getAllDiseaseDetections(options = {}) {
+    return this.getDiseaseHistory(options);
+  }
 }
 
-// Export a default instance to be used across the React app
+// Singleton instance used across the entire React app
 const api = new ESP32API();
 export default api;
