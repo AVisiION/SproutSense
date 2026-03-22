@@ -52,14 +52,14 @@ MONGODB_URI=mongodb+srv://user:pass@cluster.mongodb.net/sproutsense?retryWrites=
 
 | Device | ID | Role | Firmware |
 |--------|-----|------|----------|
-| ESP32 Dev Board | `ESP32-SENSOR-001` | Sensors + Pump + Flow + TFT | `esp32-upload/ESP32-SENSOR/ESP32-SENSOR.ino` |
-| ESP32-CAM | `ESP32-CAM-001` | Image capture + Disease detection | `esp32-upload/ESP32_CAM_AI/ESP32_CAM_AI.ino` |
+| ESP32 Dev Board | `ESP32-SENSOR` | Sensors + Pump + Flow + TFT | `esp32-upload/ESP32-SENSOR/ESP32-SENSOR.ino` |
+| ESP32-CAM | `ESP32-CAM` | Image capture + Disease detection | `esp32-upload/ESP32_CAM_AI/ESP32_CAM_AI.ino` |
 
 ### Cloud Stack
 
 ```
-ESP32-SENSOR-001  ──POST──►  Render Backend  ◄──►  Netlify Frontend
-ESP32-CAM-001     ──POST──►  (Node.js/Express)        (React/Vite)
+ESP32-SENSOR  ──POST──►  Render Backend  ◄──►  Netlify Frontend
+ESP32-CAM     ──POST──►  (Node.js/Express)        (React/Vite)
                                     │
                                     ▼
                           MongoDB Atlas
@@ -75,7 +75,7 @@ ESP32-CAM-001     ──POST──►  (Node.js/Express)        (React/Vite)
 
 ---
 
-## 🔌 Hardware — ESP32-SENSOR-001
+## 🔌 Hardware — ESP32-SENSOR
 
 ### Pin Configuration
 
@@ -357,11 +357,11 @@ SproutSense is a dual‑ESP32 + MERN system split into **edge devices**, a **Nod
 ### High‑Level Flow
 
 ```text
-  [ESP32-SENSOR-001] ── HTTP/JSON ──►  /api/sensors, /api/water, /api/config
+  [ESP32-SENSOR] ── HTTP/JSON ──►  /api/sensors, /api/water, /api/config
        ▲                                      │
        │ ADC1 sensors, relay, flow            │
        │                                      ▼
-  [ESP32-CAM-001] ── HTTP/JSON ──►       Node.js / Express
+  [ESP32-CAM] ── HTTP/JSON ──►       Node.js / Express
        ▲                                 (Render.com)
        │ Image + AI result                    │
        │                                      ▼
