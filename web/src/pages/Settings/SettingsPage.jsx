@@ -196,7 +196,7 @@ export default function SettingsPage({ theme, toggleTheme, onNotification }) {
                 <input
                   type="text"
                   className="settings-input"
-                  placeholder="ESP32-SENSOR-001"
+                  placeholder="ESP32-SENSOR"
                   value={deviceId}
                   onChange={e => setDeviceId(e.target.value)}
                 />

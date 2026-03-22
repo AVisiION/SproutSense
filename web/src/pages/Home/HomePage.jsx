@@ -81,7 +81,7 @@ const HomePage = ({ theme, sensors, isConnected }) => {
   const techStack = [
     {
       category: 'Hardware',
-      items: ['ESP32-SENSOR-001', 'ESP32-CAM-001', 'Soil Moisture', 'DHT22', 'pH Sensor', 'NPK Sensor'],
+      items: ['ESP32-SENSOR', 'ESP32-CAM', 'Soil Moisture', 'DHT22', 'pH Sensor', 'NPK Sensor'],
     },
     {
       category: 'Backend',
@@ -335,10 +335,10 @@ const HomePage = ({ theme, sensors, isConnected }) => {
               <h3>Dual ESP32 Setup</h3>
               <ul>
                 <li>
-                  <strong>ESP32-SENSOR-001:</strong> ADC1 sensors + relay pump control.
+                  <strong>ESP32-SENSOR:</strong> ADC1 sensors + relay pump control.
                 </li>
                 <li>
-                  <strong>ESP32-CAM-001:</strong> Disease detection with Edge Impulse model.
+                  <strong>ESP32-CAM:</strong> Disease detection with Edge Impulse model.
                 </li>
                 <li>
                   <strong>Link:</strong> WiFi → REST API + WebSocket to backend.

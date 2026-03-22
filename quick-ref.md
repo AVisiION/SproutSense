@@ -38,11 +38,11 @@ SproutSense is a dual‑ESP32 + MERN system split into **edge devices**, a **Nod
 ### High‑Level Flow
 
 ```text
-  [ESP32-SENSOR-001] ── HTTP/JSON ──►  /api/sensors, /api/water, /api/config
+  [ESP32-SENSOR] ── HTTP/JSON ──►  /api/sensors, /api/water, /api/config
        ▲                                      │
        │ ADC1 sensors, relay, flow           │
        │                                      ▼
-  [ESP32-CAM-001] ── HTTP/JSON ──►       Node.js / Express
+  [ESP32-CAM] ── HTTP/JSON ──►       Node.js / Express
        ▲                                 (Render.com)
        │ Image + AI result                    │
        │                                      ▼

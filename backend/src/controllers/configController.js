@@ -8,7 +8,7 @@ import DiseaseDetection from '../models/DiseaseDetection.js';
 // ─── GET CONFIG ────────────────────────────────────────────────────────────────
 export const getConfig = async (req, res) => {
   try {
-    const deviceId = req.params.deviceId || req.query.deviceId || 'ESP32-SENSOR-001';
+    const deviceId = req.params.deviceId || req.query.deviceId || 'ESP32-SENSOR';
     let config = await SystemConfig.findOne({ deviceId });
     if (!config) {
       config = await SystemConfig.create({ deviceId });
@@ -22,7 +22,7 @@ export const getConfig = async (req, res) => {
 // ─── UPDATE CONFIG ─────────────────────────────────────────────────────────────
 export const updateConfig = async (req, res) => {
   try {
-    const deviceId = req.params.deviceId || req.body.deviceId || 'ESP32-SENSOR-001';
+    const deviceId = req.params.deviceId || req.body.deviceId || 'ESP32-SENSOR';
     const updates = req.body;
     delete updates.deviceId;
     const config = await SystemConfig.findOneAndUpdate(

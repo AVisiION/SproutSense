@@ -533,7 +533,7 @@ export default function AnalyticsPage() {
                           : '--'}
                       </td>
                       <td className="records-device">
-                        {rec.deviceId || 'ESP32-SENSOR-001'}
+                        {rec.deviceId || 'ESP32-SENSOR'}
                       </td>
                     </tr>
                   ))}
