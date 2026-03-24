@@ -52,7 +52,7 @@ export function Navbar({
         {/* Brand logo — visible when sidebar is collapsed on desktop */}
         {isSidebarCollapsed && !isMobile && (
           <Link to="/home" className="navbar-brand" aria-label="SproutSense home">
-            <GlassIcon name="sprout" className="navbar-brand-icon" />
+            <img src="/assets/icon.svg" className="navbar-brand-icon" alt="" />
             <span className="navbar-brand-text">SproutSense</span>
           </Link>
         )}

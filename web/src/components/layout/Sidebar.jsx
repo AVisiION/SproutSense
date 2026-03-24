@@ -24,7 +24,7 @@ export function Sidebar({
 
       {/* ── Brand logo (Hides when collapsed via CSS) ── */}
       <div className="sidebar-brand">
-        <GlassIcon name="sprout" className="sidebar-brand-icon" />
+        <img src="/assets/icon.svg" className="sidebar-brand-icon" alt="" />
         <span className="sidebar-brand-text">SproutSense</span>
       </div>
 
@@ -52,25 +52,6 @@ export function Sidebar({
                   {item.path === '/alerts' && alerts.length > 0 && (
                     <span className="sidebar-badge">{alerts.length}</span>
                   )}
-
-                  {/* Backend online/offline dot */}
-                  {item.path === '/backend' && (
-                    <span
-                      className={`sidebar-status-dot ${systemStatus.backend}`}
-                      title={`Backend: ${statusLabel(systemStatus.backend)}`}
-                    />
-                  )}
-
-                  {/* Device (ESP32 + CAM) online/offline dot */}
-                  {item.path === '/esp32' && (
-                    <span
-                      className={`sidebar-status-dot ${systemStatus.esp32Cam === 'online' || systemStatus.esp32 === 'online'
-                          ? 'online'
-                          : 'offline'
-                        }`}
-                      title={`ESP32: ${statusLabel(systemStatus.esp32)} | CAM: ${statusLabel(systemStatus.esp32Cam)}`}
-                    />
-                  )}
                 </span>
 
                 <span className="sidebar-label">{item.label}</span>
@@ -79,28 +60,6 @@ export function Sidebar({
           </div>
         ))}
       </nav>
-
-      {/* ── System status pills (Hides when collapsed) ── */}
-      <div className="sidebar-system-status" aria-label="System status overview">
-        <div className="sidebar-system-row">
-          <span className="sidebar-system-label">Backend</span>
-          <span className={`sidebar-system-pill ${systemStatus.backend}`}>
-            {statusLabel(systemStatus.backend)}
-          </span>
-        </div>
-        <div className="sidebar-system-row">
-          <span className="sidebar-system-label">ESP32-SENSOR</span>
-          <span className={`sidebar-system-pill ${systemStatus.esp32}`}>
-            {statusLabel(systemStatus.esp32)}
-          </span>
-        </div>
-        <div className="sidebar-system-row">
-          <span className="sidebar-system-label">ESP32-CAM</span>
-          <span className={`sidebar-system-pill ${systemStatus.esp32Cam}`}>
-            {statusLabel(systemStatus.esp32Cam)}
-          </span>
-        </div>
-      </div>
     </aside>
   );
 }

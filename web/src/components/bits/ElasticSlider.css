@@ -41,8 +41,8 @@
   background: rgba(255, 255, 255, 0.05);
   border: 1px solid rgba(255, 255, 255, 0.15);
   border-radius: 50%;
-  width: 34px !important;  /* Strictly locked width */
-  height: 34px !important; /* Strictly locked height */
+  width: 34px ;  /* Strictly locked width */
+  height: 34px ; /* Strictly locked height */
   flex-shrink: 0;          /* PREVENTS SQUISHING */
   display: inline-flex;
   align-items: center;

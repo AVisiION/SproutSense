@@ -61,18 +61,18 @@ html {
 
 @media (max-width: 768px) {
   .hide-on-mobile {
-    display: none !important;
+    display: none ;
   }
   
   .hide-on-desktop {
-    display: block !important;
+    display: block ;
   }
   
   /* Make utility grid containers fluid on mobile */
   .grid-2-col, 
   .grid-3-col, 
   .grid-4-col {
-    grid-template-columns: 1fr !important;
+    grid-template-columns: 1fr ;
   }
 }
 
@@ -80,6 +80,6 @@ html {
   /* Gracefully stack utility grids on tablets */
   .grid-3-col, 
   .grid-4-col {
-    grid-template-columns: repeat(2, 1fr) !important;
+    grid-template-columns: repeat(2, 1fr) ;
   }
 }

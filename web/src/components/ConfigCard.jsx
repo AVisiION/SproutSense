@@ -1,18 +1,11 @@
-﻿import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { configAPI, sensorAPI } from '../utils/api';
 import { GlassIcon } from './bits/GlassIcon';
 import '../styles/configcard.css';
 
-export function ConfigCard({ onNotification, systemStatus: externalSystemStatus }) {
+export function ConfigCard({ onNotification, systemStatus }) {
   const [autoMode, setAutoMode] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [systemStatus, setSystemStatus] = useState({
-    backend: 'checking',
-    database: 'checking',
-    esp32: 'checking',
-    esp32Cam: 'checking',
-    uptime: 0,
-  });
   const [stats, setStats] = useState({
     totalReadings: 0,
     todayReadings: 0,
@@ -39,21 +32,17 @@ export function ConfigCard({ onNotification, systemStatus: externalSystemStatus 
   };
 
   useEffect(() => {
-    // Load initial config
-    const fetchConfig = async () => {
+    const fetchInitialData = async () => {
       try {
-        const configResponse = await configAPI.get();
+        const [configResponse, statsResponse] = await Promise.all([
+          configAPI.get(),
+          sensorAPI.getHistory(24)
+        ]);
+
         const configData = configResponse?.data || configResponse;
         setAutoMode(configData?.autoWaterEnabled || false);
-      } catch (error) {
-        console.error('Failed to load config:', error);
-      }
-    };
 
-    const fetchStats = async () => {
-      try {
-        const result = await sensorAPI.getHistory(24);
-        const readings = extractReadings(result);
+        const readings = extractReadings(statsResponse);
         setStats({
           totalReadings: readings.length,
           todayReadings: readings.filter(r => {
@@ -64,28 +53,12 @@ export function ConfigCard({ onNotification, systemStatus: externalSystemStatus 
           lastUpdate: readings[0]?.timestamp || null,
         });
       } catch (error) {
-        console.error('Failed to load stats:', error);
-        setStats({
-          totalReadings: 0,
-          todayReadings: 0,
-          lastUpdate: null,
-        });
+        console.error('Failed to load initial config/stats:', error);
       }
     };
 
-    fetchConfig();
-    fetchStats();
-
-    return undefined;
+    fetchInitialData();
   }, []);
-
-  useEffect(() => {
-    if (!externalSystemStatus) return;
-    setSystemStatus((prev) => ({
-      ...prev,
-      ...externalSystemStatus,
-    }));
-  }, [externalSystemStatus]);
 
   const handleSaveAutoMode = async () => {
     setLoading(true);
@@ -103,7 +76,6 @@ export function ConfigCard({ onNotification, systemStatus: externalSystemStatus 
   };
 
   const handleClearHistory = async () => {
-    // Show dialog with options to clear different history types
     const clearOptions = `Select which history to clear:
 
   - Sensor Readings (older than 90 days)
@@ -111,89 +83,40 @@ export function ConfigCard({ onNotification, systemStatus: externalSystemStatus 
   - Disease Detections (older than 180 days)
 
 Options:
-1. Clear Sensor Readings only
-2. Clear Watering Logs only
-3. Clear Disease History only
+1. Clear Sensor Readings
+2. Clear Watering Logs
+3. Clear Disease History
 4. Clear ALL history
 0. Cancel`;
 
     const choice = window.prompt(clearOptions, '');
-    if (choice === null) return; // User cancelled
+    if (choice === null || choice === '0') return;
 
     setClearing(true);
     try {
       let result;
-      const confirmMsg = (type, days) => 
-        window.confirm(`Clear ${type} older than ${days} days?\nThis cannot be undone.`);
+      const typeMap = {
+        '1': { label: 'sensor readings', days: 90, fn: configAPI.clearSensorHistory },
+        '2': { label: 'watering logs', days: 365, fn: configAPI.clearWateringHistory },
+        '3': { label: 'disease detections', days: 180, fn: configAPI.clearDiseaseHistory },
+      };
 
-      switch (choice.trim()) {
-        case '1': // Sensor readings
-          if (!confirmMsg('sensor readings', 90)) {
-            setClearing(false);
-            return;
-          }
-          result = await configAPI.clearSensorHistory('ESP32-SENSOR', 90);
-          onNotification?.(formatNextCleanupMessage(result, 'sensor readings'), 'success');
-          break;
-
-        case '2': // Watering logs
-          if (!confirmMsg('watering logs', 365)) {
-            setClearing(false);
-            return;
-          }
-          result = await configAPI.clearWateringHistory('ESP32-SENSOR', 365);
-          onNotification?.(formatNextCleanupMessage(result, 'watering logs'), 'success');
-          break;
-
-        case '3': // Disease history
-          if (!confirmMsg('disease detections', 180)) {
-            setClearing(false);
-            return;
-          }
-          result = await configAPI.clearDiseaseHistory('ESP32-SENSOR', 180);
-          onNotification?.(formatNextCleanupMessage(result, 'disease analytics'), 'success');
-          break;
-
-        case '4': // All history
-          if (!window.confirm('Clear ALL history?\nThis will delete:\n- Sensor readings (>90 days)\n- Watering logs (>365 days)\n- Disease detections (>180 days)\n\nThis cannot be undone!')) {
-            setClearing(false);
-            return;
-          }
+      if (choice === '4') {
+        if (window.confirm('Clear ALL history? This cannot be undone!')) {
           result = await configAPI.clearAllHistory('ESP32-SENSOR');
-          const summary = result.summary || result;
-          onNotification?.(
-            `Cleared all history: ${summary.totalRecordsDeleted || 0} total analytics deleted`,
-            'success'
-          );
-          break;
-
-        case '0':
-          setClearing(false);
-          return;
-
-        default:
-          onNotification?.('Invalid option selected', 'error');
-          setClearing(false);
-          return;
+          onNotification?.(`Cleared ${result.totalRecordsDeleted || 0} records`, 'success');
+        }
+      } else if (typeMap[choice]) {
+        const { label, days, fn } = typeMap[choice];
+        if (window.confirm(`Clear ${label} older than ${days} days?`)) {
+          result = await fn('ESP32-SENSOR', days);
+          onNotification?.(formatNextCleanupMessage(result, label), 'success');
+        }
+      } else {
+        onNotification?.('Invalid option', 'error');
       }
-
-      // Refresh stats after clearing
-      const refreshedResult = await sensorAPI.getHistory(24);
-      const readings = extractReadings(refreshedResult);
-      setStats({
-        totalReadings: readings.length,
-        todayReadings: readings.filter(r => {
-          const readingDate = new Date(r.timestamp);
-          const today = new Date();
-          return readingDate.toDateString() === today.toDateString();
-        }).length,
-        lastUpdate: new Date().toLocaleString(),
-      });
-
     } catch (error) {
-      console.error('Failed to clear history:', error);
-      const errorMsg = error.response?.data?.message || error.message || 'Unknown error';
-      onNotification?.(`Failed to clear history: ${errorMsg}`, 'error');
+      onNotification?.('Failed to clear history', 'error');
     } finally {
       setClearing(false);
     }
@@ -201,222 +124,124 @@ Options:
 
   const handleExportData = async () => {
     try {
-      const result = await sensorAPI.getHistory(168); // 7 days
+      const result = await sensorAPI.getHistory(168);
       const readings = extractReadings(result);
+      if (!readings.length) return onNotification?.('No data to export', 'info');
       
-      if (readings.length === 0) {
-        onNotification?.('No data available to export', 'info');
-        return;
-      }
-      
-      const csv = [
-        'Timestamp,Soil Moisture (%),Temperature (°C),Humidity (%),Light (lux),pH',
-        ...readings.map(r => {
-          const timestamp = r.timestamp || 'N/A';
-          const moisture = r.soilMoisture || r.soil_moisture || 'N/A';
-          const temp = r.temperature || 'N/A';
-          const humidity = r.humidity || 'N/A';
-          const light = r.light || 'N/A';
-          const ph = r.pH || r.ph || 'N/A';
-          return `${timestamp},${moisture},${temp},${humidity},${light},${ph}`;
-        })
+      const csv = ['Timestamp,Soil Moisture,Temperature,Humidity,Light,pH',
+        ...readings.map(r => `${r.timestamp},${r.soilMoisture},${r.temperature},${r.humidity},${r.light},${r.pH}`)
       ].join('\n');
       
-      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-      const link = document.createElement('a');
-      const link_url = URL.createObjectURL(blob);
-      link.setAttribute('href', link_url);
-      link.setAttribute('download', `sproutsense-data-${new Date().toISOString().split('T')[0]}.csv`);
-      link.style.visibility = 'hidden';
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      
-      onNotification?.(`Data exported successfully (${readings.length} analytics)`, 'success');
-    } catch (error) {
-      console.error('Failed to export data:', error);
-      onNotification?.('Failed to export data', 'error');
+      const blob = new Blob([csv], { type: 'text/csv' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `sproutsense-export-${new Date().toISOString().split('T')[0]}.csv`;
+      a.click();
+      onNotification?.(`Exported ${readings.length} readings`, 'success');
+    } catch {
+      onNotification?.('Export failed', 'error');
     }
   };
 
-  const getStatusColor = (status) => {
-    switch (status) {
-      case 'online': return 'status-online';
-      case 'offline': return 'status-offline';
-      case 'checking': return 'status-checking';
-      default: return 'status-unknown';
-    }
+  const statusMap = {
+    online: { label: 'Online', class: 'status-online', icon: 'check' },
+    offline: { label: 'Offline', class: 'status-offline', icon: 'x' },
+    checking: { label: 'Checking', class: 'status-checking', icon: 'refresh' }
   };
 
-  const getStatusLabel = (status) => {
-    switch (status) {
-      case 'online': return 'Online';
-      case 'offline': return 'Offline';
-      case 'checking': return 'Checking...';
-      default: return 'Unknown';
-    }
-  };
+  const getStatus = (key) => statusMap[systemStatus?.[key]] || statusMap.offline;
 
   return (
     <div className="card config-card">
-      <h2 className="card-title">
-        <GlassIcon name="config" className="card-title-icon" />
-        System Configuration
-      </h2>
+      <div className="config-card-header">
+        <div className="config-header-icon"><GlassIcon name="config" /></div>
+        <div>
+          <h2 className="card-title">System Overview</h2>
+          <p className="card-subtitle">Manage device connectivity and historical data</p>
+        </div>
+      </div>
 
-      {/* System Status */}
-      <div className="config-section">
-        <h3 className="config-section-title">
-          <GlassIcon name="activity" /> System Status
-        </h3>
-        <div className="status-grid">
-          <div className="status-item">
-            <div className="status-item-header">
-              <GlassIcon name="server" />
-              <span className="status-item-label">Backend Server</span>
-            </div>
-            <span className={`status-badge ${getStatusColor(systemStatus.backend)}`}>
-              {getStatusLabel(systemStatus.backend)}
-            </span>
+      <div className="config-grid">
+        {/* Connection Status */}
+        <div className="config-section">
+          <h3 className="config-section-title"><GlassIcon name="activity" /> Connectivity</h3>
+          <div className="status-grid">
+            {[
+              { id: 'backend', label: 'API Server', icon: 'server' },
+              { id: 'database', label: 'Primary Database', icon: 'database' },
+              { id: 'esp32', label: 'Sensor Node', icon: 'wifi' },
+              { id: 'esp32Cam', label: 'Camera Module', icon: 'image' }
+            ].map(item => {
+              const status = getStatus(item.id);
+              return (
+                <div key={item.id} className="status-item">
+                  <div className="status-item-info">
+                    <GlassIcon name={item.icon} />
+                    <span>{item.label}</span>
+                  </div>
+                  <span className={`status-badge ${status.class}`}>
+                    {status.label}
+                  </span>
+                </div>
+              );
+            })}
           </div>
-          
-          <div className="status-item">
-            <div className="status-item-header">
-              <GlassIcon name="database" />
-              <span className="status-item-label">Database</span>
-            </div>
-            <span className={`status-badge ${getStatusColor(systemStatus.database)}`}>
-              {getStatusLabel(systemStatus.database)}
-            </span>
-          </div>
-          
-          <div className="status-item">
-            <div className="status-item-header">
-              <GlassIcon name="esp32" />
-              <span className="status-item-label">ESP32 Sensor Board</span>
-            </div>
-            <span className={`status-badge ${getStatusColor(systemStatus.esp32)}`}>
-              {getStatusLabel(systemStatus.esp32)}
-            </span>
-          </div>
+        </div>
 
-          <div className="status-item">
-            <div className="status-item-header">
-              <GlassIcon name="image" />
-              <span className="status-item-label">ESP32-CAM</span>
+        {/* Telemetry Stats */}
+        <div className="config-section">
+          <h3 className="config-section-title"><GlassIcon name="sprout" /> Analytics Stats</h3>
+          <div className="stats-grid">
+            <div className="stat-item">
+              <span className="stat-value">{stats.totalReadings}</span>
+              <span className="stat-label">Total (24h)</span>
             </div>
-            <span className={`status-badge ${getStatusColor(systemStatus.esp32Cam)}`}>
-              {getStatusLabel(systemStatus.esp32Cam)}
-            </span>
+            <div className="stat-item">
+              <span className="stat-value">{stats.todayReadings}</span>
+              <span className="stat-label">Today</span>
+            </div>
+            <div className="stat-item">
+              <span className="stat-value text-sm">
+                {stats.lastUpdate ? format(new Date(stats.lastUpdate), 'HH:mm') : 'N/A'}
+              </span>
+              <span className="stat-label">Last Sync</span>
+            </div>
+          </div>
+          <div className="config-auto-header">
+            <div className="config-auto-title">
+              <GlassIcon name="activity" />
+              <div>
+                <h3>Auto-Watering</h3>
+                <p>Threshold-based irrigation</p>
+              </div>
+            </div>
+            <button 
+              className={`toggle-switch ${autoMode ? 'on' : 'off'}`}
+              onClick={() => setAutoMode(!autoMode)}
+            >
+              <span className="toggle-knob" />
+            </button>
           </div>
         </div>
       </div>
 
-      {/* Data Statistics */}
+      {/* Management Actions */}
       <div className="config-section">
-        <h3 className="config-section-title">
-          <GlassIcon name="chart" /> Data Statistics
-        </h3>
-        <div className="stats-grid">
-          <div className="stat-item">
-            <div className="stat-value">{stats.totalReadings}</div>
-            <div className="stat-label">Total Readings (24h)</div>
-          </div>
-          <div className="stat-item">
-            <div className="stat-value">{stats.todayReadings}</div>
-            <div className="stat-label">Today's Readings</div>
-          </div>
-          <div className="stat-item">
-            <div className="stat-value">
-              {stats.lastUpdate 
-                ? new Date(stats.lastUpdate).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-                : 'N/A'}
-            </div>
-            <div className="stat-label">Last Update</div>
-          </div>
-        </div>
-      </div>
-
-      {/* Quick Settings */}
-      <div className="config-section">
-        <h3 className="config-section-title">
-          <GlassIcon name="controls" /> Quick Settings
-        </h3>
-        <div className="config-toggle-row">
-          <div className="config-toggle-info">
-            <span className="config-label">Auto-Watering Mode</span>
-            <span className="config-hint">Automatically water when moisture drops below threshold</span>
-          </div>
-          <button
-            className={`toggle-switch ${autoMode ? 'on' : 'off'}`}
-            onClick={() => setAutoMode(!autoMode)}
-            aria-label="Toggle auto-watering"
-          >
-            <span className="toggle-knob" />
-          </button>
-        </div>
-        <button 
-          className="btn btn-success config-save-btn" 
-          onClick={handleSaveAutoMode}
-          disabled={loading}
-        >
-          <GlassIcon name={loading ? 'refresh' : 'check'} className="btn-icon" animated={loading} />
-          {loading ? 'Saving...' : 'Save Changes'}
-        </button>
-      </div>
-
-      {/* Data Management */}
-      <div className="config-section">
-        <h3 className="config-section-title">
-          <GlassIcon name="database" /> Data Management
-        </h3>
+        <h3 className="config-section-title"><GlassIcon name="controls" /> Data Management</h3>
         <div className="config-actions">
-          <button 
-            className="btn btn-primary config-action-btn" 
-            onClick={handleExportData}
-          >
-            <GlassIcon name="download" className="btn-icon" />
-            Export Data (CSV)
+          <button className="config-btn config-btn-primary" onClick={handleSaveAutoMode} disabled={loading}>
+            <GlassIcon name={loading ? 'refresh' : 'check'} animated={loading} />
+            {loading ? 'Saving Settings...' : 'Apply Threshold'}
           </button>
-          <button 
-            className="btn btn-danger config-action-btn" 
-            onClick={handleClearHistory}
-            disabled={clearing}
-          >
-            <GlassIcon name="trash" className="btn-icon" />
-            {clearing ? 'Clearing...' : 'Clear History'}
+          <button className="config-btn config-btn-secondary" onClick={handleExportData}>
+            <GlassIcon name="download" /> Export (CSV)
+          </button>
+          <button className="config-btn config-btn-danger" onClick={handleClearHistory} disabled={clearing}>
+            <GlassIcon name="trash" /> {clearing ? 'Clearing...' : 'Wipe History'}
           </button>
         </div>
-        <p className="config-note">
-          Export your sensor data as CSV or clear all historical analytics. Export includes the last 7 days of readings.
-        </p>
-      </div>
-
-      {/* System Info */}
-      <div className="config-section config-info-section">
-        <div className="config-info-grid">
-          <div className="config-info-item">
-            <GlassIcon name="info" />
-            <div>
-              <div className="config-info-label">Version</div>
-              <div className="config-info-value">2.0.0 IoT</div>
-            </div>
-          </div>
-          <div className="config-info-item">
-            <GlassIcon name="wifi" />
-            <div>
-              <div className="config-info-label">WebSocket</div>
-              <div className="config-info-value">{systemStatus.backend === 'online' ? 'Connected' : 'Disconnected'}</div>
-            </div>
-          </div>
-          <div className="config-info-item">
-            <GlassIcon name="clock" />
-            <div>
-              <div className="config-info-label">Refresh Rate</div>
-              <div className="config-info-value">5s</div>
-            </div>
-          </div>
-        </div>
+        <p className="config-hint">Actions performed here directly affect the persistent historical database.</p>
       </div>
     </div>
   );

@@ -228,33 +228,7 @@
 /* ═══════════════════════════════════════════
    SHARED TOGGLE SWITCH
 ═══════════════════════════════════════════ */
-.toggle-switch {
-  width: 44px;
-  height: 24px;
-  border-radius: 12px;
-  border: none;
-  cursor: pointer;
-  position: relative;
-  transition: background 0.25s;
-  flex-shrink: 0;
-  padding: 0;
-}
-.toggle-switch.on  { background: var(--plant-teal); }
-.toggle-switch.off { background: rgba(255,255,255,0.15); }
-
-.toggle-knob {
-  position: absolute;
-  top: 3px;
-  width: 18px;
-  height: 18px;
-  border-radius: 50%;
-  background: #fff;
-  transition: left 0.25s;
-  box-shadow: 0 1px 4px rgba(0,0,0,0.3);
-  pointer-events: none;
-}
-.toggle-switch.on  .toggle-knob { left: 23px; }
-.toggle-switch.off .toggle-knob { left: 3px; }
+/* Unified toggle styles moved to global.css */
 
 /* ─────────────────────────────────────────────────
    ANIMATIONS
@@ -276,11 +250,13 @@
 
 .control-card-enhanced {
   width: 100%;
+  max-width: 1800px;
   margin: 0 auto;
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
   gap: 1.5rem;
   align-items: start;
+  justify-content: center;
 }
 
 .control-card-enhanced > .card-header-row {
@@ -291,7 +267,7 @@
 .control-card-enhanced > .control-section,
 .control-card-enhanced > div:not(.card-header-row) {
   width: 100%;
-  margin-bottom: 0 !important;
+  margin-bottom: 0 ;
   height: 100%;
 }
 

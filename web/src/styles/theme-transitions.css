@@ -55,7 +55,7 @@ html.theme-transitioning * {
     color 1.2s cubic-bezier(0.22, 1, 0.36, 1),
     border-color 1.2s cubic-bezier(0.22, 1, 0.36, 1),
     box-shadow 1.2s cubic-bezier(0.22, 1, 0.36, 1),
-    opacity 1.0s cubic-bezier(0.22, 1, 0.36, 1) !important;
+    opacity 1.0s cubic-bezier(0.22, 1, 0.36, 1) ;
 }
 
 html.theme-transitioning::after {
@@ -152,14 +152,14 @@ select {
 @media (prefers-reduced-motion: reduce) {
   ::view-transition-old(root),
   ::view-transition-new(root) {
-    animation: none !important;
+    animation: none ;
   }
   
   html.theme-transitioning *,
   html.theme-transitioning::after,
   .navbar-theme-toggle::before,
   .navbar-theme-toggle::after {
-    animation: none !important;
-    transition-duration: 0.01ms !important;
+    animation: none ;
+    transition-duration: 0.01ms ;
   }
 }

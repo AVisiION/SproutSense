@@ -1,246 +1,84 @@
 /**
  * variables.css
- * ─────────────────────────────────────────────────────
  * Global CSS custom properties (variables) for SproutSense.
- * Defines the complete color palette, typography, spacing,
- * and animation tokens used across all pages and components.
- *
- * Source: SINGLE source of truth for design tokens
- * Usage: Import as the VERY FIRST file in App.css
  */
 
 :root {
-  /* ═══════════════════════════════════════════════════
-     COLOR PALETTE — Core Brand Colors
-     ═══════════════════════════════════════════════════ */
+  /* BACKGROUNDS */
+  --bg-gradient: linear-gradient(135deg, #0a0f1e 0%, #0d1f12 50%, #0a0f1e 100%);
+  --bg-color: #0a0f1e;
 
-  /* Primary & Status Colors */
-  --primary-color: #0ea5e9;         /* Sky blue — actions, links */
-  --success-color: #10b981;         /* Emerald — positive states */
-  --warning-color: #f59e0b;         /* Amber — caution alerts */
-  --danger-color: #ef4444;          /* Red — errors, critical */
-  --info-color: #3b82f6;            /* Blue — informational */
-
-  /* Plant-specific Accent Colors */
-  --plant-green: #22c55e;           /* Bright leaf green */
-  --plant-teal: #14b8a6;            /* Deep teal (sensors/IoT) */
-  --plant-cyan: #22d3ee;            /* Cyan — data highlights */
-  --plant-leaf: #4ade80;            /* Light leaf accent */
-
-  /* ─────────────────────────────────────────────────
-     Background Layers — Dark Mode (Default)
-     ───────────────────────────────────────────────── */
-  --bg-color: #050d14;              /* Base background — deepest */
-  --bg-secondary: #091824;          /* Secondary bg — cards, sections */
-  --bg-tertiary: #0f2535;           /* Tertiary bg — elevated */
-  --bg-overlay: rgba(5, 13, 20, 0.8); /* Overlay for modals */
-
-  /* ─────────────────────────────────────────────────
-     Text Colors — Dark Mode
-     ───────────────────────────────────────────────── */
-  --text-color: #dff0fb;            /* Primary text — high contrast */
-  --text-secondary: #8ab4cc;        /* Secondary text — muted */
-  --text-tertiary: #5a86a0;         /* Tertiary text — subtle */
-  --text-inverse: #050d14;          /* Text on light backgrounds */
-
-  /* ─────────────────────────────────────────────────
-     Glass Morphism — Frosted Glass Effect
-     ───────────────────────────────────────────────── */
-  --glass-color: rgba(9, 28, 44, 0.72);      /* Card glass bg */
-  --glass-color-alt: rgba(14, 42, 62, 0.64); /* Alt glass bg */
-  --glass-blur: 16px;                        /* Blur radius */
-  --glass-border: 1px solid rgba(255, 255, 255, 0.11); /* Border */
-
-  /* ─────────────────────────────────────────────────
-     Card & Component Backgrounds
-     ───────────────────────────────────────────────── */
-  --card-bg: rgba(9, 28, 44, 0.54);   /* Card background */
-  --border-color: rgba(80, 160, 200, 0.16); /* Subtle border */
+  /* GLASS CARDS - Standardised Tokens */
+  --glass-color: rgba(255, 255, 255, 0.05);
+  --glass-blur: 16px;
+  --glass-border: 1px solid rgba(255, 255, 255, 0.10);
+  --glass-radius: 16px;
+  --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
   
-  /* Sidebar Specifics */
-  --sidebar-bg: rgba(5, 15, 24, 0.9);
-  --sidebar-hover: rgba(20, 184, 166, 0.07);
-  --sidebar-active: rgba(20, 184, 166, 0.18);
-  --sidebar-active-text: var(--plant-teal);
-  --sidebar-border: rgba(20, 184, 166, 0.14);
+  /* Backward compatibility for older card styles */
+  --card-bg: var(--glass-color);
+  --card-blur: blur(var(--glass-blur));
+  --card-border: var(--glass-border);
+  --card-radius: var(--glass-radius);
+  --card-shadow: var(--glass-shadow);
 
-  /* ─────────────────────────────────────────────────
-     Glow & Shadow Effects — for depth
-     ───────────────────────────────────────────────── */
-  --glow-primary: rgba(14, 165, 233, 0.22);   /* Sky blue glow */
-  --glow-success: rgba(16, 185, 129, 0.2);    /* Green glow */
-  --glow-danger: rgba(239, 68, 68, 0.22);     /* Red glow */
-  --glow-plant: rgba(34, 197, 94, 0.2);       /* Plant green glow */
-  --glow-teal: rgba(20, 184, 166, 0.18);      /* Teal glow */
-  --glow-warning: rgba(245, 158, 11, 0.2);    /* Amber glow */
+  /* ACCENTS & BRAND COLORS */
+  --accent-primary: #22c55e;
+  --accent-hover: #16a34a;
+  --focus-ring: 0 0 0 3px rgba(34, 197, 94, 0.4);
+  
+  --plant-teal: #14b8a6;
+  --plant-green: #22c55e;
+  --plant-cyan: #0ea5e9;
 
-  --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.05);
-  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06);
-  --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.1), 0 2px 4px rgba(0, 0, 0, 0.06);
-  --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.1), 0 4px 6px rgba(0, 0, 0, 0.05);
-  --shadow-xl: 0 20px 25px rgba(0, 0, 0, 0.1), 0 10px 10px rgba(0, 0, 0, 0.04);
-  --shadow-inner: inset 0 2px 4px rgba(0, 0, 0, 0.06);
+  /* TEXT */
+  --text-primary: #f0fdf4;
+  --text-secondary: rgba(255, 255, 255, 0.6);
+  --text-inverse: #050d14;
+  --text-color: var(--text-primary);
 
-  /* ─────────────────────────────────────────────────
-     Hover & Interactive States
-     ───────────────────────────────────────────────── */
-  --hover-overlay: rgba(20, 184, 166, 0.08);  /* Hover bg */
-  --active-overlay: rgba(20, 184, 166, 0.16); /* Active bg */
-  --focus-ring: 0 0 0 3px rgba(14, 165, 233, 0.4); /* Focus outline */
+  /* TRANSITIONS */
+  --transition-speed: 0.2s ease;
 
-  /* ═══════════════════════════════════════════════════
-     TYPOGRAPHY
-     ═══════════════════════════════════════════════════ */
-  --font-family-base: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-  --font-family-mono: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+  /* LAYOUT */
+  --sidebar-width: 240px;
+  --navbar-height: 64px;
 
-  --font-size-xs: 0.75rem;   /* 12px */
-  --font-size-sm: 0.875rem;  /* 14px */
-  --font-size-base: 1rem;    /* 16px */
-  --font-size-lg: 1.125rem;  /* 18px */
-  --font-size-xl: 1.25rem;   /* 20px */
-  --font-size-2xl: 1.5rem;   /* 24px */
-  --font-size-3xl: 1.875rem; /* 30px */
-  --font-size-4xl: 2.25rem;  /* 36px */
-  --font-size-5xl: 3rem;     /* 48px */
+  /* SYSTEM ALIGNMENT */
+  --bg-secondary: #0d1f12;
+  --primary-color: var(--accent-primary);
 
-  --font-weight-normal: 400;
-  --font-weight-medium: 500;
-  --font-weight-semibold: 600;
-  --font-weight-bold: 700;
+  /* Toggles */
+  --toggle-width: 44px;
+  --toggle-height: 24px;
+  --toggle-knob-size: 18px;
+  --toggle-knob-offset: 3px;
+  --toggle-bg: rgba(255, 255, 255, 0.1);
+  --toggle-on-bg: var(--plant-teal);
+  --toggle-shadow: 0 2px 10px rgba(20, 184, 166, 0.3);
 
-  --line-height-tight: 1.2;
-  --line-height-normal: 1.5;
-  --line-height-relaxed: 1.75;
-
-  /* ═══════════════════════════════════════════════════
-     SPACING — Consistent scale (4px base unit)
-     ═══════════════════════════════════════════════════ */
-  --space-0: 0;
-  --space-1: 0.25rem;   /* 4px */
-  --space-2: 0.5rem;    /* 8px */
-  --space-3: 0.75rem;   /* 12px */
-  --space-4: 1rem;      /* 16px */
-  --space-6: 1.5rem;    /* 24px */
-  --space-8: 2rem;      /* 32px */
-  --space-12: 3rem;     /* 48px */
-  --space-16: 4rem;     /* 64px */
-
-  --gap-xs: 0.5rem;     /* 8px */
-  --gap-sm: 1rem;       /* 16px */
-  --gap-md: 1.5rem;     /* 24px */
-  --gap-lg: 2rem;       /* 32px */
-  --gap-xl: 3rem;       /* 48px */
-
-  --padding-xs: 0.5rem;  /* 8px */
-  --padding-sm: 0.75rem; /* 12px */
-  --padding-md: 1rem;    /* 16px */
-  --padding-lg: 1.5rem;  /* 24px */
-  --padding-xl: 2rem;    /* 32px */
-
-  /* ═══════════════════════════════════════════════════
-     BORDER RADIUS — rounded corner scale
-     ═══════════════════════════════════════════════════ */
-  --radius-sm: 0.375rem;  /* 6px */
-  --radius-md: 0.5rem;    /* 8px */
-  --radius-lg: 0.75rem;   /* 12px */
-  --radius-xl: 1rem;      /* 16px */
-  --radius-full: 9999px;  /* Pill-shaped */
-
-  /* ═══════════════════════════════════════════════════
-     TRANSITIONS & ANIMATIONS (Merged with theme sweep)
-     ═══════════════════════════════════════════════════ */
-  --duration-fast: 150ms;
-  --duration-normal: 250ms;
-  --duration-slow: 350ms;
-  --ease-out: cubic-bezier(0.4, 0, 0.2, 1);
-  --ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
-  --ease-bounce: cubic-bezier(0.22, 1, 0.36, 1);
-
-  /* Theme transition sweep defaults */
-  --theme-sweep-from-x: -140%;
-  --theme-sweep-from-y: 0%;
-  --theme-sweep-to-x: 140%;
-  --theme-sweep-to-y: 0%;
-  --theme-sweep-angle: 90deg;
-  --theme-ease: cubic-bezier(0.22, 1, 0.36, 1);
-  --theme-scale: 1;
-  --theme-blur: 0px;
-  --theme-drift-x: 0px;
-  --theme-drift-y: 0px;
-
-  /* ═══════════════════════════════════════════════════
-     LAYOUT — Fixed dimensions
-     ═══════════════════════════════════════════════════ */
-  --sidebar-width: 260px;          /* Fixed sidebar width */
-  --navbar-height: 60px;           /* Navbar height */
-  --container-max-width: 1400px;   /* Content max-width */
-  --container-padding: 2rem;       /* Default container padding */
-  --layout-horizontal-padding: 2rem; /* Shared layout padding */
-
-  /* Breakpoints */
-  --breakpoint-sm: 640px;
-  --breakpoint-md: 768px;
-  --breakpoint-lg: 1024px;
-  --breakpoint-xl: 1280px;
-  --breakpoint-2xl: 1536px;
-
-  /* Tells browser UI to match the theme */
-  color-scheme: light dark; 
+  color-scheme: dark;
 }
 
-/* ═══════════════════════════════════════════════════
-   LIGHT MODE OVERRIDES
-   ═══════════════════════════════════════════════════ */
 [data-theme="light"] {
-  /* Core Colors */
-  --primary-color: #0284c7;         /* Darker sky blue for contrast */
-  --danger-color: #ef4444;
-  --success-color: #10b981;
-  --warning-color: #f59e0b;
-
-  /* Light mode background layers */
-  --bg-color: #f0f8ff;              /* Light blue-tinted white */
-  --bg-secondary: #e8f5ec;          /* Light mint */
-  --bg-tertiary: #d6eee0;           /* Mint accent */
-  --bg-overlay: rgba(240, 248, 255, 0.8);
-
-  /* Light mode text colors */
-  --text-color: #0a1f2f;            /* Dark blue-gray */
-  --text-secondary: #2d5a70;        /* Medium blue-gray */
-  --text-tertiary: #4a7a90;         /* Light blue-gray */
-  --text-inverse: #f0f8ff;          /* Light text on dark */
-
-  /* Light mode glass morphism */
-  --glass-color: rgba(230, 248, 255, 0.72);
-  --glass-color-alt: rgba(210, 242, 235, 0.62);
-  --glass-border: 1px solid rgba(6, 50, 80, 0.1);
-
-  /* Light mode components */
-  --card-bg: rgba(255, 255, 255, 0.52);
-  --border-color: rgba(14, 100, 130, 0.12);
+  --bg-gradient: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 50%, #f0fdf4 100%);
+  --bg-color: #f0fdf4;
+  --bg-secondary: #dcfce7;
   
-  /* Sidebar Overrides */
-  --sidebar-bg: rgba(240, 252, 248, 0.94);
-  --sidebar-hover: rgba(20, 184, 166, 0.08);
-  --sidebar-active: rgba(20, 184, 166, 0.16);
-  --sidebar-active-text: var(--plant-teal);
-  --sidebar-border: rgba(20, 184, 166, 0.18);
+  --glass-color: rgba(255, 255, 255, 0.6);
+  --glass-border: 1px solid rgba(0, 0, 0, 0.1);
+  --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  
+  --card-bg: var(--glass-color);
+  --card-border: var(--glass-border);
+  --card-shadow: var(--glass-shadow);
 
-  /* Light mode glows */
-  --glow-primary: rgba(14, 165, 233, 0.18);
-  --glow-success: rgba(16, 185, 129, 0.16);
-  --glow-danger: rgba(239, 68, 68, 0.18);
-  --glow-plant: rgba(34, 197, 94, 0.16);
-  --glow-teal: rgba(20, 184, 166, 0.14);
-  --glow-warning: rgba(245, 158, 11, 0.16);
-
- 
-  --container-max-narrow: 1473px;
-  --container-max-wide: 1800px;
-  --container-padding-mobile: 1rem;
-  --container-padding-desktop: 2rem;
-  --sidebar-collapsed-width: 80px;
+  --text-primary: #064e3b;
+  --text-color: #064e3b;
+  --text-secondary: rgba(6, 78, 59, 0.7);
+  
+  --plant-teal: #0d9488;
+  --plant-green: #16a34a;
+  --primary-color: #16a34a;
+  --accent-primary: #16a34a;
 }
-
-

@@ -18,6 +18,14 @@ html {
   scroll-behavior: smooth;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  /* Hide scrollbar for IE, Edge and Firefox */
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* Hide scrollbar for Chrome, Safari and Opera */
+*::-webkit-scrollbar {
+  display: none;
 }
 
 /* ─────────────────────────────────────────────────
@@ -45,7 +53,7 @@ html::before {
   background:
     radial-gradient(ellipse at 14% 58%, rgba(14, 165, 233, 0.14) 0%, transparent 52%),
     radial-gradient(ellipse at 88% 80%, rgba(16, 185, 129, 0.12) 0%, transparent 52%),
-    radial-gradient(ellipse at 58% 6%,  rgba(20, 184, 166, 0.08) 0%, transparent 46%);
+    radial-gradient(ellipse at 58% 6%, rgba(20, 184, 166, 0.08) 0%, transparent 46%);
   pointer-events: none;
   z-index: 0;
   opacity: 1;
@@ -60,7 +68,9 @@ body * {
 /* ─────────────────────────────────────────────────
    FORMS & INPUTS (Global resets)
    ───────────────────────────────────────────────── */
-input, textarea, select {
+input,
+textarea,
+select {
   font-family: inherit;
 }
 
@@ -93,13 +103,53 @@ canvas {
    ACCESSIBILITY
    ───────────────────────────────────────────────── */
 @media (prefers-reduced-motion: reduce) {
+
   *,
   *::before,
   *::after {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms;
+    animation-iteration-count: 1;
+    transition-duration: 0.01ms;
   }
+}
+
+/* ─────────────────────────────────────────────────
+   SHARED UI COMPONENTS
+   ───────────────────────────────────────────────── */
+.toggle-switch {
+  width: var(--toggle-width);
+  height: var(--toggle-height);
+  border-radius: calc(var(--toggle-height) / 2);
+  background: var(--toggle-bg);
+  border: none;
+  cursor: pointer;
+  position: relative;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  flex-shrink: 0;
+  padding: 0;
+  overflow: hidden;
+}
+
+.toggle-switch.on {
+  background: var(--toggle-on-bg);
+  box-shadow: var(--toggle-shadow);
+}
+
+.toggle-knob {
+  position: absolute;
+  top: var(--toggle-knob-offset);
+  left: var(--toggle-knob-offset);
+  width: var(--toggle-knob-size);
+  height: var(--toggle-knob-size);
+  border-radius: 50%;
+  background: #fff;
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+  pointer-events: none;
+}
+
+.toggle-switch.on .toggle-knob {
+  transform: translateX(calc(var(--toggle-width) - var(--toggle-knob-size) - (2 * var(--toggle-knob-offset))));
 }
 
 /* Touch device optimization */
@@ -107,8 +157,9 @@ canvas {
   * {
     -webkit-tap-highlight-color: transparent;
   }
-  
-  button, a {
+
+  button,
+  a {
     touch-action: manipulation;
   }
 }

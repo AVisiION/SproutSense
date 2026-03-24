@@ -1,4 +1,4 @@
-﻿import axios from 'axios';
+import axios from 'axios';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api';
 
@@ -15,15 +15,13 @@ const api = axios.create({
 // ==========================================
 export const sensorAPI = {
   // GET /api/sensors - latest reading (backend uses query.deviceId)
-  getLatest: async (deviceId = 'ESP32-SENSOR') => {
-    const response = await api.get('/sensors', { params: { deviceId } });
+  getLatest: async (deviceId = 'ESP32-SENSOR', options = {}) => {
+    const response = await api.get('/sensors', { params: { deviceId }, ...options });
     return response.data;
   },
 
   // GET /api/sensors/history?deviceId=&start=&end= OR ?hours=
-  getHistory: async (startDate, endDate, deviceId = 'ESP32-SENSOR') => {
-    // Controller expects: start, end or hours[cite:66]
-    //   const { deviceId, hours, start, end } = req.query;
+  getHistory: async (startDate, endDate, deviceId = 'ESP32-SENSOR', options = {}) => {
     let params = { deviceId };
     if (typeof startDate === 'string' && typeof endDate === 'string') {
       params.start = startDate;
@@ -31,7 +29,7 @@ export const sensorAPI = {
     } else {
       params.hours = startDate || 24; // fallback to hours window
     }
-    const response = await api.get('/sensors/history', { params });
+    const response = await api.get('/sensors/history', { params, ...options });
     return response.data;
   }
 };
@@ -41,29 +39,30 @@ export const sensorAPI = {
 // ==========================================
 export const wateringAPI = {
   // POST /api/water/start
-  start: async (deviceId = 'ESP32-SENSOR', duration = null) => {
+  start: async (deviceId = 'ESP32-SENSOR', duration = null, options = {}) => {
     const payload = { deviceId };
     if (duration) payload.duration = duration;
-    const response = await api.post('/water/start', payload);
+    const response = await api.post('/water/start', payload, options);
     return response.data;
   },
 
   // POST /api/water/stop
-  stop: async (deviceId = 'ESP32-SENSOR') => {
-    const response = await api.post('/water/stop', { deviceId });
+  stop: async (deviceId = 'ESP32-SENSOR', options = {}) => {
+    const response = await api.post('/water/stop', { deviceId }, options);
     return response.data;
   },
 
-  // GET /api/water/status/:deviceId[cite:67]
-  getStatus: async (deviceId = 'ESP32-SENSOR') => {
-    const response = await api.get(`/water/status/${deviceId}`);
+  // GET /api/water/status/:deviceId
+  getStatus: async (deviceId = 'ESP32-SENSOR', options = {}) => {
+    const response = await api.get(`/water/status/${deviceId}`, options);
     return response.data;
   },
 
   // GET /api/water/history
-  getLogs: async (limit = 10, deviceId = 'ESP32-SENSOR') => {
+  getLogs: async (limit = 10, deviceId = 'ESP32-SENSOR', options = {}) => {
     const response = await api.get('/water/history', {
-      params: { limit, deviceId }
+      params: { limit, deviceId },
+      ...options
     });
     return response.data;
   }
@@ -147,36 +146,37 @@ export const configAPI = {
 // ==========================================
 export const aiAPI = {
   // GET /api/ai/recommend?deviceId=
-  getRecommendation: async (deviceId = 'ESP32-SENSOR') => {
+  getRecommendation: async (deviceId = 'ESP32-SENSOR', options = {}) => {
     const response = await api.get('/ai/recommend', {
-      params: { deviceId }
+      params: { deviceId },
+      ...options
     });
     return response.data;
   },
 
   // POST /api/ai/chat
-  chat: async ({ message, sensorContext = '', history = [], apiKey = '' }) => {
+  chat: async ({ message, sensorContext = '', history = [], apiKey = '' }, options = {}) => {
     const response = await api.post('/ai/chat', {
       message,
       sensorContext,
       history,
       apiKey
-    });
+    }, options);
     return response.data;
   },
 
-  // GET /api/ai/disease/all?deviceId=&page=&limit=&startDate=&endDate=[cite:63][cite:68]
+  // GET /api/ai/disease/all?deviceId=&page=&limit=&startDate=&endDate=
   getDiseaseDetections: async ({
     deviceId  = 'ESP32-CAM',
     page      = 1,
     limit     = 200,
     startDate,
     endDate,
-  } = {}) => {
+  } = {}, options = {}) => {
     const params = { deviceId, page, limit };
     if (startDate) params.startDate = startDate;
     if (endDate)   params.endDate   = endDate;
-    const response = await api.get('/ai/disease/all', { params });
+    const response = await api.get('/ai/disease/all', { params, ...options });
     return response.data;
   }
 };

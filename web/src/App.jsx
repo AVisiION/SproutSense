@@ -21,28 +21,30 @@
  */
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { NavLink, Navigate, Route, Routes, useLocation } from 'react-router-dom';
+import { AnimatePresence, motion } from 'framer-motion';
+import { Toaster, toast as hotToast } from 'react-hot-toast';
 import { useWebSocket } from './hooks/useWebSocket';
 
 import { configAPI, sensorAPI, wateringAPI, aiAPI } from './utils/api'; // <-- this one
 
 
 // ── Shared components ──────────────────────────────────────────────────────
-import { Navbar }          from './components/layout/Navbar';    // Ensure this path is correct!
-import { SensorCard }      from './components/SensorCard';
-import { ControlCard }     from './components/ControlCard';
-import { AIRecommendation }from './components/AIRecommendation';
-import { ConfigCard }      from './components/ConfigCard';
-import { Notification }    from './components/Notification';
-import { GlassIcon }       from './components/bits/GlassIcon';   // Make sure this matches your React Bits structure
-import SproutSenseLogo from './components/SproutSenseLogo'; 
+import { Navbar } from './components/layout/Navbar';    // Ensure this path is correct!
+import { SensorCard } from './components/SensorCard';
+import { ControlCard } from './components/ControlCard';
+import { AIRecommendation } from './components/AIRecommendation';
+import { ConfigCard } from './components/ConfigCard';
+import { Notification } from './components/Notification';
+import { GlassIcon } from './components/bits/GlassIcon';   // Make sure this matches your React Bits structure
+import SproutSenseLogo from './components/SproutSenseLogo';
 
 // ── Pages ────────────────────────────────────────────────────────────────
-import HomePage      from './pages/Home/HomePage.jsx';
-import SettingsPage  from './pages/Settings/SettingsPage.jsx';
+import HomePage from './pages/Home/HomePage.jsx';
+import SettingsPage from './pages/Settings/SettingsPage.jsx';
 import AnalyticsPage from './pages/Analytics/AnalyticsPage.jsx';
-import AlertsPage    from './pages/Alerts/AlertsPage.jsx';
-import AIChat        from './pages/AIChat/AIChat.jsx';
-import InsightsPage  from './pages/Insights/InsightsPage.jsx';
+import AlertsPage from './pages/Alerts/AlertsPage.jsx';
+import AIChat from './pages/AIChat/AIChat.jsx';
+import InsightsPage from './pages/Insights/InsightsPage.jsx';
 
 // ── Styles ─────────────────────────────────────────────────────────────────
 import './App.css';
@@ -63,9 +65,9 @@ const sidebarCategories = [
   {
     label: 'Monitor',
     items: [
-      { path: '/sensors',   label: 'Sensors',   icon: 'sensors'   },
+      { path: '/sensors', label: 'Sensors', icon: 'sensors' },
       { path: '/analytics', label: 'Analytics', icon: 'analytics' },
-      { path: '/alerts',    label: 'Alerts',    icon: 'bell'      },
+      { path: '/alerts', label: 'Alerts', icon: 'bell' },
     ]
   },
   {
@@ -77,17 +79,17 @@ const sidebarCategories = [
   {
     label: 'Intelligence',
     items: [
-      { path: '/ai',       label: 'AI Assistant', icon: 'bot'      },
-      { path: '/insights', label: 'Insights',     icon: 'insights' },
+      { path: '/ai', label: 'AI Assistant', icon: 'bot' },
+      { path: '/insights', label: 'Insights', icon: 'insights' },
     ]
   },
   {
     label: 'System',
     items: [
-      { path: '/backend',  label: 'Backend',          icon: 'server'   },
-      { path: '/esp32',    label: 'Device Connected',  icon: 'esp32'    },
-      { path: '/config',   label: 'Config',            icon: 'config'   },
-      { path: '/settings', label: 'Settings',          icon: 'settings' },
+      { path: '/backend', label: 'Backend', icon: 'server' },
+      { path: '/esp32', label: 'Device Connected', icon: 'esp32' },
+      { path: '/config', label: 'Config', icon: 'config' },
+      { path: '/settings', label: 'Settings', icon: 'settings' },
     ]
   },
 ];
@@ -95,18 +97,34 @@ const sidebarCategories = [
 const allSidebarItems = sidebarCategories.flatMap(c => c.items);
 
 // ───────────────────────────────────────────────────────────────────────────
-// HELPER UTILITIES
+// HELPER UTILITIES & COMPONENTS
 // ───────────────────────────────────────────────────────────────────────────
+
+if (!import.meta.env.VITE_API_BASE_URL) {
+  console.warn('VITE_API_BASE_URL environment variable is missing. API calls will default to /api.');
+}
+
+const PageWrapper = ({ children }) => (
+  <motion.div
+    initial={{ opacity: 0, y: 15 }}
+    animate={{ opacity: 1, y: 0 }}
+    exit={{ opacity: 0, y: -15 }}
+    transition={{ duration: 0.3, ease: 'easeInOut' }}
+    style={{ height: '100%', width: '100%' }}
+  >
+    {children}
+  </motion.div>
+);
 
 /** Normalises WebSocket/REST sensor payloads to a consistent field set */
 function normalizeSensorPayload(payload) {
   if (!payload || typeof payload !== 'object') return payload;
   return {
     ...payload,
-    pH:         payload.pH         ?? payload.ph,
-    flowRate:   payload.flowRate   ?? payload.flowRateMlPerMin  ?? payload.waterFlowRate,
-    flowVolume: payload.flowVolume ?? payload.cycleVolumeML     ?? payload.waterFlowVolume,
-    leafCount:  payload.leafCount  ?? payload.leaf_count        ?? payload.canopyLeafCount,
+    pH: payload.pH ?? payload.ph,
+    flowRate: payload.flowRate ?? payload.flowRateMlPerMin ?? payload.waterFlowRate,
+    flowVolume: payload.flowVolume ?? payload.cycleVolumeML ?? payload.waterFlowVolume,
+    leafCount: payload.leafCount ?? payload.leaf_count ?? payload.canopyLeafCount,
   };
 }
 
@@ -124,9 +142,9 @@ function onlineToStatus(isOnline) {
 /** Returns human-readable label for a status string */
 function statusLabel(status) {
   switch (status) {
-    case 'online':  return 'Online';
+    case 'online': return 'Online';
     case 'offline': return 'Offline';
-    default:        return 'Checking';
+    default: return 'Checking';
   }
 }
 
@@ -151,26 +169,26 @@ function App() {
   const location = useLocation();
 
   // ── State ──────────────────────────────────────────────────────────────
-  const [sensors, setSensors]       = useState(null);
+  const [sensors, setSensors] = useState(null);
   const [pumpActive, setPumpActive] = useState(false);
   const [systemStatus, setSystemStatus] = useState({
-    backend:         'checking',
-    database:        'checking',
-    esp32:           'checking',
-    esp32Cam:        'checking',
-    esp32LastSeen:   null,
+    backend: 'checking',
+    database: 'checking',
+    esp32: 'checking',
+    esp32Cam: 'checking',
+    esp32LastSeen: null,
     esp32CamLastSeen: null,
-    lastUpdated:     null,
+    lastUpdated: null,
   });
-  const [notification, setNotification]       = useState({ message: '', type: 'info' });
+  const [notification, setNotification] = useState({ message: '', type: 'info' });
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
-  const [moistureThreshold, setMoistureThreshold]   = useState(30);
-  const [isThresholdSaving, setIsThresholdSaving]   = useState(false);
-  const [alerts, setAlerts]                         = useState([]);
+  const [moistureThreshold, setMoistureThreshold] = useState(30);
+  const [isThresholdSaving, setIsThresholdSaving] = useState(false);
+  const [alerts, setAlerts] = useState([]);
   const [plantGrowthEnabled, setPlantGrowthEnabled] = useState(true);
-  const [plantGrowthStage, setPlantGrowthStage]     = useState('vegetative');
-  const [aiInsightsMode, setAiInsightsMode]         = useState('snapshots');
-  const [isAiControlSaving, setIsAiControlSaving]   = useState(false);
+  const [plantGrowthStage, setPlantGrowthStage] = useState('vegetative');
+  const [aiInsightsMode, setAiInsightsMode] = useState('snapshots');
+  const [isAiControlSaving, setIsAiControlSaving] = useState(false);
   const [theme, setTheme] = useState(() => localStorage.getItem('theme') || 'dark');
   const themeTransitionTimeoutRef = useRef(null);
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
@@ -211,15 +229,15 @@ function App() {
     const now = new Date();
 
     if (sensors.soilMoisture !== undefined && sensors.soilMoisture < 20)
-      newAlerts.push({ id: 'low-moisture', type: 'warning', message: 'Soil moisture critically low',     value: `${sensors.soilMoisture}%`,   time: now });
-    if (sensors.temperature  !== undefined && sensors.temperature > 38)
-      newAlerts.push({ id: 'high-temp',    type: 'error',   message: 'High temperature detected',        value: `${sensors.temperature} °C`,  time: now });
-    if (sensors.pH            !== undefined && (sensors.pH < 5.5 || sensors.pH > 7.5))
-      newAlerts.push({ id: 'ph-out',       type: 'warning', message: 'pH level out of optimal range',    value: `pH ${sensors.pH}`,           time: now });
-    if (sensors.humidity      !== undefined && sensors.humidity < 30)
-      newAlerts.push({ id: 'low-humidity', type: 'info',    message: 'Low ambient humidity',             value: `${sensors.humidity}%`,       time: now });
+      newAlerts.push({ id: 'low-moisture', type: 'warning', message: 'Soil moisture critically low', value: `${sensors.soilMoisture}%`, time: now });
+    if (sensors.temperature !== undefined && sensors.temperature > 38)
+      newAlerts.push({ id: 'high-temp', type: 'error', message: 'High temperature detected', value: `${sensors.temperature} °C`, time: now });
+    if (sensors.pH !== undefined && (sensors.pH < 5.5 || sensors.pH > 7.5))
+      newAlerts.push({ id: 'ph-out', type: 'warning', message: 'pH level out of optimal range', value: `pH ${sensors.pH}`, time: now });
+    if (sensors.humidity !== undefined && sensors.humidity < 30)
+      newAlerts.push({ id: 'low-humidity', type: 'info', message: 'Low ambient humidity', value: `${sensors.humidity}%`, time: now });
     if (pumpActive && sensors.flowRate !== undefined && sensors.flowRate < 1)
-      newAlerts.push({ id: 'no-flow',      type: 'error',   message: 'Pump active but flow is near zero', value: `${sensors.flowRate} mL/min`, time: now });
+      newAlerts.push({ id: 'no-flow', type: 'error', message: 'Pump active but flow is near zero', value: `${sensors.flowRate} mL/min`, time: now });
 
     setAlerts(prev => [
       ...newAlerts,
@@ -231,43 +249,43 @@ function App() {
   // Fetch latest ESP32-CAM disease detection and inject as alert
   const fetchDiseaseAlerts = useCallback(async () => {
     try {
-      const end   = new Date();
+      const end = new Date();
       const start = new Date(end.getTime() - 60 * 60 * 1000); // last 1 hour
       const aiResp = await aiAPI.getDiseaseDetections({
-        deviceId:  'ESP32-CAM',
+        deviceId: 'ESP32-CAM',
         startDate: start.toISOString(),
-        endDate:   end.toISOString(),
-        limit:     5,
+        endDate: end.toISOString(),
+        limit: 5,
       });
-      const aiData     = aiResp?.data || aiResp;
+      const aiData = aiResp?.data || aiResp;
       const detections = Array.isArray(aiData?.detections) ? aiData.detections : [];
       if (!detections.length) return;
 
-      const latest    = detections[0];
+      const latest = detections[0];
       const isHealthy = !latest.detectedDisease ||
         ['healthy', 'unknown'].includes(latest.detectedDisease.toLowerCase());
 
       const newAlert = isHealthy
         ? {
-            id:      'disease-healthy',
-            type:    'info',
-            message: 'ESP32-CAM: Plant appears healthy',
-            value:   latest.confidence !== undefined
-              ? `Confidence: ${Math.round(latest.confidence * 100)}%`
-              : 'No disease detected',
-            source:  'ESP32-CAM',
-            time:    latest.timestamp ? new Date(latest.timestamp) : new Date(),
-          }
+          id: 'disease-healthy',
+          type: 'info',
+          message: 'ESP32-CAM: Plant appears healthy',
+          value: latest.confidence !== undefined
+            ? `Confidence: ${Math.round(latest.confidence * 100)}%`
+            : 'No disease detected',
+          source: 'ESP32-CAM',
+          time: latest.timestamp ? new Date(latest.timestamp) : new Date(),
+        }
         : {
-            id:      `disease-${latest._id || latest.timestamp}`,
-            type:    'error',
-            message: `Plant disease detected: ${formatDiseaseName(latest.detectedDisease)}`,
-            value:   latest.confidence !== undefined
-              ? `Confidence: ${Math.round(latest.confidence * 100)}%`
-              : 'ESP32-CAM Detection',
-            source:  'ESP32-CAM',
-            time:    latest.timestamp ? new Date(latest.timestamp) : new Date(),
-          };
+          id: `disease-${latest._id || latest.timestamp}`,
+          type: 'error',
+          message: `Plant disease detected: ${formatDiseaseName(latest.detectedDisease)}`,
+          value: latest.confidence !== undefined
+            ? `Confidence: ${Math.round(latest.confidence * 100)}%`
+            : 'ESP32-CAM Detection',
+          source: 'ESP32-CAM',
+          time: latest.timestamp ? new Date(latest.timestamp) : new Date(),
+        };
 
       setAlerts(prev => [
         ...prev.filter(a => !(a.source === 'ESP32-CAM' && a.id.startsWith('disease-'))),
@@ -295,27 +313,27 @@ function App() {
 
     // Pick a random directional sweep for the transition overlay
     const directions = [
-      { fromX: '-140%', fromY: '0%',    toX: '140%',  toY: '0%',    angle: '90deg'  },
-      { fromX: '140%',  fromY: '0%',    toX: '-140%', toY: '0%',    angle: '270deg' },
-      { fromX: '0%',    fromY: '-140%', toX: '0%',    toY: '140%',  angle: '180deg' },
-      { fromX: '0%',    fromY: '140%',  toX: '0%',    toY: '-140%', angle: '0deg'   },
-      { fromX: '-140%', fromY: '-140%', toX: '140%',  toY: '140%',  angle: '135deg' },
-      { fromX: '140%',  fromY: '-140%', toX: '-140%', toY: '140%',  angle: '225deg' },
+      { fromX: '-140%', fromY: '0%', toX: '140%', toY: '0%', angle: '90deg' },
+      { fromX: '140%', fromY: '0%', toX: '-140%', toY: '0%', angle: '270deg' },
+      { fromX: '0%', fromY: '-140%', toX: '0%', toY: '140%', angle: '180deg' },
+      { fromX: '0%', fromY: '140%', toX: '0%', toY: '-140%', angle: '0deg' },
+      { fromX: '-140%', fromY: '-140%', toX: '140%', toY: '140%', angle: '135deg' },
+      { fromX: '140%', fromY: '-140%', toX: '-140%', toY: '140%', angle: '225deg' },
     ];
     const d = directions[Math.floor(Math.random() * directions.length)];
     const driftX = d.toX.startsWith('-') ? '-10px' : d.toX.startsWith('1') ? '10px' : '0px';
     const driftY = d.toY.startsWith('-') ? '-10px' : d.toY.startsWith('1') ? '10px' : '0px';
 
-    root.style.setProperty('--theme-ease',         'cubic-bezier(0.25, 0.46, 0.45, 0.94)');
-    root.style.setProperty('--theme-scale',         '1.02');
-    root.style.setProperty('--theme-blur',          '1.5px');
-    root.style.setProperty('--theme-drift-x',       driftX);
-    root.style.setProperty('--theme-drift-y',       driftY);
-    root.style.setProperty('--theme-sweep-from-x',  d.fromX);
-    root.style.setProperty('--theme-sweep-from-y',  d.fromY);
-    root.style.setProperty('--theme-sweep-to-x',    d.toX);
-    root.style.setProperty('--theme-sweep-to-y',    d.toY);
-    root.style.setProperty('--theme-sweep-angle',   d.angle);
+    root.style.setProperty('--theme-ease', 'cubic-bezier(0.25, 0.46, 0.45, 0.94)');
+    root.style.setProperty('--theme-scale', '1.02');
+    root.style.setProperty('--theme-blur', '1.5px');
+    root.style.setProperty('--theme-drift-x', driftX);
+    root.style.setProperty('--theme-drift-y', driftY);
+    root.style.setProperty('--theme-sweep-from-x', d.fromX);
+    root.style.setProperty('--theme-sweep-from-y', d.fromY);
+    root.style.setProperty('--theme-sweep-to-x', d.toX);
+    root.style.setProperty('--theme-sweep-to-y', d.toY);
+    root.style.setProperty('--theme-sweep-angle', d.angle);
     root.classList.remove('theme-transitioning');
     void root.offsetWidth; // force reflow
     root.classList.add('theme-transitioning');
@@ -330,14 +348,14 @@ function App() {
     if (themeTransitionTimeoutRef.current) clearTimeout(themeTransitionTimeoutRef.current);
     themeTransitionTimeoutRef.current = setTimeout(() => {
       root.classList.remove('theme-transitioning');
-      ['--theme-ease','--theme-scale','--theme-blur','--theme-drift-x','--theme-drift-y']
+      ['--theme-ease', '--theme-scale', '--theme-blur', '--theme-drift-x', '--theme-drift-y']
         .forEach(p => root.style.removeProperty(p));
     }, 1350);
   };
 
   // ── Sidebar helpers ────────────────────────────────────────────────────
   const toggleSidebar = () => setIsSidebarCollapsed(prev => !prev);
-  const closeSidebar  = () => { if (isMobile) setIsSidebarCollapsed(true); };
+  const closeSidebar = () => { if (isMobile) setIsSidebarCollapsed(true); };
 
   // Active page title for the navbar
   const pageTitle = allSidebarItems.find(i => i.path === location.pathname)?.label || 'SproutSense';
@@ -346,10 +364,10 @@ function App() {
   const handleWebSocketMessage = useCallback((data) => {
     const { type, data: payload } = data;
     switch (type) {
-      case 'sensor_update':    setSensors(normalizeSensorPayload(payload)); break;
-      case 'watering_started': setPumpActive(true);  showNotification('Watering started', 'success'); break;
-      case 'watering_stopped': setPumpActive(false); showNotification('Watering stopped', 'info');    break;
-      case 'config_updated':   showNotification('Configuration updated', 'success'); break;
+      case 'sensor_update': setSensors(normalizeSensorPayload(payload)); break;
+      case 'watering_started': setPumpActive(true); showNotification('Watering started', 'success'); break;
+      case 'watering_stopped': setPumpActive(false); showNotification('Watering stopped', 'info'); break;
+      case 'config_updated': showNotification('Configuration updated', 'success'); break;
       default: console.log('[WS] Unknown event:', type);
     }
   }, []);
@@ -381,12 +399,12 @@ function App() {
           configAPI.getHealth('ESP32-SENSOR'),
         ]);
 
-        const configData       = extractData(configResponse);
+        const configData = extractData(configResponse);
         const latestSensorData = extractData(sensorData);
-        const latestWatering   = extractData(wateringStatus);
-        const esp32Status      = extractData(esp32StatusResponse);
-        const esp32CamStatus   = extractData(esp32CamStatusResponse);
-        const healthData       = extractData(healthResponse);
+        const latestWatering = extractData(wateringStatus);
+        const esp32Status = extractData(esp32StatusResponse);
+        const esp32CamStatus = extractData(esp32CamStatusResponse);
+        const healthData = extractData(healthResponse);
 
         setSensors(normalizeSensorPayload(latestSensorData));
         setPumpActive(latestWatering?.pumpActive || false);
@@ -403,25 +421,25 @@ function App() {
 
         setSystemStatus(prev => ({
           ...prev,
-          backend:         healthData?.backend  === 'healthy'   ? 'online'  : onlineToStatus(isConnected),
-          database:        healthData?.database === 'connected' ? 'online'  : 'offline',
-          esp32:           onlineToStatus(isDeviceOnline(esp32Status)),
-          esp32Cam:        onlineToStatus(isDeviceOnline(esp32CamStatus)),
-          esp32LastSeen:   esp32Status?.lastSeen    || null,
+          backend: healthData?.backend === 'healthy' ? 'online' : onlineToStatus(isConnected),
+          database: healthData?.database === 'connected' ? 'online' : 'offline',
+          esp32: onlineToStatus(isDeviceOnline(esp32Status)),
+          esp32Cam: onlineToStatus(isDeviceOnline(esp32CamStatus)),
+          esp32LastSeen: esp32Status?.lastSeen || null,
           esp32CamLastSeen: esp32CamStatus?.lastSeen || null,
-          lastUpdated:     new Date().toISOString(),
+          lastUpdated: new Date().toISOString(),
         }));
       } catch (error) {
         console.error('[App] Failed to fetch initial data:', error);
         setSystemStatus(prev => ({
           ...prev,
-          backend:  onlineToStatus(isConnected),
+          backend: onlineToStatus(isConnected),
           database: 'offline',
-          esp32:    'offline',
+          esp32: 'offline',
           esp32Cam: 'offline',
-          esp32LastSeen:    null,
+          esp32LastSeen: null,
           esp32CamLastSeen: null,
-          lastUpdated:      new Date().toISOString(),
+          lastUpdated: new Date().toISOString(),
         }));
       }
     };
@@ -433,12 +451,12 @@ function App() {
 
   // ── Watering controls ──────────────────────────────────────────────────
   const handleStartWatering = async () => {
-    try   { await wateringAPI.start(); showNotification('Watering command sent', 'success'); }
+    try { await wateringAPI.start(); showNotification('Watering command sent', 'success'); }
     catch { showNotification('Failed to start watering', 'error'); }
   };
 
   const handleStopWatering = async () => {
-    try   { await wateringAPI.stop(); showNotification('Stop command sent', 'success'); }
+    try { await wateringAPI.stop(); showNotification('Stop command sent', 'success'); }
     catch { showNotification('Failed to stop watering', 'error'); }
   };
 
@@ -468,11 +486,11 @@ function App() {
   };
 
   // ── Notification helpers ───────────────────────────────────────────────
-  const showNotification  = (message, type = 'info') => setNotification({ message, type });
+  const showNotification = (message, type = 'info') => setNotification({ message, type });
   const closeNotification = () => setNotification({ message: '', type: 'info' });
 
   // ── Alert handlers ─────────────────────────────────────────────────────
-  const handleClearAlert    = useCallback((id) => setAlerts(prev => prev.filter(a => a.id !== id)), []);
+  const handleClearAlert = useCallback((id) => setAlerts(prev => prev.filter(a => a.id !== id)), []);
   const handleClearAllAlerts = useCallback(() => setAlerts([]), []);
 
   // ── Render ─────────────────────────────────────────────────────────────
@@ -512,10 +530,9 @@ function App() {
                       <span className={`sidebar-status-dot ${systemStatus.backend}`} />
                     )}
                     {item.path === '/esp32' && (
-                      <span className={`sidebar-status-dot ${
-                        systemStatus.esp32Cam === 'online' || systemStatus.esp32 === 'online'
+                      <span className={`sidebar-status-dot ${systemStatus.esp32Cam === 'online' || systemStatus.esp32 === 'online'
                           ? 'online' : 'offline'
-                      }`} />
+                        }`} />
                     )}
                   </span>
                   <span className="sidebar-label">{item.label}</span>
@@ -548,161 +565,10 @@ function App() {
           theme={theme}
           toggleTheme={toggleTheme}
           alertCount={alerts.length}
+          isConnected={isConnected}
         />
 
-        {/* ── Page routes ───────────────────────────────────────────── */}
-        <Routes>
-          <Route path="/" element={<Navigate to="/home" replace />} />
-
-          {/* Overview */}
-          <Route path="/home" element={
-            <HomePage theme={theme} sensors={sensors} isConnected={isConnected} />
-          } />
-
-          {/* Backend status */}
-          <Route path="/backend" element={
-            <section className="dashboard-section">
-              <div className="dashboard dashboard-single">
-                <div className="card">
-                  <h2 className="card-title">
-                    <GlassIcon name="server" className="card-title-icon" /> Backend Status
-                  </h2>
-                  <div className="status-grid">
-                    {[['server', 'API Server', systemStatus.backend], ['database', 'Database', systemStatus.database]]
-                      .map(([icon, label, status]) => (
-                        <div key={label} className="status-item">
-                          <div className="status-item-header">
-                            <GlassIcon name={icon} />
-                            <span className="status-item-label">{label}</span>
-                          </div>
-                          <span className={`status-badge status-${status}`}>{statusLabel(status)}</span>
-                        </div>
-                      ))}
-                  </div>
-                </div>
-              </div>
-            </section>
-          } />
-
-          {/* ESP32 device status */}
-          <Route path="/esp32" element={
-            <section className="dashboard-section">
-              <div className="dashboard dashboard-single">
-                <div className="card">
-                  <h2 className="card-title">
-                    <GlassIcon name="esp32" className="card-title-icon" /> ESP32 Device Status
-                  </h2>
-                  <div className="status-grid">
-                    <div className="status-item">
-                      <div className="status-item-header">
-                        <GlassIcon name="esp32" />
-                        <span className="status-item-label">ESP32 Sensor Board</span>
-                      </div>
-                      <div>
-                        <span className={`status-badge status-${systemStatus.esp32}`}>{statusLabel(systemStatus.esp32)}</span>
-                        <div className="status-subtext">Last seen: {formatLastSeen(systemStatus.esp32LastSeen)}</div>
-                      </div>
-                    </div>
-                    <div className="status-item">
-                      <div className="status-item-header">
-                        <GlassIcon name="image" />
-                        <span className="status-item-label">ESP32-CAM</span>
-                      </div>
-                      <div>
-                        <span className={`status-badge status-${systemStatus.esp32Cam}`}>{statusLabel(systemStatus.esp32Cam)}</span>
-                        <div className="status-subtext">Last seen: {formatLastSeen(systemStatus.esp32CamLastSeen)}</div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </section>
-          } />
-
-          {/* Sensors */}
-          <Route path="/sensors" element={
-            <section className="dashboard-section dashboard-section-wide">
-              <div className="dashboard dashboard-single dashboard-wide">
-                <SensorCard sensors={sensors} isConnected={isConnected} />
-              </div>
-            </section>
-          } />
-
-          {/* Analytics */}
-          <Route path="/analytics" element={
-            <section className="dashboard-section"><AnalyticsPage /></section>
-          } />
-
-          {/* Alerts */}
-          <Route path="/alerts" element={
-            <section className="dashboard-section">
-              <AlertsPage
-                alerts={alerts}
-                sensors={sensors}
-                onClearAlert={handleClearAlert}
-                onClearAllAlerts={handleClearAllAlerts}
-              />
-            </section>
-          } />
-
-          {/* Controls */}
-          <Route path="/controls" element={
-            <section className="dashboard-section dashboard-section-wide">
-              <div className="dashboard dashboard-single dashboard-wide">
-                <ControlCard
-                  pumpActive={pumpActive}
-                  onStartWatering={handleStartWatering}
-                  onStopWatering={handleStopWatering}
-                  moistureThreshold={moistureThreshold}
-                  onMoistureThresholdChange={setMoistureThreshold}
-                  onSaveMoistureThreshold={handleSaveMoistureThreshold}
-                  isThresholdSaving={isThresholdSaving}
-                  plantGrowthEnabled={plantGrowthEnabled}
-                  onPlantGrowthEnabledChange={setPlantGrowthEnabled}
-                  plantGrowthStage={plantGrowthStage}
-                  onPlantGrowthStageChange={setPlantGrowthStage}
-                  aiInsightsMode={aiInsightsMode}
-                  onAiInsightsModeChange={setAiInsightsMode}
-                  onSaveAiControls={handleSaveAiControls}
-                  isAiControlSaving={isAiControlSaving}
-                  sensors={sensors}
-                  onNotification={showNotification}
-                />
-              </div>
-            </section>
-          } />
-
-          {/* AI Chat */}
-          <Route path="/ai" element={
-            <section className="dashboard-section"><AIChat sensors={sensors} /></section>
-          } />
-
-          {/* Insights */}
-          <Route path="/insights" element={
-            <section className="dashboard-section"><InsightsPage /></section>
-          } />
-
-          {/* Config */}
-          <Route path="/config" element={
-            <section className="dashboard-section">
-              <div className="dashboard dashboard-single">
-                <ConfigCard onNotification={showNotification} systemStatus={systemStatus} />
-              </div>
-            </section>
-          } />
-
-          {/* Settings */}
-          <Route path="/settings" element={
-            <section className="dashboard-section">
-              <SettingsPage theme={theme} toggleTheme={toggleTheme} onNotification={showNotification} />
-            </section>
-          } />
-
-          {/* Catch-all */}
-          <Route path="*" element={<Navigate to="/home" replace />} />
-        </Routes>
-
-        {/* Toast notification */}
+        {/* Toast notification & Framer Motion AnimatePresence */}
         {notification.message && (
           <Notification
             message={notification.message}
@@ -710,7 +576,196 @@ function App() {
             onClose={closeNotification}
           />
         )}
-        
+        <Toaster
+          position="top-right"
+          toastOptions={{
+            style: {
+              background: 'rgba(15, 23, 42, 0.8)',
+              backdropFilter: 'blur(16px)',
+              color: '#f0fdf4',
+              border: '1px solid rgba(255,255,255,0.1)',
+            },
+            success: { iconTheme: { primary: '#22c55e', secondary: '#050d14' } },
+            error: { iconTheme: { primary: '#ef4444', secondary: '#050d14' } },
+          }}
+        />
+
+        {/* ── Page routes ───────────────────────────────────────────── */}
+        <AnimatePresence mode="wait">
+          <Routes location={location} key={location.pathname}>
+            <Route path="/" element={<Navigate to="/home" replace />} />
+
+            {/* Overview */}
+            <Route path="/home" element={
+              <PageWrapper>
+                <HomePage theme={theme} sensors={sensors} isConnected={isConnected} />
+              </PageWrapper>
+            } />
+
+            {/* Backend status */}
+            <Route path="/backend" element={
+              <PageWrapper>
+                <section className="dashboard-section">
+                  <div className="dashboard dashboard-single">
+                    <div className="card">
+                      <h2 className="card-title">
+                        <GlassIcon name="server" className="card-title-icon" /> Backend Status
+                      </h2>
+                      <div className="status-grid">
+                        {[['server', 'API Server', systemStatus.backend], ['database', 'Database', systemStatus.database]]
+                          .map(([icon, label, status]) => (
+                            <div key={label} className="status-item">
+                              <div className="status-item-header">
+                                <GlassIcon name={icon} />
+                                <span className="status-item-label">{label}</span>
+                              </div>
+                              <span className={`status-badge status-${status}`}>{statusLabel(status)}</span>
+                            </div>
+                          ))}
+                      </div>
+                    </div>
+                  </div>
+                </section>
+              </PageWrapper>
+            } />
+
+            {/* ESP32 device status */}
+            <Route path="/esp32" element={
+              <PageWrapper>
+                <section className="dashboard-section">
+                  <div className="dashboard dashboard-single">
+                    <div className="card">
+                      <h2 className="card-title">
+                        <GlassIcon name="esp32" className="card-title-icon" /> ESP32 Device Status
+                      </h2>
+                      <div className="status-grid">
+                        <div className="status-item">
+                          <div className="status-item-header">
+                            <GlassIcon name="esp32" />
+                            <span className="status-item-label">ESP32 Sensor Board</span>
+                          </div>
+                          <div>
+                            <span className={`status-badge status-${systemStatus.esp32}`}>{statusLabel(systemStatus.esp32)}</span>
+                            <div className="status-subtext">Last seen: {formatLastSeen(systemStatus.esp32LastSeen)}</div>
+                          </div>
+                        </div>
+                        <div className="status-item">
+                          <div className="status-item-header">
+                            <GlassIcon name="image" />
+                            <span className="status-item-label">ESP32-CAM</span>
+                          </div>
+                          <div>
+                            <span className={`status-badge status-${systemStatus.esp32Cam}`}>{statusLabel(systemStatus.esp32Cam)}</span>
+                            <div className="status-subtext">Last seen: {formatLastSeen(systemStatus.esp32CamLastSeen)}</div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </section>
+              </PageWrapper>
+            } />
+
+            {/* Sensors */}
+            <Route path="/sensors" element={
+              <PageWrapper>
+                <section className="dashboard-section dashboard-section-wide">
+                  <div className="dashboard dashboard-single dashboard-wide">
+                    <SensorCard sensors={sensors} isConnected={isConnected} />
+                  </div>
+                </section>
+              </PageWrapper>
+            } />
+
+            {/* Analytics */}
+            <Route path="/analytics" element={
+              <PageWrapper>
+                <section className="dashboard-section"><AnalyticsPage /></section>
+              </PageWrapper>
+            } />
+
+            {/* Alerts */}
+            <Route path="/alerts" element={
+              <PageWrapper>
+                <section className="dashboard-section">
+                  <AlertsPage
+                    alerts={alerts}
+                    sensors={sensors}
+                    onClearAlert={handleClearAlert}
+                    onClearAllAlerts={handleClearAllAlerts}
+                  />
+                </section>
+              </PageWrapper>
+            } />
+
+            {/* Controls */}
+            <Route path="/controls" element={
+              <PageWrapper>
+                <section className="dashboard-section dashboard-section-wide">
+                  <div className="dashboard dashboard-single dashboard-wide">
+                    <ControlCard
+                      pumpActive={pumpActive}
+                      onStartWatering={handleStartWatering}
+                      onStopWatering={handleStopWatering}
+                      moistureThreshold={moistureThreshold}
+                      onMoistureThresholdChange={setMoistureThreshold}
+                      onSaveMoistureThreshold={handleSaveMoistureThreshold}
+                      isThresholdSaving={isThresholdSaving}
+                      plantGrowthEnabled={plantGrowthEnabled}
+                      onPlantGrowthEnabledChange={setPlantGrowthEnabled}
+                      plantGrowthStage={plantGrowthStage}
+                      onPlantGrowthStageChange={setPlantGrowthStage}
+                      aiInsightsMode={aiInsightsMode}
+                      onAiInsightsModeChange={setAiInsightsMode}
+                      onSaveAiControls={handleSaveAiControls}
+                      isAiControlSaving={isAiControlSaving}
+                      sensors={sensors}
+                      onNotification={showNotification}
+                    />
+                  </div>
+                </section>
+              </PageWrapper>
+            } />
+
+            {/* AI Chat */}
+            <Route path="/ai" element={
+              <PageWrapper>
+                <section className="dashboard-section"><AIChat sensors={sensors} /></section>
+              </PageWrapper>
+            } />
+
+            {/* Insights */}
+            <Route path="/insights" element={
+              <PageWrapper>
+                <section className="dashboard-section"><InsightsPage /></section>
+              </PageWrapper>
+            } />
+
+            {/* Config */}
+            <Route path="/config" element={
+              <PageWrapper>
+                <section className="dashboard-section">
+                  <div className="dashboard dashboard-single">
+                    <ConfigCard onNotification={showNotification} systemStatus={systemStatus} />
+                  </div>
+                </section>
+              </PageWrapper>
+            } />
+
+            {/* Settings */}
+            <Route path="/settings" element={
+              <PageWrapper>
+                <section className="dashboard-section">
+                  <SettingsPage theme={theme} toggleTheme={toggleTheme} onNotification={showNotification} />
+                </section>
+              </PageWrapper>
+            } />
+
+            {/* Catch-all */}
+            <Route path="*" element={<Navigate to="/home" replace />} />
+          </Routes>
+        </AnimatePresence>
+
       </div>
     </div>
   );

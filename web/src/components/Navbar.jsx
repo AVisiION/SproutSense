@@ -34,7 +34,7 @@ export function Navbar({
             className="navbar-brand"
             aria-label="SproutSense Home"
           >
-            <GlassIcon name="sprout" className="navbar-brand-icon" animated />
+            <img src="/assets/icon.svg" className="navbar-brand-icon" alt="" />
             <span className="navbar-brand-text">SproutSense</span>
           </NavLink>
         )}

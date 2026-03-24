@@ -1,213 +1,191 @@
 /**
- * layout.css — styles/
- * ─────────────────────────────────────────────────────
- * Main content layout constraints and Master Grid.
+ * Layout.css
+ * Main application grid layout. Clean mobile-first responsive system.
  */
 
-/* ─────────────────────────────────────────────────
-   MASTER APPLICATION GRID (.app-shell)
-   ───────────────────────────────────────────────── */
+body {
+  background: var(--bg-gradient);
+  background-attachment: fixed;
+  color: var(--text-primary);
+  margin: 0;
+  padding: 0;
+  overflow-x: hidden;
+}
+
 .app-shell {
-  display: flex;
-  min-height: 100vh;
+  display: grid;
   width: 100vw;
-  overflow: hidden; 
-  background-color: var(--bg-color);
+  min-height: 100vh;
+  /* Mobile stacked layout by default */
+  grid-template-columns: 1fr;
+  grid-template-rows: auto 1fr;
+  grid-template-areas:
+    "nav"
+    "main";
+}
+
+/* Sidebar overlay on Mobile & Tablet */
+.sidebar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 100vh;
+  width: var(--sidebar-width, 260px);
+  z-index: 100;
+  transform: translateX(-100%);
+  transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1), 
+              opacity 0.4s ease, 
+              width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  background: var(--card-bg);
+  backdrop-filter: var(--card-blur);
+  border-right: var(--card-border);
+}
+
+.app-shell:not(.sidebar-collapsed) .sidebar {
+  transform: translateX(0);
+}
+
+.sidebar-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 90;
+}
+
+.container {
+  grid-area: main;
+  height: 100vh;
+  overflow-y: auto;
+  overflow-x: hidden;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  min-width: 0;
+}
+
+.dashboard-section {
+  padding: 1.5rem;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* Single column stack for mobile components */
+.dashboard-single,
+.overview-grid,
+.status-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.5rem;
+}
+
+/* Special case: for sections with only one card, ensure it fills the width */
+.dashboard-single {
+  grid-template-columns: 1fr !important;
+}
+
+/* Status Item (used in Backend/ESP32 status pages) */
+.status-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 1.25rem;
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 0.75rem;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  transition: all 0.2s ease;
+}
+
+.status-item:hover {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+.status-item-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.status-item-label {
+  font-weight: 500;
   color: var(--text-color);
 }
 
-/* ─────────────────────────────────────────────────
-   MAIN SCROLLING AREA (.container)
-   ───────────────────────────────────────────────── */
-.container {
-  flex: 1; 
-  display: flex;
-  flex-direction: column;
-  min-width: 0; 
-  height: 100vh;
-  overflow-y: auto; 
-  position: relative;
-  
-  max-width: 100%;
-  padding-left: max(var(--layout-horizontal-padding), env(safe-area-inset-left));
-  padding-right: max(var(--layout-horizontal-padding), env(safe-area-inset-right));
-
-  /* HIDE SCROLLBAR */
-  scrollbar-width: none; 
-  -ms-overflow-style: none; 
+.status-subtext {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  margin-top: 0.25rem;
 }
 
-.container::-webkit-scrollbar {
-  display: none;
+.status-badge {
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 0.25rem 0.75rem;
+  border-radius: 2rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
 }
+
+.status-online, .status-status-online { background: rgba(34, 197, 94, 0.1); color: #22c55e; }
+.status-offline, .status-status-offline { background: rgba(239, 68, 68, 0.1); color: #ef4444; }
+.status-checking, .status-status-checking { background: rgba(234, 179, 8, 0.1); color: #eab308; }
+
 
 /* ─────────────────────────────────────────────────
-DASHBOARD SECTION (The wrapper for all pages)
+   TABLET (768px - 1279px)
    ───────────────────────────────────────────────── */
-.dashboard-section {
-  padding: var(--layout-horizontal-padding); /* Restored left/right padding */
-  max-width: var(--container-max-width, 1500px);
-  width: 100%;
-  margin: 0 auto; 
-  display: flex;
-  flex-direction: column;
-  gap: 1.5rem;
-  align-items: stretch; 
-}
-
-/* Force direct children to stretch to the edges of the section */
-.dashboard-section > * {
-  width: 100%;
-}
-
-/* Wide version for graphs */
-.dashboard-section-wide {
-  max-width: 1800px;
+@media (min-width: 768px) {
+  /* Only multi-item grids change to 2 columns */
+  .overview-grid,
+  .status-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
 }
 
 /* ─────────────────────────────────────────────────
-   DESKTOP FIXES & ULTRAWIDE SCREENS
+   DESKTOP (>= 1024px)
    ───────────────────────────────────────────────── */
-   
-/* Standard Desktop (1024px - 1599px) */
 @media (min-width: 1024px) {
-  .dashboard-section {
-    max-width: var(--container-max-width, 1500px);
-    width: 100%;
-    margin-left: auto;
-    margin-right: auto;
-    padding-left: var(--layout-horizontal-padding);
-    padding-right: var(--layout-horizontal-padding);
+  .app-shell {
+    /* Expanded sidebar: explicit 260px column */
+    grid-template-columns: 260px 1fr;
+    grid-template-rows: 1fr;
+    grid-template-areas: "sidebar main";
+    height: 100vh;
+    overflow: hidden;
   }
 
-  .dashboard-section-wide {
-    max-width: 1800px;
-    margin-left: auto;
-    margin-right: auto;
+  /* Collapsed sidebar: shrink to 80px icon rail */
+  .app-shell.sidebar-collapsed {
+    grid-template-columns: 80px 1fr;
   }
-}
+  .sidebar-collapsed .sidebar{
+    margin-top: 4rem;
+  }
 
-/* Ultrawide Monitors (1600px+) 
-   This allows your internal grids (like the Control Card) to stretch out side-by-side 
-   instead of getting squished by a 1500px parent limit.
-*/
-@media (min-width: 1600px) {
-  section,
-  .section-container,
-  .section-card,
-  .content-section,
-  .problem-grid,
-  .stats-section,
-  .overview-grid,
-  .graph-container,
-  .graph-display,
-  .dashboard-section {
-    max-width: 1800px; /* Increased from 1500px */
+  .sidebar {
+    position: static;
+    transform: none !important;
+    grid-area: sidebar;
+    width: 95%;
+    height: 100vh;
+    
   }
-  
-  .dashboard-section-wide {
-    max-width: 2200px; /* Give even more room for graphs */
-  }
-  .control-card-enhanced{
-    width: 130%;
-  }
-}
 
+  .sidebar-overlay {
+    display: none;
+  }
 
-/* ─────────────────────────────────────────────────
-   TABLET
-   ───────────────────────────────────────────────── */
-@media (max-width: 1024px) {
   .container {
-    padding: 1.5rem;
-  }
-
-  section,
-  .section-container,
-  .section-card,
-  .content-section,
-  .problem-grid,
-  .stats-section,
-  .overview-grid,
-  .graph-container,
-  .graph-display,
-  .dashboard-section {
-    max-width: 1100px;
-    margin-left: auto;
-    margin-right: auto;
-    padding-left: calc(var(--layout-horizontal-padding) * 0.75);
-    padding-right: calc(var(--layout-horizontal-padding) * 0.75);
+    grid-area: main;
+    height: 100vh;
     width: 100%;
-  }
-}
-
-/* ─────────────────────────────────────────────────
-   MOBILE LANDSCAPE & SMALL TABLET
-   ───────────────────────────────────────────────── */
-@media (max-width: 768px) {
-  .container {
-    padding: 1rem;
-  }
-
-  section,
-  .section-container,
-  .section-card,
-  .content-section,
-  .problem-grid,
-  .stats-section,
-  .overview-grid,
-  .graph-container,
-  .graph-display,
-  .dashboard-section {
     max-width: 100%;
-    margin-left: 0.5rem;
-    margin-right: 0.5rem;
-    padding-left: 1rem;
-    padding-right: 1rem;
-    width: 100%;
-  }
-}
-
-/* ─────────────────────────────────────────────────
-   SMALL MOBILE DEVICES
-   ───────────────────────────────────────────────── */
-@media (max-width: 480px) {
-  .container {
-    padding: 0.75rem;
   }
 
-  section,
-  .section-container,
-  .section-card,
-  .content-section,
-  .problem-grid,
-  .stats-section,
+  /* Maintain 2 columns for grids on desktop */
   .overview-grid,
-  .graph-container,
-  .graph-display,
-  .dashboard-section {
-    max-width: 100%;
-    margin-left: 0.35rem;
-    margin-right: 0.35rem;
-    padding-left: 0.75rem;
-    padding-right: 0.75rem;
-    width: 100%;
-  }
-}
-/* Fix centering of dashboard pages on desktop widths */
-@media (min-width: 1024px) {
-  .dashboard-section {
-    max-width: var(--container-max-width, 1500px);
-    width: 100%;
-    margin-left: auto;
-    margin-right: auto;
-    padding-left: var(--layout-horizontal-padding);
-    padding-right: var(--layout-horizontal-padding);
-  }
-
-  .dashboard-section-wide {
-    max-width: 1800px;
-    margin-left: auto;
-    margin-right: auto;
+  .status-grid {
+    grid-template-columns: repeat(2, 1fr);
   }
 }

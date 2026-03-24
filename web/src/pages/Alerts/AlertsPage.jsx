@@ -1,245 +1,213 @@
-import React, { useState } from 'react';
-import { GlassIcon } from '../../components/bits/GlassIcon.jsx';
-import './AlertsPage.css';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import { GlassIcon } from '../../components/bits/GlassIcon';
+import styles from './AlertsPage.module.css';
+import { aiAPI } from '../../utils/api';
+import { format } from 'date-fns';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { SkeletonLoader } from '../../components/layout/SkeletonLoader';
+import { useWebSocket } from '../../hooks/useWebSocket';
+import { toast } from 'react-hot-toast';
 
-const SEVERITY_ORDER = { error: 0, warning: 1, info: 2 };
-
-const SENSOR_THRESHOLDS = [
-  {
-    metric: 'Soil Moisture',
-    icon: 'humidity',
-    min: 20,
-    max: 80,
-    unit: '%',
-    key: 'soilMoisture',
-    color: '#22c55e',
-    description: 'Optimal range: 20–80%. Below 20% is critically dry.',
-  },
-  {
-    metric: 'Temperature',
-    icon: 'temperature',
-    min: 15,
-    max: 38,
-    unit: '°C',
-    key: 'temperature',
-    color: '#f59e0b',
-    description: 'Optimal range: 15–38°C. Plants exposed to >38°C may wilt.',
-  },
-  {
-    metric: 'Humidity',
-    icon: 'weather',
-    min: 30,
-    max: 90,
-    unit: '%',
-    key: 'humidity',
-    color: '#22d3ee',
-    description: 'Optimal: 30–90%. Low humidity dries leaves faster.',
-  },
-  {
-    metric: 'pH',
-    icon: 'ph',
-    min: 5.5,
-    max: 7.5,
-    unit: '',
-    key: 'pH',
-    color: '#a78bfa',
-    description: 'Optimal: 5.5–7.5. Outside this range inhibits nutrient uptake.',
-  },
-  {
-    metric: 'Light',
-    icon: 'light',
-    min: 200,
-    max: 80000,
-    unit: ' lux',
-    key: 'light',
-    color: '#fbbf24',
-    description: 'Indoor plants: 200–5000 lux; outdoor: up to 80000 lux.',
-  },
-];
-
-function formatTime(ts) {
-  if (!ts) return 'Now';
-  const d = new Date(ts);
-  const diffMs = Date.now() - d.getTime();
-  const diffMin = Math.floor(diffMs / 60000);
-  if (diffMin < 1) return 'Just now';
-  if (diffMin < 60) return `${diffMin}m ago`;
-  return d.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
+function formatDiseaseName(name) {
+  if (!name || name === 'healthy') return 'Healthy';
+  return name.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
 }
 
 export default function AlertsPage({ alerts = [], sensors, onClearAlert, onClearAllAlerts }) {
-  const [filter, setFilter] = useState('all');
-  const [dismissed, setDismissed] = useState(new Set());
+  const [loading, setLoading] = useState(true);
+  const [history, setHistory] = useState([]);
+  const [latestDetection, setLatestDetection] = useState(null);
+  
+  const fetchDetections = useCallback(async () => {
+    try {
+      const end = new Date();
+      const start = new Date(end.getTime() - 7 * 24 * 3600 * 1000); // 7 days
+      
+      const resp = await aiAPI.getDiseaseDetections({
+        startDate: start.toISOString(),
+        endDate: end.toISOString(),
+        limit: 100
+      });
 
-  const visibleAlerts = alerts.filter(a => !dismissed.has(a.id));
+      const detections = resp?.data?.detections || [];
+      setHistory(detections);
+      if (detections.length > 0) {
+        setLatestDetection(detections[0]);
+      }
+    } catch (e) {
+      console.error('Failed to fetch disease detections', e);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
-  const filtered = filter === 'all'
-    ? visibleAlerts
-    : visibleAlerts.filter(a => a.type === filter);
+  useEffect(() => {
+    fetchDetections();
+  }, [fetchDetections]);
 
-  const sorted = [...filtered].sort((a, b) =>
-    (SEVERITY_ORDER[a.type] ?? 9) - (SEVERITY_ORDER[b.type] ?? 9)
-  );
+  // WebSocket for live disease alerts
+  useWebSocket((message) => {
+    if (message.type === 'disease_alert') {
+      const payload = message.data;
+      if (payload) {
+        setLatestDetection(payload);
+        setHistory(prev => [payload, ...prev].slice(0, 100)); // Keep latest 100
+        
+        const isHealthy = payload.detectedDisease === 'healthy';
+        
+        toast.custom((t) => (
+          <div className={`${styles.toastNotification} ${t.visible ? styles.toastVisible : ''}`}>
+             <GlassIcon name={isHealthy ? 'success' : 'warning'} className={isHealthy ? styles.textSuccess : styles.textDanger} />
+             <div>
+               <strong>{isHealthy ? 'Plant Healthy' : 'Disease Detected!'}</strong>
+               <p>{formatDiseaseName(payload.detectedDisease)} ({(payload.confidence * 100).toFixed(0)}%)</p>
+             </div>
+          </div>
+        ));
+      }
+    }
+  });
 
-  const counts = visibleAlerts.reduce((acc, a) => {
-    acc[a.type] = (acc[a.type] || 0) + 1;
-    return acc;
-  }, {});
+  const chartData = useMemo(() => {
+    const days = {};
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date();
+      d.setDate(d.getDate() - i);
+      days[format(d, 'MMM dd')] = 0;
+    }
 
-  const handleDismiss = (id) => {
-    setDismissed(prev => new Set([...prev, id]));
-    if (onClearAlert) onClearAlert(id);
-  };
+    history.forEach(h => {
+      const dateLabel = format(new Date(h.timestamp), 'MMM dd');
+      if (days[dateLabel] !== undefined && h.detectedDisease !== 'healthy') {
+        days[dateLabel]++;
+      }
+    });
 
-  const handleClearAll = () => {
-    const allIds = new Set(visibleAlerts.map(a => a.id));
-    setDismissed(prev => new Set([...prev, ...allIds]));
-    if (onClearAllAlerts) onClearAllAlerts();
-  };
+    return Object.entries(days).map(([date, count]) => ({ date, count }));
+  }, [history]);
+
+  const isHealthy = latestDetection?.detectedDisease === 'healthy' || !latestDetection;
+  const confidencePercent = latestDetection ? Math.round(latestDetection.confidence * 100) : 100;
 
   return (
-    <div className="alerts-page">
-      {/* Header */}
-      <div className="alerts-header">
-        <div className="alerts-header-left">
-          <GlassIcon name="bell" />
-          <div>
-            <h1 className="alerts-title">Alerts</h1>
-            <p className="alerts-subtitle">Real-time sensor threshold monitoring</p>
+    <div className={styles.container}>
+      {/* Top Section: Left (Latest) + Right (History) */}
+      <div className={styles.topGrid}>
+        
+        {/* Left Panel: Latest Detection */}
+        <div className={styles.mainCard}>
+          <div className={styles.cardHeader}>
+            <div className={styles.liveBadge}>
+              <span className={styles.pulseDot}></span> Live ESP32-CAM
+            </div>
           </div>
-        </div>
-        <div className="alerts-counts">
-          {counts.error > 0 && (
-            <span className="alerts-badge error">{counts.error} Critical</span>
-          )}
-          {counts.warning > 0 && (
-            <span className="alerts-badge warning">{counts.warning} Warning</span>
-          )}
-          {counts.info > 0 && (
-            <span className="alerts-badge info">{counts.info} Info</span>
-          )}
-          {visibleAlerts.length === 0 && (
-            <span className="alerts-badge success">All Clear</span>
-          )}
-          {visibleAlerts.length > 0 && (
-            <button
-              className="alerts-clear-btn"
-              onClick={handleClearAll}
-              title="Clear all alerts"
-            >
-              <GlassIcon name="close" />
-              Clear All
-            </button>
-          )}
-        </div>
-      </div>
 
-      {/* Filter tabs */}
-      <div className="alerts-filters">
-        {['all', 'error', 'warning', 'info'].map(f => (
-          <button
-            key={f}
-            className={`alerts-filter-tab${filter === f ? ' active' : ''}`}
-            onClick={() => setFilter(f)}
-          >
-            {f === 'all' ? `All (${visibleAlerts.length})` : `${f.charAt(0).toUpperCase() + f.slice(1)} (${counts[f] || 0})`}
-          </button>
-        ))}
-      </div>
-
-      <div className="alerts-body">
-        {/* Active Alerts */}
-        <div className="alerts-list-section">
-          <h2 className="alerts-section-title">
-            <GlassIcon name="warning" />
-            Active Alerts
-          </h2>
-          {sorted.length === 0 ? (
-            <div className="alerts-empty">
-              <GlassIcon name="success" />
-              <p>No {filter === 'all' ? '' : filter + ' '}alerts — all sensors within normal range.</p>
-            </div>
-          ) : (
-            <div className="alerts-list">
-              {sorted.map(alert => (
-                <div key={alert.id} className={`alert-item ${alert.type}`}>
-                  <div className="alert-item-icon">
-                    <GlassIcon name={alert.type === 'error' ? 'error' : alert.type === 'warning' ? 'warning' : 'info'} />
-                  </div>
-                  <div className="alert-item-content">
-                    <span className="alert-item-msg">{alert.message}</span>
-                    <span className="alert-item-val">{alert.value}</span>
-                    {alert.source && (
-                      <span className="alert-item-source">{alert.source}</span>
-                    )}
-                  </div>
-                  <span className="alert-item-time">{formatTime(alert.time)}</span>
-                  <button
-                    className="alert-dismiss-btn"
-                    onClick={() => handleDismiss(alert.id)}
-                    title="Dismiss alert"
-                    aria-label="Dismiss"
-                  >
-                    <GlassIcon name="close" />
-                  </button>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-
-        {/* Threshold reference */}
-        <div className="alerts-thresholds-section">
-          <h2 className="alerts-section-title">
-            <GlassIcon name="chart" />
-            Threshold Reference
-          </h2>
-          <div className="alerts-thresholds-grid">
-            {SENSOR_THRESHOLDS.map(t => {
-              const current = sensors?.[t.key];
-              const inRange = current !== undefined
-                ? (current >= t.min && current <= t.max)
-                : null;
-              return (
-                <div
-                  key={t.key}
-                  className={`threshold-card ${inRange === false ? 'out-of-range' : inRange === true ? 'in-range' : ''}`}
-                  style={{ '--t-color': t.color }}
-                >
-                  <div className="tc-header">
-                    <GlassIcon name={t.icon} />
-                    <span className="tc-metric">{t.metric}</span>
-                    {inRange !== null && (
-                      <span className={`tc-status ${inRange ? 'ok' : 'alert'}`}>
-                        <GlassIcon name={inRange ? 'success' : 'warning'} />
-                        {inRange ? 'OK' : 'Alert'}
-                      </span>
-                    )}
-                  </div>
-                  <div className="tc-current">
-                    {current !== undefined
-                      ? <><strong>{current}{t.unit}</strong> <span className="tc-current-label">current</span></>
-                      : <span className="tc-no-data">No data</span>
-                    }
-                  </div>
-                  <div className="tc-range">
-                    Optimal: {t.min}–{t.max}{t.unit}
-                  </div>
-                  {current !== undefined && (
-                    <div className="tc-bar-wrap">
-                      <div className="tc-bar">
-                        <div
-                          className={`tc-bar-fill ${inRange ? 'ok' : 'alert'}`}
-                          style={{ width: `${Math.min(100, Math.max(0, ((current - t.min) / (t.max - t.min)) * 100))}%` }}
-                        />
-                      </div>
+          <div className={styles.latestContent}>
+            {loading ? <SkeletonLoader height="300px" borderRadius="12px" /> : (
+              <>
+                <div className={styles.imageWrapper}>
+                  {latestDetection?.imageUrl ? (
+                    <img src={latestDetection.imageUrl} alt="Plant Snapshot" className={styles.camImage} />
+                  ) : (
+                    <div className={styles.placeholderImage}>
+                      <GlassIcon name="camera" size={48} />
+                      <p>No recent image available</p>
                     </div>
                   )}
-                  <p className="tc-desc">{t.description}</p>
+                  
+                  {/* Circular Confidence Indicator overlay */}
+                  <div className={styles.confidenceOverlay}>
+                    <svg viewBox="0 0 36 36" className={styles.circularChart}>
+                      <path className={styles.circleBg}
+                        d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                      />
+                      <path className={`${styles.circle} ${isHealthy ? styles.strokeSuccess : styles.strokeDanger}`}
+                        strokeDasharray={`${confidencePercent}, 100`}
+                        d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                      />
+                      <text x="18" y="20.35" className={styles.percentage}>{confidencePercent}%</text>
+                    </svg>
+                  </div>
                 </div>
-              );
-            })}
+
+                <div className={styles.detectionDetails}>
+                  <div className={styles.titleRow}>
+                    <h2 className={styles.diseaseTitle}>{formatDiseaseName(latestDetection?.detectedDisease)}</h2>
+                    <span className={`${styles.statusBadge} ${isHealthy ? styles.badgeSuccess : styles.badgeDanger}`}>
+                      {isHealthy ? 'Healthy' : 'Action Required'}
+                    </span>
+                  </div>
+                  <p className={styles.timestamp}>
+                    {latestDetection ? format(new Date(latestDetection.timestamp), 'MMM d, yyyy - HH:mm:ss') : 'Waiting for data...'}
+                  </p>
+                  
+                  {/* System Alerts fallback from previous alerts logic */}
+                  {alerts.length > 0 && (
+                    <div className={styles.systemAlertsBox}>
+                      <h4 className={styles.systemAlertsTitle}>System Warnings ({alerts.length})</h4>
+                      <ul className={styles.systemAlertsList}>
+                        {alerts.slice(0,3).map(a => (
+                          <li key={a.id} className={styles.systemAlertItem}>
+                            <GlassIcon name="warning" size={14} /> {a.message} ({a.value})
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                </div>
+              </>
+            )}
           </div>
+        </div>
+
+        {/* Right Panel: History Timeline */}
+        <div className={styles.historyCard}>
+          <h3 className={styles.cardTitle}>Detection History</h3>
+          <div className={styles.timelineList}>
+            {loading ? <SkeletonLoader height="100%" /> : history.length === 0 ? (
+               <div className={styles.emptyState}>No detections in the last 7 days.</div>
+            ) : (
+              history.slice(0, 10).map((item, idx) => (
+                <div key={item._id || idx} className={styles.timelineItem}>
+                  <div className={styles.timelineIconWrapper}>
+                    <GlassIcon 
+                      name={item.detectedDisease === 'healthy' ? 'success' : 'alert'} 
+                      className={item.detectedDisease === 'healthy' ? styles.textSuccess : styles.textDanger} 
+                      size={18} 
+                    />
+                  </div>
+                  <div className={styles.timelineContent}>
+                    <div className={styles.timelineHeader}>
+                      <span className={styles.timelineDisease}>{formatDiseaseName(item.detectedDisease)}</span>
+                      <span className={styles.timelineConfidence}>{Math.round(item.confidence * 100)}%</span>
+                    </div>
+                    <span className={styles.timelineDate}>{format(new Date(item.timestamp), 'MMM d, HH:mm')}</span>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Bottom Panel: 7-Day Trend Chart */}
+      <div className={styles.bottomCard}>
+        <h3 className={styles.cardTitle}>7-Day Disease Occurrences</h3>
+        <div className={styles.chartWrapper}>
+          {loading ? <SkeletonLoader height="100%" /> : (
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={chartData}>
+                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
+                <XAxis dataKey="date" stroke="rgba(255,255,255,0.4)" fontSize={12} />
+                <YAxis stroke="rgba(255,255,255,0.4)" fontSize={12} allowDecimals={false} />
+                <Tooltip 
+                  cursor={{ fill: 'rgba(255,255,255,0.05)' }}
+                  contentStyle={{ backgroundColor: 'rgba(15, 23, 42, 0.9)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px' }}
+                />
+                <Bar dataKey="count" name="Detections" fill="#ef4444" radius={[4, 4, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          )}
         </div>
       </div>
     </div>

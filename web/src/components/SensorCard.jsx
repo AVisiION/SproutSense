@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { GlassIcon } from './bits/GlassIcon';
 import '../styles/sensorcard.css';
-import SpotlightCard from './bits/Spotlight-Card'; 
+ 
 
 const SENSOR_HARDWARE = {
   soilMoisture: {
@@ -152,16 +152,7 @@ function MiniBar({ value, min, max, color }) {
   );
 }
 
-// Map sensor colors for the SpotlightCard glow effect
-const SENSOR_SPOTLIGHT_COLORS = {
-  soilMoisture: 'rgba(34, 197, 94, 0.25)',
-  temperature: 'rgba(245, 158, 11, 0.25)',
-  humidity: 'rgba(34, 211, 238, 0.25)',
-  light: 'rgba(251, 191, 36, 0.25)',
-  pH: 'rgba(167, 139, 250, 0.25)',
-  flowRate: 'rgba(56, 189, 248, 0.25)',
-  leafCount: 'rgba(52, 211, 153, 0.25)',
-};
+
 
 export function SensorCard({ sensors, isConnected }) {
   const [expandedKey, setExpandedKey] = useState(null);
@@ -188,10 +179,9 @@ export function SensorCard({ sensors, isConnected }) {
 
       <div className="sensor-grid">
         {entries.map(({ key, info, value, status }) => (
-          <SpotlightCard
+          <div
             key={key}
-            className="sensor-spotlight-card"
-            spotlightColor={SENSOR_SPOTLIGHT_COLORS[key] || 'rgba(100, 116, 139, 0.2)'}
+            className="sensor-card-wrapper"
           >
             <div
               className={`sensor-enhanced-item${expandedKey === key ? ' expanded' : ''}`}
@@ -202,14 +192,12 @@ export function SensorCard({ sensors, isConnected }) {
                 onClick={() => setExpandedKey(k => k === key ? null : key)}
                 aria-expanded={expandedKey === key}
               >
-                <div className="sensor-item-left">
-                  <span className="sensor-item-icon">
-                    <GlassIcon name={info.icon} />
-                  </span>
-                  <div className="sensor-item-info">
-                    <span className="sensor-item-label">{info.label}</span>
-                    <span className="sensor-item-model">{info.hardware.model}</span>
-                  </div>
+                <div className="sensor-item-icon">
+                  <GlassIcon name={info.icon} />
+                </div>
+                <div className="sensor-item-info">
+                  <span className="sensor-item-label">{info.label}</span>
+                  <span className="sensor-item-model">{info.hardware.model}</span>
                 </div>
                 <div className="sensor-item-right">
                   <span className="sensor-item-value">
@@ -236,7 +224,7 @@ export function SensorCard({ sensors, isConnected }) {
                 </div>
               </div>
             </div>
-          </SpotlightCard>
+          </div>
         ))}
 
         {entries.length === 0 && (
