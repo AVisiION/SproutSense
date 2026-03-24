@@ -80,7 +80,7 @@ export function ControlCard({
         </span>
       </div>
 
-      {/* Moisture health indicator */}
+      {/* Moisture health indicator
       {soilMoisture !== undefined && (
         <div className={`moisture-alert ${needsWater ? 'needs-water' : 'ok'}`}>
           <GlassIcon name={needsWater ? 'watering' : 'check'} />
@@ -90,7 +90,7 @@ export function ControlCard({
               : `Soil moisture ${soilMoisture}% - adequate`}
           </span>
         </div>
-      )}
+      )} */}
 
       {/* Manual Control */}
       <div className="control-section">
