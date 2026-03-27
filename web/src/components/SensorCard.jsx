@@ -1,242 +1,300 @@
-import React, { useState } from 'react';
-import { GlassIcon } from './bits/GlassIcon';
+/**
+ * SensorCard.jsx — Redesigned Sensor Dashboard
+ *
+ * Layout:
+ *  - Top bar: title + live connection badge
+ *  - Hero grid: 7 metric cards, each with:
+ *      • Radial SVG gauge ring
+ *      • Font Awesome icon
+ *      • Animated numeric value
+ *      • Status glow (good/warn/critical)
+ *      • Optimal range bar
+ *  - Bottom drawer: click any card to expand hardware specs
+ *  - Empty state with animated pulse
+ */
+import React, { useState, useEffect, useRef } from 'react';
 import '../styles/sensorcard.css';
- 
 
-const SENSOR_HARDWARE = {
+// ── Sensor meta-data ────────────────────────────────────────────────────────
+const SENSORS = {
   soilMoisture: {
-    label: 'Soil Moisture',
-    unit: '%',
-    icon: 'humidity',
-    color: '#22c55e',
-    hardware: {
-      model: 'Capacitive Soil Moisture Sensor v1.2',
-      type: 'Capacitive',
-      range: '0–100%',
-      voltage: '3.3V / 5V',
-      output: 'Analog (0–3.3V)',
-      accuracy: '±3%',
-      description: 'Measures volumetric water content using capacitance. More durable than resistive sensors — no corrosion.',
-    },
+    label: 'Soil Moisture',  unit: '%',       faIcon: 'fa-droplet',
+    color: '#22c55e',        maxDisplay: 100,
+    hardware: { model: 'Capacitive Soil Moisture v1.2', type: 'Capacitive', range: '0–100%', voltage: '3.3V / 5V', output: 'Analog (0–3.3V)', accuracy: '±3%', description: 'Measures volumetric water content using capacitance. More durable than resistive sensors — no corrosion.' },
     optimal: { min: 20, max: 80 },
-    status: (v) => v < 20 ? 'critical' : v < 40 ? 'warning' : 'good',
+    status: v => v < 20 ? 'critical' : v < 40 ? 'warning' : 'good',
   },
   temperature: {
-    label: 'Temperature',
-    unit: '°C',
-    icon: 'temperature',
-    color: '#f59e0b',
-    hardware: {
-      model: 'DHT22 (AM2302)',
-      type: 'Digital Temp + Humidity',
-      range: '-40 to +80°C',
-      voltage: '3.3V – 5.5V',
-      output: 'Single-wire digital',
-      accuracy: '±0.5°C',
-      description: 'Combined temperature and humidity sensor. Uses single-wire protocol. Sampling rate: 0.5 Hz (every 2s).',
-    },
+    label: 'Temperature',    unit: '°C',      faIcon: 'fa-temperature-half',
+    color: '#f59e0b',        maxDisplay: 60,
+    hardware: { model: 'DHT22 (AM2302)', type: 'Digital Temp + Humidity', range: '-40 to +80°C', voltage: '3.3V – 5.5V', output: 'Single-wire digital', accuracy: '±0.5°C', description: 'Combined temperature and humidity sensor. Uses single-wire protocol. Sampling rate: 0.5 Hz.' },
     optimal: { min: 15, max: 35 },
-    status: (v) => v > 38 ? 'critical' : v > 32 ? 'warning' : 'good',
+    status: v => v > 38 ? 'critical' : v > 32 ? 'warning' : 'good',
   },
   humidity: {
-    label: 'Humidity',
-    unit: '%',
-    icon: 'weather',
-    color: '#22d3ee',
-    hardware: {
-      model: 'DHT22 (AM2302)',
-      type: 'Digital Temp + Humidity',
-      range: '0–100% RH',
-      voltage: '3.3V – 5.5V',
-      output: 'Single-wire digital',
-      accuracy: '±2% RH',
-      description: 'Relative humidity measurement from the DHT22 sensor. Shared with temperature on the same IC.',
-    },
+    label: 'Humidity',       unit: '%',       faIcon: 'fa-cloud-rain',
+    color: '#22d3ee',        maxDisplay: 100,
+    hardware: { model: 'DHT22 (AM2302)', type: 'Digital Temp + Humidity', range: '0–100% RH', voltage: '3.3V – 5.5V', output: 'Single-wire digital', accuracy: '±2% RH', description: 'Relative humidity measurement from the DHT22 sensor. Shared with temperature on the same IC.' },
     optimal: { min: 40, max: 80 },
-    status: (v) => v < 30 ? 'warning' : 'good',
+    status: v => v < 30 ? 'warning' : 'good',
   },
   light: {
-    label: 'Light Level',
-    unit: 'lux',
-    icon: 'light',
-    color: '#fbbf24',
-    hardware: {
-      model: 'BH1750FVI',
-      type: 'Ambient Light Sensor',
-      range: '1–65535 lux',
-      voltage: '2.4V – 3.6V',
-      output: 'I²C (addr: 0x23 / 0x5C)',
-      accuracy: '±20%',
-      description: 'Digital ambient light sensor with 16-bit ADC. Directly outputs lux values. Ideal for plant light monitoring.',
-    },
+    label: 'Light Level',    unit: ' lux',    faIcon: 'fa-sun',
+    color: '#fbbf24',        maxDisplay: 65535,
+    hardware: { model: 'BH1750FVI', type: 'Ambient Light', range: '1–65535 lux', voltage: '2.4V – 3.6V', output: 'I²C (0x23 / 0x5C)', accuracy: '±20%', description: 'Digital ambient light sensor with 16-bit ADC. Directly outputs lux values. Ideal for plant light monitoring.' },
     optimal: { min: 1000, max: 50000 },
-    status: (v) => v < 200 ? 'warning' : 'good',
+    status: v => v < 200 ? 'warning' : 'good',
   },
   pH: {
-    label: 'Soil pH',
-    unit: '',
-    icon: 'ph',
-    color: '#a78bfa',
-    hardware: {
-      model: 'Analog pH Sensor / Electrode',
-      type: 'Electrochemical',
-      range: '0–14 pH',
-      voltage: '5V',
-      output: 'Analog (0–3.4V)',
-      accuracy: '±0.1 pH',
-      description: 'Glass electrode pH probe with BNC connector. Requires regular calibration with pH 4.0 / 7.0 / 10.0 buffer solutions.',
-    },
+    label: 'Soil pH',        unit: '',        faIcon: 'fa-flask',
+    color: '#a78bfa',        maxDisplay: 14,
+    hardware: { model: 'Analog pH Electrode', type: 'Electrochemical', range: '0–14 pH', voltage: '5V', output: 'Analog (0–3.4V)', accuracy: '±0.1 pH', description: 'Glass electrode pH probe with BNC connector. Requires regular calibration with pH 4.0 / 7.0 / 10.0 buffer solutions.' },
     optimal: { min: 5.5, max: 7.0 },
-    status: (v) => (v < 5.5 || v > 7.5) ? 'warning' : 'good',
+    status: v => (v < 5.5 || v > 7.5) ? 'warning' : 'good',
   },
   flowRate: {
-    label: 'Water Flow Rate',
-    unit: ' mL/min',
-    icon: 'activity',
-    color: '#38bdf8',
-    hardware: {
-      model: 'YF-S201 / Hall Flow Sensor',
-      type: 'Hall-effect Turbine',
-      range: '1-30 L/min',
-      voltage: '5V-18V',
-      output: 'Pulse (digital)',
-      accuracy: 'around +/-10%',
-      description: 'Counts pulses generated by the turbine to estimate real-time flow rate. Useful to verify pump output and detect dry-run conditions.',
-    },
+    label: 'Flow Rate',      unit: ' mL/min', faIcon: 'fa-faucet-drip',
+    color: '#38bdf8',        maxDisplay: 900,
+    hardware: { model: 'YF-S201 Hall Flow Sensor', type: 'Hall-effect Turbine', range: '1–30 L/min', voltage: '5V–18V', output: 'Pulse (digital)', accuracy: '±10%', description: 'Counts pulses generated by the turbine to estimate real-time flow rate. Verifies pump output and detects dry-run.' },
     optimal: { min: 10, max: 800 },
-    status: (v) => (v < 1 ? 'warning' : v > 900 ? 'critical' : 'good'),
+    status: v => v < 1 ? 'warning' : v > 900 ? 'critical' : 'good',
   },
   leafCount: {
-    label: 'Leaf Count',
-    unit: ' leaves',
-    icon: 'leaf',
-    color: '#34d399',
-    hardware: {
-      model: 'ESP32-CAM + Edge Impulse',
-      type: 'Computer Vision Estimation',
-      range: '0-5000 leaves',
-      voltage: '5V (ESP32-CAM)',
-      output: 'AI-inferred integer count',
-      accuracy: 'model-dependent',
-      description: 'Estimated number of visible leaves from camera snapshots or live feed using the AI vision model.',
-    },
+    label: 'Leaf Count',     unit: ' leaves', faIcon: 'fa-seedling',
+    color: '#34d399',        maxDisplay: 400,
+    hardware: { model: 'ESP32-CAM + Edge Impulse', type: 'Computer Vision', range: '0–5000 leaves', voltage: '5V (ESP32-CAM)', output: 'AI-inferred integer', accuracy: 'Model-dependent', description: 'Estimated number of visible leaves from camera snapshots using the AI vision model.' },
     optimal: { min: 3, max: 400 },
-    status: (v) => (v <= 0 ? 'critical' : v < 3 ? 'warning' : 'good'),
+    status: v => v <= 0 ? 'critical' : v < 3 ? 'warning' : 'good',
   },
 };
 
-function StatusBadge({ status }) {
-  const config = {
-    good: { label: 'Normal', color: '#10b981' },
-    warning: { label: 'Attention', color: '#f59e0b' },
-    critical: { label: 'Critical', color: '#ef4444' },
-  };
-  const c = config[status] || config.good;
+const STATUS_CFG = {
+  good:     { label: 'Normal',    color: '#22c55e', fa: 'fa-circle-check'    },
+  warning:  { label: 'Attention', color: '#f59e0b', fa: 'fa-triangle-exclamation' },
+  critical: { label: 'Critical',  color: '#ef4444', fa: 'fa-circle-exclamation' },
+};
+
+// ── Radial gauge ring (SVG) ─────────────────────────────────────────────────
+function RadialGauge({ pct, color, status }) {
+  const R = 36;
+  const CIRC = 2 * Math.PI * R;
+  const dash = Math.max(0, Math.min(1, pct)) * CIRC;
+  const glowColor = STATUS_CFG[status]?.color || color;
+
   return (
-    <span className="sensor-status-badge" style={{ background: `${c.color}20`, color: c.color, borderColor: `${c.color}40` }}>
-      {c.label}
+    <svg className="sc-gauge-svg" viewBox="0 0 88 88" aria-hidden="true">
+      {/* Track */}
+      <circle cx="44" cy="44" r={R} fill="none" strokeWidth="6"
+        stroke="rgba(255,255,255,0.07)" />
+      {/* Fill */}
+      <circle cx="44" cy="44" r={R} fill="none" strokeWidth="6"
+        stroke={glowColor}
+        strokeLinecap="round"
+        strokeDasharray={`${dash} ${CIRC}`}
+        strokeDashoffset={CIRC * 0.25}   /* start at 12 o'clock */
+        style={{
+          filter: `drop-shadow(0 0 6px ${glowColor}90)`,
+          transition: 'stroke-dasharray 0.8s cubic-bezier(0.4,0,0.2,1)',
+        }}
+      />
+    </svg>
+  );
+}
+
+// ── Animated counter ────────────────────────────────────────────────────────
+function AnimatedValue({ target, unit, decimals = 1 }) {
+  const [display, setDisplay] = useState(target);
+  const prev = useRef(target);
+
+  useEffect(() => {
+    if (target === prev.current) return;
+    const start = prev.current;
+    const end   = target;
+    const dur   = 600;
+    const t0    = performance.now();
+
+    const step = (now) => {
+      const p = Math.min((now - t0) / dur, 1);
+      const ease = 1 - Math.pow(1 - p, 3);
+      setDisplay(+(start + (end - start) * ease).toFixed(decimals));
+      if (p < 1) requestAnimationFrame(step);
+      else { setDisplay(end); prev.current = end; }
+    };
+    requestAnimationFrame(step);
+  }, [target]);
+
+  return <>{display}{unit}</>;
+}
+
+// ── Optimal range bar ───────────────────────────────────────────────────────
+function RangeBar({ value, min, max, maxDisplay, color }) {
+  const fullPct = Math.min(100, Math.max(0, (value / maxDisplay) * 100));
+  const inRange = value >= min && value <= max;
+  const barColor = inRange ? color : '#ef4444';
+  // zone markers
+  const minPct = (min / maxDisplay) * 100;
+  const maxPct = (max / maxDisplay) * 100;
+
+  return (
+    <div className="sc-range-wrap">
+      <div className="sc-range-track">
+        {/* Optimal zone highlight */}
+        <div className="sc-range-zone" style={{ left: `${minPct}%`, width: `${maxPct - minPct}%`, background: `${color}28` }} />
+        {/* Value fill */}
+        <div className="sc-range-fill" style={{ width: `${fullPct}%`, background: barColor, boxShadow: `0 0 8px ${barColor}70` }} />
+      </div>
+      <div className="sc-range-labels">
+        <span>{min}{/* unit omitted for space */}</span>
+        <span className="sc-range-optimal">optimal</span>
+        <span>{max}</span>
+      </div>
+    </div>
+  );
+}
+
+// ── Hardware spec drawer ────────────────────────────────────────────────────
+function HwDrawer({ hw, unit, optimal, color }) {
+  const specs = [
+    ['fa-tag',          'Model',    hw.model],
+    ['fa-microchip',    'Type',     hw.type],
+    ['fa-arrows-left-right', 'Range', hw.range],
+    ['fa-bolt',         'Voltage',  hw.voltage],
+    ['fa-wave-square',  'Output',   hw.output],
+    ['fa-bullseye',     'Accuracy', hw.accuracy],
+    ['fa-circle-check', 'Optimal',  `${optimal.min}–${optimal.max}${unit}`],
+  ];
+  return (
+    <div className="sc-drawer">
+      <p className="sc-drawer-desc">{hw.description}</p>
+      <div className="sc-drawer-specs">
+        {specs.map(([icon, key, val]) => (
+          <div key={key} className="sc-drawer-spec">
+            <i className={`fa-solid ${icon} sc-spec-icon`} aria-hidden="true" style={{ color }} />
+            <div>
+              <div className="sc-spec-key">{key}</div>
+              <div className="sc-spec-val">{val}</div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ── Main metric card ────────────────────────────────────────────────────────
+function MetricCard({ sensorKey, info, value, isConnected }) {
+  const [open, setOpen] = useState(false);
+  const hasValue = value !== undefined && value !== null;
+  const status   = hasValue ? info.status(value) : 'good';
+  const pct      = hasValue ? Math.min(1, Math.max(0, value / info.maxDisplay)) : 0;
+  const sc       = STATUS_CFG[status];
+
+  return (
+    <div
+      className={`sc-card sc-card--${status}${open ? ' sc-card--open' : ''}`}
+      style={{ '--sc-color': info.color, '--sc-status-color': sc.color }}
+    >
+      {/* ── Card header (always visible) ── */}
+      <button className="sc-card-btn" onClick={() => setOpen(o => !o)} aria-expanded={open}>
+
+        {/* Gauge + icon */}
+        <div className="sc-gauge-wrap">
+          <RadialGauge pct={pct} color={info.color} status={status} />
+          <i className={`fa-solid ${info.faIcon} sc-fa-icon`} aria-hidden="true" />
+        </div>
+
+        {/* Main info */}
+        <div className="sc-card-body">
+          <div className="sc-card-label">{info.label}</div>
+          <div className="sc-card-value">
+            {hasValue
+              ? <AnimatedValue target={value} unit={info.unit} decimals={info.unit === ' lux' || info.unit === ' leaves' ? 0 : 1} />
+              : <span className="sc-no-val">—</span>
+            }
+          </div>
+          <div className="sc-card-model">{info.hardware.model}</div>
+        </div>
+
+        {/* Status badge + expand caret */}
+        <div className="sc-card-right">
+          <span className="sc-status-pill" style={{ background: `${sc.color}1a`, color: sc.color, borderColor: `${sc.color}40` }}>
+            <i className={`fa-solid ${sc.fa}`} aria-hidden="true" />
+            {sc.label}
+          </span>
+          <i className={`fa-solid fa-chevron-down sc-caret${open ? ' sc-caret--up' : ''}`} aria-hidden="true" />
+        </div>
+      </button>
+
+      {/* Range bar */}
+      {hasValue && (
+        <div className="sc-range-row">
+          <RangeBar value={value} min={info.optimal.min} max={info.optimal.max} maxDisplay={info.maxDisplay} color={info.color} />
+        </div>
+      )}
+
+      {/* Hardware drawer */}
+      {open && (
+        <HwDrawer hw={info.hardware} unit={info.unit} optimal={info.optimal} color={info.color} />
+      )}
+    </div>
+  );
+}
+
+// ── Connection dot ──────────────────────────────────────────────────────────
+function ConnDot({ live }) {
+  return (
+    <span className={`sc-conn-badge${live ? '' : ' sc-conn-badge--off'}`}>
+      <span className="sc-conn-dot" />
+      <i className={`fa-solid ${live ? 'fa-wifi' : 'fa-wifi'} sc-conn-icon`} aria-hidden="true" />
+      {live ? 'ESP32 Live' : 'No Signal'}
     </span>
   );
 }
 
-function MiniBar({ value, min, max, color }) {
-  const pct = Math.min(100, Math.max(0, ((value - 0) / (max * 1.25)) * 100));
-  const inRange = value >= min && value <= max;
-  return (
-    <div className="sensor-mini-bar">
-      <div
-        className="sensor-mini-bar-fill"
-        style={{ width: `${pct}%`, background: inRange ? color : '#ef4444' }}
-      />
-    </div>
-  );
-}
-
-
-
+// ── Root export ─────────────────────────────────────────────────────────────
 export function SensorCard({ sensors, isConnected }) {
-  const [expandedKey, setExpandedKey] = useState(null);
-
-  const entries = Object.entries(SENSOR_HARDWARE).map(([key, info]) => ({
-    key,
-    info,
+  const entries = Object.entries(SENSORS).map(([key, info]) => ({
+    key, info,
     value: sensors?.[key],
-    status: sensors?.[key] !== undefined ? info.status(sensors[key]) : 'good',
-  })).filter(e => e.value !== undefined || !sensors);
+  }));
+
+  const liveCount = entries.filter(e => e.value !== undefined).length;
 
   return (
-    <div className="card sensor-card-enhanced">
-      <div className="card-header-row">
-        <h2 className="card-title">
-          <GlassIcon name="sensors" className="card-title-icon" />
-          Live Sensor Data
-        </h2>
-        <span className={`sensor-connection-badge ${isConnected ? 'connected' : 'disconnected'}`}>
-          <span className="connection-dot-small" />
-          {isConnected ? 'ESP32 Live' : 'No Signal'}
-        </span>
+    <section className="sc-root">
+
+      {/* ── Header ── */}
+      <div className="sc-header">
+        <div className="sc-header-left">
+          <i className="fa-solid fa-gauge-high sc-header-icon" aria-hidden="true" />
+          <div>
+            <h2 className="sc-header-title">Live Sensor Data</h2>
+            <p className="sc-header-sub">{liveCount} of {entries.length} sensors reporting</p>
+          </div>
+        </div>
+        <ConnDot live={isConnected} />
       </div>
 
-      <div className="sensor-grid">
-        {entries.map(({ key, info, value, status }) => (
-          <div
-            key={key}
-            className="sensor-card-wrapper"
-          >
-            <div
-              className={`sensor-enhanced-item${expandedKey === key ? ' expanded' : ''}`}
-              style={{ '--sensor-color': info.color }}
-            >
-              <button
-                className="sensor-item-btn"
-                onClick={() => setExpandedKey(k => k === key ? null : key)}
-                aria-expanded={expandedKey === key}
-              >
-                <div className="sensor-item-icon">
-                  <GlassIcon name={info.icon} />
-                </div>
-                <div className="sensor-item-info">
-                  <span className="sensor-item-label">{info.label}</span>
-                  <span className="sensor-item-model">{info.hardware.model}</span>
-                </div>
-                <div className="sensor-item-right">
-                  <span className="sensor-item-value">
-                    {value !== undefined ? `${value}${info.unit}` : '—'}
-                  </span>
-                  {value !== undefined && <StatusBadge status={status} />}
-                </div>
-              </button>
+      {/* ── Sensor grid ── */}
+      {entries.some(e => e.value !== undefined) || !sensors ? (
+        <div className="sc-grid">
+          {entries.map(({ key, info, value }) => (
+            <MetricCard key={key} sensorKey={key} info={info} value={value} isConnected={isConnected} />
+          ))}
+        </div>
+      ) : (
+        <div className="sc-empty">
+          <div className="sc-empty-pulse" aria-hidden="true" />
+          <i className="fa-solid fa-satellite-dish sc-empty-icon" aria-hidden="true" />
+          <p className="sc-empty-text">Waiting for sensor data from ESP32…</p>
+          <p className="sc-empty-hint">Ensure the device is powered and connected to Wi-Fi.</p>
+        </div>
+      )}
 
-              {value !== undefined && (
-                <MiniBar value={value} min={info.optimal.min} max={info.optimal.max} color={info.color} />
-              )}
-
-              {/* Hardware detail is always rendered, but CSS handles when to show it */}
-              <div className="sensor-hardware-detail">
-                <p className="sensor-hw-desc">{info.hardware.description}</p>
-                <div className="sensor-hw-specs">
-                  <div className="sensor-hw-spec"><span>Type</span><strong>{info.hardware.type}</strong></div>
-                  <div className="sensor-hw-spec"><span>Range</span><strong>{info.hardware.range}</strong></div>
-                  <div className="sensor-hw-spec"><span>Accuracy</span><strong>{info.hardware.accuracy}</strong></div>
-                  <div className="sensor-hw-spec"><span>Voltage</span><strong>{info.hardware.voltage}</strong></div>
-                  <div className="sensor-hw-spec"><span>Output</span><strong>{info.hardware.output}</strong></div>
-                  <div className="sensor-hw-spec"><span>Optimal</span><strong>{info.optimal.min}–{info.optimal.max}{info.unit}</strong></div>
-                </div>
-              </div>
-            </div>
-          </div>
-        ))}
-
-        {entries.length === 0 && (
-          <div className="sensor-no-data">
-            <GlassIcon name="wifi" />
-            <p>Waiting for sensor data from ESP32...</p>
-          </div>
-        )}
-      </div>
-
-      {/* Class added here to hide hint on large screens */}
-      <p className="sensor-hint hide-on-desktop">Tap any sensor row to view hardware specifications.</p>
-    </div>
+      <p className="sc-footer-hint">
+        <i className="fa-solid fa-hand-pointer" aria-hidden="true" />
+        &ensp;Tap any sensor card to view hardware specifications
+      </p>
+    </section>
   );
 }

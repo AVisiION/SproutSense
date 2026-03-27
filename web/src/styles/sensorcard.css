@@ -1,453 +1,483 @@
-/**
- * SensorCard.css
- * ─────────────────────────────────────────────────────
- * Styles for the enhanced sensor tracking cards.
- */
+/* ============================================================
+   SensorCard — Redesigned
+   Layout: radial gauge + FA icon + animated value + range bar
+   Light / dark via [data-theme='dark'] on <html>
+============================================================ */
 
-.sensor-grid {
-  display: grid;
-  gap: 0.75rem;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-  justify-content: center;
-}
-
-.sensor-item {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 1rem;
-  background: rgba(255, 255, 255, 0.05);
-  -webkit-backdrop-filter: blur(8px);
-  backdrop-filter: blur(8px);
-  border-radius: 0.85rem;
-  border: var(--glass-border);
-  transition: border-color 0.2s ease, background-color 0.2s ease, box-shadow 0.2s ease;
-}
-
-.sensor-item:hover {
-  background: rgba(255, 255, 255, 0.075);
-  box-shadow: 0 8px 18px rgba(2, 6, 23, 0.12),
-              inset 0 0 16px rgba(255, 255, 255, 0.04);
-  border-color: rgba(14, 165, 233, 0.3);
-}
-
-.sensor-item .label {
-  color: var(--text-secondary);
-  font-size: 0.9rem;
-}
-
-.sensor-label {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.45rem;
-}
-
-.metric-icon {
-  width: 1.35rem;
-  height: 1.35rem;
-  border-radius: 0.45rem;
-  border: 1px solid rgba(20, 184, 166, 0.28);
-  background: linear-gradient(135deg, rgba(20, 184, 166, 0.14), rgba(34, 197, 94, 0.1));
-}
-
-.metric-icon svg {
-  width: 0.78rem;
-  height: 0.78rem;
-  stroke: var(--plant-teal);
-}
-
-.metric-unit {
-  margin-left: 0.25rem;
-  font-size: 0.8em;
-  color: var(--text-tertiary);
-  font-weight: 600;
-}
-
-.sensor-item .value {
-  font-size: 1.62rem;
-  font-weight: 700;
-  color: var(--plant-cyan);
-  letter-spacing: -0.025em;
-  font-variant-numeric: tabular-nums;
-}
-
-/* ═══════════════════════════════════════════
-   SENSOR CARD ENHANCED
-   Fixed width overflow issues.
-═══════════════════════════════════════════ */
-.sensor-card-enhanced {
+/* ── Root section ────────────────────────────────────────── */
+.sc-root {
   display: flex;
   flex-direction: column;
   gap: 0;
   width: 100%;
-  max-width: 100%;
 }
 
-.sensor-enhanced-header {
+/* ── Header ──────────────────────────────────────────────── */
+.sc-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 1rem;
+  padding: 0 0 20px;
+  flex-wrap: wrap;
+  gap: 12px;
 }
 
-.sensor-connection-badge {
+.sc-header-left {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.sc-header-icon {
+  font-size: 26px;
+  color: var(--plant-teal, #14b8a6);
+  filter: drop-shadow(0 0 10px rgba(20,184,166,0.5));
+}
+
+.sc-header-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text-color, #f0fdf4);
+  margin: 0;
+  line-height: 1.2;
+}
+
+.sc-header-sub {
+  font-size: 12px;
+  color: var(--text-secondary, #94a3b8);
+  margin: 2px 0 0;
+}
+
+/* ── Connection badge ────────────────────────────────────── */
+.sc-conn-badge {
   display: inline-flex;
   align-items: center;
-  gap: 0.35rem;
-  font-size: 0.72rem;
+  gap: 7px;
+  font-size: 12px;
   font-weight: 600;
-  padding: 0.25rem 0.6rem;
-  border-radius: 999px;
-  background: rgba(34, 197, 94, 0.12);
-  border: 1px solid rgba(34, 197, 94, 0.3);
-  color: var(--plant-green);
+  padding: 5px 12px;
+  border-radius: 99px;
+  background: rgba(34,197,94,0.12);
+  border: 1px solid rgba(34,197,94,0.30);
+  color: #22c55e;
+  letter-spacing: 0.04em;
 }
 
-.sensor-connection-badge.offline {
-  background: rgba(239, 68, 68, 0.1);
-  border-color: rgba(239, 68, 68, 0.3);
-  color: var(--danger-color);
+.sc-conn-badge--off {
+  background: rgba(239,68,68,0.10);
+  border-color: rgba(239,68,68,0.28);
+  color: #ef4444;
 }
 
-.sensor-connection-dot {
+.sc-conn-dot {
   width: 7px;
   height: 7px;
   border-radius: 50%;
   background: currentColor;
-  animation: dotPulse 2.4s ease-in-out infinite;
+  animation: sc-dot-pulse 2.2s ease-in-out infinite;
 }
 
-.sensor-connection-badge.offline .sensor-connection-dot {
-  animation: none;
+.sc-conn-badge--off .sc-conn-dot { animation: none; }
+
+.sc-conn-icon { font-size: 12px; }
+
+@keyframes sc-dot-pulse {
+  0%,100% { opacity:1; box-shadow: 0 0 0 0 rgba(34,197,94,0.6); }
+  50%      { opacity:0.7; box-shadow: 0 0 0 5px rgba(34,197,94,0); }
 }
 
-.sensor-enhanced-grid {
-  display: flex;
-  flex-direction: column;
-  gap: 0.3rem;
-}
-
-.sensor-enhanced-item {
-  border-radius: 0.75rem;
-  overflow: hidden;
-  border: 1px solid transparent;
-  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), 
-              border-color 0.3s ease, 
-              box-shadow 0.3s ease,
-              background-color 0.3s ease;
-}
-
-.sensor-enhanced-item:hover {
-  transform: translateY(-4px);
-  border-color: rgba(20, 184, 166, 0.3);
-  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 
-              0 8px 10px -6px rgba(20, 184, 166, 0.1);
-  background: rgba(255, 255, 255, 0.02);
-}
-
-.sensor-enhanced-item:hover .sensor-item-icon {
-  transform: scale(1.1);
-  border-color: rgba(20, 184, 166, 0.45);
-  background: linear-gradient(135deg, rgba(20,184,166,0.25), rgba(34,197,94,0.15));
-}
-
-.sensor-enhanced-item:hover .sensor-item-icon svg {
-  stroke: var(--plant-green);
-  filter: drop-shadow(0 0 5px rgba(34, 197, 94, 0.4));
-}
-
-.sensor-enhanced-item:hover .sensor-item-value {
-  transform: scale(1.05);
-  color: var(--plant-green);
-  text-shadow: 0 0 15px rgba(34, 197, 94, 0.2);
-}
-
-.sensor-enhanced-item .sensor-item-icon,
-.sensor-enhanced-item .sensor-item-value {
-  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-}
-
-.sensor-enhanced-item.expanded {
-  border-color: rgba(20, 184, 166, 0.25);
-}
-
-.sensor-item-btn {
+/* ── Sensor grid ─────────────────────────────────────────── */
+.sc-grid {
   display: grid;
-  grid-template-columns: 2.25rem 1fr auto;
-  align-items: center;
-  gap: 1rem;
-  width: 100%;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 14px;
+}
+
+@media (min-width: 1280px) {
+  .sc-grid { grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 18px; }
+}
+
+/* ── Metric card ─────────────────────────────────────────── */
+.sc-card {
+  border-radius: 16px;
+  border: 1px solid rgba(255,255,255,0.07);
   background: rgba(255,255,255,0.04);
-  border: 1px solid transparent;
-  border-radius: 0.75rem;
-  padding: 0.85rem 1.15rem;
-  cursor: pointer;
-  transition: background 0.2s, border-color 0.2s;
-  text-align: left;
+  overflow: hidden;
+  transition: transform 0.22s cubic-bezier(0.4,0,0.2,1),
+              border-color 0.22s,
+              box-shadow 0.22s;
+  position: relative;
 }
 
-.sensor-enhanced-item:hover .sensor-item-btn {
-  background: rgba(20, 184, 166, 0.09);
-  border-color: rgba(20, 184, 166, 0.25);
+/* Left accent stripe using status colour */
+.sc-card::before {
+  content: '';
+  position: absolute;
+  left: 0; top: 16px; bottom: 16px;
+  width: 3px;
+  border-radius: 0 3px 3px 0;
+  background: var(--sc-status-color, #22c55e);
+  opacity: 0.75;
+  transition: height 0.3s, opacity 0.3s;
 }
 
-.sensor-enhanced-item.expanded .sensor-item-btn {
-  background: rgba(20, 184, 166, 0.08);
-  border-color: rgba(20, 184, 166, 0.22);
-  border-bottom-left-radius: 0;
-  border-bottom-right-radius: 0;
+.sc-card:hover {
+  transform: translateY(-4px);
+  border-color: rgba(var(--sc-color), 0.25);
+  box-shadow: 0 12px 32px -8px rgba(0,0,0,0.22),
+              0 0 0 1px rgba(255,255,255,0.05);
 }
 
-.sensor-item-icon {
-  width: 2rem;
-  height: 2rem;
-  border-radius: 0.6rem;
-  background: linear-gradient(135deg, rgba(20,184,166,0.15), rgba(34,197,94,0.1));
-  border: 1px solid rgba(20,184,166,0.25);
-  display: flex;
+/* Status-specific border glow */
+.sc-card--good     { border-color: rgba(34,197,94,0.12); }
+.sc-card--warning  { border-color: rgba(245,158,11,0.20); }
+.sc-card--critical {
+  border-color: rgba(239,68,68,0.30);
+  animation: sc-critical-pulse 2s ease-in-out infinite;
+}
+
+@keyframes sc-critical-pulse {
+  0%,100% { box-shadow: 0 0 0 0 rgba(239,68,68,0); }
+  50%      { box-shadow: 0 0 14px 2px rgba(239,68,68,0.20); }
+}
+
+.sc-card--open {
+  border-color: rgba(20,184,166,0.30) !important;
+  box-shadow: 0 8px 28px -6px rgba(0,0,0,0.20);
+}
+
+/* ── Card button (clickable header row) ──────────────────── */
+.sc-card-btn {
+  display: grid;
+  grid-template-columns: 80px 1fr auto;
   align-items: center;
-  justify-content: center;
+  gap: 14px;
+  width: 100%;
+  padding: 18px 18px 10px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+  color: inherit;
+  transition: background 0.15s;
+}
+
+.sc-card-btn:hover { background: rgba(255,255,255,0.03); }
+
+/* ── Radial gauge ────────────────────────────────────────── */
+.sc-gauge-wrap {
+  position: relative;
+  width: 80px;
+  height: 80px;
   flex-shrink: 0;
 }
 
-.sensor-item-icon svg {
-  width: 1rem;
-  height: 1rem;
-  stroke: var(--plant-teal);
+.sc-gauge-svg {
+  width: 80px;
+  height: 80px;
 }
 
-.sensor-item-left {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  flex: 1;
-  min-width: 0;
+/* FA icon centered inside the gauge */
+.sc-fa-icon {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 22px;
+  color: var(--sc-color, #14b8a6);
+  filter: drop-shadow(0 0 6px color-mix(in srgb, var(--sc-color) 60%, transparent));
+  transition: transform 0.25s, font-size 0.25s;
 }
 
-.sensor-item-info {
+.sc-card:hover .sc-fa-icon {
+  transform: translate(-50%, -50%) scale(1.15);
+}
+
+/* ── Card body (label, value, model) ─────────────────────── */
+.sc-card-body {
   display: flex;
   flex-direction: column;
+  gap: 2px;
   min-width: 0;
 }
 
-.sensor-item-label {
-  font-size: 0.82rem;
-  color: var(--text-secondary);
-  font-weight: 500;
+.sc-card-label {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.10em;
+  color: var(--text-secondary, #94a3b8);
+}
+
+.sc-card-value {
+  font-size: 26px;
+  font-weight: 800;
+  color: var(--sc-color, #14b8a6);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.03em;
+  line-height: 1.15;
+  filter: drop-shadow(0 0 10px color-mix(in srgb, var(--sc-color) 40%, transparent));
+  transition: color 0.3s;
+}
+
+.sc-no-val {
+  font-size: 22px;
+  color: var(--text-tertiary, #475569);
+  font-weight: 400;
+}
+
+.sc-card-model {
+  font-size: 10.5px;
+  color: var(--text-tertiary, #475569);
+  font-family: monospace;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ── Card right (status pill + caret) ────────────────────── */
+.sc-card-right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.sc-status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 99px;
+  border: 1px solid;
+  white-space: nowrap;
+  letter-spacing: 0.04em;
+}
+
+.sc-status-pill i { font-size: 10px; }
+
+.sc-caret {
+  font-size: 11px;
+  color: var(--text-tertiary, #475569);
+  transition: transform 0.25s cubic-bezier(0.4,0,0.2,1);
+}
+
+.sc-caret--up { transform: rotate(180deg); }
+
+/* ── Range bar row ───────────────────────────────────────── */
+.sc-range-row {
+  padding: 0 18px 14px;
+}
+
+.sc-range-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.sc-range-track {
+  position: relative;
+  height: 6px;
+  border-radius: 99px;
+  background: rgba(255,255,255,0.07);
+  overflow: hidden;
+}
+
+.sc-range-zone {
+  position: absolute;
+  top: 0; bottom: 0;
+  border-radius: 99px;
+}
+
+.sc-range-fill {
+  height: 100%;
+  border-radius: 99px;
+  transition: width 0.7s cubic-bezier(0.4,0,0.2,1);
+  position: relative;
+  z-index: 1;
+}
+
+.sc-range-labels {
+  display: flex;
+  justify-content: space-between;
+  font-size: 10px;
+  color: var(--text-tertiary, #475569);
+  padding: 0 1px;
+}
+
+.sc-range-optimal {
+  color: var(--plant-teal, #14b8a6);
+  font-weight: 600;
+  font-size: 9.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+/* ── Hardware spec drawer ────────────────────────────────── */
+.sc-drawer {
+  border-top: 1px solid rgba(255,255,255,0.06);
+  padding: 16px 18px 18px;
+  background: rgba(0,0,0,0.12);
+  animation: sc-drawer-in 0.25s ease both;
+}
+
+@keyframes sc-drawer-in {
+  from { opacity: 0; transform: translateY(-6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.sc-drawer-desc {
+  font-size: 12.5px;
+  color: var(--text-secondary, #94a3b8);
+  line-height: 1.6;
+  margin: 0 0 14px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+}
+
+.sc-drawer-specs {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 10px 16px;
+}
+
+.sc-drawer-spec {
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+}
+
+.sc-spec-icon {
+  font-size: 12px;
+  margin-top: 2px;
+  flex-shrink: 0;
+  width: 14px;
+  text-align: center;
+}
+
+.sc-spec-key {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-tertiary, #475569);
   line-height: 1.2;
 }
 
-.sensor-item-model {
-  font-size: 0.7rem;
-  color: var(--text-tertiary);
-  font-family: monospace;
-}
-
-.sensor-item-right {
-  display: flex;
-  align-items: center;
-  gap: 0.6rem;
-  flex-shrink: 0;
-}
-
-.sensor-item-value {
-  font-size: 1.4rem;
-  font-weight: 700;
-  color: var(--plant-cyan);
-  font-variant-numeric: tabular-nums;
-  letter-spacing: -0.02em;
-}
-
-.sensor-item-unit {
-  font-size: 0.78rem;
-  color: var(--text-tertiary);
-  font-weight: 600;
-  margin-left: -0.2rem;
-}
-
-.sensor-mini-bar {
-  width: 48px;
-  height: 6px;
-  border-radius: 3px;
-  background: rgba(255,255,255,0.08);
-  overflow: hidden;
-}
-
-.sensor-mini-bar-fill {
-  height: 100%;
-  border-radius: 3px;
-  background: var(--plant-teal);
-  transition: width 0.5s ease;
-}
-
-.sensor-mini-bar-fill.warn {
-  background: #ef4444;
-}
-
-.sensor-status-badge {
-  font-size: 0.68rem;
-  font-weight: 700;
-  padding: 0.18rem 0.5rem;
-  border-radius: 999px;
-  white-space: nowrap;
-}
-
-.sensor-status-badge.good    { background: rgba(34,197,94,0.15);  color: var(--plant-green); }
-.sensor-status-badge.warning { background: rgba(245,158,11,0.15); color: #f59e0b; }
-.sensor-status-badge.critical{ background: rgba(239,68,68,0.15);  color: #ef4444; }
-
-.sensor-expand-icon {
-  width: 16px;
-  height: 16px;
-  color: var(--text-tertiary);
-  transition: transform 0.25s;
-  flex-shrink: 0;
-}
-
-.sensor-expand-icon svg {
-  width: 14px;
-  height: 14px;
-  stroke: currentColor;
-}
-
-.sensor-enhanced-item.expanded .sensor-expand-icon {
-  transform: rotate(180deg);
-}
-
-.sensor-hardware-detail {
-  background: rgba(255,255,255,0.03);
-  border-top: 1px solid rgba(20,184,166,0.15);
-  padding: 0.85rem;
-  border-bottom-left-radius: 0.75rem;
-  border-bottom-right-radius: 0.75rem;
-}
-
-.sensor-hw-specs {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
-  gap: 0.4rem 0.75rem;
-  margin-bottom: 0.65rem;
-}
-
-.sensor-hw-spec {
-  display: flex;
-  flex-direction: column;
-}
-
-.sensor-hw-spec-key {
-  font-size: 0.67rem;
-  color: var(--text-tertiary);
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  font-weight: 600;
-}
-
-.sensor-hw-spec-val {
-  font-size: 0.8rem;
-  color: var(--text-color);
+.sc-spec-val {
+  font-size: 12.5px;
+  color: var(--text-color, #f0fdf4);
   font-weight: 500;
+  line-height: 1.4;
 }
 
-.sensor-hw-desc {
-  font-size: 0.78rem;
-  color: var(--text-secondary);
-  line-height: 1.55;
-  border-top: 1px solid rgba(255,255,255,0.06);
-  padding-top: 0.55rem;
-  margin-top: 0.35rem;
-}
-
-.sensor-hint {
-  font-size: 0.76rem;
-  color: var(--text-tertiary);
-  text-align: center;
-  padding: 0.5rem 0 0;
-  font-style: italic;
-}
-
-.sensor-no-data {
+/* ── Empty state ─────────────────────────────────────────── */
+.sc-empty {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 0.5rem;
-  padding: 2rem;
-  color: var(--text-tertiary);
-  font-size: 0.9rem;
+  gap: 10px;
+  padding: 56px 24px;
+  position: relative;
 }
 
-/* ─────────────────────────────────────────────────
-   ANIMATIONS
-   ───────────────────────────────────────────────── */
-@keyframes dotPulse {
-  0%, 100% {
-    opacity: 1;
-    transform: scale(1);
-    box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.7);
-  }
-  60% {
-    opacity: 0.75;
-    transform: scale(0.82);
-    box-shadow: 0 0 0 6px rgba(34, 197, 94, 0);
-  }
+.sc-empty-pulse {
+  position: absolute;
+  width: 140px;
+  height: 140px;
+  border-radius: 50%;
+  border: 2px solid rgba(20,184,166,0.20);
+  animation: sc-empty-ring 2.4s ease-in-out infinite;
+  pointer-events: none;
 }
 
-/* ─────────────────────────────────────────────────
-   RESPONSIVE OVERRIDES
-   Fixed: Removed >100% width hacks
-   ───────────────────────────────────────────────── */
-@media (min-width: 1024px) {
-  .sensor-card-enhanced {
-    width: 100%;
-    max-width: 1800px;
-    margin: 0 auto;
-  }
-  
-  .sensor-grid {
-    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-    gap: 1.5rem;
-  }
+@keyframes sc-empty-ring {
+  0%   { transform: scale(0.7); opacity: 0.8; }
+  100% { transform: scale(1.6); opacity: 0; }
 }
 
-@media (max-width: 768px) {
-  .sensor-item {
-    padding: 0.85rem;
-  }
-  .sensor-item .value {
-    font-size: 1.3rem;
-  }
+.sc-empty-icon {
+  font-size: 38px;
+  color: var(--plant-teal, #14b8a6);
+  opacity: 0.55;
+  position: relative;
 }
 
-/* ═══════════════════════════════════════════
-   SMART ACCORDION LOGIC
-═══════════════════════════════════════════ */
-
-/* 1. By default, hide the detail content */
-.sensor-hardware-detail {
-  display: none;
+.sc-empty-text {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-secondary, #94a3b8);
+  margin: 0;
 }
 
-/* 2. Show it when user clicks (adds .expanded class) */
-.sensor-enhanced-item.expanded .sensor-hardware-detail {
-  display: block;
+.sc-empty-hint {
+  font-size: 12px;
+  color: var(--text-tertiary, #475569);
+  margin: 0;
 }
 
-/* 3. At very large screens, transform into static cards */
-@media (min-width: 1600px) {
-  .sensor-grid {
-    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+/* ── Footer hint ─────────────────────────────────────────── */
+.sc-footer-hint {
+  text-align: center;
+  font-size: 11.5px;
+  color: var(--text-tertiary, #475569);
+  font-style: italic;
+  padding: 14px 0 2px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+}
+
+.sc-footer-hint i { color: var(--plant-teal, #14b8a6); font-size: 11px; }
+
+/* ── Light mode overrides ─────────────────────────────────── */
+[data-theme='light'] .sc-card {
+  background: rgba(0,0,0,0.02);
+  border-color: rgba(0,0,0,0.07);
+}
+[data-theme='light'] .sc-card-btn:hover {
+  background: rgba(0,0,0,0.03);
+}
+[data-theme='light'] .sc-drawer {
+  background: rgba(0,0,0,0.03);
+}
+[data-theme='light'] .sc-range-track {
+  background: rgba(0,0,0,0.08);
+}
+[data-theme='light'] .sc-card-value {
+  filter: none;
+}
+[data-theme='light'] .sc-header-title {
+  color: #1a3a2a;
+}
+[data-theme='light'] .sc-header-sub,
+[data-theme='light'] .sc-card-label {
+  color: #4b7060;
+}
+[data-theme='light'] .sc-card-model,
+[data-theme='light'] .sc-range-labels,
+[data-theme='light'] .sc-spec-key,
+[data-theme='light'] .sc-footer-hint {
+  color: #6b7280;
+}
+[data-theme='light'] .sc-spec-val  { color: #1a3a2a; }
+[data-theme='light'] .sc-drawer-desc { color: #374151; }
+
+/* ── Responsive ───────────────────────────────────────────── */
+@media (max-width: 600px) {
+  .sc-card-btn {
+    grid-template-columns: 64px 1fr auto;
+    padding: 14px 14px 8px;
+    gap: 10px;
   }
-  
-  .sensor-hardware-detail {
-    display: block !important;
-  }
-  
-  .sensor-item-btn {
-    pointer-events: none;
-    cursor: default;
-  }
-  
-  .hide-on-desktop {
-    display: none;
-  }
+  .sc-gauge-wrap, .sc-gauge-svg { width: 64px; height: 64px; }
+  .sc-fa-icon  { font-size: 18px; }
+  .sc-card-value { font-size: 22px; }
+  .sc-status-pill { display: none; }
+  .sc-grid { grid-template-columns: 1fr; }
 }
