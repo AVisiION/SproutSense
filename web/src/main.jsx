@@ -3,10 +3,19 @@ import ReactDOM from 'react-dom/client';
 import { BrowserRouter } from 'react-router-dom';
 import App from './App';
 
-ReactDOM.createRoot(document.getElementById('root')).render(
+const root = ReactDOM.createRoot(document.getElementById('root'));
+
+root.render(
   <React.StrictMode>
     <BrowserRouter>
       <App />
     </BrowserRouter>
   </React.StrictMode>
 );
+
+// Signal the loading screen to dismiss once React has finished its first render
+requestAnimationFrame(() => {
+  requestAnimationFrame(() => {
+    window.dispatchEvent(new Event('sproutsense:ready'));
+  });
+});
