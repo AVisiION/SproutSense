@@ -1,23 +1,11 @@
 /**
  * Navbar.jsx — components/layout/
- * Top navigation bar shown above every page.
+ * Top navigation bar.
  *
- * Features:
- *  - Hamburger button to toggle sidebar (desktop collapse / mobile slide)
- *  - Current page title
- *  - WebSocket connection status pill
- *  - Alert bell with unread count badge
- *  - Dark/Light theme toggle
- *
- * Props:
- *  - currentPage        {string}   — active route label shown as title
- *  - isMobile           {boolean}  — true when viewport ≤ 768 px
- *  - isSidebarCollapsed {boolean}
- *  - toggleSidebar      {fn}
- *  - theme              {string}   — 'dark' | 'light'
- *  - toggleTheme        {fn}
- *  - alertCount         {number}   — number of active alerts
- *  - isConnected        {boolean}  — WebSocket / backend live connection
+ * Theme toggle strategy:
+ *  - Desktop (>768 px): full rounded-square button (.navbar-theme-toggle)
+ *  - Mobile  (≤768 px): compact circular pill (.navbar-theme-toggle-mobile)
+ *    Both call the same toggleTheme handler — only one is visible at a time via CSS.
  */
 import React from 'react';
 import { Link } from 'react-router-dom';
@@ -34,10 +22,12 @@ export function Navbar({
   alertCount,
   isConnected,
 }) {
+  const isDark = theme === 'dark';
+
   return (
     <header className="top-navbar" role="banner">
 
-      {/* ── Left: hamburger + page title ── */}
+      {/* ── Left: hamburger + brand + page title ── */}
       <div className="navbar-left">
         <button
           className="navbar-toggle"
@@ -45,11 +35,10 @@ export function Navbar({
           aria-label={isSidebarCollapsed ? 'Open sidebar' : 'Close sidebar'}
           aria-expanded={!isSidebarCollapsed}
         >
-          {/* Show X on mobile when sidebar open, otherwise hamburger */}
           {isMobile && !isSidebarCollapsed ? '✕' : '☰'}
         </button>
 
-        {/* Brand logo — visible when sidebar is collapsed on desktop */}
+        {/* Brand — only when sidebar is collapsed on desktop */}
         {isSidebarCollapsed && !isMobile && (
           <Link to="/home" className="navbar-brand" aria-label="SproutSense home">
             <img src="/assets/icon.svg" className="navbar-brand-icon" alt="" />
@@ -57,11 +46,10 @@ export function Navbar({
           </Link>
         )}
 
-        {/* Active page title */}
         <h1 className="navbar-title">{currentPage}</h1>
       </div>
 
-      {/* ── Right: connection status, alerts, theme toggle ── */}
+      {/* ── Right: connection status, alerts, theme toggle(s) ── */}
       <div className="navbar-right">
 
         {/* Live connection status */}
@@ -91,16 +79,45 @@ export function Navbar({
           )}
         </Link>
 
-        {/* Theme toggle */}
+        {/* ── DESKTOP theme toggle (hidden on mobile via CSS) ── */}
         <button
-          className="navbar-theme-toggle"
+          className="navbar-theme-toggle navbar-theme-toggle--desktop"
           onClick={toggleTheme}
-          aria-label={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
+          aria-label={`Switch to ${isDark ? 'light' : 'dark'} mode`}
+          title={`Switch to ${isDark ? 'light' : 'dark'} mode`}
         >
           <span className="theme-icon">
-            {theme === 'dark' ? '🌙' : '☀️'}
+            {isDark ? '🌙' : '☀️'}
           </span>
         </button>
+
+        {/* ── MOBILE theme toggle (hidden on desktop via CSS) ── */}
+        <button
+          className="navbar-theme-toggle navbar-theme-toggle--mobile"
+          onClick={toggleTheme}
+          aria-label={`Switch to ${isDark ? 'light' : 'dark'} mode`}
+          title={`Switch to ${isDark ? 'light' : 'dark'} mode`}
+        >
+          {/* SVG sun/moon inline — no dependency */}
+          {isDark ? (
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <path d="M21 12.79A9 9 0 1111.21 3a7 7 0 009.79 9.79z" />
+            </svg>
+          ) : (
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <circle cx="12" cy="12" r="5" />
+              <line x1="12" y1="1"  x2="12" y2="3" />
+              <line x1="12" y1="21" x2="12" y2="23" />
+              <line x1="4.22" y1="4.22"  x2="5.64"  y2="5.64" />
+              <line x1="18.36" y1="18.36" x2="19.78" y2="19.78" />
+              <line x1="1"  y1="12" x2="3"  y2="12" />
+              <line x1="21" y1="12" x2="23" y2="12" />
+              <line x1="4.22"  y1="19.78" x2="5.64"  y2="18.36" />
+              <line x1="18.36" y1="5.64"  x2="19.78" y2="4.22" />
+            </svg>
+          )}
+        </button>
+
       </div>
     </header>
   );
