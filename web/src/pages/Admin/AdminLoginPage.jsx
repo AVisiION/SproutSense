@@ -1,7 +1,7 @@
 /**
  * AdminLoginPage.jsx
- * Secure admin login. Redirects to /admin/panel on success.
- * Redirects to /home if already authenticated.
+ * Secure admin login with Font Awesome icons.
+ * Redirects to /admin/panel on success.
  */
 import React, { useState } from 'react';
 import { useNavigate, Navigate } from 'react-router-dom';
@@ -24,8 +24,7 @@ export default function AdminLoginPage() {
     e.preventDefault();
     setError('');
     setLoading(true);
-    // Simulate brief async check
-    await new Promise(r => setTimeout(r, 600));
+    await new Promise(r => setTimeout(r, 650));
     const ok = adminLogin(username.trim(), password);
     setLoading(false);
     if (ok) {
@@ -38,46 +37,76 @@ export default function AdminLoginPage() {
 
   return (
     <div className="admin-login-root">
+
+      {/* Decorative background blobs */}
+      <div className="adm-bg-blob adm-bg-blob--1" aria-hidden="true" />
+      <div className="adm-bg-blob adm-bg-blob--2" aria-hidden="true" />
+
       <div className="admin-login-card">
 
-        {/* Brand */}
+        {/* ── Brand ─────────────────────────────────────────── */}
         <div className="admin-login-brand">
-          <img src="/assets/icon.svg" alt="SproutSense" className="admin-login-logo" />
+          <div className="adm-logo-ring" aria-hidden="true">
+            <img src="/assets/icon.svg" alt="SproutSense" className="admin-login-logo" />
+          </div>
           <h1 className="admin-login-title">Admin Access</h1>
-          <p className="admin-login-sub">SproutSense Control Panel</p>
+          <p className="admin-login-sub">
+            <i className="fa-solid fa-shield-halved" aria-hidden="true" />
+            &ensp;SproutSense Control Panel
+          </p>
         </div>
 
+        {/* ── Divider ───────────────────────────────────────── */}
+        <div className="adm-divider">
+          <span className="adm-divider-line" />
+          <span className="adm-divider-label">
+            <i className="fa-solid fa-lock" aria-hidden="true" />
+            &ensp;Secure Login
+          </span>
+          <span className="adm-divider-line" />
+        </div>
+
+        {/* ── Form ──────────────────────────────────────────── */}
         <form className="admin-login-form" onSubmit={handleSubmit} autoComplete="off">
 
-          {/* Username */}
+          {/* Username field */}
           <div className="admin-field">
-            <label className="admin-label" htmlFor="admin-user">Username</label>
+            <label className="admin-label" htmlFor="admin-user">
+              <i className="fa-solid fa-user-shield" aria-hidden="true" />
+              &ensp;Username
+            </label>
             <div className="admin-input-wrap">
-              <span className="admin-input-icon">&#9881;</span>
+              <i className="fa-solid fa-user admin-input-icon" aria-hidden="true" />
               <input
                 id="admin-user"
                 className="admin-input"
                 type="text"
-                placeholder="Admin username"
+                placeholder="Enter admin username"
                 value={username}
                 onChange={e => setUsername(e.target.value)}
                 required
                 autoFocus
                 autoComplete="off"
               />
+              {username.length > 0 && (
+                <i className="fa-solid fa-circle-check admin-input-check" aria-hidden="true" />
+              )}
             </div>
           </div>
 
-          {/* Password */}
+          {/* Password field */}
           <div className="admin-field">
-            <label className="admin-label" htmlFor="admin-pass">Password</label>
+            <label className="admin-label" htmlFor="admin-pass">
+              <i className="fa-solid fa-key" aria-hidden="true" />
+              &ensp;Password
+            </label>
             <div className="admin-input-wrap">
-              <span className="admin-input-icon">&#128274;</span>
+              <i className="fa-solid fa-lock admin-input-icon" aria-hidden="true" />
               <input
                 id="admin-pass"
                 className="admin-input"
                 type={showPass ? 'text' : 'password'}
-                placeholder="Admin password"
+                placeholder="Enter admin password"
                 value={password}
                 onChange={e => setPassword(e.target.value)}
                 required
@@ -90,31 +119,47 @@ export default function AdminLoginPage() {
                 tabIndex={-1}
                 aria-label={showPass ? 'Hide password' : 'Show password'}
               >
-                {showPass ? '\u{1F648}' : '\u{1F441}'}
+                <i
+                  className={`fa-solid ${showPass ? 'fa-eye-slash' : 'fa-eye'}`}
+                  aria-hidden="true"
+                />
               </button>
             </div>
           </div>
 
-          {/* Error */}
+          {/* Error message */}
           {error && (
             <div className="admin-error" role="alert">
-              &#9888; {error}
+              <i className="fa-solid fa-triangle-exclamation" aria-hidden="true" />
+              &ensp;{error}
             </div>
           )}
 
-          {/* Submit */}
+          {/* Submit button */}
           <button
             type="submit"
             className={`admin-submit-btn${loading ? ' loading' : ''}`}
             disabled={loading}
           >
-            {loading ? 'Verifying...' : 'Enter Admin Panel'}
+            {loading ? (
+              <>
+                <i className="fa-solid fa-circle-notch fa-spin" aria-hidden="true" />
+                &ensp;Verifying&hellip;
+              </>
+            ) : (
+              <>
+                <i className="fa-solid fa-right-to-bracket" aria-hidden="true" />
+                &ensp;Enter Admin Panel
+              </>
+            )}
           </button>
 
         </form>
 
+        {/* ── Footer ────────────────────────────────────────── */}
         <p className="admin-login-footer">
-          Restricted access &mdash; authorised personnel only
+          <i className="fa-solid fa-circle-info" aria-hidden="true" />
+          &ensp;Restricted access &mdash; authorised personnel only
         </p>
       </div>
     </div>
