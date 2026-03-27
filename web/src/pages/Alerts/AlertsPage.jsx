@@ -1,41 +1,196 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import {
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
+  ResponsiveContainer, Cell, LineChart, Line
+} from 'recharts';
 import { GlassIcon } from '../../components/bits/GlassIcon';
 import styles from './AlertsPage.module.css';
 import { aiAPI } from '../../utils/api';
-import { format } from 'date-fns';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { format, formatDistanceToNow } from 'date-fns';
 import { SkeletonLoader } from '../../components/layout/SkeletonLoader';
 import { useWebSocket } from '../../hooks/useWebSocket';
 import { toast } from 'react-hot-toast';
 
+// ─── Helpers ──────────────────────────────────────────────────────────────────
 function formatDiseaseName(name) {
   if (!name || name === 'healthy') return 'Healthy';
   return name.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
 }
 
+// ─── Mock data generators ─────────────────────────────────────────────────────
+const MOCK_DISEASES = [
+  'healthy', 'healthy', 'healthy',
+  'leaf_blight', 'powdery_mildew', 'healthy',
+  'early_blight', 'healthy', 'healthy', 'rust',
+];
+
+function generateMockDetections() {
+  return Array.from({ length: 12 }, (_, i) => {
+    const disease = MOCK_DISEASES[i % MOCK_DISEASES.length];
+    return {
+      _id             : `mock-${i}`,
+      detectedDisease : disease,
+      confidence      : disease === 'healthy' ? 0.88 + Math.random() * 0.1 : 0.65 + Math.random() * 0.3,
+      timestamp       : new Date(Date.now() - i * 5 * 3600_000).toISOString(),
+      imageUrl        : null,
+      isMock          : true,
+    };
+  });
+}
+
+function generateMockSystemAlerts(sensors) {
+  const base = [
+    {
+      id      : 'mock-moisture',
+      type    : 'warning',
+      message : 'Soil moisture below threshold',
+      value   : '18%',
+      time    : new Date(Date.now() - 12 * 60_000),
+    },
+    {
+      id      : 'mock-temp',
+      type    : 'error',
+      message : 'High temperature detected',
+      value   : '39.2 °C',
+      time    : new Date(Date.now() - 38 * 60_000),
+    },
+    {
+      id      : 'mock-ph',
+      type    : 'warning',
+      message : 'pH level out of optimal range',
+      value   : 'pH 8.1',
+      time    : new Date(Date.now() - 2 * 3600_000),
+    },
+    {
+      id      : 'mock-humidity',
+      type    : 'info',
+      message : 'Low ambient humidity',
+      value   : '26%',
+      time    : new Date(Date.now() - 5 * 3600_000),
+    },
+    {
+      id      : 'mock-disease',
+      type    : 'error',
+      message : 'Plant disease detected: Leaf Blight',
+      value   : 'Confidence 82%',
+      source  : 'ESP32-CAM',
+      time    : new Date(Date.now() - 8 * 3600_000),
+    },
+  ];
+  return base;
+}
+
+// ─── Severity config ──────────────────────────────────────────────────────────
+const SEVERITY = {
+  error  : { label: 'Critical', color: '#ef4444', bg: 'rgba(239,68,68,0.12)',   border: 'rgba(239,68,68,0.3)'   },
+  warning: { label: 'Warning',  color: '#f59e0b', bg: 'rgba(245,158,11,0.12)', border: 'rgba(245,158,11,0.3)' },
+  info   : { label: 'Info',     color: '#3b82f6', bg: 'rgba(59,130,246,0.12)', border: 'rgba(59,130,246,0.3)' },
+};
+
+// ─── Motion variants ──────────────────────────────────────────────────────────
+const containerVariants = {
+  hidden : { opacity: 0 },
+  visible: { opacity: 1, transition: { staggerChildren: 0.07 } },
+};
+const itemVariants = {
+  hidden : { y: 20, opacity: 0 },
+  visible: { y: 0,  opacity: 1, transition: { duration: 0.4, ease: 'easeOut' } },
+};
+const alertRowVariants = {
+  hidden : { opacity: 0, x: -16 },
+  visible: { opacity: 1, x: 0, transition: { duration: 0.3 } },
+  exit   : { opacity: 0, x: 16, transition: { duration: 0.2 } },
+};
+
+// ─── Custom Tooltip ───────────────────────────────────────────────────────────
+const CustomTooltip = ({ active, payload, label }) => {
+  if (!active || !payload?.length) return null;
+  return (
+    <div className={styles.chartTooltip}>
+      <p className={styles.tooltipLabel}>{label}</p>
+      {payload.map((e, i) => (
+        <p key={i} style={{ color: e.color || e.fill }}>
+          <strong>{e.name}:</strong> {e.value}
+        </p>
+      ))}
+    </div>
+  );
+};
+
+// ─── Single Alert Row ─────────────────────────────────────────────────────────
+function AlertRow({ alert, onClear }) {
+  const sev = SEVERITY[alert.type] || SEVERITY.info;
+  return (
+    <motion.div
+      className={styles.alertRow}
+      variants={alertRowVariants}
+      initial="hidden"
+      animate="visible"
+      exit="exit"
+      layout
+      style={{ borderLeft: `3px solid ${sev.color}`, background: sev.bg }}
+    >
+      <div className={styles.alertSeverityBadge} style={{ color: sev.color, borderColor: sev.border, background: sev.bg }}>
+        {sev.label}
+      </div>
+      <div className={styles.alertBody}>
+        <span className={styles.alertMessage}>{alert.message}</span>
+        <span className={styles.alertMeta}>
+          {alert.value && <span className={styles.alertValue}>{alert.value}</span>}
+          <span className={styles.alertTime}>
+            {alert.time ? formatDistanceToNow(new Date(alert.time), { addSuffix: true }) : '—'}
+          </span>
+          {alert.source && <span className={styles.alertSource}>{alert.source}</span>}
+        </span>
+      </div>
+      {onClear && (
+        <button className={styles.alertDismiss} onClick={() => onClear(alert.id)} title="Dismiss">
+          ✕
+        </button>
+      )}
+    </motion.div>
+  );
+}
+
+// ─── Main Component ───────────────────────────────────────────────────────────
 export default function AlertsPage({ alerts = [], sensors, onClearAlert, onClearAllAlerts }) {
-  const [loading, setLoading] = useState(true);
-  const [history, setHistory] = useState([]);
-  const [latestDetection, setLatestDetection] = useState(null);
-  
+  const [loading,         setLoading]         = useState(true);
+  const [isTestMode,      setIsTestMode]       = useState(false);
+  const [history,         setHistory]          = useState([]);
+  const [latestDetection, setLatestDetection]  = useState(null);
+  const [activeFilter,    setActiveFilter]     = useState('all');   // all | error | warning | info
+  const [activeTab,       setActiveTab]        = useState('system'); // system | disease
+
+  // ─── Fetch disease detections ─────────────────────────────────────────────
   const fetchDetections = useCallback(async () => {
     try {
-      const end = new Date();
-      const start = new Date(end.getTime() - 7 * 24 * 3600 * 1000); // 7 days
-      
-      const resp = await aiAPI.getDiseaseDetections({
+      const end   = new Date();
+      const start = new Date(end.getTime() - 7 * 24 * 3_600_000);
+      const resp  = await aiAPI.getDiseaseDetections({
         startDate: start.toISOString(),
-        endDate: end.toISOString(),
-        limit: 100
+        endDate  : end.toISOString(),
+        limit    : 100,
       });
-
       const detections = resp?.data?.detections || [];
-      setHistory(detections);
-      if (detections.length > 0) {
+
+      if (detections.length === 0) {
+        // No real data → testmode
+        setIsTestMode(true);
+        const mock = generateMockDetections();
+        setHistory(mock);
+        setLatestDetection(mock[0]);
+      } else {
+        setIsTestMode(false);
+        setHistory(detections);
         setLatestDetection(detections[0]);
       }
-    } catch (e) {
-      console.error('Failed to fetch disease detections', e);
+    } catch {
+      // Full API failure → testmode
+      setIsTestMode(true);
+      const mock = generateMockDetections();
+      setHistory(mock);
+      setLatestDetection(mock[0]);
     } finally {
       setLoading(false);
     }
@@ -43,31 +198,47 @@ export default function AlertsPage({ alerts = [], sensors, onClearAlert, onClear
 
   useEffect(() => {
     fetchDetections();
+    const id = setInterval(fetchDetections, 60_000);
+    return () => clearInterval(id);
   }, [fetchDetections]);
 
-  // WebSocket for live disease alerts
+  // ─── WebSocket live disease alerts ────────────────────────────────────────
   useWebSocket((message) => {
     if (message.type === 'disease_alert') {
       const payload = message.data;
-      if (payload) {
-        setLatestDetection(payload);
-        setHistory(prev => [payload, ...prev].slice(0, 100)); // Keep latest 100
-        
-        const isHealthy = payload.detectedDisease === 'healthy';
-        
-        toast.custom((t) => (
-          <div className={`${styles.toastNotification} ${t.visible ? styles.toastVisible : ''}`}>
-             <GlassIcon name={isHealthy ? 'success' : 'warning'} className={isHealthy ? styles.textSuccess : styles.textDanger} />
-             <div>
-               <strong>{isHealthy ? 'Plant Healthy' : 'Disease Detected!'}</strong>
-               <p>{formatDiseaseName(payload.detectedDisease)} ({(payload.confidence * 100).toFixed(0)}%)</p>
-             </div>
+      if (!payload) return;
+      setIsTestMode(false);
+      setLatestDetection(payload);
+      setHistory(prev => [payload, ...prev].slice(0, 100));
+      const isHealthy = payload.detectedDisease === 'healthy';
+      toast.custom((t) => (
+        <div className={`${styles.toastNotification} ${t.visible ? styles.toastVisible : ''}`}>
+          <GlassIcon name={isHealthy ? 'success' : 'warning'} className={isHealthy ? styles.textSuccess : styles.textDanger} />
+          <div>
+            <strong>{isHealthy ? 'Plant Healthy ✓' : '⚠ Disease Detected!'}</strong>
+            <p>{formatDiseaseName(payload.detectedDisease)} ({(payload.confidence * 100).toFixed(0)}%)</p>
           </div>
-        ));
-      }
+        </div>
+      ));
     }
   });
 
+  // ─── Derived data ─────────────────────────────────────────────────────────
+
+  // System alerts: use real ones from App.jsx, or mock if none
+  const displayAlerts = useMemo(() => {
+    if (alerts.length > 0) return alerts;
+    if (isTestMode)        return generateMockSystemAlerts(sensors);
+    return [];
+  }, [alerts, sensors, isTestMode]);
+
+  // Filter system alerts
+  const filteredAlerts = useMemo(() => {
+    if (activeFilter === 'all') return displayAlerts;
+    return displayAlerts.filter(a => a.type === activeFilter);
+  }, [displayAlerts, activeFilter]);
+
+  // 7-day disease bar chart
   const chartData = useMemo(() => {
     const days = {};
     for (let i = 6; i >= 0; i--) {
@@ -75,141 +246,285 @@ export default function AlertsPage({ alerts = [], sensors, onClearAlert, onClear
       d.setDate(d.getDate() - i);
       days[format(d, 'MMM dd')] = 0;
     }
-
     history.forEach(h => {
       const dateLabel = format(new Date(h.timestamp), 'MMM dd');
       if (days[dateLabel] !== undefined && h.detectedDisease !== 'healthy') {
         days[dateLabel]++;
       }
     });
-
     return Object.entries(days).map(([date, count]) => ({ date, count }));
   }, [history]);
 
-  const isHealthy = latestDetection?.detectedDisease === 'healthy' || !latestDetection;
-  const confidencePercent = latestDetection ? Math.round(latestDetection.confidence * 100) : 100;
+  // KPI summary
+  const kpiSummary = useMemo(() => {
+    const critical = displayAlerts.filter(a => a.type === 'error').length;
+    const warnings = displayAlerts.filter(a => a.type === 'warning').length;
+    const diseaseEvents = history.filter(h => h.detectedDisease !== 'healthy').length;
+    const healthy  = history.filter(h => h.detectedDisease === 'healthy').length;
+    return { critical, warnings, diseaseEvents, healthy };
+  }, [displayAlerts, history]);
 
+  const isLatestHealthy     = latestDetection?.detectedDisease === 'healthy' || !latestDetection;
+  const confidencePercent   = latestDetection ? Math.round(latestDetection.confidence * 100) : 100;
+
+  // ─── Render ───────────────────────────────────────────────────────────────
   return (
-    <div className={styles.container}>
-      {/* Top Section: Left (Latest) + Right (History) */}
-      <div className={styles.topGrid}>
-        
-        {/* Left Panel: Latest Detection */}
-        <div className={styles.mainCard}>
-          <div className={styles.cardHeader}>
-            <div className={styles.liveBadge}>
-              <span className={styles.pulseDot}></span> Live ESP32-CAM
+    <motion.div
+      className={styles.container}
+      initial="hidden"
+      animate="visible"
+      variants={containerVariants}
+    >
+
+      {/* ── Header ── */}
+      <motion.div className={styles.pageHeader} variants={itemVariants}>
+        <div>
+          <h1 className={styles.pageTitle}>Alerts &amp; Detections</h1>
+          <p className={styles.pageSubtitle}>System warnings, disease detections &amp; plant health timeline</p>
+        </div>
+        <div className={styles.liveBadge}>
+          <span className={styles.pulseDot} />
+          Live ESP32-CAM
+        </div>
+      </motion.div>
+
+      {/* ── Testmode Banner ── */}
+      <AnimatePresence>
+        {isTestMode && (
+          <motion.div
+            className={styles.testmodeBanner}
+            initial={{ opacity: 0, y: -8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -8 }}
+            transition={{ duration: 0.3 }}
+          >
+            ⚠️&nbsp;<strong>Demo / Test Mode</strong> — No real detection data found.
+            Showing simulated alerts &amp; disease history. This banner disappears once ESP32-CAM sends real data.
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* ── KPI Strip ── */}
+      <motion.div className={styles.kpiStrip} variants={itemVariants}>
+        {[
+          { label: 'Critical',       value: kpiSummary.critical,      color: '#ef4444', icon: 'alert'   },
+          { label: 'Warnings',       value: kpiSummary.warnings,      color: '#f59e0b', icon: 'warning' },
+          { label: 'Disease Events', value: kpiSummary.diseaseEvents, color: '#a855f7', icon: 'disease' },
+          { label: 'Healthy Scans',  value: kpiSummary.healthy,       color: '#22c55e', icon: 'success' },
+        ].map((k, i) => (
+          <motion.div
+            key={i}
+            className={styles.kpiCard}
+            whileHover={{ y: -3, scale: 1.015 }}
+            style={{ borderColor: k.color + '44' }}
+          >
+            <div className={styles.kpiTop}>
+              <GlassIcon name={k.icon} className={styles.kpiIcon} />
+              <span className={styles.kpiLabel}>{k.label}</span>
             </div>
-          </div>
+            <div className={styles.kpiValue} style={{ color: k.color }}>
+              {loading ? <SkeletonLoader width="40px" height="28px" /> : k.value}
+            </div>
+          </motion.div>
+        ))}
+      </motion.div>
 
-          <div className={styles.latestContent}>
-            {loading ? <SkeletonLoader height="300px" borderRadius="12px" /> : (
-              <>
-                <div className={styles.imageWrapper}>
-                  {latestDetection?.imageUrl ? (
-                    <img src={latestDetection.imageUrl} alt="Plant Snapshot" className={styles.camImage} />
-                  ) : (
-                    <div className={styles.placeholderImage}>
-                      <GlassIcon name="camera" size={48} />
-                      <p>No recent image available</p>
-                    </div>
-                  )}
-                  
-                  {/* Circular Confidence Indicator overlay */}
-                  <div className={styles.confidenceOverlay}>
-                    <svg viewBox="0 0 36 36" className={styles.circularChart}>
-                      <path className={styles.circleBg}
-                        d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
-                      />
-                      <path className={`${styles.circle} ${isHealthy ? styles.strokeSuccess : styles.strokeDanger}`}
-                        strokeDasharray={`${confidencePercent}, 100`}
-                        d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
-                      />
-                      <text x="18" y="20.35" className={styles.percentage}>{confidencePercent}%</text>
-                    </svg>
-                  </div>
-                </div>
+      {/* ── Main Grid ── */}
+      <div className={styles.mainGrid}>
 
-                <div className={styles.detectionDetails}>
-                  <div className={styles.titleRow}>
-                    <h2 className={styles.diseaseTitle}>{formatDiseaseName(latestDetection?.detectedDisease)}</h2>
-                    <span className={`${styles.statusBadge} ${isHealthy ? styles.badgeSuccess : styles.badgeDanger}`}>
-                      {isHealthy ? 'Healthy' : 'Action Required'}
-                    </span>
-                  </div>
-                  <p className={styles.timestamp}>
-                    {latestDetection ? format(new Date(latestDetection.timestamp), 'MMM d, yyyy - HH:mm:ss') : 'Waiting for data...'}
-                  </p>
-                  
-                  {/* System Alerts fallback from previous alerts logic */}
-                  {alerts.length > 0 && (
-                    <div className={styles.systemAlertsBox}>
-                      <h4 className={styles.systemAlertsTitle}>System Warnings ({alerts.length})</h4>
-                      <ul className={styles.systemAlertsList}>
-                        {alerts.slice(0,3).map(a => (
-                          <li key={a.id} className={styles.systemAlertItem}>
-                            <GlassIcon name="warning" size={14} /> {a.message} ({a.value})
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  )}
-                </div>
-              </>
+        {/* ── Left: Latest Detection Card ── */}
+        <motion.div className={styles.detectionCard} variants={itemVariants}>
+          <div className={styles.cardHeaderRow}>
+            <h3 className={styles.cardTitle}>Latest Detection</h3>
+            {latestDetection && (
+              <span className={`${styles.statusPill} ${isLatestHealthy ? styles.pillGreen : styles.pillRed}`}>
+                {isLatestHealthy ? '✓ Healthy' : '⚠ Action Required'}
+              </span>
             )}
           </div>
-        </div>
 
-        {/* Right Panel: History Timeline */}
-        <div className={styles.historyCard}>
-          <h3 className={styles.cardTitle}>Detection History</h3>
-          <div className={styles.timelineList}>
-            {loading ? <SkeletonLoader height="100%" /> : history.length === 0 ? (
-               <div className={styles.emptyState}>No detections in the last 7 days.</div>
-            ) : (
-              history.slice(0, 10).map((item, idx) => (
-                <div key={item._id || idx} className={styles.timelineItem}>
-                  <div className={styles.timelineIconWrapper}>
-                    <GlassIcon 
-                      name={item.detectedDisease === 'healthy' ? 'success' : 'alert'} 
-                      className={item.detectedDisease === 'healthy' ? styles.textSuccess : styles.textDanger} 
-                      size={18} 
+          {loading ? <SkeletonLoader height="280px" borderRadius="12px" /> : (
+            <>
+              <div className={styles.imageWrapper}>
+                {latestDetection?.imageUrl ? (
+                  <img src={latestDetection.imageUrl} alt="Plant Snapshot" className={styles.camImage} />
+                ) : (
+                  <div className={styles.placeholderImage}>
+                    <GlassIcon name="camera" size={44} />
+                    <p>{isTestMode ? 'Demo Mode — No real image' : 'No recent image available'}</p>
+                  </div>
+                )}
+
+                {/* Circular confidence overlay */}
+                <div className={styles.confidenceOverlay}>
+                  <svg viewBox="0 0 36 36" className={styles.circularChart}>
+                    <path className={styles.circleBg}
+                      d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
                     />
-                  </div>
-                  <div className={styles.timelineContent}>
-                    <div className={styles.timelineHeader}>
-                      <span className={styles.timelineDisease}>{formatDiseaseName(item.detectedDisease)}</span>
-                      <span className={styles.timelineConfidence}>{Math.round(item.confidence * 100)}%</span>
-                    </div>
-                    <span className={styles.timelineDate}>{format(new Date(item.timestamp), 'MMM d, HH:mm')}</span>
-                  </div>
+                    <path
+                      className={`${styles.circle} ${isLatestHealthy ? styles.strokeSuccess : styles.strokeDanger}`}
+                      strokeDasharray={`${confidencePercent}, 100`}
+                      d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                    />
+                    <text x="18" y="20.35" className={styles.percentage}>{confidencePercent}%</text>
+                  </svg>
                 </div>
-              ))
-            )}
+              </div>
+
+              <div className={styles.detectionMeta}>
+                <h2 className={`${styles.diseaseTitle} ${isLatestHealthy ? styles.textSuccess : styles.textDanger}`}>
+                  {formatDiseaseName(latestDetection?.detectedDisease)}
+                </h2>
+                <p className={styles.detectionTime}>
+                  {latestDetection
+                    ? format(new Date(latestDetection.timestamp), 'MMM d, yyyy · HH:mm:ss')
+                    : 'Waiting for data...'}
+                </p>
+                {latestDetection?.isMock && (
+                  <span className={styles.mockTag}>Simulated reading</span>
+                )}
+              </div>
+            </>
+          )}
+        </motion.div>
+
+        {/* ── Right: Tabs — System Alerts + Disease History ── */}
+        <motion.div className={styles.rightPanel} variants={itemVariants}>
+
+          {/* Tab toggle */}
+          <div className={styles.tabBar}>
+            <button
+              className={`${styles.tabBtn} ${activeTab === 'system' ? styles.tabActive : ''}`}
+              onClick={() => setActiveTab('system')}
+            >
+              System Alerts
+              {displayAlerts.length > 0 && (
+                <span className={styles.tabBadge}>{displayAlerts.length}</span>
+              )}
+            </button>
+            <button
+              className={`${styles.tabBtn} ${activeTab === 'disease' ? styles.tabActive : ''}`}
+              onClick={() => setActiveTab('disease')}
+            >
+              Disease History
+            </button>
           </div>
-        </div>
+
+          {/* ── System Alerts Tab ── */}
+          {activeTab === 'system' && (
+            <div className={styles.tabContent}>
+              {/* Filter chips */}
+              <div className={styles.filterBar}>
+                {['all', 'error', 'warning', 'info'].map(f => (
+                  <button
+                    key={f}
+                    className={`${styles.filterChip} ${activeFilter === f ? styles.filterActive : ''}`}
+                    onClick={() => setActiveFilter(f)}
+                  >
+                    {f === 'all' ? 'All' : f === 'error' ? '🔴 Critical' : f === 'warning' ? '🟡 Warning' : '🔵 Info'}
+                  </button>
+                ))}
+                {onClearAllAlerts && displayAlerts.length > 0 && !isTestMode && (
+                  <button className={styles.clearAllBtn} onClick={onClearAllAlerts}>
+                    Clear All
+                  </button>
+                )}
+              </div>
+
+              {/* Alert list */}
+              <div className={styles.alertList}>
+                {loading ? <SkeletonLoader height="200px" /> : filteredAlerts.length === 0 ? (
+                  <div className={styles.emptyState}>
+                    <GlassIcon name="success" size={32} />
+                    <p>No {activeFilter !== 'all' ? activeFilter : ''} alerts right now</p>
+                  </div>
+                ) : (
+                  <AnimatePresence>
+                    {filteredAlerts.map(alert => (
+                      <AlertRow
+                        key={alert.id}
+                        alert={alert}
+                        onClear={!isTestMode ? onClearAlert : null}
+                      />
+                    ))}
+                  </AnimatePresence>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* ── Disease History Tab ── */}
+          {activeTab === 'disease' && (
+            <div className={styles.tabContent}>
+              <div className={styles.timelineList}>
+                {loading ? <SkeletonLoader height="100%" /> : history.length === 0 ? (
+                  <div className={styles.emptyState}>No detections in the last 7 days.</div>
+                ) : (
+                  history.slice(0, 10).map((item, idx) => {
+                    const healthy = item.detectedDisease === 'healthy';
+                    return (
+                      <motion.div
+                        key={item._id || idx}
+                        className={styles.timelineItem}
+                        initial={{ opacity: 0, x: -10 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: idx * 0.04 }}
+                      >
+                        <div className={`${styles.timelineDot} ${healthy ? styles.dotGreen : styles.dotRed}`} />
+                        <div className={styles.timelineContent}>
+                          <div className={styles.timelineHeader}>
+                            <span className={`${styles.timelineDisease} ${healthy ? styles.textSuccess : styles.textDanger}`}>
+                              {formatDiseaseName(item.detectedDisease)}
+                            </span>
+                            <span className={styles.timelineConfidence}>
+                              {Math.round(item.confidence * 100)}%
+                            </span>
+                          </div>
+                          <span className={styles.timelineDate}>
+                            {format(new Date(item.timestamp), 'MMM d, HH:mm')}
+                            {item.isMock && <span className={styles.mockTag}> · demo</span>}
+                          </span>
+                        </div>
+                      </motion.div>
+                    );
+                  })
+                )}
+              </div>
+            </div>
+          )}
+        </motion.div>
       </div>
 
-      {/* Bottom Panel: 7-Day Trend Chart */}
-      <div className={styles.bottomCard}>
-        <h3 className={styles.cardTitle}>7-Day Disease Occurrences</h3>
+      {/* ── Bottom: 7-Day Chart ── */}
+      <motion.div className={styles.bottomCard} variants={itemVariants}>
+        <div className={styles.cardHeaderRow}>
+          <div>
+            <h3 className={styles.cardTitle}>7-Day Disease Occurrences</h3>
+            <p className={styles.cardSubtitle}>Non-healthy detections per day</p>
+          </div>
+        </div>
         <div className={styles.chartWrapper}>
           {loading ? <SkeletonLoader height="100%" /> : (
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={chartData}>
+              <BarChart data={chartData} barSize={28}>
                 <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
-                <XAxis dataKey="date" stroke="rgba(255,255,255,0.4)" fontSize={12} />
-                <YAxis stroke="rgba(255,255,255,0.4)" fontSize={12} allowDecimals={false} />
-                <Tooltip 
-                  cursor={{ fill: 'rgba(255,255,255,0.05)' }}
-                  contentStyle={{ backgroundColor: 'rgba(15, 23, 42, 0.9)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px' }}
-                />
-                <Bar dataKey="count" name="Detections" fill="#ef4444" radius={[4, 4, 0, 0]} />
+                <XAxis dataKey="date"  stroke="rgba(255,255,255,0.4)" fontSize={12} tickLine={false} axisLine={false} />
+                <YAxis allowDecimals={false} stroke="rgba(255,255,255,0.4)" fontSize={12} tickLine={false} axisLine={false} />
+                <Tooltip content={<CustomTooltip />} cursor={{ fill: 'rgba(255,255,255,0.05)' }} />
+                <Bar dataKey="count" name="Detections" radius={[6, 6, 0, 0]}>
+                  {chartData.map((entry, i) => (
+                    <Cell
+                      key={i}
+                      fill={entry.count === 0 ? 'rgba(34,197,94,0.5)' : entry.count >= 3 ? '#ef4444' : '#f59e0b'}
+                    />
+                  ))}
+                </Bar>
               </BarChart>
             </ResponsiveContainer>
           )}
         </div>
-      </div>
-    </div>
+      </motion.div>
+
+    </motion.div>
   );
 }

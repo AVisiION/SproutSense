@@ -294,10 +294,11 @@ function App() {
     } catch { /* Silently ignore — disease API may be offline */ }
   }, []);
 
-  // Poll disease detections every 60 seconds
+ 
+  // Poll disease detections every 5 minutes
   useEffect(() => {
     fetchDiseaseAlerts();
-    const interval = setInterval(fetchDiseaseAlerts, 60_000);
+    const interval = setInterval(fetchDiseaseAlerts, 5 * 60_000); // 5 minutes
     return () => clearInterval(interval);
   }, [fetchDiseaseAlerts]);
 
@@ -374,13 +375,29 @@ function App() {
 
   const { isConnected } = useWebSocket(handleWebSocketMessage);
 
-  // Reflect WebSocket state in systemStatus
+  // Reflect WebSocket state in systemStatus with debounce for offline
   useEffect(() => {
-    setSystemStatus(prev => ({ ...prev, backend: onlineToStatus(isConnected) }));
+    let offlineTimeout;
+    if (isConnected) {
+      setSystemStatus(prev => ({ ...prev, backend: onlineToStatus(true) }));
+    } else {
+      // Wait 5 seconds before marking as offline
+      offlineTimeout = setTimeout(() => {
+        setSystemStatus(prev => ({ ...prev, backend: onlineToStatus(false) }));
+      }, 5000);
+    }
+    return () => {
+      if (offlineTimeout) clearTimeout(offlineTimeout);
+    };
   }, [isConnected]);
 
   // ── Initial data fetch + polling ───────────────────────────────────────
+  // Debounce ESP32 and ESP32-CAM offline status
   useEffect(() => {
+    let esp32OfflineTimeout, esp32CamOfflineTimeout;
+    let lastEsp32Online = true;
+    let lastEsp32CamOnline = true;
+
     const fetchData = async () => {
       try {
         const [
@@ -419,12 +436,51 @@ function App() {
           return new Date(s.lastSeen).getTime() > Date.now() - 5 * 60 * 1000;
         };
 
+        const esp32IsOnline = isDeviceOnline(esp32Status);
+        const esp32CamIsOnline = isDeviceOnline(esp32CamStatus);
+
+        // Debounce ESP32 offline
+        if (esp32IsOnline) {
+          if (esp32OfflineTimeout) clearTimeout(esp32OfflineTimeout);
+          lastEsp32Online = true;
+        } else {
+          if (lastEsp32Online) {
+            // Just went offline, start debounce
+            esp32OfflineTimeout = setTimeout(() => {
+              setSystemStatus(prev => ({
+                ...prev,
+                esp32: onlineToStatus(false),
+                esp32LastSeen: esp32Status?.lastSeen || null,
+              }));
+            }, 5000);
+            lastEsp32Online = false;
+          }
+        }
+
+        // Debounce ESP32-CAM offline
+        if (esp32CamIsOnline) {
+          if (esp32CamOfflineTimeout) clearTimeout(esp32CamOfflineTimeout);
+          lastEsp32CamOnline = true;
+        } else {
+          if (lastEsp32CamOnline) {
+            esp32CamOfflineTimeout = setTimeout(() => {
+              setSystemStatus(prev => ({
+                ...prev,
+                esp32Cam: onlineToStatus(false),
+                esp32CamLastSeen: esp32CamStatus?.lastSeen || null,
+              }));
+            }, 5000);
+            lastEsp32CamOnline = false;
+          }
+        }
+
+        // Always update to online immediately if online, or keep previous if in debounce
         setSystemStatus(prev => ({
           ...prev,
           backend: healthData?.backend === 'healthy' ? 'online' : onlineToStatus(isConnected),
           database: healthData?.database === 'connected' ? 'online' : 'offline',
-          esp32: onlineToStatus(isDeviceOnline(esp32Status)),
-          esp32Cam: onlineToStatus(isDeviceOnline(esp32CamStatus)),
+          esp32: esp32IsOnline ? onlineToStatus(true) : prev.esp32,
+          esp32Cam: esp32CamIsOnline ? onlineToStatus(true) : prev.esp32Cam,
           esp32LastSeen: esp32Status?.lastSeen || null,
           esp32CamLastSeen: esp32CamStatus?.lastSeen || null,
           lastUpdated: new Date().toISOString(),
@@ -445,8 +501,12 @@ function App() {
     };
 
     fetchData();
-    const interval = setInterval(fetchData, 5_000);
-    return () => clearInterval(interval);
+    const interval = setInterval(fetchData, 11_000); // 11 seconds
+    return () => {
+      clearInterval(interval);
+      if (esp32OfflineTimeout) clearTimeout(esp32OfflineTimeout);
+      if (esp32CamOfflineTimeout) clearTimeout(esp32CamOfflineTimeout);
+    };
   }, []);
 
   // ── Watering controls ──────────────────────────────────────────────────
