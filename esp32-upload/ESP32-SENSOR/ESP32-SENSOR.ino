@@ -29,11 +29,7 @@ const char* WIFI_SSID     = "@Connect";
 const char* WIFI_PASSWORD = "qwertyomm";
 
 // ========== STATIC IP (optional) ==========
-#define STATICIP_ENABLED true
-const uint8_t STATIC_IP[]      = {192, 168, 1, 120};
-const uint8_t STATIC_GATEWAY[] = {192, 168, 1,   1};
-const uint8_t STATIC_SUBNET[]  = {255, 255, 255, 0};
-const uint8_t STATIC_DNS1[]    = {8,   8,   8,   8};
+
 
 // ========== BACKEND URLs ==========
 const char* BACKEND_URL   = "https://sproutsense-backend.onrender.com/api/sensors";
