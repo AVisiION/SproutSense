@@ -3,12 +3,13 @@
  * Root application component for SproutSense.
  *
  * Responsibilities:
- *  - Global state: sensors, pumpActive, systemStatus, alerts, theme, sidebar
+ *  - Global state: sensors, pumpActive, systemStatus, alerts, sidebar
  *  - WebSocket connection via useWebSocket hook
  *  - Polling: sensor data every 5 s, disease detections every 60 s
- *  - Theme toggle with View Transitions API + CSS fallback
  *  - Route definitions via react-router-dom <Routes>
  *  - Renders <Layout> (sidebar + navbar + page content)
+ *
+ * Theme: Dark mode only.
  *
  * Import order:
  *  1. React + hooks
@@ -57,7 +58,6 @@ import './components/layout/styles/Layout.css';
 
 // ───────────────────────────────────────────────────────────────────────────
 // PROTECTED ADMIN ROUTE
-// Wraps any admin-only route. Redirects to /admin/login if not authenticated.
 // ───────────────────────────────────────────────────────────────────────────
 function ProtectedAdminRoute({ children }) {
   const { isAdminAuthenticated } = useAdminAuth();
@@ -176,7 +176,6 @@ function formatDiseaseName(name) {
 function App() {
   const location = useLocation();
 
-  // Determine if we're on a full-screen admin route (no sidebar/navbar)
   const isAdminRoute = location.pathname.startsWith('/admin');
 
   // ── State ──────────────────────────────────────────────────────────────
@@ -200,16 +199,16 @@ function App() {
   const [plantGrowthStage, setPlantGrowthStage] = useState('vegetative');
   const [aiInsightsMode, setAiInsightsMode] = useState('snapshots');
   const [isAiControlSaving, setIsAiControlSaving] = useState(false);
-  const [theme, setTheme] = useState(() => localStorage.getItem('theme') || 'dark');
-  const themeTransitionTimeoutRef = useRef(null);
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
 
-  // ── Effects ────────────────────────────────────────────────────────────
-
+  // ── Lock theme to dark permanently ────────────────────────────────────
   useEffect(() => {
-    document.documentElement.setAttribute('data-theme', theme);
-    localStorage.setItem('theme', theme);
-  }, [theme]);
+    document.documentElement.setAttribute('data-theme', 'dark');
+    document.documentElement.classList.remove('light-theme');
+    localStorage.setItem('theme', 'dark');
+  }, []);
+
+  // ── Effects ────────────────────────────────────────────────────────────
 
   useEffect(() => {
     const handleResize = () => {
@@ -220,12 +219,6 @@ function App() {
     handleResize();
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
-  }, []);
-
-  useEffect(() => {
-    return () => {
-      if (themeTransitionTimeoutRef.current) clearTimeout(themeTransitionTimeoutRef.current);
-    };
   }, []);
 
   useEffect(() => {
@@ -279,51 +272,6 @@ function App() {
     const interval = setInterval(fetchDiseaseAlerts, 5 * 60_000);
     return () => clearInterval(interval);
   }, [fetchDiseaseAlerts]);
-
-  // ── Theme toggle ───────────────────────────────────────────────────────
-  const toggleTheme = () => {
-    const root = document.documentElement;
-    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-      setTheme(prev => prev === 'dark' ? 'light' : 'dark');
-      return;
-    }
-    const directions = [
-      { fromX: '-140%', fromY: '0%', toX: '140%', toY: '0%', angle: '90deg' },
-      { fromX: '140%', fromY: '0%', toX: '-140%', toY: '0%', angle: '270deg' },
-      { fromX: '0%', fromY: '-140%', toX: '0%', toY: '140%', angle: '180deg' },
-      { fromX: '0%', fromY: '140%', toX: '0%', toY: '-140%', angle: '0deg' },
-      { fromX: '-140%', fromY: '-140%', toX: '140%', toY: '140%', angle: '135deg' },
-      { fromX: '140%', fromY: '-140%', toX: '-140%', toY: '140%', angle: '225deg' },
-    ];
-    const d = directions[Math.floor(Math.random() * directions.length)];
-    const driftX = d.toX.startsWith('-') ? '-10px' : d.toX.startsWith('1') ? '10px' : '0px';
-    const driftY = d.toY.startsWith('-') ? '-10px' : d.toY.startsWith('1') ? '10px' : '0px';
-    root.style.setProperty('--theme-ease', 'cubic-bezier(0.25, 0.46, 0.45, 0.94)');
-    root.style.setProperty('--theme-scale', '1.02');
-    root.style.setProperty('--theme-blur', '1.5px');
-    root.style.setProperty('--theme-drift-x', driftX);
-    root.style.setProperty('--theme-drift-y', driftY);
-    root.style.setProperty('--theme-sweep-from-x', d.fromX);
-    root.style.setProperty('--theme-sweep-from-y', d.fromY);
-    root.style.setProperty('--theme-sweep-to-x', d.toX);
-    root.style.setProperty('--theme-sweep-to-y', d.toY);
-    root.style.setProperty('--theme-sweep-angle', d.angle);
-    root.classList.remove('theme-transitioning');
-    void root.offsetWidth;
-    root.classList.add('theme-transitioning');
-    const applyTheme = () => setTheme(prev => prev === 'dark' ? 'light' : 'dark');
-    if (document.startViewTransition) {
-      document.startViewTransition(applyTheme);
-    } else {
-      applyTheme();
-    }
-    if (themeTransitionTimeoutRef.current) clearTimeout(themeTransitionTimeoutRef.current);
-    themeTransitionTimeoutRef.current = setTimeout(() => {
-      root.classList.remove('theme-transitioning');
-      ['--theme-ease', '--theme-scale', '--theme-blur', '--theme-drift-x', '--theme-drift-y']
-        .forEach(p => root.style.removeProperty(p));
-    }, 1350);
-  };
 
   const toggleSidebar = () => setIsSidebarCollapsed(prev => !prev);
   const closeSidebar  = () => { if (isMobile) setIsSidebarCollapsed(true); };
@@ -467,7 +415,6 @@ function App() {
 
   // ── Render ─────────────────────────────────────────────────────────────
 
-  // Admin routes render WITHOUT sidebar/navbar (full-screen standalone)
   if (isAdminRoute) {
     return (
       <AdminAuthProvider>
@@ -551,8 +498,6 @@ function App() {
             isMobile={isMobile}
             isSidebarCollapsed={isSidebarCollapsed}
             toggleSidebar={toggleSidebar}
-            theme={theme}
-            toggleTheme={toggleTheme}
             alertCount={alerts.length}
             isConnected={isConnected}
           />
@@ -574,7 +519,7 @@ function App() {
               <Route path="/" element={<Navigate to="/home" replace />} />
 
               <Route path="/home" element={
-                <PageWrapper><HomePage theme={theme} sensors={sensors} isConnected={isConnected} /></PageWrapper>
+                <PageWrapper><HomePage sensors={sensors} isConnected={isConnected} /></PageWrapper>
               } />
 
               <Route path="/backend" element={
@@ -682,7 +627,7 @@ function App() {
               <Route path="/settings" element={
                 <PageWrapper>
                   <section className="dashboard-section">
-                    <SettingsPage theme={theme} toggleTheme={toggleTheme} onNotification={showNotification} />
+                    <SettingsPage onNotification={showNotification} />
                   </section>
                 </PageWrapper>
               } />

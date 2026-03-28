@@ -1,10 +1,7 @@
 /**
  * Navbar.css — components/layout/
  * Styles for the top navigation bar.
- *
- * Theme-toggle strategy:
- *   .navbar-theme-toggle--desktop  → shown >768 px, hidden ≤768 px
- *   .navbar-theme-toggle--mobile   → hidden >768 px, shown ≤768 px
+ * Dark mode only — light mode removed.
  */
 
 /* ============================================================
@@ -252,17 +249,12 @@
   transform : rotate(180deg) scale(1.2);
   filter    : drop-shadow(0 0 8px currentColor);
 }
-[data-theme='light'] .navbar-theme-toggle--desktop:hover .theme-icon {
-  transform : rotate(-180deg) scale(1.2);
-  filter    : drop-shadow(0 0 8px #f59e0b);
-}
 
 /* ── MOBILE variant: circular 36×36 pill ── */
 .navbar-theme-toggle--mobile {
   width        : 2.25rem;
   height       : 2.25rem;
   border-radius: 50%;
-  /* Cyan glow ring on dark, amber on light */
   border-color : rgba(6,182,212,.35);
   background   : linear-gradient(135deg,rgba(6,182,212,.12),rgba(20,184,166,.07));
 }
@@ -277,30 +269,13 @@
   transform: rotate(30deg) scale(1.18);
   filter   : drop-shadow(0 0 5px var(--plant-cyan, #22d3ee));
 }
-/* Light-mode: amber tint */
-[data-theme='light'] .navbar-theme-toggle--mobile,
-.light-theme .navbar-theme-toggle--mobile {
-  border-color: rgba(245,158,11,.38);
-  background  : linear-gradient(135deg,rgba(245,158,11,.12),rgba(251,146,60,.07));
-}
-[data-theme='light'] .navbar-theme-toggle--mobile svg,
-.light-theme .navbar-theme-toggle--mobile svg {
-  color  : #f59e0b;
-  stroke : #f59e0b;
-}
-[data-theme='light'] .navbar-theme-toggle--mobile:hover svg,
-.light-theme .navbar-theme-toggle--mobile:hover svg {
-  filter: drop-shadow(0 0 5px #f59e0b);
-}
 
 /* ============================================================
    VISIBILITY — which variant shows where
 ============================================================ */
-/* Desktop: show square, hide circle */
 .navbar-theme-toggle--mobile  { display: none; }
 .navbar-theme-toggle--desktop { display: flex; }
 
-/* Mobile: hide square, show circle */
 @media (max-width: 768px) {
   .navbar-theme-toggle--desktop { display: none; }
   .navbar-theme-toggle--mobile  { display: flex; }
@@ -329,7 +304,6 @@
 @media (max-width: 480px) {
   .top-navbar   { padding:.75rem; min-height:3.75rem; }
   .navbar-title { font-size:.9rem; }
-  /* Hide connection pill entirely on very small screens */
   .navbar-connection { display:none; }
   .navbar-right { gap:.5rem; }
 }
