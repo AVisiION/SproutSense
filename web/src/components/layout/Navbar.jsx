@@ -6,10 +6,6 @@
  *  - Desktop (>768 px): full rounded-square button (.navbar-theme-toggle)
  *  - Mobile  (≤768 px): compact circular pill (.navbar-theme-toggle-mobile)
  *    Both call the same toggleTheme handler — only one is visible at a time via CSS.
- *
- *  Icon convention (both desktop & mobile):
- *    Dark mode  → show ☀️ / sun  (clicking switches TO light)
- *    Light mode → show 🌙 / moon (clicking switches TO dark)
  */
 import React from 'react';
 import { Link } from 'react-router-dom';
@@ -96,15 +92,18 @@ export function Navbar({
         </button>
 
         {/* ── MOBILE theme toggle (hidden on desktop via CSS) ── */}
-        {/* Shows the icon for the mode you will SWITCH TO (mirrors desktop) */}
         <button
           className="navbar-theme-toggle navbar-theme-toggle--mobile"
           onClick={toggleTheme}
           aria-label={`Switch to ${isDark ? 'light' : 'dark'} mode`}
           title={`Switch to ${isDark ? 'light' : 'dark'} mode`}
         >
+          {/* SVG sun/moon inline — no dependency */}
           {isDark ? (
-            /* Sun — currently dark, click to go light */
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <path d="M21 12.79A9 9 0 1111.21 3a7 7 0 009.79 9.79z" />
+            </svg>
+          ) : (
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
               <circle cx="12" cy="12" r="5" />
               <line x1="12" y1="1"  x2="12" y2="3" />
@@ -115,11 +114,6 @@ export function Navbar({
               <line x1="21" y1="12" x2="23" y2="12" />
               <line x1="4.22"  y1="19.78" x2="5.64"  y2="18.36" />
               <line x1="18.36" y1="5.64"  x2="19.78" y2="4.22" />
-            </svg>
-          ) : (
-            /* Moon — currently light, click to go dark */
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-              <path d="M21 12.79A9 9 0 1111.21 3a7 7 0 009.79 9.79z" />
             </svg>
           )}
         </button>
