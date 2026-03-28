@@ -69,7 +69,7 @@
   font-size     : 1.2rem;
   position      : relative;
   overflow      : hidden;
-  margin-left   : 1.2rem;
+  margin-left   : 0.2rem;
   flex-shrink   : 0;
 }
 .navbar-toggle::before {
