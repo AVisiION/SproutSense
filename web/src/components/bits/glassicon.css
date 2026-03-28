@@ -1,7 +1,12 @@
 /**
- * GlassIcon.css
- * ─────────────────────────────────────────────────────
+ * glassicon.css
  * Styles for the GlassIcon component and global icon animation utilities.
+ *
+ * Design rules:
+ *  - Base icon color  : --accent-secondary  (cyan accent — readable on both themes)
+ *  - Hover icon color : --plant-green       (soft green — consistent with palette)
+ *  - No background, border, or shadow on base — sidebar icons stay clean.
+ *  - .glass-icon-box  : opt-in modifier for card headers and metric tiles.
  */
 
 .glass-icon {
@@ -9,11 +14,8 @@
   align-items: center;
   justify-content: center;
   border-radius: 0.65rem;
-  /* No background, border, or box-shadow by default —
-     sidebar icons must be clean SVGs without a glass box. */
-  color: var(--plant-teal);
+  color: var(--accent-secondary);
   transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1),
-              box-shadow 0.4s cubic-bezier(0.16, 1, 0.3, 1),
               color 0.4s ease;
   position: relative;
 }
@@ -27,6 +29,7 @@
   height: 100%;
   transform: skewX(-20deg);
   transition: left 0.6s ease;
+  pointer-events: none;
 }
 
 .glass-icon:hover {
@@ -38,84 +41,85 @@
   left: 200%;
 }
 
-/* ═══════════════════════════════════════════
+/* ── ACTIVE SIDEBAR ICON — matches active nav link ── */
+.sidebar-link.active .glass-icon {
+  color: var(--accent-primary);
+}
+
+/* ── STATUS ICON COLORS — for explicit context icons ── */
+.glass-icon.icon-success { color: var(--success-color); }
+.glass-icon.icon-warning { color: var(--warning-color); }
+.glass-icon.icon-danger  { color: var(--danger-color);  }
+.glass-icon.icon-info    { color: var(--info-color);    }
+.glass-icon.icon-orchid  { color: var(--orchid-color);  }
+
+/* ══════════════════════════════════════════
    GLASS BOX MODIFIER
-   Apply .glass-icon-box when you explicitly
-   want the bordered glass pill (e.g. card
-   headers, metric tiles, status rows).
-═══════════════════════════════════════════ */
+   Use on card headers, metric tiles, etc.
+   Never use on sidebar nav icons.
+══════════════════════════════════════════ */
 .glass-icon-box {
   border: var(--glass-border);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08),
-              inset 0 0 16px rgba(255, 255, 255, 0.04);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.10),
+              inset 0 0 14px rgba(255, 255, 255, 0.04);
 }
 
 .glass-icon-box:hover {
-  box-shadow: 0 6px 16px rgba(20, 184, 166, 0.2),
-              inset 0 0 20px rgba(255, 255, 255, 0.08);
+  box-shadow: 0 6px 18px rgba(67, 160, 71, 0.18),
+              inset 0 0 18px rgba(255, 255, 255, 0.06);
 }
 
-/* ═══════════════════════════════════════════
+/* ══════════════════════════════════════════
    ANIMATION MODIFIERS
-═══════════════════════════════════════════ */
-.glass-icon.animate-float {
-  animation: float 3s ease-in-out infinite;
-}
+══════════════════════════════════════════ */
+.glass-icon.animate-float  { animation: float     3s ease-in-out infinite; }
+.glass-icon.animate-spin   { animation: spinOnce  4s linear infinite; }
+.glass-icon.animate-pulse  { animation: iconPulse 2s ease-in-out infinite; }
 
-.glass-icon.animate-spin {
-  animation: spin 4s linear infinite;
-}
-
-.glass-icon.animate-pulse {
-  animation: iconPulse 2s ease-in-out infinite;
-}
-
-/* ═══════════════════════════════════════════
-   GLOBAL ICON ANIMATION UTILITIES
-═══════════════════════════════════════════ */
+/* ══════════════════════════════════════════
+   KEYFRAMES
+══════════════════════════════════════════ */
 @keyframes float {
-  0%   { transform: translateY(0px); }
-  50%  { transform: translateY(-4px); }
-  100% { transform: translateY(0px); }
+  0%, 100% { transform: translateY(0); }
+  50%       { transform: translateY(-4px); }
 }
 
-@keyframes spin {
+@keyframes spinOnce {
   from { transform: rotate(0deg); }
-  to   { transform: rotate(180deg); }
+  to   { transform: rotate(360deg); }
 }
 
 @keyframes iconPulse {
-  0%   { transform: scale(1);   opacity: 1; }
-  50%  { transform: scale(1.1); opacity: 0.8; }
-  100% { transform: scale(1);   opacity: 1; }
+  0%, 100% { transform: scale(1);   opacity: 1;   }
+  50%       { transform: scale(1.1); opacity: 0.8; }
 }
 
 @keyframes wave {
-  0%, 100% { transform: rotate(0deg); }
+  0%, 100% { transform: rotate(0deg);   }
   25%       { transform: rotate(-15deg); }
-  75%       { transform: rotate(15deg); }
+  75%       { transform: rotate(15deg);  }
 }
 
 @keyframes iconBounce {
-  0%, 100% { transform: translateY(0); }
+  0%, 100% { transform: translateY(0);    }
   50%       { transform: translateY(-6px); }
 }
 
-/* ═══════════════════════════════════════════
+/* ══════════════════════════════════════════
    SVG SIZING UTILITIES
-═══════════════════════════════════════════ */
+══════════════════════════════════════════ */
 .glass-icon svg {
   width: 1.15rem;
   height: 1.15rem;
   flex-shrink: 0;
 }
 
-.glass-icon-sm svg { width: 0.9rem;  height: 0.9rem; }
+.glass-icon-sm svg { width: 0.9rem;  height: 0.9rem;  }
 .glass-icon-md svg { width: 1.15rem; height: 1.15rem; }
 .glass-icon-lg svg { width: 1.45rem; height: 1.45rem; }
-.glass-icon-xl svg { width: 1.8rem;  height: 1.8rem; }
+.glass-icon-xl svg { width: 1.8rem;  height: 1.8rem;  }
 
-/* Context-Specific Scaling */
+/* Context-specific scaling */
 .metric-icon .glass-icon svg,
 .card-title-icon .glass-icon svg,
 .status-item-header .glass-icon svg,
