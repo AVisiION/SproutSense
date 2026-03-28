@@ -59,9 +59,16 @@ import './App.css';
 import './components/layout/styles/Sidebar.css';
 import './components/layout/styles/Layout.css';
 
-// ── Aurora dark-mode colour stops ──────────────────────────────────────
-const AURORA_DARK  = ['#06b6d4', '#14b8a6', '#22c55e', '#06131a'];
-const AURORA_LIGHT = ['#0891b2', '#0d9488', '#16a34a', '#f0faf9'];
+// ── Aurora colour stops ────────────────────────────────────────────────────
+//
+// DARK  : Obsidian-green base → muted teal wave → muted forest green → deep dark
+//         blend=0.32 keeps waves subtle and atmospheric, not dominant.
+//
+// LIGHT : Soft mint base → teal accent → mid-green → pale mint fade
+//         blend=0.45 keeps waves visible but soft on the light background.
+//
+const AURORA_DARK  = ['#020905', '#0A9E94', '#3A8F3E', '#071510'];
+const AURORA_LIGHT = ['#F3FBF4', '#00897B', '#388E3C', '#E4F4E7'];
 
 // ───────────────────────────────────────────────────────────────────────────
 // PROTECTED ADMIN ROUTE
@@ -473,6 +480,7 @@ function App() {
 
   // ── Aurora colour stops (react to theme) ──────────────────────────────
   const auroraStops = theme === 'dark' ? AURORA_DARK : AURORA_LIGHT;
+  const auroraBlend = theme === 'dark' ? 0.32 : 0.45;
 
   // ── Render ─────────────────────────────────────────────────────────────
 
@@ -495,11 +503,11 @@ function App() {
 
   return (
     <AdminAuthProvider>
-      {/* ── Aurora: fixed full-screen background layer ── */}
+      {/* ── Aurora: fixed full-screen WebGL background layer ── */}
       <Aurora
         colorStops={auroraStops}
         amplitude={1.2}
-        blend={0.55}
+        blend={auroraBlend}
         speed={0.4}
       />
 
@@ -576,12 +584,39 @@ function App() {
           {notification.message && (
             <Notification message={notification.message} type={notification.type} onClose={closeNotification} />
           )}
+
+          {/* Toaster — styled to match current theme palette */}
           <Toaster
             position="top-right"
             toastOptions={{
-              style: { background: 'rgba(15, 23, 42, 0.8)', backdropFilter: 'blur(16px)', color: '#f0fdf4', border: '1px solid rgba(255,255,255,0.1)' },
-              success: { iconTheme: { primary: '#22c55e', secondary: '#050d14' } },
-              error:   { iconTheme: { primary: '#ef4444', secondary: '#050d14' } },
+              style: {
+                background: theme === 'dark'
+                  ? 'rgba(4, 14, 9, 0.88)'
+                  : 'rgba(255, 255, 255, 0.90)',
+                backdropFilter: 'blur(18px)',
+                WebkitBackdropFilter: 'blur(18px)',
+                color: theme === 'dark' ? '#C8DCC8' : '#132016',
+                border: theme === 'dark'
+                  ? '1px solid rgba(255,255,255,0.07)'
+                  : '1px solid rgba(46,125,50,0.14)',
+                borderRadius: '12px',
+                boxShadow: theme === 'dark'
+                  ? '0 8px 32px rgba(0,0,0,0.55)'
+                  : '0 6px 24px rgba(10,40,15,0.12)',
+                fontSize: '0.88rem',
+              },
+              success: {
+                iconTheme: {
+                  primary: theme === 'dark' ? '#3A8F3E' : '#388E3C',
+                  secondary: theme === 'dark' ? '#020905' : '#F3FBF4',
+                },
+              },
+              error: {
+                iconTheme: {
+                  primary: theme === 'dark' ? '#CC3333' : '#C62828',
+                  secondary: theme === 'dark' ? '#020905' : '#F3FBF4',
+                },
+              },
             }}
           />
 
