@@ -40,15 +40,17 @@
    2. COLLAPSED MODE
    ───────────────────────────────────────── */
 @media (min-width: 769px) {
+
+  /* ── Container: fully invisible, no border, no bg, no shadow ── */
   .app-shell.sidebar-collapsed .sidebar {
-    width: 80px;
-    min-width: 80px;
+    width: 72px;
+    min-width: 72px;
     padding: 2rem 0.5rem;
-    background: rgba(3, 10, 7, 0.82);
-    border-color: rgba(255, 255, 255, 0.06);
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.45);
-    -webkit-backdrop-filter: blur(20px);
-    backdrop-filter: blur(20px);
+    background: transparent;
+    border: none;
+    box-shadow: none;
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
   }
 
   .app-shell.sidebar-collapsed .sidebar-brand,
@@ -58,48 +60,108 @@
 
   .app-shell.sidebar-collapsed .sidebar-nav {
     padding-top: 1rem;
+    gap: 0.4rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
   }
 
+  /* ── Liquid Glass pill — default (idle) ── */
   .app-shell.sidebar-collapsed .sidebar-link {
     justify-content: center;
-    padding: 0.85rem;
-    margin-bottom: 0.5rem;
-    background: rgba(255, 255, 255, 0.03);
-    border: 1px solid rgba(255, 255, 255, 0.05);
-    backdrop-filter: blur(10px);
-  }
+    width: 52px;
+    height: 52px;
+    padding: 0;
+    border-radius: 16px;
+    margin-bottom: 0;
 
-  /* Collapsed active: muted forest green, not teal */
-  .app-shell.sidebar-collapsed .sidebar-link.active {
-    background: rgba(58, 143, 62, 0.20);
-    border-color: rgba(58, 143, 62, 0.40);
-    box-shadow: 0 0 20px rgba(58, 143, 62, 0.12);
-  }
-
-  .app-shell.sidebar-collapsed .sidebar-link:hover {
-    background: rgba(255, 255, 255, 0.07);
-    border-color: rgba(255, 255, 255, 0.15);
-    backdrop-filter: blur(15px);
+    /* Liquid glass base */
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.10);
     box-shadow:
-      0 10px 40px -10px rgba(0, 0, 0, 0.4),
-      inset 0 0 10px rgba(255, 255, 255, 0.03);
+      0 2px 8px rgba(0, 0, 0, 0.25),
+      inset 0 1px 0 rgba(255, 255, 255, 0.08);
+    -webkit-backdrop-filter: blur(16px) saturate(160%);
+    backdrop-filter: blur(16px) saturate(160%);
+
+    transition:
+      background 0.25s ease,
+      border-color 0.25s ease,
+      box-shadow 0.25s ease,
+      transform 0.2s ease;
   }
 
+  /* ── Liquid Glass pill — hover ── */
+  .app-shell.sidebar-collapsed .sidebar-link:hover {
+    background: rgba(255, 255, 255, 0.12);
+    border-color: rgba(255, 255, 255, 0.22);
+    box-shadow:
+      0 6px 24px rgba(0, 0, 0, 0.35),
+      inset 0 1px 0 rgba(255, 255, 255, 0.18),
+      inset 0 -1px 0 rgba(0, 0, 0, 0.12);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    backdrop-filter: blur(20px) saturate(180%);
+    transform: translateY(-2px) scale(1.05);
+  }
+
+  /* ── Liquid Glass pill — active ── */
+  .app-shell.sidebar-collapsed .sidebar-link.active {
+    background: rgba(58, 143, 62, 0.22);
+    border-color: rgba(78, 168, 82, 0.45);
+    box-shadow:
+      0 4px 20px rgba(58, 143, 62, 0.28),
+      inset 0 1px 0 rgba(255, 255, 255, 0.15),
+      inset 0 -1px 0 rgba(0, 0, 0, 0.10);
+    -webkit-backdrop-filter: blur(18px) saturate(170%);
+    backdrop-filter: blur(18px) saturate(170%);
+    color: #7EC880;
+  }
+
+  /* Light theme liquid glass overrides */
+  [data-theme='light'] .app-shell.sidebar-collapsed .sidebar-link {
+    background: rgba(255, 255, 255, 0.45);
+    border-color: rgba(46, 125, 50, 0.14);
+    box-shadow:
+      0 2px 10px rgba(10, 40, 15, 0.10),
+      inset 0 1px 0 rgba(255, 255, 255, 0.90);
+  }
+
+  [data-theme='light'] .app-shell.sidebar-collapsed .sidebar-link:hover {
+    background: rgba(255, 255, 255, 0.72);
+    border-color: rgba(46, 125, 50, 0.28);
+    box-shadow:
+      0 6px 20px rgba(10, 40, 15, 0.14),
+      inset 0 1px 0 rgba(255, 255, 255, 1);
+    transform: translateY(-2px) scale(1.05);
+  }
+
+  [data-theme='light'] .app-shell.sidebar-collapsed .sidebar-link.active {
+    background: rgba(58, 143, 62, 0.12);
+    border-color: rgba(46, 125, 50, 0.35);
+    box-shadow:
+      0 4px 16px rgba(58, 143, 62, 0.18),
+      inset 0 1px 0 rgba(255, 255, 255, 0.95);
+    color: #2E7D32;
+  }
+
+  /* ── Tooltip label on hover ── */
   .app-shell.sidebar-collapsed .sidebar-label {
     position: fixed;
-    left: 90px;
-    background: rgba(4, 14, 9, 0.95);
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    backdrop-filter: blur(12px);
-    padding: 0.5rem 1rem;
+    left: 82px;
+    background: rgba(4, 14, 9, 0.92);
+    border: 1px solid rgba(255, 255, 255, 0.10);
+    -webkit-backdrop-filter: blur(14px);
+    backdrop-filter: blur(14px);
+    padding: 0.45rem 0.9rem;
     border-radius: 0.5rem;
     opacity: 0;
     pointer-events: none;
-    transform: translateX(-15px);
-    transition: all 0.3s ease;
+    transform: translateX(-10px);
+    transition: all 0.25s ease;
     color: #C8DCC8;
-    font-size: 0.85rem;
+    font-size: 0.82rem;
     white-space: nowrap;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35);
   }
 
   .app-shell.sidebar-collapsed .sidebar-link:hover .sidebar-label {
