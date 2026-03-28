@@ -9,6 +9,7 @@
  *  - Theme toggle with View Transitions API + CSS fallback
  *  - Route definitions via react-router-dom <Routes>
  *  - Renders <Layout> (sidebar + navbar + page content)
+ *  - Aurora animated background (WebGL, fixed layer, z-index 0)
  *
  * Import order:
  *  1. React + hooks
@@ -26,6 +27,9 @@ import { Toaster, toast as hotToast } from 'react-hot-toast';
 import { useWebSocket } from './hooks/useWebSocket';
 
 import { configAPI, sensorAPI, wateringAPI, aiAPI } from './utils/api';
+
+// ── Background ─────────────────────────────────────────────────────────────
+import Aurora from './components/background/Aurora';
 
 // ── Admin auth ─────────────────────────────────────────────────────────────
 import { AdminAuthProvider, useAdminAuth } from './context/AdminAuthContext';
@@ -55,9 +59,12 @@ import './App.css';
 import './components/layout/styles/Sidebar.css';
 import './components/layout/styles/Layout.css';
 
+// ── Aurora dark-mode colour stops ──────────────────────────────────────
+const AURORA_DARK  = ['#06b6d4', '#14b8a6', '#22c55e', '#06131a'];
+const AURORA_LIGHT = ['#0891b2', '#0d9488', '#16a34a', '#f0faf9'];
+
 // ───────────────────────────────────────────────────────────────────────────
 // PROTECTED ADMIN ROUTE
-// Wraps any admin-only route. Redirects to /admin/login if not authenticated.
 // ───────────────────────────────────────────────────────────────────────────
 function ProtectedAdminRoute({ children }) {
   const { isAdminAuthenticated } = useAdminAuth();
@@ -176,7 +183,6 @@ function formatDiseaseName(name) {
 function App() {
   const location = useLocation();
 
-  // Determine if we're on a full-screen admin route (no sidebar/navbar)
   const isAdminRoute = location.pathname.startsWith('/admin');
 
   // ── State ──────────────────────────────────────────────────────────────
@@ -465,9 +471,11 @@ function App() {
   const handleClearAlert    = useCallback((id) => setAlerts(prev => prev.filter(a => a.id !== id)), []);
   const handleClearAllAlerts = useCallback(() => setAlerts([]), []);
 
+  // ── Aurora colour stops (react to theme) ──────────────────────────────
+  const auroraStops = theme === 'dark' ? AURORA_DARK : AURORA_LIGHT;
+
   // ── Render ─────────────────────────────────────────────────────────────
 
-  // Admin routes render WITHOUT sidebar/navbar (full-screen standalone)
   if (isAdminRoute) {
     return (
       <AdminAuthProvider>
@@ -487,13 +495,21 @@ function App() {
 
   return (
     <AdminAuthProvider>
-      <div className={`app-shell${isSidebarCollapsed ? ' sidebar-collapsed' : ''}`}>
+      {/* ── Aurora: fixed full-screen background layer ── */}
+      <Aurora
+        colorStops={auroraStops}
+        amplitude={1.2}
+        blend={0.55}
+        speed={0.4}
+      />
+
+      <div className={`app-shell${isSidebarCollapsed ? ' sidebar-collapsed' : ''}`} style={{ position: 'relative', zIndex: 1 }}>
 
         {!isSidebarCollapsed && isMobile && (
           <div className="sidebar-overlay" onClick={closeSidebar} />
         )}
 
-        {/* ── Fixed sidebar ───────────────────────────────────────────── */}
+        {/* ── Fixed sidebar ── */}
         <aside className="sidebar" role="navigation" aria-label="Main navigation">
           <div className="sidebar-brand">
             <img src="/assets/icon.svg" className="sidebar-brand-icon" alt="SproutSense logo" />
@@ -544,7 +560,7 @@ function App() {
           </div>
         </aside>
 
-        {/* ── Main content area ─────────────────────────────────────── */}
+        {/* ── Main content area ── */}
         <div className="container">
           <Navbar
             currentPage={pageTitle}
