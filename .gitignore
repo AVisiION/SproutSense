@@ -32,3 +32,6 @@ build/
 # ESP32-SENSOR secrets and build artifacts
 esp32-upload/ESP32-SENSOR/.h/
 esp32-upload/ESP32-SENSOR/config.h
+
+.ino
+esp32-upload/ESP32-SENSOR/ESP32-SENSOR.ino
