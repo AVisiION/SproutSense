@@ -1,20 +1,26 @@
 /**
  * variables.css
  * Global CSS custom properties (variables) for SproutSense.
+ * Redesigned for a professional plant-glass theme with cyan accents.
  */
 
 :root {
   /* BACKGROUNDS */
-  --bg-gradient: linear-gradient(135deg, #0a0f1e 0%, #0d1f12 50%, #0a0f1e 100%);
-  --bg-color: #0a0f1e;
+  --bg-gradient: linear-gradient(135deg, #06131a 0%, #0b1f1f 35%, #0d2a24 65%, #06131a 100%);
+  --bg-color: #06131a;
+  --bg-secondary: #0b1f1f;
+  --bg-tertiary: #12312d;
 
   /* GLASS CARDS - Standardised Tokens */
-  --glass-color: rgba(255, 255, 255, 0.05);
-  --glass-blur: 16px;
-  --glass-border: 1px solid rgba(255, 255, 255, 0.10);
-  --glass-radius: 16px;
-  --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
-  
+  --glass-color: rgba(10, 28, 34, 0.52);
+  --glass-color-strong: rgba(8, 22, 28, 0.68);
+  --glass-blur: 18px;
+  --glass-border: 1px solid rgba(125, 211, 252, 0.14);
+  --glass-border-strong: 1px solid rgba(45, 212, 191, 0.22);
+  --glass-radius: 18px;
+  --glass-shadow: 0 10px 32px rgba(0, 0, 0, 0.35);
+  --glass-highlight: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+
   /* Backward compatibility for older card styles */
   --card-bg: var(--glass-color);
   --card-blur: blur(var(--glass-blur));
@@ -25,60 +31,131 @@
   /* ACCENTS & BRAND COLORS */
   --accent-primary: #22c55e;
   --accent-hover: #16a34a;
-  --focus-ring: 0 0 0 3px rgba(34, 197, 94, 0.4);
-  
+  --accent-secondary: #14b8a6;
+  --accent-cyan: #06b6d4;
+  --focus-ring: 0 0 0 3px rgba(6, 182, 212, 0.28);
+
   --plant-teal: #14b8a6;
   --plant-green: #22c55e;
-  --plant-cyan: #0ea5e9;
+  --plant-cyan: #22d3ee;
+  --plant-mint: #86efac;
+
+  /* STATUS */
+  --success-color: #22c55e;
+  --warning-color: #f59e0b;
+  --danger-color: #ef4444;
+  --info-color: #06b6d4;
+  --primary-color: var(--accent-primary);
 
   /* TEXT */
-  --text-primary: #f0fdf4;
-  --text-secondary: rgba(255, 255, 255, 0.6);
-  --text-inverse: #050d14;
+  --text-primary: #ecfeff;
+  --text-secondary: rgba(220, 252, 231, 0.72);
+  --text-tertiary: rgba(165, 243, 252, 0.58);
+  --text-inverse: #041014;
   --text-color: var(--text-primary);
 
+  /* ICONS / BORDERS */
+  --border-color: rgba(125, 211, 252, 0.12);
+  --border-soft: rgba(255, 255, 255, 0.08);
+  --divider-color: rgba(255, 255, 255, 0.06);
+
+  /* GLOWS */
+  --glow-cyan: 0 0 24px rgba(34, 211, 238, 0.16);
+  --glow-teal: 0 0 24px rgba(20, 184, 166, 0.16);
+  --glow-green: 0 0 24px rgba(34, 197, 94, 0.16);
+
   /* TRANSITIONS */
-  --transition-speed: 0.2s ease;
+  --transition-speed: 0.25s ease;
 
   /* LAYOUT */
   --sidebar-width: 240px;
   --navbar-height: 64px;
-
-  /* SYSTEM ALIGNMENT */
-  --bg-secondary: #0d1f12;
-  --primary-color: var(--accent-primary);
 
   /* Toggles */
   --toggle-width: 44px;
   --toggle-height: 24px;
   --toggle-knob-size: 18px;
   --toggle-knob-offset: 3px;
-  --toggle-bg: rgba(255, 255, 255, 0.1);
-  --toggle-on-bg: var(--plant-teal);
-  --toggle-shadow: 0 2px 10px rgba(20, 184, 166, 0.3);
+  --toggle-bg: rgba(255, 255, 255, 0.10);
+  --toggle-on-bg: linear-gradient(135deg, #14b8a6 0%, #22c55e 100%);
+  --toggle-shadow: 0 2px 10px rgba(20, 184, 166, 0.28);
+
+  /* EXTRA UI HELPERS */
+  --surface-1: rgba(255, 255, 255, 0.03);
+  --surface-2: rgba(255, 255, 255, 0.05);
+  --surface-hover: rgba(34, 211, 238, 0.08);
+  --surface-active: rgba(20, 184, 166, 0.12);
 
   color-scheme: dark;
 }
 
 [data-theme="light"] {
-  --bg-gradient: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 50%, #f0fdf4 100%);
-  --bg-color: #f0fdf4;
-  --bg-secondary: #dcfce7;
-  
-  --glass-color: rgba(255, 255, 255, 0.6);
-  --glass-border: 1px solid rgba(0, 0, 0, 0.1);
-  --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-  
+  /* BACKGROUNDS */
+  --bg-gradient: linear-gradient(135deg, #f4fffb 0%, #e6faf7 35%, #dff7f1 65%, #f4fffb 100%);
+  --bg-color: #f4fffb;
+  --bg-secondary: #e6faf7;
+  --bg-tertiary: #d7f3ec;
+
+  /* GLASS CARDS */
+  --glass-color: rgba(255, 255, 255, 0.62);
+  --glass-color-strong: rgba(255, 255, 255, 0.78);
+  --glass-blur: 16px;
+  --glass-border: 1px solid rgba(13, 148, 136, 0.12);
+  --glass-border-strong: 1px solid rgba(6, 182, 212, 0.18);
+  --glass-shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
+  --glass-highlight: inset 0 1px 0 rgba(255, 255, 255, 0.75);
+
+  /* Backward compatibility */
   --card-bg: var(--glass-color);
   --card-border: var(--glass-border);
   --card-shadow: var(--glass-shadow);
 
-  --text-primary: #064e3b;
-  --text-color: #064e3b;
-  --text-secondary: rgba(6, 78, 59, 0.7);
-  
+  /* ACCENTS */
+  --accent-primary: #16a34a;
+  --accent-hover: #15803d;
+  --accent-secondary: #0d9488;
+  --accent-cyan: #0891b2;
+  --focus-ring: 0 0 0 3px rgba(8, 145, 178, 0.18);
+
   --plant-teal: #0d9488;
   --plant-green: #16a34a;
-  --primary-color: #16a34a;
-  --accent-primary: #16a34a;
-}
+  --plant-cyan: #0891b2;
+  --plant-mint: #4ade80;
+
+  /* STATUS */
+  --success-color: #16a34a;
+  --warning-color: #d97706;
+  --danger-color: #dc2626;
+  --info-color: #0891b2;
+  --primary-color: var(--accent-primary);
+
+  /* TEXT */
+  --text-primary: #083344;
+  --text-secondary: rgba(8, 51, 68, 0.72);
+  --text-tertiary: rgba(15, 118, 110, 0.56);
+  --text-inverse: #f8fffd;
+  --text-color: var(--text-primary);
+
+  /* ICONS / BORDERS */
+  --border-color: rgba(8, 145, 178, 0.10);
+  --border-soft: rgba(13, 148, 136, 0.08);
+  --divider-color: rgba(8, 51, 68, 0.08);
+
+  /* GLOWS */
+  --glow-cyan: 0 0 20px rgba(8, 145, 178, 0.10);
+  --glow-teal: 0 0 20px rgba(13, 148, 136, 0.10);
+  --glow-green: 0 0 20px rgba(22, 163, 74, 0.10);
+
+  /* Toggles */
+  --toggle-bg: rgba(8, 51, 68, 0.10);
+  --toggle-on-bg: linear-gradient(135deg, #0d9488 0%, #16a34a 100%);
+  --toggle-shadow: 0 2px 10px rgba(13, 148, 136, 0.18);
+
+  /* EXTRA UI HELPERS */
+  --surface-1: rgba(255, 255, 255, 0.45);
+  --surface-2: rgba(255, 255, 255, 0.68);
+  --surface-hover: rgba(8, 145, 178, 0.08);
+  --surface-active: rgba(13, 148, 136, 0.10);
+
+  color-scheme: light;
+} 
