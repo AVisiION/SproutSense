@@ -87,7 +87,7 @@ export function Navbar({
           title={`Switch to ${isDark ? 'light' : 'dark'} mode`}
         >
           <span className="theme-icon">
-            {isDark ? '🌙' : '☀️'}
+            {isDark ? '☀️' : '🌙'}
           </span>
         </button>
 

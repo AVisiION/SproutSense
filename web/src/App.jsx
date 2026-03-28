@@ -496,7 +496,7 @@ function App() {
         {/* ── Fixed sidebar ───────────────────────────────────────────── */}
         <aside className="sidebar" role="navigation" aria-label="Main navigation">
           <div className="sidebar-brand">
-            <GlassIcon name="sprout" className="sidebar-brand-icon" />
+            <img src="/assets/icon.svg" className="sidebar-brand-icon" alt="SproutSense logo" />
             <span className="sidebar-brand-text">SproutSense</span>
           </div>
 

@@ -106,16 +106,16 @@
 }
 
 .sidebar-brand-icon {
-  width: 2.2rem;
-  height: 2.2rem;
+  width: 3.2rem;
+  height: 3.2rem;
   object-fit: contain;
   animation: float 3s ease-in-out infinite;
 }
 
 .sidebar-brand-text {
-  font-size: 1.35rem;
+  font-size: 1rem;
   font-weight: 700;
-  color: var(--text-color);
+  color: #59ab56;
 }
 
 .sidebar-category {
