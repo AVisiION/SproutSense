@@ -9,7 +9,6 @@
 .sidebar {
   flex-shrink: 0;
   padding: 1.75rem 1.25rem;
-  /* Increased opacity: aurora must not bleed through sidebar */
   background: rgba(4, 14, 9, 0.88);
   border: 1px solid rgba(255, 255, 255, 0.07);
   border-radius: 1.5rem;
@@ -69,7 +68,6 @@
     backdrop-filter: blur(10px);
   }
 
-  /* Collapsed active: muted forest green, not teal */
   .app-shell.sidebar-collapsed .sidebar-link.active {
     background: rgba(58, 143, 62, 0.20);
     border-color: rgba(58, 143, 62, 0.40);
@@ -120,6 +118,13 @@
   transition: opacity 0.3s ease;
 }
 
+/* Hide logo + brand text on mobile — homepage hero logo takes over */
+@media (max-width: 768px) {
+  .sidebar-brand {
+    display: none;
+  }
+}
+
 .sidebar-brand-icon {
   width: 3.2rem;
   height: 3.2rem;
@@ -130,7 +135,6 @@
 .sidebar-brand-text {
   font-size: 1rem;
   font-weight: 700;
-  /* Muted forest green — not vivid */
   color: #4EA852;
 }
 
@@ -174,7 +178,6 @@
   border: 1px solid transparent;
 }
 
-/* Hover: subtle glass lift — visible but not garish */
 .sidebar-link:hover {
   background: rgba(58, 143, 62, 0.10);
   border-color: rgba(78, 168, 82, 0.18);
@@ -190,7 +193,6 @@
   color: #132016;
 }
 
-/* Active: forest green glow — no teal */
 .sidebar-link.active {
   background: rgba(58, 143, 62, 0.16);
   border-color: rgba(78, 168, 82, 0.30);
@@ -280,7 +282,6 @@
   letter-spacing: 0.5px;
 }
 
-/* Online: muted green — not vivid lime */
 .sidebar-system-pill.online {
   background: rgba(58, 143, 62, 0.18);
   color: #7EC880;
@@ -293,7 +294,6 @@
   border-color: rgba(46, 125, 50, 0.25);
 }
 
-/* Offline: muted red */
 .sidebar-system-pill.offline {
   background: rgba(204, 51, 51, 0.15);
   color: #E07070;
@@ -306,14 +306,12 @@
   border-color: rgba(198, 40, 40, 0.20);
 }
 
-/* Checking: muted neutral */
 .sidebar-system-pill.checking {
   background: rgba(255, 255, 255, 0.04);
   color: var(--text-secondary);
   border: 1px solid rgba(255, 255, 255, 0.08);
 }
 
-/* Hide when collapsed */
 .app-shell.sidebar-collapsed .sidebar-system-status {
   opacity: 0;
   pointer-events: none;
@@ -329,7 +327,6 @@
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  /* Updated border: obsidian-green, not slate */
   border: 2px solid rgba(2, 9, 5, 0.95);
 }
 

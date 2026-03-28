@@ -144,6 +144,17 @@ const HomePage = ({ theme, sensors, isConnected }) => {
       <section className="hero-modern">
         <div className="hero-inner">
           <div className="hero-content-modern">
+
+            {/* Logo — replaces background image as visual centerpiece */}
+            <div className="hero-logo-wrap">
+              <img
+                src="/assets/icon.png"
+                alt="SproutSense Logo"
+                className="hero-logo"
+                onError={(e) => { e.target.src = '/assets/icon.svg'; }}
+              />
+            </div>
+
             <div className="hero-badge">
               <GlassIcon name="sprout" className="hero-badge-icon" />
               <span>IoT + AI Plant Care System</span>
@@ -171,8 +182,6 @@ const HomePage = ({ theme, sensors, isConnected }) => {
               </button>
             </div>
           </div>
-
-          {/* RIGHT SIDE removed: simplified hero layout for better focus and readability */}
         </div>
       </section>
 
