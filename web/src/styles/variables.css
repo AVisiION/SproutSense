@@ -2,41 +2,42 @@
  * variables.css — SproutSense Design Tokens
  * Theme: Green Glass Modern
  *
- * Palette anatomy (dark):
- *   Base backgrounds : #050b07  #07140c  #0b1f13
- *   Primary green    : #43A047  (Material Green 600)
- *   Soft green       : #66BB6A  (Material Green 400)
- *   Deep green       : #2E7D32  (Material Green 800)
- *   Accent cyan      : #00B4A6  (teal-cyan accent)
- *   Warning amber    : #FFBF00
- *   Orchid info      : #ED80E9
- *   Danger red       : #E53935
+ * DARK  — Obsidian-green base, heavily frosted glass, muted palette
+ * LIGHT — Soft mint paper, bright frosted glass, vibrant accents
  *
- * Palette anatomy (light):
- *   Base backgrounds : #F3FBF4  #E4F4E7  #D5EBD9
- *   Same brand greens, deeper for contrast on light.
+ * Palette (dark):
+ *   Backgrounds  : #020905  #040e08  #071510
+ *   Glass cards  : rgba(4,14,9, 0.82)  — thick frost, not translucent
+ *   Primary green: #3A8F3E  — desaturated, soft glow only
+ *   Icon cyan    : #0A9E94  — muted teal
+ *   Text primary : #C8DCC8  — soft grey-green, not stark white
+ *   Warning amber: #E6AC00  — slightly dimmed
+ *   Orchid info  : #C86EC4  — desaturated orchid
  */
 
 /* ============================================================
    DARK MODE (default)
+   Obsidian-green depths + thick frosted glass + muted palette
 ============================================================ */
 :root {
 
-  /* ── BACKGROUNDS */
-  --bg-gradient        : linear-gradient(145deg, #050b07 0%, #07140c 45%, #0b1f13 75%, #050b07 100%);
-  --bg-color           : #050b07;
-  --bg-secondary       : #07140c;
-  --bg-tertiary        : #0b1f13;
+  /* ── BACKGROUNDS — near-black with barely perceptible green tint */
+  --bg-gradient        : linear-gradient(145deg, #020905 0%, #040e08 50%, #071510 80%, #020905 100%);
+  --bg-color           : #020905;
+  --bg-secondary       : #040e08;
+  --bg-tertiary        : #071510;
 
-  /* ── GLASS CARDS */
-  --glass-color        : rgba(8, 24, 15, 0.70);
-  --glass-color-strong : rgba(6, 20, 13, 0.84);
-  --glass-blur         : 20px;
-  --glass-border       : 1px solid rgba(255, 255, 255, 0.08);
-  --glass-border-strong: 1px solid rgba(67, 160, 71, 0.22);
+  /* ── GLASS CARDS
+     High opacity so aurora does not bleed through cards.
+     Thin white shimmer border = modern glass look. */
+  --glass-color        : rgba(4, 14, 9, 0.82);
+  --glass-color-strong : rgba(3, 10, 7, 0.92);
+  --glass-blur         : 22px;
+  --glass-border       : 1px solid rgba(255, 255, 255, 0.07);
+  --glass-border-strong: 1px solid rgba(58, 143, 62, 0.18);
   --glass-radius       : 18px;
-  --glass-shadow       : 0 10px 36px rgba(0, 0, 0, 0.50);
-  --glass-highlight    : inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  --glass-shadow       : 0 12px 40px rgba(0, 0, 0, 0.65);
+  --glass-highlight    : inset 0 1px 0 rgba(255, 255, 255, 0.04);
 
   /* Backward compatibility */
   --card-bg     : var(--glass-color);
@@ -45,87 +46,87 @@
   --card-radius : var(--glass-radius);
   --card-shadow : var(--glass-shadow);
 
-  /* ── BRAND ACCENTS */
-  --accent-primary     : #43A047;
-  --accent-hover       : #388E3C;
-  --accent-secondary   : #00B4A6;
-  --accent-cyan        : #00B4A6;
-  --focus-ring         : 0 0 0 3px rgba(67, 160, 71, 0.28);
+  /* ── BRAND ACCENTS — desaturated so they glow softly, not harshly */
+  --accent-primary     : #3A8F3E;
+  --accent-hover       : #2F7533;
+  --accent-secondary   : #0A9E94;
+  --accent-cyan        : #0A9E94;
+  --focus-ring         : 0 0 0 3px rgba(58, 143, 62, 0.22);
 
-  /* ── PLANT / ICON TOKENS */
-  --plant-green        : #66BB6A;
-  --plant-teal         : #00B4A6;
-  --plant-cyan         : #26D0C4;
-  --plant-moss         : #388E3C;
-  --plant-canopy       : #43A047;
-  --plant-mint         : #A5D6A7;
-  --plant-deep         : #2E7D32;
+  /* ── PLANT / ICON TOKENS — muted, not neon */
+  --plant-green        : #4EA852;
+  --plant-teal         : #0A9E94;
+  --plant-cyan         : #18BCAF;
+  --plant-moss         : #2F7533;
+  --plant-canopy       : #3A8F3E;
+  --plant-mint         : #7DB880;
+  --plant-deep         : #1F5C23;
 
-  /* ── NOTIFICATION / STATUS COLORS */
-  --success-color      : #43A047;
-  --success-bg         : rgba(67, 160, 71, 0.14);
-  --success-border     : rgba(67, 160, 71, 0.50);
+  /* ── NOTIFICATION / STATUS — dimmed for dark bg readability */
+  --success-color      : #3A8F3E;
+  --success-bg         : rgba(58, 143, 62, 0.12);
+  --success-border     : rgba(58, 143, 62, 0.35);
 
-  --warning-color      : #FFBF00;
-  --warning-bg         : rgba(255, 191, 0, 0.14);
-  --warning-border     : rgba(255, 191, 0, 0.55);
-  --warning-text       : #FDF7E5;
+  --warning-color      : #E6AC00;
+  --warning-bg         : rgba(230, 172, 0, 0.11);
+  --warning-border     : rgba(230, 172, 0, 0.40);
+  --warning-text       : #F5E9C0;
 
-  --danger-color       : #E53935;
-  --danger-bg          : rgba(229, 57, 53, 0.14);
-  --danger-border      : rgba(229, 57, 53, 0.50);
+  --danger-color       : #CC3333;
+  --danger-bg          : rgba(204, 51, 51, 0.12);
+  --danger-border      : rgba(204, 51, 51, 0.38);
 
-  --info-color         : #00B4A6;
-  --info-bg            : rgba(0, 180, 166, 0.12);
-  --info-border        : rgba(0, 180, 166, 0.45);
+  --info-color         : #0A9E94;
+  --info-bg            : rgba(10, 158, 148, 0.10);
+  --info-border        : rgba(10, 158, 148, 0.35);
 
-  --orchid-color       : #ED80E9;
-  --orchid-bg          : rgba(237, 128, 233, 0.12);
-  --orchid-border      : rgba(237, 128, 233, 0.45);
+  --orchid-color       : #C86EC4;
+  --orchid-bg          : rgba(200, 110, 196, 0.10);
+  --orchid-border      : rgba(200, 110, 196, 0.35);
 
   --primary-color      : var(--accent-primary);
 
-  /* ── TEXT */
-  --text-primary       : #E8F5E9;
-  --text-secondary     : rgba(200, 230, 203, 0.78);
-  --text-tertiary      : rgba(150, 195, 155, 0.58);
-  --text-muted         : rgba(100, 155, 105, 0.42);
-  --text-inverse       : #050b07;
+  /* ── TEXT — soft grey-green, not stark white */
+  --text-primary       : #C8DCC8;
+  --text-secondary     : rgba(170, 200, 170, 0.72);
+  --text-tertiary      : rgba(120, 160, 122, 0.52);
+  --text-muted         : rgba(85, 125, 87, 0.38);
+  --text-inverse       : #020905;
   --text-color         : var(--text-primary);
 
-  /* ── BORDERS & DIVIDERS */
-  --border-color       : rgba(255, 255, 255, 0.07);
-  --border-soft        : rgba(255, 255, 255, 0.05);
-  --border-moss        : rgba(67, 160, 71, 0.18);
-  --divider-color      : rgba(255, 255, 255, 0.05);
+  /* ── BORDERS & DIVIDERS — very subtle */
+  --border-color       : rgba(255, 255, 255, 0.055);
+  --border-soft        : rgba(255, 255, 255, 0.035);
+  --border-moss        : rgba(58, 143, 62, 0.13);
+  --divider-color      : rgba(255, 255, 255, 0.04);
 
-  /* ── GLOW UTILITIES */
-  --glow-green         : 0 0 22px rgba(67, 160, 71, 0.22);
-  --glow-cyan          : 0 0 22px rgba(0, 180, 166, 0.20);
-  --glow-amber         : 0 0 18px rgba(255, 191, 0, 0.18);
-  --glow-orchid        : 0 0 18px rgba(237, 128, 233, 0.14);
+  /* ── GLOW UTILITIES — barely visible, atmospheric only */
+  --glow-green         : 0 0 20px rgba(58, 143, 62, 0.16);
+  --glow-cyan          : 0 0 20px rgba(10, 158, 148, 0.14);
+  --glow-amber         : 0 0 16px rgba(230, 172, 0, 0.13);
+  --glow-orchid        : 0 0 16px rgba(200, 110, 196, 0.11);
 
   /* ── SURFACE HELPERS */
-  --surface-1          : rgba(255, 255, 255, 0.02);
-  --surface-2          : rgba(255, 255, 255, 0.04);
-  --surface-hover      : rgba(67, 160, 71, 0.08);
-  --surface-active     : rgba(67, 160, 71, 0.14);
+  --surface-1          : rgba(255, 255, 255, 0.015);
+  --surface-2          : rgba(255, 255, 255, 0.030);
+  --surface-hover      : rgba(58, 143, 62, 0.07);
+  --surface-active     : rgba(58, 143, 62, 0.12);
 
   /* ── GRADIENTS */
-  --grad-primary       : linear-gradient(135deg, #2E7D32, #43A047);
-  --grad-cyan          : linear-gradient(135deg, #00B4A6, #26D0C4);
-  --grad-forest        : linear-gradient(135deg, #0b1f13, #43A047, #00B4A6);
-  --grad-glow          : radial-gradient(ellipse at top left, rgba(67,160,71,0.08) 0%, transparent 55%),
-                         radial-gradient(ellipse at bottom right, rgba(0,180,166,0.07) 0%, transparent 55%);
+  --grad-primary       : linear-gradient(135deg, #1F5C23, #3A8F3E);
+  --grad-cyan          : linear-gradient(135deg, #0A9E94, #18BCAF);
+  --grad-forest        : linear-gradient(135deg, #071510, #3A8F3E, #0A9E94);
+  --grad-glow          : radial-gradient(ellipse at top left,  rgba(58,143,62,0.06)  0%, transparent 55%),
+                         radial-gradient(ellipse at bottom right, rgba(10,158,148,0.05) 0%, transparent 55%);
 
   /* ── TOGGLES */
   --toggle-width       : 44px;
   --toggle-height      : 24px;
   --toggle-knob-size   : 18px;
   --toggle-knob-offset : 3px;
-  --toggle-bg          : rgba(255, 255, 255, 0.08);
-  --toggle-on-bg       : linear-gradient(135deg, #2E7D32, #00B4A6);
-  --toggle-shadow      : 0 2px 10px rgba(67, 160, 71, 0.25);
+  --toggle-bg          : rgba(255, 255, 255, 0.07);
+  --toggle-on-bg       : linear-gradient(135deg, #1F5C23, #0A9E94);
+  --toggle-shadow      : 0 2px 10px rgba(58, 143, 62, 0.20);
 
   /* ── LAYOUT */
   --sidebar-width      : 240px;
@@ -141,18 +142,16 @@
 }
 
 /* ============================================================
-   LIGHT MODE
-   Background: soft mint paper + frosted glass
+   LIGHT MODE  — PRESERVED EXACTLY
+   Soft mint paper + frosted glass
 ============================================================ */
 [data-theme="light"] {
 
-  /* ── BACKGROUNDS */
   --bg-gradient        : linear-gradient(145deg, #F3FBF4 0%, #E4F4E7 45%, #D5EBD9 75%, #F3FBF4 100%);
   --bg-color           : #F3FBF4;
   --bg-secondary       : #E4F4E7;
   --bg-tertiary        : #D5EBD9;
 
-  /* ── GLASS CARDS */
   --glass-color        : rgba(255, 255, 255, 0.78);
   --glass-color-strong : rgba(255, 255, 255, 0.92);
   --glass-blur         : 16px;
@@ -161,19 +160,16 @@
   --glass-shadow       : 0 8px 28px rgba(10, 40, 15, 0.10);
   --glass-highlight    : inset 0 1px 0 rgba(255, 255, 255, 0.85);
 
-  /* Backward compatibility */
   --card-bg     : var(--glass-color);
   --card-border : var(--glass-border);
   --card-shadow : var(--glass-shadow);
 
-  /* ── BRAND ACCENTS */
   --accent-primary     : #388E3C;
   --accent-hover       : #2E7D32;
   --accent-secondary   : #00897B;
   --accent-cyan        : #00897B;
   --focus-ring         : 0 0 0 3px rgba(56, 142, 60, 0.20);
 
-  /* ── PLANT / ICON TOKENS */
   --plant-green        : #388E3C;
   --plant-teal         : #00897B;
   --plant-cyan         : #00ACC1;
@@ -182,7 +178,6 @@
   --plant-mint         : #C8E6C9;
   --plant-deep         : #1B5E20;
 
-  /* ── NOTIFICATION / STATUS COLORS */
   --success-color      : #388E3C;
   --success-bg         : rgba(56, 142, 60, 0.10);
   --success-border     : rgba(56, 142, 60, 0.40);
@@ -206,7 +201,6 @@
 
   --primary-color      : var(--accent-primary);
 
-  /* ── TEXT */
   --text-primary       : #132016;
   --text-secondary     : rgba(28, 60, 32, 0.80);
   --text-tertiary      : rgba(45, 90, 48, 0.60);
@@ -214,34 +208,38 @@
   --text-inverse       : #F3FBF4;
   --text-color         : var(--text-primary);
 
-  /* ── BORDERS & DIVIDERS */
   --border-color       : rgba(46, 125, 50, 0.10);
   --border-soft        : rgba(46, 125, 50, 0.07);
   --border-moss        : rgba(67, 160, 71, 0.16);
   --divider-color      : rgba(28, 60, 32, 0.07);
 
-  /* ── GLOW UTILITIES */
   --glow-green         : 0 0 18px rgba(56, 142, 60, 0.14);
   --glow-cyan          : 0 0 18px rgba(0, 137, 123, 0.12);
   --glow-amber         : 0 0 14px rgba(184, 134, 11, 0.12);
   --glow-orchid        : 0 0 14px rgba(171, 71, 188, 0.10);
 
-  /* ── SURFACE HELPERS */
   --surface-1          : rgba(255, 255, 255, 0.50);
   --surface-2          : rgba(255, 255, 255, 0.70);
   --surface-hover      : rgba(56, 142, 60, 0.07);
   --surface-active     : rgba(56, 142, 60, 0.12);
 
-  /* ── GRADIENTS */
   --grad-primary       : linear-gradient(135deg, #2E7D32, #43A047);
   --grad-cyan          : linear-gradient(135deg, #00897B, #00ACC1);
   --grad-forest        : linear-gradient(135deg, #E4F4E7, #C8E6C9, #00ACC1);
   --grad-glow          : radial-gradient(ellipse at top, rgba(56,142,60,0.07) 0%, transparent 55%);
 
-  /* ── TOGGLES */
   --toggle-bg          : rgba(46, 125, 50, 0.10);
   --toggle-on-bg       : linear-gradient(135deg, #2E7D32, #00897B);
   --toggle-shadow      : 0 2px 10px rgba(56, 142, 60, 0.18);
+
+  --toggle-width       : 44px;
+  --toggle-height      : 24px;
+  --toggle-knob-size   : 18px;
+  --toggle-knob-offset : 3px;
+  --sidebar-width      : 240px;
+  --navbar-height      : 64px;
+  --transition-speed   : 0.25s ease;
+  --bg-secondary-compat: var(--bg-secondary);
 
   color-scheme: light;
 }
