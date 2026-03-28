@@ -1,48 +1,49 @@
-// web/src/pages/HomePage.jsx
+// web/src/pages/Home/HomePage.jsx
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { GlassIcon } from '../../components/bits/GlassIcon';
 import ScrollVelocity from '../../components/bits/ScrollVelocity';
 import './HomePage.css';
-
 import '../../components/bits/ScrollVelocity.css';
 
 const HomePage = ({ theme, sensors, isConnected }) => {
   const navigate = useNavigate();
   const [isVisible, setIsVisible] = useState(false);
 
-  useEffect(() => {
-    setIsVisible(true);
-  }, []);
+  useEffect(() => { setIsVisible(true); }, []);
 
   const soilMoisture = sensors?.soilMoisture ?? 0;
-  const temperature = sensors?.temperature ?? 0;
-  const humidity = sensors?.humidity ?? 0;
-  const pH = sensors?.pH ?? 0;
+  const temperature  = sensors?.temperature  ?? 0;
+  const humidity     = sensors?.humidity     ?? 0;
+  const pH           = sensors?.pH           ?? 0;
 
   const quickStats = [
     {
       label: 'Soil Moisture',
       value: `${soilMoisture}%`,
       icon: 'watering',
+      unit: '%',
       status: soilMoisture < 30 ? 'warning' : soilMoisture < 50 ? 'info' : 'success',
     },
     {
       label: 'Temperature',
       value: `${temperature}°C`,
       icon: 'temperature',
+      unit: '°C',
       status: temperature > 35 ? 'warning' : 'success',
     },
     {
       label: 'Humidity',
       value: `${humidity}%`,
       icon: 'humidity',
+      unit: '%',
       status: humidity < 30 ? 'info' : 'success',
     },
     {
-      label: 'pH Level',
+      label: 'Soil pH',
       value: pH.toFixed(1),
       icon: 'ph',
+      unit: 'pH',
       status: pH < 5.5 || pH > 7.5 ? 'warning' : 'success',
     },
   ];
@@ -50,226 +51,172 @@ const HomePage = ({ theme, sensors, isConnected }) => {
   const features = [
     {
       title: 'Smart Monitoring',
-      description:
-        '6 sensors track soil moisture, temperature, humidity, pH, NPK, and light intensity in real-time via dual ESP32 architecture.',
+      description: '6 sensors track soil moisture, temperature, humidity, pH, NPK, and light intensity in real-time via dual ESP32 architecture.',
       icon: 'monitoring',
       path: '/sensors',
+      tag: 'Real-time',
     },
     {
       title: 'Auto Watering',
-      description:
-        'Intelligent pump control with moisture thresholds, timed watering, and daily scheduling – no overwatering or underwatering.',
+      description: 'Intelligent pump control with moisture thresholds, timed watering, and daily scheduling — no overwatering or underwatering.',
       icon: 'watering',
       path: '/controls',
+      tag: 'Automated',
     },
     {
       title: 'AI Disease Detection',
-      description:
-        'Edge Impulse ML model on ESP32-CAM identifies 9 plant diseases (leaf spot, rust, blight, etc.) at the edge.',
+      description: 'Edge Impulse ML model on ESP32-CAM identifies 9 plant diseases at the edge — no cloud round-trip required.',
       icon: 'disease',
       path: '/insights',
+      tag: 'On-device AI',
     },
     {
-      title: 'Real-time Dashboard',
-      description:
-        'WebSocket live data streaming, interactive charts, historical analytics, and instant alerts for critical conditions.',
+      title: 'Analytics Dashboard',
+      description: 'WebSocket live data streaming, interactive charts, historical logs, and instant alerts for critical plant conditions.',
       icon: 'bell',
       path: '/analytics',
+      tag: 'Live data',
     },
   ];
 
   const techStack = [
+    { category: 'Hardware',  items: ['ESP32-SENSOR', 'ESP32-CAM', 'Soil Moisture', 'DHT22', 'pH Sensor', 'NPK Sensor'] },
+    { category: 'Backend',   items: ['Node.js', 'Express', 'MongoDB Atlas', 'WebSocket', 'REST API', 'Render'] },
+    { category: 'Frontend',  items: ['React 18', 'Vite', 'Recharts', 'React Router', 'Netlify'] },
+    { category: 'AI / ML',   items: ['Edge Impulse', 'TensorFlow Lite', 'On-device Inference', 'Image Classification'] },
+  ];
+
+  const archNodes = [
     {
-      category: 'Hardware',
-      items: ['ESP32-SENSOR', 'ESP32-CAM', 'Soil Moisture', 'DHT22', 'pH Sensor', 'NPK Sensor'],
+      icon: 'sensors',
+      title: 'ESP32-SENSOR',
+      desc: 'ADC1 multi-sensor node. Reads soil moisture, DHT22, pH, NPK and drives the relay pump.',
+      accent: 'green',
     },
     {
-      category: 'Backend',
-      items: ['Node.js', 'Express', 'MongoDB Atlas', 'WebSocket', 'REST API', 'Render'],
+      icon: 'disease',
+      title: 'ESP32-CAM',
+      desc: 'Captures leaf images, runs Edge Impulse TFLite model on-device, sends disease events via REST.',
+      accent: 'teal',
     },
     {
-      category: 'Frontend',
-      items: ['React 18', 'Vite', 'Recharts', 'React Router', 'Netlify'],
+      icon: 'monitoring',
+      title: 'Node.js Backend',
+      desc: 'Express REST API + WebSocket server on Render. Persists all readings to MongoDB Atlas.',
+      accent: 'blue',
     },
     {
-      category: 'AI / ML',
-      items: ['Edge Impulse', 'TensorFlow Lite', 'On-device Inference', 'Image Classification'],
+      icon: 'records',
+      title: 'React Dashboard',
+      desc: 'Vite SPA on Netlify. Real-time charts, alerts, controls, and AI insight viewer.',
+      accent: 'orchid',
     },
   ];
 
-  const problemsSolutions = [
-    {
-      problem: 'Inconsistent Watering',
-      solution:
-        'Set per-plant moisture thresholds and use scheduled windowed watering with safety cutoffs to avoid overwatering.',
-    },
-    {
-      problem: 'Late Disease Detection',
-      solution:
-        'Use frequent on-device image capture with lightweight Edge Impulse models and immediate alerting to the dashboard.',
-    },
-    {
-      problem: 'No Local Feedback',
-      solution:
-        'Add the ST7735R TFT overview to the sensor controller so users see quick local status without the web app.',
-    },
-    {
-      problem: 'Network Outages',
-      solution:
-        'Queue important sensor events locally on the ESP32 and sync when connectivity is restored; keep safe default watering behavior.',
-    },
-  ];
-
-  const aiResources = [
-    {
-      title: 'Edge Impulse Docs',
-      url: 'https://docs.edgeimpulse.com',
-      desc: 'Guides for training and exporting TFLite models for ESP32-CAM.'
-    },
-    {
-      title: 'TensorFlow Lite Micro',
-      url: 'https://www.tensorflow.org/lite/microcontrollers',
-      desc: 'Reference for running models on microcontrollers and optimizing size/latency.'
-    },
-    {
-      title: 'Soil Moisture Best Practices',
-      url: 'https://example.com/soil-moisture-guide',
-      desc: 'Practical tips for sensor placement and calibration.'
-    },
+  const systemStatus = [
+    { label: 'Backend API', key: 'api' },
+    { label: 'MongoDB Atlas', key: 'db' },
+    { label: 'ESP32 Devices', key: 'esp' },
+    { label: 'WebSocket', key: 'ws' },
   ];
 
   return (
-    <div className={`homepage-new ${isVisible ? 'visible' : ''}`} data-theme={theme}>
-      {/* HERO */}
-      <section className="hero-modern">
-        <div className="hero-inner">
-          <div className="hero-content-modern">
-            <div className="hero-badge">
-              <GlassIcon name="sprout" className="hero-badge-icon" />
-              <span>IoT + AI Plant Care System</span>
-            </div>
+    <div className={`hp ${isVisible ? 'hp--visible' : ''}`} data-theme={theme}>
 
-            <h1 className="hero-title-modern">
-              SproutSense:
-              <br />
-              <span className="gradient-text">Smart Plant Care Without the Guesswork</span>
-            </h1>
+      {/* ═══════════════════════════════════
+          HERO — pure glass, no image
+      ═══════════════════════════════════ */}
+      <section className="hp-hero">
+        {/* ambient blobs */}
+        <div className="hp-hero__blob hp-hero__blob--1" aria-hidden="true" />
+        <div className="hp-hero__blob hp-hero__blob--2" aria-hidden="true" />
+        <div className="hp-hero__blob hp-hero__blob--3" aria-hidden="true" />
 
-            <p className="hero-subtitle-modern">
-              Dual ESP32 microcontrollers, multi-sensor monitoring, AI-powered disease detection, and automated watering –
-              keeping your plants healthy 24/7.
-            </p>
-
-            <div className="hero-actions">
-              <button className="btn-hero btn-hero-primary" onClick={() => navigate('/controls')}>
-                <GlassIcon name="controls" />
-                <span>Control System</span>
-              </button>
-              <button className="btn-hero btn-hero-secondary" onClick={() => navigate('/sensors')}>
-                <GlassIcon name="sensors" />
-                <span>Live Dashboard</span>
-              </button>
-            </div>
+        <div className="hp-hero__inner">
+          <div className="hp-hero__badge">
+            <GlassIcon name="sprout" />
+            <span>IoT + AI Plant Care System</span>
           </div>
 
-          {/* RIGHT SIDE removed: simplified hero layout for better focus and readability */}
+          <h1 className="hp-hero__title">
+            SproutSense
+            <span className="hp-hero__title-sub">Smart Plant Care Without the Guesswork</span>
+          </h1>
+
+          <p className="hp-hero__desc">
+            Dual ESP32 microcontrollers, six-parameter soil monitoring, on-device AI disease
+            detection, and automated irrigation — keeping your plants healthy 24 / 7.
+          </p>
+
+          <div className="hp-hero__actions">
+            <button className="hp-btn hp-btn--primary" onClick={() => navigate('/controls')}>
+              <GlassIcon name="controls" />
+              <span>Control System</span>
+            </button>
+            <button className="hp-btn hp-btn--ghost" onClick={() => navigate('/sensors')}>
+              <GlassIcon name="sensors" />
+              <span>Live Dashboard</span>
+            </button>
+          </div>
+
+          {/* connection pill */}
+          <div className={`hp-hero__status ${isConnected ? 'hp-hero__status--on' : 'hp-hero__status--off'}`}>
+            <span className="hp-hero__status-dot" />
+            {isConnected ? 'System Online · WebSocket Live' : 'Connecting to ESP32 sensors…'}
+          </div>
         </div>
       </section>
 
-      {/* LIVE STATS */}
-      <section className="stats-section">
-        <div className="section-header-center">
-          <h2>Live Plant Health Metrics</h2>
-          <p className="section-subtitle">
-            {isConnected ? (
-              <span className="status-online">
-                <GlassIcon name="check" /> System Online • Real-time WebSocket Data
-              </span>
-            ) : (
-              <span className="status-offline">
-                <GlassIcon name="close" /> Connecting to ESP32 sensors...
-              </span>
-            )}
-          </p>
+      {/* ═══════════════════════════════════
+          LIVE SENSOR METRICS
+      ═══════════════════════════════════ */}
+      <section className="hp-section hp-stats">
+        <div className="hp-section__head">
+          <h2>Live Sensor Readings</h2>
+          <p>All values streamed directly from ESP32 over WebSocket</p>
         </div>
-
-        <div className="stats-grid">
-          {quickStats.map((stat, index) => (
+        <div className="hp-stats__grid">
+          {quickStats.map((s, i) => (
             <div
-              key={stat.label}
-              className={`stat-card stat-card-${stat.status}`}
-              style={{ animationDelay: `${index * 100}ms` }}
+              key={s.label}
+              className={`hp-stat-card hp-stat-card--${s.status}`}
+              style={{ animationDelay: `${i * 90}ms` }}
             >
-              <div className="stat-icon-wrapper">
-                <GlassIcon name={stat.icon} className="stat-icon" />
+              <div className="hp-stat-card__icon">
+                <GlassIcon name={s.icon} />
               </div>
-              <div className="stat-content">
-                <span className="stat-label">{stat.label}</span>
-                <span className="stat-value">{stat.value}</span>
+              <div className="hp-stat-card__body">
+                <span className="hp-stat-card__label">{s.label}</span>
+                <span className="hp-stat-card__value">{s.value}</span>
               </div>
-              <div className={`stat-indicator stat-indicator-${stat.status}`} />
+              <div className={`hp-stat-card__pulse hp-stat-card__pulse--${s.status}`} />
             </div>
           ))}
         </div>
       </section>
 
-      {/* OVERVIEW */}
-      <section className="overview-section">
-        <div className="section-container">
-          <div className="overview-content">
-            <h2 className="section-title">About SproutSense</h2>
-            <div className="overview-grid">
-              <div className="overview-card">
-                <GlassIcon name="leaf" className="overview-icon" />
-                <h3>The Problem</h3>
-                <p>
-                  Overwatering, underwatering, poor soil conditions and undetected diseases cause huge losses. Manual
-                  monitoring is time‑consuming and error‑prone.
-                </p>
-              </div>
-              <div className="overview-card">
-                <GlassIcon name="sprout" className="overview-icon" />
-                <h3>Our Solution</h3>
-                <p>
-                  SproutSense automates plant care with multi‑sensor data, AI disease detection on ESP32‑CAM, and smart
-                  irrigation controlled from a cloud dashboard.
-                </p>
-              </div>
-              <div className="overview-card">
-                <GlassIcon name="check" className="overview-icon" />
-                <h3>Key Benefits</h3>
-                <ul className="benefits-list">
-                  <li>✓ Precision irrigation and water savings</li>
-                  <li>✓ Early disease alerts from on‑device AI</li>
-                  <li>✓ Real‑time monitoring via WebSocket</li>
-                  <li>✓ Automatic logs and analytics in MongoDB</li>
-                </ul>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* FEATURES */}
-      <section className="features-section-new">
-        <div className="section-header-center">
+      {/* ═══════════════════════════════════
+          CORE FEATURES  ← animation kept
+      ═══════════════════════════════════ */}
+      <section className="hp-section hp-features">
+        <div className="hp-section__head">
           <h2>Core Features</h2>
-          <p className="section-subtitle">Everything you need for intelligent, automated plant care</p>
+          <p>Everything you need for intelligent, automated plant care</p>
         </div>
-
         <div className="features-grid-new">
-          {features.map((feature, index) => (
+          {features.map((f, i) => (
             <div
-              key={feature.title}
+              key={f.title}
               className="feature-card-new"
-              style={{ animationDelay: `${index * 150}ms` }}
-              onClick={() => navigate(feature.path)}
+              style={{ animationDelay: `${i * 150}ms` }}
+              onClick={() => navigate(f.path)}
             >
               <div className="feature-icon-bg">
-                <GlassIcon name={feature.icon} className="feature-icon-new" />
+                <GlassIcon name={f.icon} className="feature-icon-new" />
               </div>
-              <h3 className="feature-title-new">{feature.title}</h3>
-              <p className="feature-desc-new">{feature.description}</p>
+              <span className="hp-feature-tag">{f.tag}</span>
+              <h3 className="feature-title-new">{f.title}</h3>
+              <p className="feature-desc-new">{f.description}</p>
               <div className="feature-arrow">
                 <GlassIcon name="arrow-right" />
               </div>
@@ -278,186 +225,138 @@ const HomePage = ({ theme, sensors, isConnected }) => {
         </div>
       </section>
 
-      {/* PROBLEMS & SOLUTIONS */}
-      <section className="problems-section">
-        <div className="section-container">
-          <h2 className="section-title">Problems & Solutions</h2>
-          <div className="problems-grid">
-            {problemsSolutions.map((ps, i) => (
-              <div key={i} className="problem-card" style={{ animationDelay: `${i * 100}ms` }}>
-                <h3 className="problem-title">{ps.problem}</h3>
-                <p className="problem-solution">{ps.solution}</p>
+      {/* ═══════════════════════════════════
+          ABOUT — 3 glass panels
+      ═══════════════════════════════════ */}
+      <section className="hp-section hp-about">
+        <div className="hp-section__head">
+          <h2>About SproutSense</h2>
+          <p>An end-to-end IoT + AI solution built for precision agriculture</p>
+        </div>
+        <div className="hp-about__grid">
+          <div className="hp-glass-card">
+            <GlassIcon name="leaf" className="hp-glass-card__icon hp-glass-card__icon--green" />
+            <h3>The Problem</h3>
+            <p>
+              Overwatering, nutrient deficiencies, and undetected fungal diseases cause significant
+              crop losses. Manual checks are slow, inconsistent, and miss early warning signs.
+            </p>
+          </div>
+          <div className="hp-glass-card">
+            <GlassIcon name="sprout" className="hp-glass-card__icon hp-glass-card__icon--teal" />
+            <h3>Our Solution</h3>
+            <p>
+              SproutSense combines six soil and environment sensors, an on-device AI camera, and
+              smart irrigation — all managed from a single real-time cloud dashboard.
+            </p>
+          </div>
+          <div className="hp-glass-card">
+            <GlassIcon name="check" className="hp-glass-card__icon hp-glass-card__icon--green" />
+            <h3>Key Benefits</h3>
+            <ul className="hp-check-list">
+              <li>Precision irrigation, reduced water waste</li>
+              <li>Early disease alerts from on-device AI</li>
+              <li>Real-time monitoring via WebSocket</li>
+              <li>Automated logs and analytics in MongoDB</li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      {/* ═══════════════════════════════════
+          SYSTEM ARCHITECTURE
+      ═══════════════════════════════════ */}
+      <section className="hp-section hp-arch">
+        <div className="hp-section__head">
+          <h2>System Architecture</h2>
+          <p>Four interconnected layers from sensor edge to user interface</p>
+        </div>
+        <div className="hp-arch__grid">
+          {archNodes.map((n, i) => (
+            <div key={n.title} className={`hp-arch-card hp-arch-card--${n.accent}`} style={{ animationDelay: `${i * 100}ms` }}>
+              <div className="hp-arch-card__num">{String(i + 1).padStart(2, '0')}</div>
+              <div className="hp-arch-card__icon">
+                <GlassIcon name={n.icon} />
               </div>
-            ))}
-          </div>
+              <h3>{n.title}</h3>
+              <p>{n.desc}</p>
+            </div>
+          ))}
         </div>
       </section>
 
-      {/* AI INSIGHTS & WEB RESOURCES */}
-      <section className="ai-insights-section">
-        <div className="section-container">
-          <h2 className="section-title">AI Insights & Resources</h2>
-          <div className="ai-insights-grid">
-            <div className="ai-summary">
-              <p className="ai-desc">
-                Our on-device AI provides early warnings for common leaf diseases. For best results,
-                ensure consistent lighting, focused framing of leaves, and regular model retraining
-                with new labeled samples from your plants.
-              </p>
-              <ul className="ai-tips">
-                <li>Tip: Capture images from multiple angles for robust inference.</li>
-                <li>Tip: Retrain weekly with recent samples for seasonal shifts.</li>
-                <li>Tip: Combine sensor thresholds with image alerts for higher precision.</li>
-              </ul>
+      {/* ═══════════════════════════════════
+          TECH STACK — scroll velocity
+      ═══════════════════════════════════ */}
+      <section className="hp-section hp-tech">
+        <div className="hp-section__head">
+          <h2>Technology Stack</h2>
+          <p>Built on proven open-source tools across hardware, cloud, and AI layers</p>
+        </div>
+        <div className="hp-tech__grid">
+          {techStack.map((stack, i) => (
+            <div key={stack.category} className="hp-glass-card hp-tech__card" style={{ animationDelay: `${i * 80}ms` }}>
+              <h3 className="hp-tech__cat">{stack.category}</h3>
+              <ScrollVelocity
+                texts={[stack.items.join(' • ')]}
+                className="tech-badge"
+                parallaxClassName="tech-parallax"
+                scrollerClassName="tech-scroller"
+                velocity={i % 2 !== 0 ? -80 : 70}
+                numCopies={2}
+                velocityMapping={{ input: [0, 1000], output: [0, 5] }}
+              />
             </div>
-
-            <div className="ai-resources">
-              {aiResources.map((r) => (
-                <a key={r.title} className="resource-card" href={r.url} target="_blank" rel="noopener noreferrer">
-                  <div className="resource-head">
-                    <GlassIcon name="link" />
-                    <h4>{r.title}</h4>
-                  </div>
-                  <p className="resource-desc">{r.desc}</p>
-                </a>
-              ))}
-            </div>
-          </div>
+          ))}
         </div>
       </section>
 
-      {/* ARCHITECTURE */}
-      <section className="architecture-section">
-        <div className="section-container">
-          <h2 className="section-title">System Architecture</h2>
-          <div className="architecture-grid">
-            <div className="arch-card">
-              <h3>Dual ESP32 Setup</h3>
-              <ul>
-                <li>
-                  <strong>ESP32-SENSOR:</strong> ADC1 sensors + relay pump control.
-                </li>
-                <li>
-                  <strong>ESP32-CAM:</strong> Disease detection with Edge Impulse model.
-                </li>
-                <li>
-                  <strong>Link:</strong> WiFi → REST API + WebSocket to backend.
-                </li>
-              </ul>
-            </div>
-            <div className="arch-card">
-              <h3>Backend Infrastructure</h3>
-              <ul>
-                <li>
-                  <strong>Server:</strong> Node.js + Express on Render.
-                </li>
-                <li>
-                  <strong>Database:</strong> MongoDB Atlas (SensorReading, WateringLog, DiseaseDetection collections).
-                </li>
-                <li>
-                  <strong>APIs:</strong> /api/sensors, /api/watering, /api/ai, /api/config.
-                </li>
-              </ul>
-            </div>
-            <div className="arch-card">
-              <h3>Frontend Dashboard</h3>
-              <ul>
-                <li>React + Vite single‑page app.</li>
-                <li>Analytics, alerts, AI insights, and controls.</li>
-                <li>Deployed to Netlify for fast previews.</li>
-              </ul>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* TECH STACK */}
-      <section className="tech-stack-section">
-        <div className="section-container">
-          <h2 className="section-title">Technology Stack</h2>
-          <div style={{ marginTop: 12, marginBottom: 18 }}>
-            
-          </div>
-          <div className="tech-stack-grid">
-            {techStack.map((stack, index) => (
-              <div
-                key={stack.category}
-                className="tech-stack-card"
-                style={{ animationDelay: `${index * 100}ms` }}
-              >
-                <h3>{stack.category}</h3>
-                <div className="tech-items">
-                  <ScrollVelocity
-                    texts={[stack.items.join(' • ')]}
-                    className="tech-badge"
-                    parallaxClassName="tech-parallax"
-                    scrollerClassName="tech-scroller"
-                    velocity={index % 2 !== 0 ? -100 : 80}
-                    numCopies={2}
-                    velocityMapping={{ input: [0, 1000], output: [0, 5] }}
-                  />
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* QUICK ACTIONS */}
-      <section className="quick-actions-section">
-        <div className="quick-actions-card">
-          <div className="quick-actions-header">
+      {/* ═══════════════════════════════════
+          QUICK ACTIONS
+      ═══════════════════════════════════ */}
+      <section className="hp-section hp-actions">
+        <div className="hp-glass-card hp-actions__card">
+          <div className="hp-section__head hp-section__head--left">
             <h2>Quick Actions</h2>
-            <p>Control your SproutSense system</p>
+            <p>Jump directly to any part of your SproutSense system</p>
           </div>
-          <div className="quick-actions-grid">
-            <button className="quick-action-btn" onClick={() => navigate('/controls')}>
-              <GlassIcon name="watering" className="qa-icon" />
-              <span>Water Now</span>
-            </button>
-            <button className="quick-action-btn" onClick={() => navigate('/sensors')}>
-              <GlassIcon name="sensors" className="qa-icon" />
-              <span>View Sensors</span>
-            </button>
-            <button className="quick-action-btn" onClick={() => navigate('/analytics')}>
-              <GlassIcon name="records" className="qa-icon" />
-              <span>History</span>
-            </button>
-            <button className="quick-action-btn" onClick={() => navigate('/settings')}>
-              <GlassIcon name="settings" className="qa-icon" />
-              <span>Settings</span>
-            </button>
+          <div className="hp-actions__grid">
+            {[
+              { icon: 'watering', label: 'Water Now',    path: '/controls'  },
+              { icon: 'sensors',  label: 'Sensors',      path: '/sensors'   },
+              { icon: 'records',  label: 'Analytics',    path: '/analytics' },
+              { icon: 'disease',  label: 'AI Insights',  path: '/insights'  },
+              { icon: 'settings', label: 'Settings',     path: '/settings'  },
+            ].map((a) => (
+              <button key={a.label} className="hp-action-btn" onClick={() => navigate(a.path)}>
+                <GlassIcon name={a.icon} className="hp-action-btn__icon" />
+                <span>{a.label}</span>
+              </button>
+            ))}
           </div>
         </div>
       </section>
 
-      {/* STATUS */}
-      <section className="system-status-section">
-        <div className="status-card-compact">
+      {/* ═══════════════════════════════════
+          SYSTEM STATUS
+      ═══════════════════════════════════ */}
+      <section className="hp-section hp-status">
+        <div className="hp-glass-card hp-status__card">
           <h3>System Status</h3>
-          <div className="status-indicators">
-            <div className="status-indicator-item">
-              <span className="status-dot status-online" />
-              <span>Backend API (Render)</span>
-            </div>
-            <div className="status-indicator-item">
-              <span className="status-dot status-online" />
-              <span>MongoDB Atlas</span>
-            </div>
-            <div className="status-indicator-item">
-              <span className="status-dot status-online" />
-              <span>ESP32 Devices</span>
-            </div>
-            <div className="status-indicator-item">
-              <span className="status-dot status-online" />
-              <span>WebSocket Live</span>
-            </div>
+          <div className="hp-status__grid">
+            {systemStatus.map((s) => (
+              <div key={s.key} className="hp-status__item">
+                <span className="hp-status__dot hp-status__dot--online" />
+                <span>{s.label}</span>
+              </div>
+            ))}
           </div>
-          <p className="status-footer">
-            All systems operational • Last updated: {new Date().toLocaleString()}
+          <p className="hp-status__footer">
+            All systems operational · Last updated: {new Date().toLocaleTimeString()}
           </p>
         </div>
       </section>
+
     </div>
   );
 };
