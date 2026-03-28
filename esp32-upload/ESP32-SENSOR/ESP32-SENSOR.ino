@@ -1,624 +1,667 @@
-// =====================================================
-// SPROUTSENSE ESP32-SENSOR — FINAL PRODUCTION v2.1 + BLYNK
-// Board: ESP32 Dev Module
-// Sensors: Soil Moisture, pH, LDR, DHT22
-// Actuators: Relay (GPIO 14) + Flow Sensor (GPIO 12)
-// Display: TFT ST7735R (SPI)
-// Backend: Render.com & Blynk IoT
-// =====================================================
+// =====================================================================
+// SPROUTSENSE  ESP32-SENSOR  v3.0
+// Board  : ESP32 Dev Module
+// Sensors: Soil Moisture (ADC), pH (ADC), LDR (ADC), DHT22 (Digital)
+// Actuator: Relay GPIO-14  |  Flow sensor GPIO-12
+// Backend : https://10.55.107.32:5000
+// Blynk   : Cloud IoT mirror
+//
+// Serial baud : 115200
+// Commands    : h/? s p o r f w b c
+// =====================================================================
 
-// ========== BLYNK CONFIGURATION ==========
-// IMPORTANT: These must be the VERY FIRST lines before any includes!
-#define BLYNK_TEMPLATE_ID "TMPL_YOUR_ID"
+// ── Blynk  (MUST be before all includes) ─────────────────────────────
+#define BLYNK_TEMPLATE_ID   "TMPL_YOUR_ID"
 #define BLYNK_TEMPLATE_NAME "SproutSense"
-#define BLYNK_AUTH_TOKEN "YOUR_BLYNK_AUTH_TOKEN"
-#define BLYNK_PRINT Serial
+#define BLYNK_AUTH_TOKEN    "YOUR_BLYNK_AUTH_TOKEN"
+#define BLYNK_PRINT         Serial
 
-// ========== LIBRARIES ==========
+// ── Libraries ─────────────────────────────────────────────────────────
 #include <WiFi.h>
 #include <BlynkSimpleEsp32.h>
 #include <DHT.h>
 #include <HTTPClient.h>
 #include <ArduinoJson.h>
-#include <SPI.h>
-#include <Adafruit_GFX.h>
-#include <Adafruit_ST7735.h>
 
-// ========== WIFI CREDENTIALS ==========
-const char* WIFI_SSID     = "@Connect";
-const char* WIFI_PASSWORD = "qwertyomm";
+// ── WiFi credentials ──────────────────────────────────────────────────
+const char* WIFI_SSID     = "YOUR_WIFI_SSID";
+const char* WIFI_PASSWORD = "YOUR_WIFI_PASSWORD";
 
-// ========== STATIC IP (optional) ==========
+// ── Backend endpoints (match backend/src/routes exactly) ──────────────
+// POST /api/sensors           — sensor data
+// POST /api/config/status     — heartbeat / device status
+// POST /api/water/start       — pump start command ACK
+// POST /api/water/stop        — pump stop  command ACK
+// GET  /api/water/status/ESP32-SENSOR — poll for remote pump commands
+const char* BASE_URL          = "http://10.55.107.32:5000";
+const char* URL_SENSORS       = "http://10.55.107.32:5000/api/sensors";
+const char* URL_STATUS        = "http://10.55.107.32:5000/api/config/status";
+const char* URL_WATER_START   = "http://10.55.107.32:5000/api/water/start";
+const char* URL_WATER_STOP    = "http://10.55.107.32:5000/api/water/stop";
+const char* URL_WATER_STATUS  = "http://10.55.107.32:5000/api/water/status/ESP32-SENSOR";
+const char* DEVICE_ID         = "ESP32-SENSOR";
 
+// ── Pin configuration (ADC1 only — WiFi safe) ─────────────────────────
+#define PIN_SOIL   35   // ADC1_CH7  capacitive moisture
+#define PIN_PH     34   // ADC1_CH6  analog pH probe
+#define PIN_LDR    39   // ADC1_CH3  LDR
+#define PIN_DHT    13   // Digital   DHT22
+#define PIN_RELAY  14   // Output    relay → pump
+#define PIN_FLOW   12   // Interrupt YF-S401 flow meter
 
-// ========== BACKEND URLs ==========
-const char* BACKEND_URL   = "https://sproutsense-backend.onrender.com/api/sensors";
-const char* HEARTBEAT_URL = "https://sproutsense-backend.onrender.com/api/config/status";
-const char* DEVICE_ID     = "ESP32-SENSOR";
+// ── Sensor / actuator settings ────────────────────────────────────────
+#define DHT_TYPE             DHT22
+#define MOISTURE_ADC_DRY     2800
+#define MOISTURE_ADC_WET     1200
+#define LUX_MAX              100000.0f
+#define FLOW_PULSES_PER_ML   5.5f
+#define MOISTURE_THRESHOLD   30.0f   // auto-water below this %
+#define TARGET_WATER_ML      100.0f  // target volume per cycle
+#define PUMP_MAX_MS          20000   // hard safety timeout ms
 
-// ========== BACKEND STATUS (for TFT) ==========
-bool   backendOk        = true;
-String backendLastError = "";
+// ── Timing intervals (ms) ─────────────────────────────────────────────
+#define IV_SENSORS    5000   // sensor read + Blynk push
+#define IV_BACKEND    15000  // POST sensor data to backend
+#define IV_HEARTBEAT  30000  // POST device status (heartbeat)
+#define IV_CMD_POLL   8000   // GET watering status (remote pump command)
 
-// ========== PIN CONFIGURATION (ADC1 ONLY — WiFi safe) ==========
-#define PIN_SOIL_MOISTURE  35   // ADC1_CH7 — Capacitive moisture sensor
-#define PIN_PH_SENSOR      34   // ADC1_CH6 — Analog pH probe
-#define PIN_LDR            39   // ADC1_CH3 — LDR light sensor
-#define PIN_DHT            13   // Digital  — DHT22 temperature/humidity
-#define PIN_RELAY          14   // Output   — Relay CH1 → Water pump
-#define PIN_FLOW_SENSOR    12   // Interrupt — YF-S401 flow meter
-
-// TFT ST7735R (128x160) — Hardware SPI
-#define PIN_TFT_CS  5
-#define PIN_TFT_RST 4
-#define PIN_TFT_DC  27
-
-// ========== SENSOR SETTINGS ==========
-#define DHT_TYPE           DHT22
-#define MOISTURE_THRESHOLD 30.0    // Auto-water below this %
-#define TARGET_WATER_ML    100.0   // Volume per watering cycle
-#define PUMP_MAX_TIME_MS   20000   // Safety timeout (20 seconds)
-
-// Moisture ADC calibration
-#define MOISTURE_ADC_DRY   2800
-#define MOISTURE_ADC_WET   1200
-
-// LDR calibration
-#define LUX_MAX 100000.0
-
-// Flow sensor calibration
-#define FLOW_PULSES_PER_ML  5.5    // YF-S401: adjust if measurement drifts
-
-// ========== TIMING (milliseconds) ==========
-#define INTERVAL_SENSORS   5000    // Read sensors every 5s
-#define INTERVAL_BACKEND   15000   // Send to backend every 15s
-#define INTERVAL_TFT       4000    // Update TFT every 4s
-#define INTERVAL_HEARTBEAT 30000   // Heartbeat every 30s
-
-// ========== OBJECTS ==========
+// ── Objects ───────────────────────────────────────────────────────────
 DHT dht(PIN_DHT, DHT_TYPE);
-Adafruit_ST7735 tft = Adafruit_ST7735(PIN_TFT_CS, PIN_TFT_DC, PIN_TFT_RST);
 
-// ========== TFT COLORS ==========
-#define C_BLACK   0x0000
-#define C_WHITE   0xFFFF
-#define C_CYAN    0x07FF
-#define C_GREEN   0x07E0
-#define C_YELLOW  0xFFE0
-#define C_RED     0xF800
-#define C_ORANGE  0xFD20
-#define C_LGRAY   0xC618
-#define C_DGRAY   0x4208
+// ── Flow sensor (interrupt-driven) ────────────────────────────────────
+volatile unsigned long flowPulses = 0;
+void IRAM_ATTR flowISR()            { flowPulses++; }
+float  flowMl()                     { return (float)flowPulses / FLOW_PULSES_PER_ML; }
+void   resetFlow()                  { flowPulses = 0; }
 
-// ========== FORWARD DECLARATIONS ==========
-void handleSerialCommand(char cmd);
+// ── Pump state ────────────────────────────────────────────────────────
+bool          pumpRunning  = false;
+bool          manualPump   = false;
+unsigned long pumpStartMs  = 0;
 
-// ========== FLOW SENSOR (interrupt-driven) ==========
-volatile unsigned long flowPulseCount = 0;
+// ── Cached sensor values ──────────────────────────────────────────────
+float cachedMoisture = 0.0f;
+float cachedPH       = 7.0f;
+float cachedLux      = 0.0f;
+float cachedTemp     = 25.0f;
+float cachedHumidity = 50.0f;
+bool  dhtValid       = false;
 
-void IRAM_ATTR flowISR() {
-  flowPulseCount++;
+// ── Timers ────────────────────────────────────────────────────────────
+unsigned long tSensors   = 0;
+unsigned long tBackend   = 0;
+unsigned long tHeartbeat = 0;
+unsigned long tCmdPoll   = 0;
+
+// ── Backend health tracking ───────────────────────────────────────────
+uint32_t backendOkCount   = 0;
+uint32_t backendFailCount = 0;
+
+// ── Forward declarations ──────────────────────────────────────────────
+void handleSerial(char c);
+void startPump(const char* trigger);
+void stopPump();
+void pollRemoteCommand();
+
+// ─────────────────────────────────────────────────────────────────────
+// SERIAL LOGGER — structured, tag-based output
+// ─────────────────────────────────────────────────────────────────────
+void logSep(const char* tag) {
+  Serial.printf("\n╔══════════════════════════════════[ %s ]\n", tag);
+}
+void logLine(const char* tag, const char* fmt, ...) {
+  char buf[256];
+  va_list args;
+  va_start(args, fmt);
+  vsnprintf(buf, sizeof(buf), fmt, args);
+  va_end(args);
+  Serial.printf("║ [%-10s] %s\n", tag, buf);
+}
+void logOK(const char* tag, const char* fmt, ...) {
+  char buf[256];
+  va_list args;
+  va_start(args, fmt);
+  vsnprintf(buf, sizeof(buf), fmt, args);
+  va_end(args);
+  Serial.printf("║ [%-10s] ✔  %s\n", tag, buf);
+}
+void logERR(const char* tag, const char* fmt, ...) {
+  char buf[256];
+  va_list args;
+  va_start(args, fmt);
+  vsnprintf(buf, sizeof(buf), fmt, args);
+  va_end(args);
+  Serial.printf("║ [%-10s] ✖  %s\n", tag, buf);
+}
+void logWARN(const char* tag, const char* fmt, ...) {
+  char buf[256];
+  va_list args;
+  va_start(args, fmt);
+  vsnprintf(buf, sizeof(buf), fmt, args);
+  va_end(args);
+  Serial.printf("║ [%-10s] ⚠  %s\n", tag, buf);
+}
+void logEnd() {
+  Serial.println("╚══════════════════════════════════════════════");
 }
 
-float getFlowVolumeMl() {
-  return (float)flowPulseCount / FLOW_PULSES_PER_ML;
+// ─────────────────────────────────────────────────────────────────────
+// HTTP HELPER — POST JSON, returns HTTP status code
+// ─────────────────────────────────────────────────────────────────────
+int httpPost(const char* url, const String& payload, int timeoutMs = 8000) {
+  HTTPClient http;
+  http.begin(url);
+  http.addHeader("Content-Type", "application/json");
+  http.setTimeout(timeoutMs);
+  int code = http.POST(payload);
+  if (code > 0) {
+    String resp = http.getString();
+    // Only log response body on errors for brevity
+    if (code >= 400)
+      logERR("HTTP", "Response: %s", resp.c_str());
+  }
+  http.end();
+  return code;
 }
 
-void resetFlowCounter() {
-  flowPulseCount = 0;
+// HTTP GET — returns body string, empty on failure
+String httpGet(const char* url, int timeoutMs = 6000) {
+  HTTPClient http;
+  http.begin(url);
+  http.setTimeout(timeoutMs);
+  int code = http.GET();
+  String body = "";
+  if (code == 200) body = http.getString();
+  else logWARN("HTTP", "GET %s → %d", url, code);
+  http.end();
+  return body;
 }
 
-// ========== PUMP CONTROL ==========
-bool pumpRunning   = false;
-bool manualPump    = false;
-unsigned long pumpStartTime = 0;
-
-void startPump() {
-  resetFlowCounter();
+// ─────────────────────────────────────────────────────────────────────
+// PUMP CONTROL
+// ─────────────────────────────────────────────────────────────────────
+void startPump(const char* trigger = "manual") {
+  if (pumpRunning) return;
+  resetFlow();
   digitalWrite(PIN_RELAY, HIGH);
-  pumpRunning   = true;
-  pumpStartTime = millis();
-  Blynk.virtualWrite(V5, 1); // Update Blynk switch to ON
-  Serial.println("[PUMP] ON — target: " + String(TARGET_WATER_ML) + " mL");
+  pumpRunning  = true;
+  pumpStartMs  = millis();
+  Blynk.virtualWrite(V5, 1);
+
+  logSep("PUMP");
+  logOK("PUMP", "ON  trigger=%-10s  target=%.0f mL", trigger, TARGET_WATER_ML);
+  logEnd();
+
+  // Notify backend — POST /api/water/start
+  if (WiFi.status() == WL_CONNECTED) {
+    StaticJsonDocument<128> doc;
+    doc["deviceId"]    = DEVICE_ID;
+    doc["triggerType"] = trigger;   // "auto" | "manual" | "scheduled" | "ai"
+    String p; serializeJson(doc, p);
+    int code = httpPost(URL_WATER_START, p);
+    if (code == 200 || code == 201)
+      logOK("PUMP", "Backend ACK start → %d", code);
+    else
+      logWARN("PUMP", "Backend start ACK failed → %d (non-critical)", code);
+  }
 }
 
 void stopPump() {
+  if (!pumpRunning) return;
   digitalWrite(PIN_RELAY, LOW);
   pumpRunning = false;
-  Blynk.virtualWrite(V5, 0); // Update Blynk switch to OFF
-  Serial.printf("[PUMP] OFF — dispensed: %.1f mL in %lums\n",
-    getFlowVolumeMl(), millis() - pumpStartTime);
+  manualPump  = false;
+  Blynk.virtualWrite(V5, 0);
+
+  float vol     = flowMl();
+  unsigned long ms = millis() - pumpStartMs;
+
+  logSep("PUMP");
+  logOK("PUMP", "OFF  dispensed=%.1f mL  runtime=%lu ms", vol, ms);
+  logEnd();
+
+  // Notify backend — POST /api/water/stop
+  if (WiFi.status() == WL_CONNECTED) {
+    StaticJsonDocument<128> doc;
+    doc["deviceId"] = DEVICE_ID;
+    String p; serializeJson(doc, p);
+    int code = httpPost(URL_WATER_STOP, p);
+    if (code == 200 || code == 201)
+      logOK("PUMP", "Backend ACK stop  → %d", code);
+    else
+      logWARN("PUMP", "Backend stop  ACK failed → %d (non-critical)", code);
+  }
 }
 
-void updatePumpLogic() {
+void updatePumpSafety() {
   if (!pumpRunning) return;
-  float vol             = getFlowVolumeMl();
-  unsigned long runtime = millis() - pumpStartTime;
+  float vol             = flowMl();
+  unsigned long runtime = millis() - pumpStartMs;
+
   if (vol >= TARGET_WATER_ML) {
-    Serial.println("[PUMP] Target volume reached");
+    logOK("PUMP", "Target %.0f mL reached (got %.1f mL) — stopping",
+      TARGET_WATER_ML, vol);
     stopPump();
-  } else if (runtime >= PUMP_MAX_TIME_MS) {
-    Serial.println("[PUMP] Safety timeout — stopping");
+  } else if (runtime >= PUMP_MAX_MS) {
+    logWARN("PUMP", "Safety timeout %u ms reached — force stop (%.1f mL)",
+      PUMP_MAX_MS, vol);
     stopPump();
   }
 }
 
-// ========== BLYNK MANUAL PUMP CONTROL ==========
-// Triggers when you press the button (V5) in the Blynk app
+// ─────────────────────────────────────────────────────────────────────
+// BLYNK — virtual pin V5 = manual pump toggle from app
+// ─────────────────────────────────────────────────────────────────────
 BLYNK_WRITE(V5) {
-  int pinValue = param.asInt();
-  if (pinValue == 1) {
-    manualPump = true;
-    startPump();
-  } else {
-    manualPump = false;
-    stopPump();
-  }
+  int v = param.asInt();
+  if (v == 1) { manualPump = true;  startPump("manual"); }
+  else         { manualPump = false; stopPump(); }
 }
 
-// ========== CACHED SENSOR VALUES ==========
-float cachedMoisture = 0;
-float cachedPH       = 7.0;
-float cachedLux      = 0;
-float cachedTemp     = 25.0;    
-float cachedHumidity = 50.0;    
-bool  dhtValid       = false;
-
-// ========== SENSOR READ FUNCTIONS ==========
-float readSoilMoisture() {
-  int raw = analogRead(PIN_SOIL_MOISTURE);
-  float pct = (float)(MOISTURE_ADC_DRY - raw) /
-              (float)(MOISTURE_ADC_DRY - MOISTURE_ADC_WET) * 100.0;
-  return constrain(pct, 0.0, 100.0);
+// ─────────────────────────────────────────────────────────────────────
+// SENSOR READS
+// ─────────────────────────────────────────────────────────────────────
+float readMoisture() {
+  int raw = analogRead(PIN_SOIL);
+  return constrain(
+    (float)(MOISTURE_ADC_DRY - raw) / (float)(MOISTURE_ADC_DRY - MOISTURE_ADC_WET) * 100.0f,
+    0.0f, 100.0f);
 }
 
 float readPH() {
   long sum = 0;
-  for (int i = 0; i < 5; i++) {
-    sum += analogRead(PIN_PH_SENSOR);
-    delayMicroseconds(200);
-  }
-  float voltage = (sum / 5.0 / 4095.0) * 3.3;
-  return constrain(7.0 - ((voltage - 2.5) / 0.18), 0.0, 14.0);
+  for (int i = 0; i < 5; i++) { sum += analogRead(PIN_PH); delayMicroseconds(200); }
+  float v = (sum / 5.0f / 4095.0f) * 3.3f;
+  return constrain(7.0f - ((v - 2.5f) / 0.18f), 0.0f, 14.0f);
 }
 
 float readLux() {
-  return (analogRead(PIN_LDR) / 4095.0) * LUX_MAX;
+  return (analogRead(PIN_LDR) / 4095.0f) * LUX_MAX;
 }
 
-void updateAllSensors() {
-  cachedMoisture = readSoilMoisture();
+void updateSensors() {
+  cachedMoisture = readMoisture();
   cachedPH       = readPH();
   cachedLux      = readLux();
   float t = dht.readTemperature();
   float h = dht.readHumidity();
-  
   if (!isnan(t) && !isnan(h)) {
     cachedTemp = t; cachedHumidity = h; dhtValid = true;
   }
 }
 
 void printSensors() {
-  Serial.printf("[SENSORS] Moisture:%.1f%% pH:%.2f Lux:%.0f",
-    cachedMoisture, cachedPH, cachedLux);
-  if (dhtValid)
-    Serial.printf(" Temp:%.1fC Hum:%.1f%%", cachedTemp, cachedHumidity);
-  else
-    Serial.print(" Temp:CACHED Hum:CACHED");
-  Serial.printf(" Flow:%.1fmL Pump:%s\n",
-    getFlowVolumeMl(), pumpRunning ? "ON" : "OFF");
+  logSep("SENSORS");
+  logLine("SENSORS", "Moisture  : %6.1f %%   (threshold: %.0f%%  %s)",
+    cachedMoisture, MOISTURE_THRESHOLD,
+    cachedMoisture < MOISTURE_THRESHOLD ? "<-- DRY" : "OK");
+  logLine("SENSORS", "pH        : %6.2f     (%s)",
+    cachedPH, (cachedPH >= 5.5f && cachedPH <= 7.5f) ? "optimal" : "OUT OF RANGE");
+  logLine("SENSORS", "Light     : %6.0f lux (%s)",
+    cachedLux, cachedLux < 2000 ? "LOW" : "OK");
+  if (dhtValid) {
+    logLine("SENSORS", "Temp      : %6.1f C",   cachedTemp);
+    logLine("SENSORS", "Humidity  : %6.1f %%",   cachedHumidity);
+  } else {
+    logWARN("SENSORS", "DHT22 read failed — using cached %.1f C  %.0f %%",
+      cachedTemp, cachedHumidity);
+  }
+  logLine("SENSORS", "Flow vol  : %6.1f mL  pulses=%lu", flowMl(), flowPulses);
+  logLine("SENSORS", "Pump      : %s", pumpRunning ? "ON" : "OFF");
+  logEnd();
 }
 
-// ========== AUTO WATERING ==========
+// ─────────────────────────────────────────────────────────────────────
+// AUTO WATERING
+// ─────────────────────────────────────────────────────────────────────
 void checkAutoWatering() {
   if (pumpRunning || manualPump) return;
   if (cachedMoisture < MOISTURE_THRESHOLD) {
-    Serial.printf("[AUTO] Moisture %.1f%% < %.0f%% — starting pump\n",
+    logWARN("AUTO", "Moisture %.1f%% < %.0f%% — triggering auto-water",
       cachedMoisture, MOISTURE_THRESHOLD);
-    startPump();
+    startPump("auto");
   }
 }
 
-// ========== BLYNK SYNC ==========
+// ─────────────────────────────────────────────────────────────────────
+// BLYNK SYNC
+// ─────────────────────────────────────────────────────────────────────
+// Blynk virtual pins:
+//   V0 = soilMoisture   V1 = pH         V2 = lux
+//   V3 = temperature    V4 = humidity   V5 = pump toggle
+//   V6 = flowVolume
 void sendToBlynk() {
-  if (WiFi.status() == WL_CONNECTED) {
-    Blynk.virtualWrite(V0, cachedMoisture);
-    Blynk.virtualWrite(V1, cachedPH);
-    Blynk.virtualWrite(V2, cachedLux);
-    if (dhtValid) {
-      Blynk.virtualWrite(V3, cachedTemp);
-      Blynk.virtualWrite(V4, cachedHumidity);
-    }
-    Blynk.virtualWrite(V6, getFlowVolumeMl());
+  if (WiFi.status() != WL_CONNECTED) return;
+  Blynk.virtualWrite(V0, cachedMoisture);
+  Blynk.virtualWrite(V1, cachedPH);
+  Blynk.virtualWrite(V2, cachedLux);
+  if (dhtValid) {
+    Blynk.virtualWrite(V3, cachedTemp);
+    Blynk.virtualWrite(V4, cachedHumidity);
   }
+  Blynk.virtualWrite(V6, flowMl());
+  logOK("BLYNK", "V0-V6 updated");
 }
 
-// ========== HEARTBEAT ==========
+// ─────────────────────────────────────────────────────────────────────
+// HEARTBEAT  →  POST /api/config/status
+// Exact fields per validateDeviceStatus in requestValidator.js
+// ─────────────────────────────────────────────────────────────────────
 void sendHeartbeat() {
-  if (WiFi.status() != WL_CONNECTED) return;
-
+  if (WiFi.status() != WL_CONNECTED) {
+    logWARN("HEARTBEAT", "Skipped — no WiFi"); return;
+  }
   StaticJsonDocument<256> doc;
   doc["deviceId"]     = DEVICE_ID;
   doc["online"]       = true;
   doc["pumpActive"]   = pumpRunning;
-  doc["currentState"] = pumpRunning ? "WATERING" : "IDLE";
+  doc["currentState"] = pumpRunning ? "WATERING" : "IDLE";  // IDLE|WATERING|COOLDOWN|ERROR
   doc["ipAddress"]    = WiFi.localIP().toString();
-  doc["uptime"]       = millis() / 1000;
+  doc["uptime"]       = (int)(millis() / 1000);
+  String p; serializeJson(doc, p);
 
-  String payload;
-  serializeJson(doc, payload);
-
-  HTTPClient http;
-  http.begin(HEARTBEAT_URL);
-  http.addHeader("Content-Type", "application/json");
-  http.setTimeout(5000);
-  int code = http.POST(payload);
-  http.end();
-  Serial.printf("[HEARTBEAT] %d | Pump:%s | Uptime:%lus\n",
-    code, pumpRunning ? "ON" : "OFF", millis() / 1000);
+  int code = httpPost(URL_STATUS, p);
+  if (code == 200 || code == 201) {
+    logOK("HEARTBEAT", "→ %d  uptime=%lus  pump=%s  ip=%s",
+      code, millis()/1000, pumpRunning?"ON":"OFF",
+      WiFi.localIP().toString().c_str());
+  } else {
+    logERR("HEARTBEAT", "FAILED → %d", code);
+  }
 }
 
-// ========== BACKEND SYNC ==========
-void sendToBackend() {
+// ─────────────────────────────────────────────────────────────────────
+// SENSOR POST  →  POST /api/sensors
+// Required fields per validateSensorReading in requestValidator.js:
+//   soilMoisture, temperature, humidity, light
+//   optional: pH, flowRate (flowRateMlPerMin), flowVolume, deviceId
+// ─────────────────────────────────────────────────────────────────────
+void sendSensors() {
   if (WiFi.status() != WL_CONNECTED) {
-    Serial.println("[BACKEND] Skipped — no WiFi");
-    return;
+    logWARN("BACKEND", "Skipped — no WiFi"); return;
   }
 
-  float flowRateMlPerMin = 0.0;
+  float flowRateMlPerMin = 0.0f;
   if (pumpRunning) {
-    float runtimeMin = (millis() - pumpStartTime) / 60000.0;
-    if (runtimeMin > 0.0)
-      flowRateMlPerMin = getFlowVolumeMl() / runtimeMin;
+    float runMin = (millis() - pumpStartMs) / 60000.0f;
+    if (runMin > 0.0f) flowRateMlPerMin = flowMl() / runMin;
   }
 
-  StaticJsonDocument<512> doc;
-  doc["deviceId"]     = DEVICE_ID;
-  doc["soilMoisture"] = round(cachedMoisture * 10) / 10.0;
-  doc["pH"]           = round(cachedPH * 100) / 100.0;
-  doc["light"]        = (int)cachedLux;
-  doc["temperature"]  = round(cachedTemp * 10) / 10.0;
-  doc["humidity"]     = round(cachedHumidity * 10) / 10.0;
-  doc["flowRate"]     = round(flowRateMlPerMin * 10) / 10.0;
-  doc["flowVolume"]   = round(getFlowVolumeMl() * 10) / 10.0;
+  // Round to reduce JSON payload size and match frontend normalization
+  StaticJsonDocument<384> doc;
+  doc["deviceId"]          = DEVICE_ID;
+  doc["soilMoisture"]      = round(cachedMoisture * 10.0f) / 10.0f;  // required
+  doc["temperature"]       = round(cachedTemp     * 10.0f) / 10.0f;  // required
+  doc["humidity"]          = round(cachedHumidity * 10.0f) / 10.0f;  // required
+  doc["light"]             = (float)(int)cachedLux;                   // required (lux as float)
+  doc["pH"]                = round(cachedPH        * 100.0f) / 100.0f; // optional
+  doc["flowRateMlPerMin"]  = round(flowRateMlPerMin * 10.0f) / 10.0f;  // optional alias
+  doc["flowVolume"]        = round(flowMl()          * 10.0f) / 10.0f;  // optional
 
-  String payload;
-  serializeJson(doc, payload);
-  Serial.println("[BACKEND] Sending: " + payload);
+  String payload; serializeJson(doc, payload);
+
+  logSep("BACKEND");
+  logLine("BACKEND", "POST %s", URL_SENSORS);
+  logLine("BACKEND", "Payload: %s", payload.c_str());
 
   int code = -1;
-  for (int attempt = 0; attempt < 3 && code != 200 && code != 201; attempt++) {
-    if (attempt > 0) {
-      Serial.printf("[BACKEND] Retry %d/2...\n", attempt);
+  for (int attempt = 1; attempt <= 3 && code != 200 && code != 201; attempt++) {
+    if (attempt > 1) {
+      logWARN("BACKEND", "Retry %d/3 …", attempt);
       delay(3000);
     }
-    HTTPClient http;
-    http.begin(BACKEND_URL);
-    http.addHeader("Content-Type", "application/json");
-    http.setTimeout(10000); 
-    code = http.POST(payload);
-    
+    code = httpPost(URL_SENSORS, payload, 10000);
     if (code == 200 || code == 201) {
-      Serial.println("[BACKEND] OK (" + String(code) + ") — saved to DB");
-      backendOk = true;
-      backendLastError = "";
+      backendOkCount++;
+      logOK("BACKEND", "Saved to DB → %d  (ok=%u fail=%u)",
+        code, backendOkCount, backendFailCount);
     } else {
-      Serial.printf("[BACKEND] Attempt %d failed: %d\n", attempt + 1, code);
+      logWARN("BACKEND", "Attempt %d failed → %d", attempt, code);
     }
-    http.end();
   }
 
   if (code != 200 && code != 201) {
-    Serial.println("[BACKEND] All 3 attempts failed — data lost for this cycle");
-    backendOk = false;
-    backendLastError = "HTTP " + String(code);
+    backendFailCount++;
+    logERR("BACKEND", "All 3 attempts failed → %d  (ok=%u fail=%u)",
+      code, backendOkCount, backendFailCount);
+  }
+  logEnd();
+}
+
+// ─────────────────────────────────────────────────────────────────────
+// REMOTE COMMAND POLL  →  GET /api/water/status/ESP32-SENSOR
+// Web dashboard can set pumpActive=true to start remote watering.
+// The ESP polls this and reacts, keeping the hardware in sync with UI.
+// ─────────────────────────────────────────────────────────────────────
+void pollRemoteCommand() {
+  if (WiFi.status() != WL_CONNECTED) return;
+
+  String body = httpGet(URL_WATER_STATUS);
+  if (body.isEmpty()) return;
+
+  StaticJsonDocument<256> doc;
+  DeserializationError err = deserializeJson(doc, body);
+  if (err) { logWARN("CMD-POLL", "JSON parse error: %s", err.c_str()); return; }
+
+  // Backend responds with { pumpActive: bool, ... }
+  bool remotePump = doc["pumpActive"] | false;
+
+  if (remotePump && !pumpRunning && !manualPump) {
+    logLine("CMD-POLL", "Remote pump=ON command received → starting");
+    manualPump = true;
+    startPump("manual");
+  } else if (!remotePump && pumpRunning && manualPump) {
+    logLine("CMD-POLL", "Remote pump=OFF command received → stopping");
+    stopPump();
   }
 }
 
-// ========== TFT DISPLAY ==========
-uint8_t tftPage = 0;
-unsigned long lastTFTUpdate = 0;
-
-void updateTFTDisplay() {
-  tft.fillScreen(C_BLACK);
-  
-  // --- 1. GLOBAL HEADER ---
-  tft.setTextSize(1);
-  tft.setCursor(5, 4);
-  tft.setTextColor(C_CYAN);  tft.print("SPROUTSENSE");
-  tft.setCursor(130, 4);
-  tft.setTextColor(C_DGRAY); tft.printf("%u/4", tftPage + 1);
-  tft.drawLine(0, 14, 160, 14, C_DGRAY);
-
-  // --- 2. MAIN CONTENT AREA ---
-  switch (tftPage) {
-    case 0: // Soil & Light
-      tft.setCursor(5, 18); tft.setTextColor(C_YELLOW); tft.println("SOIL & LIGHT");
-      
-      tft.setCursor(5, 34); tft.setTextSize(2);
-      tft.setTextColor(cachedMoisture < 30 ? C_RED : C_GREEN);
-      tft.printf("%.0f%%\n", cachedMoisture);
-      tft.setCursor(5, 52); tft.setTextSize(1); tft.setTextColor(C_LGRAY); tft.print("Moisture");
-
-      tft.setCursor(85, 34); tft.setTextSize(2);
-      tft.setTextColor((cachedPH < 5.5 || cachedPH > 7.5) ? C_ORANGE : C_GREEN);
-      tft.printf("%.1f\n", cachedPH);
-      tft.setCursor(85, 52); tft.setTextSize(1); tft.setTextColor(C_LGRAY); tft.print("pH Lvl");
-
-      tft.setCursor(5, 72); tft.setTextSize(2);
-      tft.setTextColor(cachedLux < 2000 ? C_RED : C_GREEN);
-      tft.printf("%.0f\n", cachedLux);
-      tft.setCursor(5, 90); tft.setTextSize(1); tft.setTextColor(C_LGRAY); tft.print("Lux");
-      break;
-
-    case 1: // Climate
-      tft.setCursor(5, 18); tft.setTextColor(C_YELLOW); tft.println("CLIMATE");
-      if (dhtValid) {
-        tft.setCursor(5, 38); tft.setTextSize(2); tft.setTextColor(C_CYAN);
-        tft.printf("%.1fC\n", cachedTemp);
-        tft.setCursor(5, 56); tft.setTextSize(1); tft.setTextColor(C_LGRAY); tft.print("Temp");
-
-        tft.setCursor(85, 38); tft.setTextSize(2); tft.setTextColor(C_GREEN);
-        tft.printf("%.0f%%\n", cachedHumidity);
-        tft.setCursor(85, 56); tft.setTextSize(1); tft.setTextColor(C_LGRAY); tft.print("Hum");
-      } else {
-        tft.setCursor(5, 38); tft.setTextSize(1); tft.setTextColor(C_RED);
-        tft.println("DHT22 OFFLINE!");
-        tft.setCursor(5, 52); tft.setTextColor(C_ORANGE);
-        tft.printf("Temp: %.1fC (cached)\n", cachedTemp);
-        tft.setCursor(5, 64);
-        tft.printf("Hum : %.0f%% (cached)\n", cachedHumidity);
-      }
-      break;
-
-    case 2: // Watering
-      tft.setCursor(5, 18); tft.setTextColor(C_YELLOW); tft.println("WATERING");
-      
-      tft.setCursor(5, 34); tft.setTextSize(2);
-      tft.setTextColor(pumpRunning ? C_CYAN : C_DGRAY);
-      tft.print(pumpRunning ? "PUMP ON" : "PUMP OFF");
-      
-      tft.setCursor(5, 56); tft.setTextSize(1); tft.setTextColor(C_LGRAY);
-      tft.printf("Vol: %.1f / %.0f mL\n", getFlowVolumeMl(), TARGET_WATER_ML);
-      tft.setCursor(5, 70); tft.setTextColor(C_DGRAY);
-      tft.printf("Auto-Trg : %.0f%%\n", MOISTURE_THRESHOLD);
-      
-      if (pumpRunning) {
-        tft.setCursor(5, 88); tft.setTextColor(C_ORANGE);
-        tft.printf("Running  : %lus", (millis() - pumpStartTime) / 1000);
-      }
-      break;
-
-    case 3: // Network
-      tft.setCursor(5, 18); tft.setTextColor(C_YELLOW); tft.println("NETWORK");
-      
-      tft.setCursor(5, 32); tft.setTextSize(1);
-      tft.setTextColor(WiFi.status() == WL_CONNECTED ? C_GREEN : C_RED);
-      tft.printf("WiFi : %s\n", WiFi.status() == WL_CONNECTED ? "OK" : "FAIL");
-      if (WiFi.status() == WL_CONNECTED) {
-        tft.setCursor(5, 44); tft.setTextColor(C_LGRAY);
-        tft.print(WiFi.localIP().toString().c_str());
-      }
-      
-      tft.setCursor(5, 62); 
-      tft.setTextColor(backendOk ? C_GREEN : C_RED);
-      tft.print("Cloud: ");
-      if (backendOk) {
-        tft.print("SYNC OK");
-      } else {
-        tft.setCursor(5, 76); tft.setTextSize(2);
-        tft.print("ERR: ");
-        tft.print(backendLastError);
-        tft.setTextSize(1);
-      }
-      break;
-  }
-
-  // --- 3. GLOBAL STATUS FOOTER ---
-  tft.drawLine(0, 112, 160, 112, C_DGRAY);
-  tft.setCursor(5, 118);
-  tft.setTextSize(1);
-  if (!backendOk) {
-    tft.setTextColor(C_RED); tft.print("! BACKEND OFFLINE !");
-  } else if (pumpRunning) {
-    tft.setTextColor(C_CYAN); tft.print(">>> WATERING <<<");
-  } else if (!dhtValid) {
-    tft.setTextColor(C_ORANGE); tft.print("! SENSOR WARNING !");
-  } else {
-    tft.setTextColor(C_GREEN); tft.print("SYSTEM NORMAL");
-  }
+// ─────────────────────────────────────────────────────────────────────
+// SERIAL COMMANDS
+// ─────────────────────────────────────────────────────────────────────
+void printHelp() {
+  Serial.println();
+  Serial.println("╔══════════════════════════════════════════════╗");
+  Serial.println("║       SPROUTSENSE v3.0  SERIAL COMMANDS      ║");
+  Serial.println("╠══════════════════════════════════════════════╣");
+  Serial.println("║  h / ?  — This help menu                     ║");
+  Serial.println("║  s      — Read & print all sensors now        ║");
+  Serial.println("║  p      — Pump ON  (manual)                   ║");
+  Serial.println("║  o      — Pump OFF (manual)                   ║");
+  Serial.println("║  r      — Relay click test (1 s)              ║");
+  Serial.println("║  f      — Flow counter status                 ║");
+  Serial.println("║  w      — WiFi status + IP                    ║");
+  Serial.println("║  b      — Force backend sensor POST now       ║");
+  Serial.println("║  c      — Force heartbeat POST now            ║");
+  Serial.println("╚══════════════════════════════════════════════╝");
 }
 
-// ========== TIMERS ==========
-unsigned long lastSensorRead  = 0;
-unsigned long lastBackendSync = 0;
-unsigned long lastHeartbeat   = 0;
-
-// ========== SETUP ==========
-void setup() {
-  Serial.begin(115200);
-  delay(1000);
-  Serial.println("\n====================================");
-  Serial.println("  SPROUTSENSE ESP32-SENSOR v2.1");
-  Serial.println("  Flow + Relay + TFT + Cloud + Blynk");
-  Serial.println("====================================\n");
-
-  // TFT init
-  tft.initR(INITR_BLACKTAB);
-  tft.setRotation(1);
-  tft.fillScreen(C_BLACK);
-  tft.setTextColor(C_CYAN); tft.setTextSize(1);
-  tft.setCursor(5, 5);  tft.println("SproutSense v2.1");
-  tft.setCursor(5, 20); tft.setTextColor(C_WHITE); tft.println("Initializing...");
-
-  // GPIO
-  pinMode(PIN_RELAY, OUTPUT);
-  digitalWrite(PIN_RELAY, LOW); // Pump OFF at boot
-  pinMode(PIN_FLOW_SENSOR, INPUT_PULLUP);
-  attachInterrupt(digitalPinToInterrupt(PIN_FLOW_SENSOR), flowISR, FALLING);
-
-  // ADC
-  analogSetWidth(12);
-  analogSetAttenuation(ADC_11db);
-
-  // DHT warmup
-  dht.begin();
-  delay(2500);
-  for (int i = 0; i < 3; i++) {
-    float t = dht.readTemperature();
-    float h = dht.readHumidity();
-    if (!isnan(t) && !isnan(h)) {
-      cachedTemp = t; cachedHumidity = h; dhtValid = true;
-      Serial.printf("[DHT] Warmup OK: %.1fC %.1f%%\n", t, h);
-      break;
-    }
-    delay(2000);
-  }
-
-  // WiFi
-  WiFi.mode(WIFI_STA);
-#if STATICIP_ENABLED
-  IPAddress ip(STATIC_IP[0],      STATIC_IP[1],      STATIC_IP[2],      STATIC_IP[3]);
-  IPAddress gw(STATIC_GATEWAY[0], STATIC_GATEWAY[1], STATIC_GATEWAY[2], STATIC_GATEWAY[3]);
-  IPAddress sn(STATIC_SUBNET[0],  STATIC_SUBNET[1],  STATIC_SUBNET[2],  STATIC_SUBNET[3]);
-  IPAddress d1(STATIC_DNS1[0],    STATIC_DNS1[1],    STATIC_DNS1[2],    STATIC_DNS1[3]);
-  WiFi.config(ip, gw, sn, d1);
-#endif
-  WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
-  Serial.printf("[WIFI] Connecting to %s", WIFI_SSID);
-  int tries = 0;
-  while (WiFi.status() != WL_CONNECTED && tries < 30) {
-    delay(500); Serial.print("."); tries++;
-  }
-  
-  if (WiFi.status() == WL_CONNECTED) {
-    Serial.printf("\n[WIFI] Connected! IP: %s\n", WiFi.localIP().toString().c_str());
-    tft.setCursor(5, 35); tft.setTextColor(C_GREEN);
-    tft.print(WiFi.localIP().toString().c_str());
-    sendHeartbeat();
-    
-    // Initialize Blynk (non-blocking method)
-    Blynk.config(BLYNK_AUTH_TOKEN);
-    Serial.println("[BLYNK] Configured");
-  } else {
-    Serial.println("\n[WIFI] FAILED — will retry in loop");
-    tft.setCursor(5, 35); tft.setTextColor(C_RED); tft.println("WiFi FAILED");
-  }
-
-  delay(2000);
-  tft.fillScreen(C_BLACK);
-  Serial.println("\n>>> SPROUTSENSE v2.1 READY <<<");
-}
-
-// ========== MAIN LOOP ==========
-void loop() {
-  unsigned long now = millis();
-
-  // Handle Blynk communication
-  if (WiFi.status() == WL_CONNECTED) {
-    Blynk.run();
-  }
-
-  // Auto-reconnect WiFi
-  if (WiFi.status() != WL_CONNECTED) {
-    static unsigned long lastReconnect = 0;
-    if (now - lastReconnect > 30000) {
-      lastReconnect = now;
-      Serial.println("[WIFI] Reconnecting...");
-      WiFi.reconnect();
-    }
-  }
-
-  // Read sensors every 5s
-  if (now - lastSensorRead >= INTERVAL_SENSORS) {
-    lastSensorRead = now;
-    updateAllSensors();
-    printSensors();
-    checkAutoWatering();
-    sendToBlynk(); // Sync realtime data to Blynk
-  }
-
-  // Send to backend every 15s
-  if (now - lastBackendSync >= INTERVAL_BACKEND) {
-    lastBackendSync = now;
-    sendToBackend();
-  }
-
-  // Heartbeat every 30s
-  if (now - lastHeartbeat >= INTERVAL_HEARTBEAT) {
-    lastHeartbeat = now;
-    sendHeartbeat();
-  }
-
-  // Update TFT every 4s
-  if (now - lastTFTUpdate >= INTERVAL_TFT) {
-    lastTFTUpdate = now;
-    
-    // IF BACKEND FAILED: Force display to stay on Network Page (Page 3)
-    if (!backendOk) {
-      tftPage = 3; 
-    }
-
-    updateTFTDisplay();
-    
-    if (backendOk) {
-      tftPage = (tftPage + 1) % 4;
-    }
-  }
-
-  // Pump safety logic
-  updatePumpLogic();
-
-  // Serial commands
-  if (Serial.available()) {
-    handleSerialCommand((char)Serial.read());
-  }
-
-  delay(50); 
-}
-
-// ========== SERIAL COMMANDS ==========
-void handleSerialCommand(char cmd) {
+void handleSerial(char cmd) {
   switch (cmd) {
-    case 'h':
-    case '?':
-      Serial.println("\n=== SPROUTSENSE COMMANDS ===");
-      Serial.println("  s — Show sensor readings");
-      Serial.println("  p — Pump ON (manual)");
-      Serial.println("  o — Pump OFF (manual)");
-      Serial.println("  r — Test relay (1s click)");
-      Serial.println("  f — Show flow sensor count");
-      Serial.println("  w — WiFi status");
-      Serial.println("  t — TFT page test (cycles all pages)");
+    case 'h': case '?':
+      printHelp();
       break;
+
     case 's':
-      updateAllSensors();
+      updateSensors();
       printSensors();
       break;
+
     case 'p':
       manualPump = true;
-      startPump();
+      startPump("manual");
       break;
+
     case 'o':
       manualPump = false;
       stopPump();
       break;
+
     case 'r':
-      Serial.println("[TEST] Relay click test...");
+      logLine("TEST", "Relay click test…");
       digitalWrite(PIN_RELAY, HIGH); delay(1000); digitalWrite(PIN_RELAY, LOW);
+      logOK("TEST", "Relay click done");
       break;
+
     case 'f':
-      Serial.printf("[FLOW] Pulses: %lu | Volume: %.1f mL\n", flowPulseCount, getFlowVolumeMl());
+      logSep("FLOW");
+      logLine("FLOW", "Pulses  : %lu", flowPulses);
+      logLine("FLOW", "Volume  : %.2f mL", flowMl());
+      logLine("FLOW", "Cal     : %.1f pulses/mL", FLOW_PULSES_PER_ML);
+      logEnd();
       break;
+
     case 'w':
-      Serial.printf("[WIFI] %s | IP: %s | RSSI: %d dBm\n", 
-        WiFi.status() == WL_CONNECTED ? "CONNECTED" : "DISCONNECTED", WiFi.localIP().toString().c_str(), WiFi.RSSI());
+      logSep("WIFI");
+      logLine("WIFI", "Status  : %s",
+        WiFi.status() == WL_CONNECTED ? "CONNECTED" : "DISCONNECTED");
+      logLine("WIFI", "IP      : %s", WiFi.localIP().toString().c_str());
+      logLine("WIFI", "RSSI    : %d dBm", WiFi.RSSI());
+      logLine("WIFI", "SSID    : %s", WiFi.SSID().c_str());
+      logEnd();
       break;
-    case 't':
-      Serial.println("[TFT] Cycling all 4 pages...");
-      for (int i = 0; i < 4; i++) {
-        tftPage = i; updateTFTDisplay(); delay(2000);
-      }
+
+    case 'b':
+      logLine("CMD", "Forcing backend POST…");
+      sendSensors();
+      break;
+
+    case 'c':
+      logLine("CMD", "Forcing heartbeat POST…");
+      sendHeartbeat();
       break;
   }
+}
+
+// ─────────────────────────────────────────────────────────────────────
+// SETUP
+// ─────────────────────────────────────────────────────────────────────
+void setup() {
+  Serial.begin(115200);
+  delay(1000);
+
+  Serial.println();
+  Serial.println("╔══════════════════════════════════════════════╗");
+  Serial.println("║    SPROUTSENSE  ESP32-SENSOR  v3.0           ║");
+  Serial.println("║    Booting…                                  ║");
+  Serial.println("╚══════════════════════════════════════════════╝");
+
+  // ── GPIO setup ───────────────────────────────────────────────────
+  pinMode(PIN_RELAY, OUTPUT);
+  digitalWrite(PIN_RELAY, LOW);   // pump OFF at boot
+  pinMode(PIN_FLOW, INPUT_PULLUP);
+  attachInterrupt(digitalPinToInterrupt(PIN_FLOW), flowISR, FALLING);
+  logOK("INIT", "GPIO configured  relay=GPIO%d  flow=GPIO%d",
+    PIN_RELAY, PIN_FLOW);
+
+  // ── ADC ──────────────────────────────────────────────────────────
+  analogSetWidth(12);
+  analogSetAttenuation(ADC_11db);
+  logOK("INIT", "ADC  12-bit  11 dB attenuation");
+
+  // ── DHT22 warmup ─────────────────────────────────────────────────
+  dht.begin();
+  delay(2500);
+  logLine("INIT", "DHT22 warmup…");
+  for (int i = 0; i < 3; i++) {
+    float t = dht.readTemperature(), h = dht.readHumidity();
+    if (!isnan(t) && !isnan(h)) {
+      cachedTemp = t; cachedHumidity = h; dhtValid = true;
+      logOK("INIT", "DHT22 OK  %.1f C  %.0f %%", t, h);
+      break;
+    }
+    logWARN("INIT", "DHT22 attempt %d failed, retrying…", i + 1);
+    delay(2000);
+  }
+  if (!dhtValid) logERR("INIT", "DHT22 all warmup attempts failed — using defaults");
+
+  // ── WiFi ─────────────────────────────────────────────────────────
+  WiFi.mode(WIFI_STA);
+  WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
+  logLine("WIFI", "Connecting to %s ", WIFI_SSID);
+  int tries = 0;
+  while (WiFi.status() != WL_CONNECTED && tries < 30) {
+    delay(500); Serial.print("."); tries++;
+  }
+  Serial.println();
+
+  if (WiFi.status() == WL_CONNECTED) {
+    logOK("WIFI", "Connected!  IP=%s  RSSI=%d dBm",
+      WiFi.localIP().toString().c_str(), WiFi.RSSI());
+
+    // ── Blynk  (non-blocking config) ───────────────────────────────
+    Blynk.config(BLYNK_AUTH_TOKEN);
+    logOK("BLYNK", "Configured (non-blocking)");
+
+    // ── Initial heartbeat ──────────────────────────────────────────
+    sendHeartbeat();
+  } else {
+    logERR("WIFI", "Connection FAILED after %d tries — will retry in loop", tries);
+  }
+
+  // ── Initial sensor read ──────────────────────────────────────────
+  updateSensors();
+  printSensors();
+
+  Serial.println();
+  Serial.println("╔══════════════════════════════════════════════╗");
+  Serial.println("║    SPROUTSENSE  v3.0  READY                  ║");
+  Serial.println("║    Type 'h' for command list                  ║");
+  Serial.println("╚══════════════════════════════════════════════╝");
+  Serial.println();
+}
+
+// ─────────────────────────────────────────────────────────────────────
+// MAIN LOOP
+// ─────────────────────────────────────────────────────────────────────
+void loop() {
+  unsigned long now = millis();
+
+  // ── Blynk ────────────────────────────────────────────────────────
+  if (WiFi.status() == WL_CONNECTED) Blynk.run();
+
+  // ── WiFi auto-reconnect ──────────────────────────────────────────
+  if (WiFi.status() != WL_CONNECTED) {
+    static unsigned long lastReconn = 0;
+    if (now - lastReconn >= 30000) {
+      lastReconn = now;
+      logWARN("WIFI", "Disconnected — attempting reconnect…");
+      WiFi.reconnect();
+    }
+  }
+
+  // ── Sensor read  (every IV_SENSORS ms) ───────────────────────────
+  if (now - tSensors >= IV_SENSORS) {
+    tSensors = now;
+    updateSensors();
+    printSensors();
+    checkAutoWatering();
+    sendToBlynk();
+  }
+
+  // ── Backend sensor POST  (every IV_BACKEND ms) ───────────────────
+  if (now - tBackend >= IV_BACKEND) {
+    tBackend = now;
+    sendSensors();
+  }
+
+  // ── Heartbeat  (every IV_HEARTBEAT ms) ───────────────────────────
+  if (now - tHeartbeat >= IV_HEARTBEAT) {
+    tHeartbeat = now;
+    sendHeartbeat();
+  }
+
+  // ── Poll remote pump command  (every IV_CMD_POLL ms) ─────────────
+  if (now - tCmdPoll >= IV_CMD_POLL) {
+    tCmdPoll = now;
+    pollRemoteCommand();
+  }
+
+  // ── Pump safety ──────────────────────────────────────────────────
+  updatePumpSafety();
+
+  // ── Serial input ─────────────────────────────────────────────────
+  if (Serial.available()) handleSerial((char)Serial.read());
+
+  delay(50);
 }
