@@ -9,18 +9,13 @@
   align-items: center;
   justify-content: center;
   border-radius: 0.65rem;
-  /* background: linear-gradient(135deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.02)); */
-  border: var(--glass-border);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08),
-              inset 0 0 16px rgba(255, 255, 255, 0.04);
+  /* No background, border, or box-shadow by default —
+     sidebar icons must be clean SVGs without a glass box. */
   color: var(--plant-teal);
   transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1),
               box-shadow 0.4s cubic-bezier(0.16, 1, 0.3, 1),
               color 0.4s ease;
   position: relative;
-  /* overflow: hidden; */
-
-  
 }
 
 .glass-icon::before {
@@ -36,8 +31,6 @@
 
 .glass-icon:hover {
   transform: translateY(-2px) scale(1.05);
-  box-shadow: 0 6px 16px rgba(20, 184, 166, 0.2),
-              inset 0 0 20px rgba(255, 255, 255, 0.08);
   color: var(--plant-green);
 }
 
@@ -45,7 +38,26 @@
   left: 200%;
 }
 
-/* Modifiers for icon animations */
+/* ═══════════════════════════════════════════
+   GLASS BOX MODIFIER
+   Apply .glass-icon-box when you explicitly
+   want the bordered glass pill (e.g. card
+   headers, metric tiles, status rows).
+═══════════════════════════════════════════ */
+.glass-icon-box {
+  border: var(--glass-border);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08),
+              inset 0 0 16px rgba(255, 255, 255, 0.04);
+}
+
+.glass-icon-box:hover {
+  box-shadow: 0 6px 16px rgba(20, 184, 166, 0.2),
+              inset 0 0 20px rgba(255, 255, 255, 0.08);
+}
+
+/* ═══════════════════════════════════════════
+   ANIMATION MODIFIERS
+═══════════════════════════════════════════ */
 .glass-icon.animate-float {
   animation: float 3s ease-in-out infinite;
 }
@@ -73,51 +85,35 @@
 }
 
 @keyframes iconPulse {
-  0% { transform: scale(1); opacity: 1; }
-  50% { transform: scale(1.1); opacity: 0.8; }
-  100% { transform: scale(1); opacity: 1; }
+  0%   { transform: scale(1);   opacity: 1; }
+  50%  { transform: scale(1.1); opacity: 0.8; }
+  100% { transform: scale(1);   opacity: 1; }
 }
 
 @keyframes wave {
   0%, 100% { transform: rotate(0deg); }
-  25% { transform: rotate(-15deg); }
-  75% { transform: rotate(15deg); }
+  25%       { transform: rotate(-15deg); }
+  75%       { transform: rotate(15deg); }
 }
 
 @keyframes iconBounce {
   0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-6px); }
+  50%       { transform: translateY(-6px); }
 }
+
 /* ═══════════════════════════════════════════
    SVG SIZING UTILITIES
 ═══════════════════════════════════════════ */
-
 .glass-icon svg {
   width: 1.15rem;
   height: 1.15rem;
   flex-shrink: 0;
 }
 
-/* Modifiers */
-.glass-icon-sm svg {
-  width: 0.9rem;
-  height: 0.9rem;
-}
-
-.glass-icon-md svg {
-  width: 1.15rem;
-  height: 1.15rem;
-}
-
-.glass-icon-lg svg {
-  width: 1.45rem;
-  height: 1.45rem;
-}
-
-.glass-icon-xl svg {
-  width: 1.8rem;
-  height: 1.8rem;
-}
+.glass-icon-sm svg { width: 0.9rem;  height: 0.9rem; }
+.glass-icon-md svg { width: 1.15rem; height: 1.15rem; }
+.glass-icon-lg svg { width: 1.45rem; height: 1.45rem; }
+.glass-icon-xl svg { width: 1.8rem;  height: 1.8rem; }
 
 /* Context-Specific Scaling */
 .metric-icon .glass-icon svg,
