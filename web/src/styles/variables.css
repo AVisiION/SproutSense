@@ -1,161 +1,217 @@
 /**
- * variables.css
- * Global CSS custom properties (variables) for SproutSense.
- * Redesigned for a professional plant-glass theme with cyan accents.
+ * variables.css — SproutSense Design Tokens
+ * Theme: Forest × Cyan
+ *
+ * Dark  — Deep forest floor: rich dark greens, bark browns, cyan accent glow
+ * Light — Morning canopy: warm parchment, sage leaf, dew-drop cyan highlights
+ *
+ * Palette anatomy:
+ *   Forest dark  : #0b1a0f  →  #122318  →  #1a3322
+ *   Bark brown   : #2c1f14  →  #3d2b1a
+ *   Moss green   : #2d5a27  →  #3d7a35
+ *   Canopy green : #4a9e3f  →  #5dbf52
+ *   Cyan accent  : #0fd4c8  →  #38eedd
+ *   Dew cyan     : #00b4a6  →  #0dcfbb
  */
 
+/* ============================================================
+   DARK MODE (default)
+   Background: deep forest floor
+   Accents: moss × cyan dewdrop
+============================================================ */
 :root {
-  /* BACKGROUNDS */
-  --bg-gradient: linear-gradient(135deg, #06131a 0%, #0b1f1f 35%, #0d2a24 65%, #06131a 100%);
-  --bg-color: #06131a;
-  --bg-secondary: #0b1f1f;
-  --bg-tertiary: #12312d;
 
-  /* GLASS CARDS - Standardised Tokens */
-  --glass-color: rgba(10, 28, 34, 0.52);
-  --glass-color-strong: rgba(8, 22, 28, 0.68);
-  --glass-blur: 18px;
-  --glass-border: 1px solid rgba(125, 211, 252, 0.14);
-  --glass-border-strong: 1px solid rgba(45, 212, 191, 0.22);
-  --glass-radius: 18px;
-  --glass-shadow: 0 10px 32px rgba(0, 0, 0, 0.35);
-  --glass-highlight: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  /* ── BACKGROUNDS */
+  --bg-gradient        : linear-gradient(145deg, #0b1a0f 0%, #0f2218 40%, #122318 70%, #0b1a0f 100%);
+  --bg-color           : #0b1a0f;
+  --bg-secondary       : #0f2218;
+  --bg-tertiary        : #162d1e;
 
-  /* Backward compatibility for older card styles */
-  --card-bg: var(--glass-color);
-  --card-blur: blur(var(--glass-blur));
-  --card-border: var(--glass-border);
-  --card-radius: var(--glass-radius);
-  --card-shadow: var(--glass-shadow);
+  /* ── GLASS CARDS */
+  --glass-color        : rgba(15, 34, 22, 0.55);
+  --glass-color-strong : rgba(10, 24, 16, 0.72);
+  --glass-blur         : 20px;
+  --glass-border       : 1px solid rgba(15, 212, 200, 0.10);
+  --glass-border-strong: 1px solid rgba(15, 212, 200, 0.20);
+  --glass-radius       : 18px;
+  --glass-shadow       : 0 10px 36px rgba(0, 0, 0, 0.45);
+  --glass-highlight    : inset 0 1px 0 rgba(255, 255, 255, 0.05);
 
-  /* ACCENTS & BRAND COLORS */
-  --accent-primary: #22c55e;
-  --accent-hover: #16a34a;
-  --accent-secondary: #14b8a6;
-  --accent-cyan: #06b6d4;
-  --focus-ring: 0 0 0 3px rgba(6, 182, 212, 0.28);
+  /* Backward compatibility */
+  --card-bg     : var(--glass-color);
+  --card-blur   : blur(var(--glass-blur));
+  --card-border : var(--glass-border);
+  --card-radius : var(--glass-radius);
+  --card-shadow : var(--glass-shadow);
 
-  --plant-teal: #14b8a6;
-  --plant-green: #22c55e;
-  --plant-cyan: #22d3ee;
-  --plant-mint: #86efac;
+  /* ── BRAND ACCENTS */
+  --accent-primary     : #4a9e3f;
+  --accent-hover       : #3d8434;
+  --accent-secondary   : #0fd4c8;
+  --accent-cyan        : #0fd4c8;
+  --accent-bark        : #6b3f22;
+  --focus-ring         : 0 0 0 3px rgba(15, 212, 200, 0.25);
 
-  /* STATUS */
-  --success-color: #22c55e;
-  --warning-color: #f59e0b;
-  --danger-color: #ef4444;
-  --info-color: #06b6d4;
-  --primary-color: var(--accent-primary);
+  /* ── PLANT TOKENS */
+  --plant-green        : #5dbf52;
+  --plant-teal         : #0fd4c8;
+  --plant-cyan         : #38eedd;
+  --plant-moss         : #3d7a35;
+  --plant-bark         : #6b3f22;
+  --plant-canopy       : #4a9e3f;
+  --plant-mint         : #a8edbd;
 
-  /* TEXT */
-  --text-primary: #ecfeff;
-  --text-secondary: rgba(220, 252, 231, 0.72);
-  --text-tertiary: rgba(165, 243, 252, 0.58);
-  --text-inverse: #041014;
-  --text-color: var(--text-primary);
+  /* ── GRADIENTS */
+  --grad-primary       : linear-gradient(135deg, #2d5a27, #4a9e3f);
+  --grad-cyan          : linear-gradient(135deg, #00b4a6, #0fd4c8);
+  --grad-forest        : linear-gradient(135deg, #1a3322, #2d5a27, #0fd4c8);
+  --grad-bark          : linear-gradient(135deg, #2c1f14, #6b3f22);
+  --grad-glow          : radial-gradient(ellipse at top left, rgba(15,212,200,0.08) 0%, transparent 60%),
+                         radial-gradient(ellipse at bottom right, rgba(74,158,63,0.07) 0%, transparent 55%);
 
-  /* ICONS / BORDERS */
-  --border-color: rgba(125, 211, 252, 0.12);
-  --border-soft: rgba(255, 255, 255, 0.08);
-  --divider-color: rgba(255, 255, 255, 0.06);
+  /* ── STATUS */
+  --success-color      : #5dbf52;
+  --warning-color      : #d4890f;
+  --danger-color       : #d94f3d;
+  --info-color         : #0fd4c8;
+  --primary-color      : var(--accent-primary);
 
-  /* GLOWS */
-  --glow-cyan: 0 0 24px rgba(34, 211, 238, 0.16);
-  --glow-teal: 0 0 24px rgba(20, 184, 166, 0.16);
-  --glow-green: 0 0 24px rgba(34, 197, 94, 0.16);
+  /* ── TEXT */
+  --text-primary       : #e8f5e2;
+  --text-secondary     : rgba(180, 220, 165, 0.75);
+  --text-tertiary      : rgba(120, 175, 110, 0.55);
+  --text-muted         : rgba(90, 140, 80, 0.40);
+  --text-inverse       : #0b1a0f;
+  --text-color         : var(--text-primary);
 
-  /* TRANSITIONS */
-  --transition-speed: 0.25s ease;
+  /* ── BORDERS & DIVIDERS */
+  --border-color       : rgba(15, 212, 200, 0.09);
+  --border-soft        : rgba(255, 255, 255, 0.06);
+  --border-moss        : rgba(61, 122, 53, 0.20);
+  --divider-color      : rgba(255, 255, 255, 0.05);
 
-  /* LAYOUT */
-  --sidebar-width: 240px;
-  --navbar-height: 64px;
+  /* ── GLOW UTILITIES */
+  --glow-cyan          : 0 0 22px rgba(15, 212, 200, 0.20);
+  --glow-green         : 0 0 22px rgba(74, 158, 63, 0.20);
+  --glow-moss          : 0 0 18px rgba(45, 90, 39, 0.30);
 
-  /* Toggles */
-  --toggle-width: 44px;
-  --toggle-height: 24px;
-  --toggle-knob-size: 18px;
-  --toggle-knob-offset: 3px;
-  --toggle-bg: rgba(255, 255, 255, 0.10);
-  --toggle-on-bg: linear-gradient(135deg, #14b8a6 0%, #22c55e 100%);
-  --toggle-shadow: 0 2px 10px rgba(20, 184, 166, 0.28);
+  /* ── SURFACE HELPERS */
+  --surface-1          : rgba(255, 255, 255, 0.02);
+  --surface-2          : rgba(255, 255, 255, 0.04);
+  --surface-hover      : rgba(15, 212, 200, 0.07);
+  --surface-active     : rgba(74, 158, 63, 0.12);
+  --surface-bark       : rgba(44, 31, 20, 0.45);
 
-  /* EXTRA UI HELPERS */
-  --surface-1: rgba(255, 255, 255, 0.03);
-  --surface-2: rgba(255, 255, 255, 0.05);
-  --surface-hover: rgba(34, 211, 238, 0.08);
-  --surface-active: rgba(20, 184, 166, 0.12);
+  /* ── TOGGLES */
+  --toggle-width       : 44px;
+  --toggle-height      : 24px;
+  --toggle-knob-size   : 18px;
+  --toggle-knob-offset : 3px;
+  --toggle-bg          : rgba(255, 255, 255, 0.08);
+  --toggle-on-bg       : linear-gradient(135deg, #2d5a27, #0fd4c8);
+  --toggle-shadow      : 0 2px 10px rgba(15, 212, 200, 0.22);
+
+  /* ── LAYOUT */
+  --sidebar-width      : 240px;
+  --navbar-height      : 64px;
+
+  /* ── TRANSITIONS */
+  --transition-speed   : 0.25s ease;
+
+  /* ── SYSTEM */
+  --bg-secondary-compat: var(--bg-secondary);
+  --primary-color      : var(--accent-primary);
 
   color-scheme: dark;
 }
 
+/* ============================================================
+   LIGHT MODE
+   Background: morning canopy, parchment + sage + dew cyan
+============================================================ */
 [data-theme="light"] {
-  /* BACKGROUNDS */
-  --bg-gradient: linear-gradient(135deg, #f4fffb 0%, #e6faf7 35%, #dff7f1 65%, #f4fffb 100%);
-  --bg-color: #f4fffb;
-  --bg-secondary: #e6faf7;
-  --bg-tertiary: #d7f3ec;
 
-  /* GLASS CARDS */
-  --glass-color: rgba(255, 255, 255, 0.62);
-  --glass-color-strong: rgba(255, 255, 255, 0.78);
-  --glass-blur: 16px;
-  --glass-border: 1px solid rgba(13, 148, 136, 0.12);
-  --glass-border-strong: 1px solid rgba(6, 182, 212, 0.18);
-  --glass-shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
-  --glass-highlight: inset 0 1px 0 rgba(255, 255, 255, 0.75);
+  /* ── BACKGROUNDS */
+  --bg-gradient        : linear-gradient(145deg, #f5f0e8 0%, #eaf4e2 40%, #dff2ec 70%, #f5f0e8 100%);
+  --bg-color           : #f5f0e8;
+  --bg-secondary       : #eaf4e2;
+  --bg-tertiary        : #d8edd4;
+
+  /* ── GLASS CARDS */
+  --glass-color        : rgba(255, 255, 255, 0.68);
+  --glass-color-strong : rgba(255, 255, 255, 0.82);
+  --glass-blur         : 16px;
+  --glass-border       : 1px solid rgba(0, 180, 166, 0.14);
+  --glass-border-strong: 1px solid rgba(0, 180, 166, 0.25);
+  --glass-shadow       : 0 8px 28px rgba(30, 60, 20, 0.10);
+  --glass-highlight    : inset 0 1px 0 rgba(255, 255, 255, 0.80);
 
   /* Backward compatibility */
-  --card-bg: var(--glass-color);
-  --card-border: var(--glass-border);
-  --card-shadow: var(--glass-shadow);
+  --card-bg     : var(--glass-color);
+  --card-border : var(--glass-border);
+  --card-shadow : var(--glass-shadow);
 
-  /* ACCENTS */
-  --accent-primary: #16a34a;
-  --accent-hover: #15803d;
-  --accent-secondary: #0d9488;
-  --accent-cyan: #0891b2;
-  --focus-ring: 0 0 0 3px rgba(8, 145, 178, 0.18);
+  /* ── BRAND ACCENTS */
+  --accent-primary     : #2d7a28;
+  --accent-hover       : #236020;
+  --accent-secondary   : #00b4a6;
+  --accent-cyan        : #00b4a6;
+  --accent-bark        : #7a4f2e;
+  --focus-ring         : 0 0 0 3px rgba(0, 180, 166, 0.18);
 
-  --plant-teal: #0d9488;
-  --plant-green: #16a34a;
-  --plant-cyan: #0891b2;
-  --plant-mint: #4ade80;
+  /* ── PLANT TOKENS */
+  --plant-green        : #2d7a28;
+  --plant-teal         : #00b4a6;
+  --plant-cyan         : #0dcfbb;
+  --plant-moss         : #4a8c42;
+  --plant-bark         : #7a4f2e;
+  --plant-canopy       : #3d8434;
+  --plant-mint         : #c5f0d0;
 
-  /* STATUS */
-  --success-color: #16a34a;
-  --warning-color: #d97706;
-  --danger-color: #dc2626;
-  --info-color: #0891b2;
-  --primary-color: var(--accent-primary);
+  /* ── GRADIENTS */
+  --grad-primary       : linear-gradient(135deg, #2d7a28, #4a9e3f);
+  --grad-cyan          : linear-gradient(135deg, #00b4a6, #0dcfbb);
+  --grad-forest        : linear-gradient(135deg, #eaf4e2, #c5f0d0, #0dcfbb);
+  --grad-bark          : linear-gradient(135deg, #c8a882, #7a4f2e);
+  --grad-glow          : radial-gradient(ellipse at top, rgba(0,180,166,0.08) 0%, transparent 55%);
 
-  /* TEXT */
-  --text-primary: #083344;
-  --text-secondary: rgba(8, 51, 68, 0.72);
-  --text-tertiary: rgba(15, 118, 110, 0.56);
-  --text-inverse: #f8fffd;
-  --text-color: var(--text-primary);
+  /* ── STATUS */
+  --success-color      : #2d7a28;
+  --warning-color      : #b87008;
+  --danger-color       : #c0392b;
+  --info-color         : #00b4a6;
+  --primary-color      : var(--accent-primary);
 
-  /* ICONS / BORDERS */
-  --border-color: rgba(8, 145, 178, 0.10);
-  --border-soft: rgba(13, 148, 136, 0.08);
-  --divider-color: rgba(8, 51, 68, 0.08);
+  /* ── TEXT */
+  --text-primary       : #1a2e14;
+  --text-secondary     : rgba(30, 65, 22, 0.75);
+  --text-tertiary      : rgba(45, 90, 35, 0.58);
+  --text-muted         : rgba(80, 130, 60, 0.45);
+  --text-inverse       : #f5f0e8;
+  --text-color         : var(--text-primary);
 
-  /* GLOWS */
-  --glow-cyan: 0 0 20px rgba(8, 145, 178, 0.10);
-  --glow-teal: 0 0 20px rgba(13, 148, 136, 0.10);
-  --glow-green: 0 0 20px rgba(22, 163, 74, 0.10);
+  /* ── BORDERS & DIVIDERS */
+  --border-color       : rgba(0, 180, 166, 0.10);
+  --border-soft        : rgba(45, 90, 35, 0.08);
+  --border-moss        : rgba(74, 140, 66, 0.18);
+  --divider-color      : rgba(30, 65, 22, 0.07);
 
-  /* Toggles */
-  --toggle-bg: rgba(8, 51, 68, 0.10);
-  --toggle-on-bg: linear-gradient(135deg, #0d9488 0%, #16a34a 100%);
-  --toggle-shadow: 0 2px 10px rgba(13, 148, 136, 0.18);
+  /* ── GLOW UTILITIES */
+  --glow-cyan          : 0 0 18px rgba(0, 180, 166, 0.14);
+  --glow-green         : 0 0 18px rgba(45, 122, 40, 0.14);
+  --glow-moss          : 0 0 14px rgba(74, 140, 66, 0.12);
 
-  /* EXTRA UI HELPERS */
-  --surface-1: rgba(255, 255, 255, 0.45);
-  --surface-2: rgba(255, 255, 255, 0.68);
-  --surface-hover: rgba(8, 145, 178, 0.08);
-  --surface-active: rgba(13, 148, 136, 0.10);
+  /* ── SURFACE HELPERS */
+  --surface-1          : rgba(255, 255, 255, 0.50);
+  --surface-2          : rgba(255, 255, 255, 0.70);
+  --surface-hover      : rgba(0, 180, 166, 0.07);
+  --surface-active     : rgba(45, 122, 40, 0.10);
+  --surface-bark       : rgba(200, 168, 130, 0.25);
+
+  /* ── TOGGLES */
+  --toggle-bg          : rgba(30, 65, 22, 0.10);
+  --toggle-on-bg       : linear-gradient(135deg, #2d7a28, #00b4a6);
+  --toggle-shadow      : 0 2px 10px rgba(0, 180, 166, 0.16);
 
   color-scheme: light;
-} 
+}
