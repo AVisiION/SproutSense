@@ -41,7 +41,7 @@
   <link rel="apple-touch-icon" sizes="180x180"   href="/logo.jpg">
   <link rel="mask-icon"        href="/safari-pinned-tab.svg" color="#14b8a6">
 
-  <!-- ✅ Font Awesome 6 Free — official CDN (replaces broken kit placeholder) -->
+  <!-- ✅ Font Awesome 6 Free — official CDN -->
   <link
     rel="stylesheet"
     href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
@@ -70,6 +70,17 @@
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    /* ── Fix: dark background on root prevents white flash ── */
+    body {
+      background: #050d14;
+      margin: 0;
+    }
+
+    #root {
+      background: #0a0e1a;
+      min-height: 100vh;
+    }
 
     #ss-loader {
       position : fixed;
@@ -251,7 +262,9 @@
         l.addEventListener('transitionend',function(){l.remove();},{once:true});
       }
       window.addEventListener('sproutsense:ready',dismissLoader,{once:true});
-      var fb=setTimeout(dismissLoader,3500);
+      // Increased fallback from 3500ms to 5000ms to avoid dismissing
+      // the loader before React finishes painting on slow connections.
+      var fb=setTimeout(dismissLoader,5000);
       window.addEventListener('sproutsense:ready',function(){clearTimeout(fb);},{once:true});
     })();
   </script>
