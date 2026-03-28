@@ -1,19 +1,23 @@
 /**
  * Sidebar.css — components/layout/
- * Modern floating glass sidebar logic.
+ * Modern floating glass sidebar — tuned for dark green glass palette.
  */
+
 /* ─────────────────────────────────────────
    1. DESKTOP — Floating Sidebar Structure
    ───────────────────────────────────────── */
 .sidebar {
   flex-shrink: 0;
   padding: 1.75rem 1.25rem;
-  background: var(--glass-color, rgba(15, 23, 42, 0.4));
-  border: var(--glass-border, 1px solid rgba(255, 255, 255, 0.08));
+  /* Increased opacity: aurora must not bleed through sidebar */
+  background: rgba(4, 14, 9, 0.88);
+  border: 1px solid rgba(255, 255, 255, 0.07);
   border-radius: 1.5rem;
-  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.2), inset 0 0 20px rgba(255, 255, 255, 0.02);
-  -webkit-backdrop-filter: blur(16px);
-  backdrop-filter: blur(16px);
+  box-shadow:
+    0 12px 40px rgba(0, 0, 0, 0.55),
+    inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  -webkit-backdrop-filter: blur(22px);
+  backdrop-filter: blur(22px);
   transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
   display: flex;
   flex-direction: column;
@@ -24,6 +28,14 @@
   -ms-overflow-style: none;
 }
 
+[data-theme='light'] .sidebar {
+  background: rgba(255, 255, 255, 0.90);
+  border-color: rgba(46, 125, 50, 0.12);
+  box-shadow:
+    0 8px 28px rgba(10, 40, 15, 0.12),
+    inset 0 1px 0 rgba(255, 255, 255, 0.80);
+}
+
 /* ─────────────────────────────────────────
    2. COLLAPSED MODE
    ───────────────────────────────────────── */
@@ -32,11 +44,11 @@
     width: 80px;
     min-width: 80px;
     padding: 2rem 0.5rem;
-    background: transparent;
-    border-color: transparent;
-    box-shadow: none;
-    -webkit-backdrop-filter: none;
-    backdrop-filter: none;
+    background: rgba(3, 10, 7, 0.82);
+    border-color: rgba(255, 255, 255, 0.06);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.45);
+    -webkit-backdrop-filter: blur(20px);
+    backdrop-filter: blur(20px);
   }
 
   .app-shell.sidebar-collapsed .sidebar-brand,
@@ -57,34 +69,37 @@
     backdrop-filter: blur(10px);
   }
 
+  /* Collapsed active: muted forest green, not teal */
   .app-shell.sidebar-collapsed .sidebar-link.active {
-    background: rgba(20, 184, 166, 0.2);
-    border-color: rgba(20, 184, 166, 0.4);
-    box-shadow: 0 0 20px rgba(20, 184, 166, 0.15);
+    background: rgba(58, 143, 62, 0.20);
+    border-color: rgba(58, 143, 62, 0.40);
+    box-shadow: 0 0 20px rgba(58, 143, 62, 0.12);
   }
 
   .app-shell.sidebar-collapsed .sidebar-link:hover {
-    background: rgba(255, 255, 255, 0.12);
-    border-color: rgba(255, 255, 255, 0.25);
+    background: rgba(255, 255, 255, 0.07);
+    border-color: rgba(255, 255, 255, 0.15);
     backdrop-filter: blur(15px);
     box-shadow:
-      0 10px 40px -10px rgba(0, 0, 0, 0.3),
-      inset 0 0 10px rgba(255, 255, 255, 0.05);
-
+      0 10px 40px -10px rgba(0, 0, 0, 0.4),
+      inset 0 0 10px rgba(255, 255, 255, 0.03);
   }
 
   .app-shell.sidebar-collapsed .sidebar-label {
     position: fixed;
     left: 90px;
-    background: var(--glass-color, rgba(15, 23, 42, 0.9));
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    backdrop-filter: blur(10px);
+    background: rgba(4, 14, 9, 0.95);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    backdrop-filter: blur(12px);
     padding: 0.5rem 1rem;
     border-radius: 0.5rem;
     opacity: 0;
     pointer-events: none;
     transform: translateX(-15px);
     transition: all 0.3s ease;
+    color: #C8DCC8;
+    font-size: 0.85rem;
+    white-space: nowrap;
   }
 
   .app-shell.sidebar-collapsed .sidebar-link:hover .sidebar-label {
@@ -94,7 +109,7 @@
 }
 
 /* ─────────────────────────────────────────
-   4. BRAND & NAV LINKS
+   3. BRAND & NAV LINKS
    ───────────────────────────────────────── */
 .sidebar-brand {
   display: flex;
@@ -115,7 +130,12 @@
 .sidebar-brand-text {
   font-size: 1rem;
   font-weight: 700;
-  color: #59ab56;
+  /* Muted forest green — not vivid */
+  color: #4EA852;
+}
+
+[data-theme='light'] .sidebar-brand-text {
+  color: #2E7D32;
 }
 
 .sidebar-category {
@@ -131,7 +151,8 @@
   text-transform: uppercase;
   color: var(--text-secondary);
   padding: 0 0.5rem;
-  opacity: 0.5;
+  opacity: 0.45;
+  letter-spacing: 0.08em;
 }
 
 .sidebar-nav {
@@ -150,77 +171,79 @@
   color: var(--text-secondary);
   transition: all 0.3s ease;
   text-decoration: none;
+  border: 1px solid transparent;
 }
 
+/* Hover: subtle glass lift — visible but not garish */
 .sidebar-link:hover {
-  background: rgba(44, 95, 87, 0.034);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  backdrop-filter: blur(8px);
-  color: #ffffff;
-  transform: translateX(0px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.178);
+  background: rgba(58, 143, 62, 0.10);
+  border-color: rgba(78, 168, 82, 0.18);
+  backdrop-filter: blur(10px);
+  color: #C8DCC8;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
   font-weight: 400;
 }
 
-.sidebar-link.active {
-  background: rgba(10, 100, 90, 0.082);
-  border: 1px solid rgba(20, 184, 166, 0.2);
-  color: var(--plant-teal);
-  box-shadow: 0 4px 12px rgba(2, 73, 73, 0.363);
-  font-weight: 700;
-  text-decoration: solid 2px;
+[data-theme='light'] .sidebar-link:hover {
+  background: rgba(58, 143, 62, 0.08);
+  border-color: rgba(46, 125, 50, 0.18);
+  color: #132016;
 }
 
+/* Active: forest green glow — no teal */
+.sidebar-link.active {
+  background: rgba(58, 143, 62, 0.16);
+  border-color: rgba(78, 168, 82, 0.30);
+  color: #7EC880;
+  box-shadow: 0 4px 18px rgba(58, 143, 62, 0.18);
+  font-weight: 700;
+}
+
+[data-theme='light'] .sidebar-link.active {
+  background: rgba(58, 143, 62, 0.10);
+  border-color: rgba(46, 125, 50, 0.28);
+  color: #2E7D32;
+  box-shadow: 0 4px 14px rgba(58, 143, 62, 0.12);
+}
+
+/* ─────────────────────────────────────────
+   4. BADGE, OVERLAY, ANIMATIONS
+   ───────────────────────────────────────── */
 .sidebar-badge {
   position: absolute;
   top: -6px;
   right: -8px;
-  background: #ef4444;
+  background: #CC3333;
   color: #fff;
   font-size: 0.65rem;
   font-weight: 700;
   padding: 2px 6px;
   border-radius: 10px;
+  box-shadow: 0 2px 8px rgba(204, 51, 51, 0.40);
 }
 
-/* Overlay & Animations */
 .sidebar-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.4);
+  background: rgba(0, 0, 0, 0.55);
   backdrop-filter: blur(4px);
   z-index: 99;
   animation: fadeIn 0.4s ease;
 }
 
 @keyframes fadeIn {
-  from {
-    opacity: 0;
-  }
-
-  to {
-    opacity: 1;
-  }
+  from { opacity: 0; }
+  to   { opacity: 1; }
 }
 
 @keyframes float {
-
-  0%,
-  100% {
-    transform: translateY(0);
-  }
-
-  50% {
-    transform: translateY(-4px);
-  }
+  0%, 100% { transform: translateY(0); }
+  50%       { transform: translateY(-4px); }
 }
 
-.light-theme .sidebar {
-  background: rgba(255, 255, 255, 0.8);
-  border-color: rgba(0, 0, 0, 0.05);
-}
-
-/* System Status Section */
+/* ─────────────────────────────────────────
+   5. SYSTEM STATUS SECTION
+   ───────────────────────────────────────── */
 .sidebar-system-status {
   margin-top: auto;
   padding: 1rem 0.5rem;
@@ -229,6 +252,10 @@
   flex-direction: column;
   gap: 0.75rem;
   transition: opacity 0.3s ease;
+}
+
+[data-theme='light'] .sidebar-system-status {
+  border-top-color: rgba(46, 125, 50, 0.10);
 }
 
 .sidebar-system-row {
@@ -241,44 +268,60 @@
 .sidebar-system-label {
   color: var(--text-secondary);
   font-weight: 500;
-  opacity: 0.8;
+  opacity: 0.75;
 }
 
 .sidebar-system-pill {
-  font-size: 0.7rem;
+  font-size: 0.68rem;
   font-weight: 700;
   padding: 2px 8px;
   border-radius: 6px;
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
+/* Online: muted green — not vivid lime */
 .sidebar-system-pill.online {
-  background: rgba(34, 197, 94, 0.15);
-  color: #4ade80;
-  border: 1px solid rgba(34, 197, 94, 0.2);
+  background: rgba(58, 143, 62, 0.18);
+  color: #7EC880;
+  border: 1px solid rgba(78, 168, 82, 0.25);
 }
 
+[data-theme='light'] .sidebar-system-pill.online {
+  background: rgba(58, 143, 62, 0.10);
+  color: #2E7D32;
+  border-color: rgba(46, 125, 50, 0.25);
+}
+
+/* Offline: muted red */
 .sidebar-system-pill.offline {
-  background: rgba(239, 68, 68, 0.15);
-  color: #f87171;
-  border: 1px solid rgba(239, 68, 68, 0.2);
+  background: rgba(204, 51, 51, 0.15);
+  color: #E07070;
+  border: 1px solid rgba(204, 51, 51, 0.22);
 }
 
+[data-theme='light'] .sidebar-system-pill.offline {
+  background: rgba(198, 40, 40, 0.08);
+  color: #C62828;
+  border-color: rgba(198, 40, 40, 0.20);
+}
+
+/* Checking: muted neutral */
 .sidebar-system-pill.checking {
-  background: rgba(255, 255, 255, 0.05);
+  background: rgba(255, 255, 255, 0.04);
   color: var(--text-secondary);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.08);
 }
 
-/* Hide system status when collapsed */
+/* Hide when collapsed */
 .app-shell.sidebar-collapsed .sidebar-system-status {
   opacity: 0;
   pointer-events: none;
 }
 
-/* Inline Status Dot */
+/* ─────────────────────────────────────────
+   6. INLINE STATUS DOT
+   ───────────────────────────────────────── */
 .sidebar-status-dot {
   position: absolute;
   top: -2px;
@@ -286,20 +329,20 @@
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  border: 2px solid rgba(15, 23, 42, 0.9);
-  box-shadow: 0 0 8px rgba(0, 0, 0, 0.5);
+  /* Updated border: obsidian-green, not slate */
+  border: 2px solid rgba(2, 9, 5, 0.95);
 }
 
 .sidebar-status-dot.online {
-  background: #22c55e;
-  box-shadow: 0 0 12px rgba(34, 197, 94, 0.5);
+  background: #4EA852;
+  box-shadow: 0 0 8px rgba(78, 168, 82, 0.45);
 }
 
 .sidebar-status-dot.offline {
-  background: #ef4444;
-  box-shadow: 0 0 12px rgba(239, 68, 68, 0.5);
+  background: #CC3333;
+  box-shadow: 0 0 8px rgba(204, 51, 51, 0.40);
 }
 
 .sidebar-status-dot.checking {
-  background: #94a3b8;
+  background: rgba(170, 180, 170, 0.55);
 }
