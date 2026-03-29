@@ -1,6 +1,20 @@
 // ─── SPROUTSENSE MOCK DATA SERVICE ───────────────────────────────────────────
 // Central in-memory store. No localStorage. Default: OFF.
 
+const listeners = [];
+
+export function subscribeToMockUpdates(callback) {
+  listeners.push(callback);
+  return () => {
+    const idx = listeners.indexOf(callback);
+    if (idx > -1) listeners.splice(idx, 1);
+  };
+}
+
+function notifyUpdate() {
+  listeners.forEach(cb => cb());
+}
+
 export const mockDataStore = {
   enabled: false,
   scenario: 'normal',
@@ -89,13 +103,18 @@ const SCENARIOS = {
 
 // ─── API ──────────────────────────────────────────────────────────────────────
 export function isMockEnabled()       { return mockDataStore.enabled; }
-export function setMockEnabled(val)   { mockDataStore.enabled = !!val; }
+
+export function setMockEnabled(val) { 
+  mockDataStore.enabled = !!val; 
+  notifyUpdate(); 
+}
 
 export function applyScenario(name) {
   const preset = SCENARIOS[name];
   if (!preset) return;
   Object.assign(mockDataStore, preset);
   mockDataStore.scenario = name;
+  notifyUpdate();
 }
 
 export function getMockSensors()      { return mockDataStore.sensors ?? []; }
@@ -108,55 +127,68 @@ export function getMockUsers()        { return mockDataStore.users; }
 export function addSensor(sensor) {
   const newSensor = { id: `S${Date.now()}`, status: 'active', lastUpdate: 'just now', ...sensor };
   mockDataStore.sensors = [...(mockDataStore.sensors || []), newSensor];
+  notifyUpdate();
   return newSensor;
 }
 export function updateSensor(id, fields) {
   mockDataStore.sensors = (mockDataStore.sensors || []).map(s => s.id === id ? { ...s, ...fields } : s);
+  notifyUpdate();
 }
 export function deleteSensor(id) {
   mockDataStore.sensors = (mockDataStore.sensors || []).filter(s => s.id !== id);
+  notifyUpdate();
 }
 
 // ─── Alert CRUD ───────────────────────────────────────────────────────────────
 export function addAlert(alert) {
   const newAlert = { id: `A${Date.now()}`, enabled: true, timestamp: new Date().toLocaleTimeString(), ...alert };
   mockDataStore.alerts = [...(mockDataStore.alerts || []), newAlert];
+  notifyUpdate();
   return newAlert;
 }
 export function updateAlert(id, fields) {
   mockDataStore.alerts = (mockDataStore.alerts || []).map(a => a.id === id ? { ...a, ...fields } : a);
+  notifyUpdate();
 }
 export function deleteAlert(id) {
   mockDataStore.alerts = (mockDataStore.alerts || []).filter(a => a.id !== id);
+  notifyUpdate();
 }
 
 // ─── Crop Health update ───────────────────────────────────────────────────────
 export function updateCropHealth(fields) {
   mockDataStore.cropHealth = { ...mockDataStore.cropHealth, ...fields };
+  notifyUpdate();
 }
 
 // ─── Weather update ───────────────────────────────────────────────────────────
 export function updateWeather(fields) {
   mockDataStore.weather = { ...mockDataStore.weather, ...fields };
+  notifyUpdate();
 }
 
 // ─── User CRUD ────────────────────────────────────────────────────────────────
 export function addUser(user) {
   const newUser = { id: `U${Date.now()}`, active: true, ...user };
   mockDataStore.users = [...mockDataStore.users, newUser];
+  notifyUpdate();
   return newUser;
 }
 export function updateUser(id, fields) {
   mockDataStore.users = mockDataStore.users.map(u => u.id === id ? { ...u, ...fields } : u);
+  notifyUpdate();
 }
 export function deleteUser(id) {
   mockDataStore.users = mockDataStore.users.filter(u => u.id !== id);
+  notifyUpdate();
 }
 
 // ─── Reset ────────────────────────────────────────────────────────────────────
 export function resetToDefaults() {
-  applyScenario('normal');
+  const preset = SCENARIOS['normal'];
+  Object.assign(mockDataStore, preset);
   mockDataStore.scenario = 'normal';
+  notifyUpdate();
 }
 
 export function exportMockData() {
@@ -177,6 +209,7 @@ export function importMockData(jsonString) {
     if (data.cropHealth) mockDataStore.cropHealth = data.cropHealth;
     if (data.weather)    mockDataStore.weather    = data.weather;
     if (data.users)      mockDataStore.users      = data.users;
+    notifyUpdate();
     return { success: true };
   } catch {
     return { success: false, error: 'Invalid JSON format' };
