@@ -408,3 +408,52 @@
 .sidebar-status-dot.checking {
   background: rgba(170, 180, 170, 0.55);
 }
+
+/* ─────────────────────────────────────────
+   7. MOBILE — Slide-in drawer (≤ 768px)
+   ───────────────────────────────────────── */
+@media (max-width: 768px) {
+
+  /* Sidebar becomes a fixed full-height drawer */
+  .sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 100dvh;
+    width: 280px;
+    border-radius: 0 1.5rem 1.5rem 0;   /* round only right side on mobile */
+    z-index: 300;
+    transform: translateX(-100%);        /* hidden off-screen by default */
+    transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+    overflow-y: auto;
+    overflow-x: hidden;
+  }
+
+  /* Open state — parent adds .sidebar-open class */
+  .sidebar-open .sidebar {
+    transform: translateX(0);
+  }
+
+  /* Overlay — shown when sidebar is open */
+  .sidebar-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.55);
+    backdrop-filter: blur(4px);
+    z-index: 299;
+    animation: fadeIn 0.3s ease;
+  }
+
+  .sidebar-open .sidebar-overlay {
+    display: block;
+  }
+    .sidebar-brand {
+    display: none;
+  }
+    .sidebar-system-status {
+    margin-bottom: 5rem; }
+  .sidebar-nav {
+    margin-top: 2.5rem;
+  }
+}
