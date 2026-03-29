@@ -27,6 +27,7 @@ import { Toaster, toast as hotToast } from 'react-hot-toast';
 import { useWebSocket } from './hooks/useWebSocket';
 
 import { configAPI, sensorAPI, wateringAPI, aiAPI } from './utils/api';
+import { isMockEnabled, getMockSensors, getMockAlerts } from './services/mockDataService'; // <-- NEW MOCK IMPORTS
 
 // ── Background ─────────────────────────────────────────────────────────────
 import Aurora from './components/background/Aurora';
@@ -45,6 +46,7 @@ import { ConfigCard } from './components/ConfigCard';
 import { Notification } from './components/Notification';
 import { GlassIcon } from './components/bits/GlassIcon';
 import SproutSenseLogo from './components/SproutSenseLogo';
+import MockBanner from './components/layout/MockBanner'; // <-- NEW MOCK BANNER
 
 // ── Pages ────────────────────────────────────────────────────────────────
 import HomePage from './pages/Home/HomePage.jsx';
@@ -242,6 +244,12 @@ function App() {
   }, []);
 
   useEffect(() => {
+    if (isMockEnabled()) {
+      // If mock is enabled, use mock alerts and bypass real threshold checks
+      setAlerts(getMockAlerts());
+      return;
+    }
+
     if (!sensors) return;
     const newAlerts = [];
     const now = new Date();
@@ -262,6 +270,7 @@ function App() {
   }, [sensors, pumpActive]);
 
   const fetchDiseaseAlerts = useCallback(async () => {
+    if (isMockEnabled()) return; // Mock handles its own alerts
     try {
       const end = new Date();
       const start = new Date(end.getTime() - 60 * 60 * 1000);
@@ -344,6 +353,7 @@ function App() {
 
   // ── WebSocket ──────────────────────────────────────────────────────────
   const handleWebSocketMessage = useCallback((data) => {
+    if (isMockEnabled()) return; // Block live WS updates if Mock Mode is ON
     const { type, data: payload } = data;
     switch (type) {
       case 'sensor_update':    setSensors(normalizeSensorPayload(payload)); break;
@@ -373,6 +383,22 @@ function App() {
     let lastEsp32Online = true, lastEsp32CamOnline = true;
 
     const fetchData = async () => {
+      // ── MOCK INJECTION ──
+      if (isMockEnabled()) {
+        const mockSensorsArr = getMockSensors();
+        // Assuming first sensor in mock array is the primary
+        const mockPrimary = mockSensorsArr.length > 0 ? mockSensorsArr[0] : null; 
+        
+        setSensors(mockPrimary);
+        setSystemStatus({
+          backend: 'online', database: 'online', esp32: 'online', esp32Cam: 'online',
+          esp32LastSeen: new Date().toISOString(), esp32CamLastSeen: new Date().toISOString(),
+          lastUpdated: new Date().toISOString(),
+        });
+        return; // Skip real API fetch
+      }
+
+      // ── REAL API FETCH ──
       try {
         const [sensorData, wateringStatus, configResponse, esp32StatusResponse, esp32CamStatusResponse, healthResponse] =
           await Promise.all([
@@ -453,20 +479,24 @@ function App() {
 
   // ── Watering & Config handlers ─────────────────────────────────────────
   const handleStartWatering = async () => {
+    if(isMockEnabled()) { showNotification('Mock: Pump Started', 'success'); setPumpActive(true); return; }
     try { await wateringAPI.start(); showNotification('Watering command sent', 'success'); }
     catch { showNotification('Failed to start watering', 'error'); }
   };
   const handleStopWatering = async () => {
+    if(isMockEnabled()) { showNotification('Mock: Pump Stopped', 'info'); setPumpActive(false); return; }
     try { await wateringAPI.stop(); showNotification('Stop command sent', 'success'); }
     catch { showNotification('Failed to stop watering', 'error'); }
   };
   const handleSaveMoistureThreshold = async () => {
+    if(isMockEnabled()) { showNotification('Mock: Threshold Saved', 'success'); return; }
     setIsThresholdSaving(true);
     try { await configAPI.update('ESP32-SENSOR', { soilMoistureThreshold: moistureThreshold }); showNotification('Moisture threshold saved', 'success'); }
     catch { showNotification('Failed to save moisture threshold', 'error'); }
     finally { setIsThresholdSaving(false); }
   };
   const handleSaveAiControls = async () => {
+    if(isMockEnabled()) { showNotification('Mock: AI Settings Saved', 'success'); return; }
     setIsAiControlSaving(true);
     try { await configAPI.update('ESP32-SENSOR', { plantGrowthEnabled, plantGrowthStage, aiInsightsMode }); showNotification('Growth and AI insight settings saved', 'success'); }
     catch { showNotification('Failed to save growth and AI settings', 'error'); }
@@ -569,7 +599,11 @@ function App() {
         </aside>
 
         {/* ── Main content area ── */}
-        <div className="container">
+        <div className="container" style={{ display: 'flex', flexDirection: 'column' }}>
+          
+          {/* MOCK BANNER GOES HERE */}
+          <MockBanner />
+
           <Navbar
             currentPage={pageTitle}
             isMobile={isMobile}
@@ -688,7 +722,9 @@ function App() {
               <Route path="/alerts" element={
                 <PageWrapper>
                   <section className="dashboard-section">
-                    <AlertsPage alerts={alerts} sensors={sensors} onClearAlert={handleClearAlert} onClearAllAlerts={handleClearAllAlerts} />
+                    <div style={{ marginTop: '2rem' }}>
+                      <AlertsPage alerts={alerts} sensors={sensors} onClearAlert={handleClearAlert} onClearAllAlerts={handleClearAllAlerts} />
+                    </div>
                   </section>
                 </PageWrapper>
               } />

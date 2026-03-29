@@ -6,7 +6,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Navigate } from 'react-router-dom';
 import { useAdminAuth } from '../../context/AdminAuthContext';
-import './Admin.css';
+import './AdminLogin.css';
 
 export default function AdminLoginPage() {
   const { isAdminAuthenticated, adminLogin } = useAdminAuth();

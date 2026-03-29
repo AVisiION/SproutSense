@@ -1,7 +1,7 @@
 /**
  * AdminPanelPage.jsx
  * Professional glass-morphism admin dashboard.
- * Sections: Overview, Devices, Config, Raw Data, Logs
+ * Sections: Overview, Devices, Config, Raw Data, Logs, Mock Data
  * Features: Font Awesome icons, animated cards, live log feed, interactive controls
  */
 import React, { useState, useEffect, useRef, useCallback } from 'react';
@@ -9,6 +9,9 @@ import { useNavigate } from 'react-router-dom';
 import { useAdminAuth } from '../../context/AdminAuthContext';
 import { configAPI, sensorAPI, wateringAPI } from '../../utils/api';
 import './Admin.css';
+import { setMockEnabled, isMockEnabled } from '../../services/mockDataService';
+import MockDataPanel from './MockDataPanel';
+import './MockDataPanel.css';
 
 const SECTIONS = [
   { id: 'overview', label: 'Overview',  icon: 'fa-chart-line' },
@@ -16,6 +19,7 @@ const SECTIONS = [
   { id: 'config',   label: 'Config',    icon: 'fa-sliders' },
   { id: 'data',     label: 'Raw Data',  icon: 'fa-database' },
   { id: 'logs',     label: 'Logs',      icon: 'fa-terminal' },
+  { id: 'mock',     label: 'Mock Data', icon: 'fa-vial' }, // New Mock Data tab
 ];
 
 const LOG_TYPES = { info: 'info', success: 'success', warning: 'warning', error: 'error' };
@@ -26,15 +30,18 @@ export default function AdminPanelPage() {
   const logEndRef = useRef(null);
 
   const [activeSection, setActiveSection]   = useState('overview');
-  const [systemInfo,    setSystemInfo]       = useState(null);
-  const [sensorData,    setSensorData]       = useState(null);
-  const [configData,    setConfigData]       = useState(null);
+  const [systemInfo,    setSystemInfo]      = useState(null);
+  const [sensorData,    setSensorData]      = useState(null);
+  const [configData,    setConfigData]      = useState(null);
   const [waterStatus,   setWaterStatus]      = useState(null);
   const [loading,       setLoading]          = useState(true);
   const [refreshing,    setRefreshing]       = useState(false);
   const [actionLog,     setActionLog]        = useState([]);
   const [uptime,        setUptime]           = useState(0);
   const [sidebarOpen,   setSidebarOpen]      = useState(true);
+  
+  // Mock Data master toggle state
+  const [mockEnabled, setMockEnabledState] = useState(isMockEnabled());
 
   const log = useCallback((msg, type = LOG_TYPES.info) => {
     const entry = {
@@ -129,6 +136,13 @@ export default function AdminPanelPage() {
     a.href = url; a.download = `sproutsense-logs-${Date.now()}.txt`; a.click();
     URL.revokeObjectURL(url);
     log('Logs exported to file', LOG_TYPES.success);
+  };
+
+  const handleMockToggle = (e) => {
+    const val = e.target.checked;
+    setMockEnabledState(val);
+    setMockEnabled(val);
+    log(`Mock Data Mode turned ${val ? 'ON' : 'OFF'}`, val ? LOG_TYPES.warning : LOG_TYPES.info);
   };
 
   return (
@@ -377,6 +391,90 @@ export default function AdminPanelPage() {
                     )}
                     <div ref={logEndRef} />
                   </div>
+                </div>
+              )}
+              
+              {/* ── MOCK DATA ───────────────────────────────── */}
+              {activeSection === 'mock' && (
+                <div className="adm-section">
+                  <div style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    marginBottom: '1rem',
+                    background: 'var(--bg-glass, rgba(255, 255, 255, 0.05))',
+                    padding: '1.25rem',
+                    borderRadius: '1rem',
+                    border: '1px solid var(--border-glass, rgba(255, 255, 255, 0.1))',
+                  }}>
+                    <div>
+                      <h2 style={{ fontSize: '1.25rem', fontWeight: 600, color: 'var(--text-main, #fff)', margin: '0 0 0.25rem 0' }}>
+                        <i className="fa-solid fa-vial" style={{ color: 'var(--color-primary, #10b981)', marginRight: '0.5rem' }} />
+                        Mock Data Control
+                      </h2>
+                      <p style={{ fontSize: '0.875rem', color: 'var(--text-muted, #9ca3af)', margin: 0 }}>
+                        Override live API data for testing and presentations. Default: Off.
+                      </p>
+                    </div>
+
+                    <label style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '0.75rem',
+                      cursor: 'pointer',
+                      userSelect: 'none',
+                    }}>
+                      <span style={{ 
+                        fontSize: '0.875rem', 
+                        fontWeight: 600,
+                        color: mockEnabled ? 'var(--color-primary, #10b981)' : 'var(--text-muted, #9ca3af)'
+                      }}>
+                        {mockEnabled ? 'ON' : 'OFF'}
+                      </span>
+
+                      <span style={{ position: 'relative', display: 'inline-block', width: 52, height: 28 }}>
+                        <input
+                          type="checkbox"
+                          checked={mockEnabled}
+                          onChange={handleMockToggle}
+                          style={{ opacity: 0, width: 0, height: 0, position: 'absolute' }}
+                          aria-label="Enable mock data mode"
+                        />
+                        <span style={{
+                          position: 'absolute',
+                          inset: 0,
+                          borderRadius: 9999,
+                          background: mockEnabled ? 'var(--color-primary, #10b981)' : 'var(--bg-glass-strong, rgba(255, 255, 255, 0.1))',
+                          transition: 'background 200ms ease',
+                          border: '1px solid var(--border-glass, rgba(255, 255, 255, 0.2))',
+                        }}>
+                          <span style={{
+                            position: 'absolute',
+                            width: 20,
+                            height: 20,
+                            borderRadius: '50%',
+                            background: '#fff',
+                            top: 3,
+                            left: mockEnabled ? 27 : 3,
+                            transition: 'left 200ms ease',
+                            boxShadow: '0 2px 5px rgba(0,0,0,0.3)',
+                          }} />
+                        </span>
+                      </span>
+                    </label>
+                  </div>
+
+                  {mockEnabled ? (
+                    <MockDataPanel />
+                  ) : (
+                    <div className="adm-glass-box" style={{ textAlign: 'center', padding: '3rem 1rem' }}>
+                      <i className="fa-solid fa-power-off" style={{ fontSize: '2.5rem', color: 'var(--text-muted, #9ca3af)', marginBottom: '1rem' }} />
+                      <h3 style={{ margin: '0 0 0.5rem 0', color: 'var(--text-main, #fff)' }}>Mock Data is Disabled</h3>
+                      <p style={{ margin: 0, color: 'var(--text-muted, #9ca3af)', maxWidth: '400px', marginInline: 'auto' }}>
+                        Turn on the switch above to reveal the control panel and inject mock scenarios into the dashboard.
+                      </p>
+                    </div>
+                  )}
                 </div>
               )}
             </>
