@@ -1,4 +1,4 @@
-﻿import mongoose from 'mongoose';
+import mongoose from 'mongoose';
 
 const sensorReadingSchema = new mongoose.Schema({
   soilMoisture: {
@@ -15,7 +15,9 @@ const sensorReadingSchema = new mongoose.Schema({
   },
   temperature: {
     type: Number,
-    required: true
+    required: true,
+    min: -50,
+    max: 120
   },
   humidity: {
     type: Number,

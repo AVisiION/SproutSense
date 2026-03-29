@@ -76,6 +76,8 @@ export function useWebSocket(onMessage) {
         clearTimeout(reconnectTimeoutRef.current);
       }
       if (wsRef.current) {
+        // Prevent onclose event from firing and looping a reconnection when we intentionally destroy the hook
+        wsRef.current.onclose = null;
         wsRef.current.close();
       }
     };

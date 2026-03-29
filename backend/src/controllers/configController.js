@@ -6,7 +6,7 @@ import WateringLog from '../models/WateringLog.js';
 import DiseaseDetection from '../models/DiseaseDetection.js';
 
 // ─── GET CONFIG ────────────────────────────────────────────────────────────────
-export const getConfig = async (req, res) => {
+export const getConfig = async (req, res, next) => {
   try {
     const deviceId = req.params.deviceId || req.query.deviceId || 'ESP32-SENSOR';
     let config = await SystemConfig.findOne({ deviceId });
@@ -15,12 +15,12 @@ export const getConfig = async (req, res) => {
     }
     res.json({ success: true, config });
   } catch (error) {
-    res.status(500).json({ success: false, error: error.message });
+    next(error);
   }
 };
 
 // ─── UPDATE CONFIG ─────────────────────────────────────────────────────────────
-export const updateConfig = async (req, res) => {
+export const updateConfig = async (req, res, next) => {
   try {
     const deviceId = req.params.deviceId || req.body.deviceId || 'ESP32-SENSOR';
     const updates = req.body;
@@ -32,12 +32,12 @@ export const updateConfig = async (req, res) => {
     );
     res.json({ success: true, config });
   } catch (error) {
-    res.status(500).json({ success: false, error: error.message });
+    next(error);
   }
 };
 
 // ─── GET STATUS ────────────────────────────────────────────────────────────────
-export const getStatus = async (req, res) => {
+export const getStatus = async (req, res, next) => {
   try {
     const deviceId = req.params.deviceId || req.query.deviceId;
     if (deviceId) {
@@ -47,12 +47,12 @@ export const getStatus = async (req, res) => {
     const allStatuses = await DeviceStatus.find({}).sort({ lastSeen: -1 });
     res.json({ success: true, statuses: allStatuses });
   } catch (error) {
-    res.status(500).json({ success: false, error: error.message });
+    next(error);
   }
 };
 
 // ─── UPDATE STATUS (Device heartbeat) ─────────────────────────────────────────
-export const updateStatus = async (req, res) => {
+export const updateStatus = async (req, res, next) => {
   try {
     const {
       deviceId, isOnline, state, ipAddress,
@@ -66,12 +66,12 @@ export const updateStatus = async (req, res) => {
     );
     res.json({ success: true, status });
   } catch (error) {
-    res.status(500).json({ success: false, error: error.message });
+    next(error);
   }
 };
 
 // ─── HEALTH CHECK ──────────────────────────────────────────────────────────────
-export const getHealth = async (req, res) => {
+export const getHealth = async (req, res, next) => {
   try {
     const dbState    = mongoose.connection.readyState;
     const dbConnected = dbState === 1;
@@ -103,7 +103,7 @@ export const getHealth = async (req, res) => {
       environment: process.env.NODE_ENV || 'development'
     });
   } catch (error) {
-    res.status(500).json({ success: false, status: 'error', error: error.message });
+    next(error);
   }
 };
 
@@ -119,34 +119,34 @@ export const toggleTestMode = async (req, res) => {
 };
 
 // ─── CLEAR HISTORY ─────────────────────────────────────────────────────────────
-export const clearSensorHistory = async (req, res) => {
+export const clearSensorHistory = async (req, res, next) => {
   try {
     const result = await SensorReading.deleteMany({});
     res.json({ success: true, deleted: result.deletedCount });
   } catch (error) {
-    res.status(500).json({ success: false, error: error.message });
+    next(error);
   }
 };
 
-export const clearWateringHistory = async (req, res) => {
+export const clearWateringHistory = async (req, res, next) => {
   try {
     const result = await WateringLog.deleteMany({});
     res.json({ success: true, deleted: result.deletedCount });
   } catch (error) {
-    res.status(500).json({ success: false, error: error.message });
+    next(error);
   }
 };
 
-export const clearDiseaseHistory = async (req, res) => {
+export const clearDiseaseHistory = async (req, res, next) => {
   try {
     const result = await DiseaseDetection.deleteMany({});
     res.json({ success: true, deleted: result.deletedCount });
   } catch (error) {
-    res.status(500).json({ success: false, error: error.message });
+    next(error);
   }
 };
 
-export const clearAllHistory = async (req, res) => {
+export const clearAllHistory = async (req, res, next) => {
   try {
     const [s, w, d] = await Promise.all([
       SensorReading.deleteMany({}),
@@ -162,7 +162,7 @@ export const clearAllHistory = async (req, res) => {
       }
     });
   } catch (error) {
-    res.status(500).json({ success: false, error: error.message });
+    next(error);
   }
 };
 

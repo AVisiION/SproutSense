@@ -1,4 +1,4 @@
-﻿import WateringLog from '../models/WateringLog.js';
+import WateringLog from '../models/WateringLog.js';
 import SensorReading from '../models/SensorReading.js';
 import DeviceStatus from '../models/DeviceStatus.js';
 import SystemConfig from '../models/SystemConfig.js';
@@ -8,24 +8,10 @@ import { successResponse, errorResponse } from '../utils/helpers.js';
 import { HTTP_STATUS } from '../config/constants.js';
 import wsService from '../utils/websocketService.js';
 
-const getEsp32BaseUrl = async (deviceId = 'ESP32-SENSOR') => {
-  const systemConfig = await SystemConfig.getConfig(deviceId);
-  const configuredIp = systemConfig?.espIp?.trim();
-  const ipAddress = configuredIp || config.ESP32.IP;
-  const port = Number(config.ESP32.PORT || 80);
-
-  if (port === 80) {
-    return `http://${ipAddress}`;
-  }
-
-  return `http://${ipAddress}:${port}`;
-};
-
 // Start watering
 export const startWatering = async (req, res, next) => {
   try {
     const { deviceId = 'ESP32-SENSOR', triggerType = 'manual' } = req.body;
-    const esp32BaseUrl = await getEsp32BaseUrl(deviceId);
 
     // Get current soil moisture
     const currentReading = await SensorReading.getLatest(deviceId);
@@ -39,12 +25,8 @@ export const startWatering = async (req, res, next) => {
       startTime: new Date()
     });
 
-    // Send command to ESP32
-    try {
-      await axios.post(`${esp32BaseUrl}/water/start`, {}, { timeout: config.ESP32.TIMEOUT });
-    } catch (error) {
-      console.warn('Failed to communicate with ESP32:', error.message);
-    }
+    // We no longer push via axios.post to the ESP32 because it polls the backend 
+    // every 8 seconds via GET /api/water/status. This eliminates the 5s API latency!
 
     // Update device status
     const status = await DeviceStatus.getStatus(deviceId);
@@ -65,7 +47,6 @@ export const startWatering = async (req, res, next) => {
 export const stopWatering = async (req, res, next) => {
   try {
     const { deviceId = 'ESP32-SENSOR' } = req.body;
-    const esp32BaseUrl = await getEsp32BaseUrl(deviceId);
 
     // Find the active watering log
     const activeLog = await WateringLog.findOne({
@@ -82,12 +63,8 @@ export const stopWatering = async (req, res, next) => {
       await activeLog.save();
     }
 
-    // Send command to ESP32
-    try {
-      await axios.post(`${esp32BaseUrl}/water/stop`, {}, { timeout: config.ESP32.TIMEOUT });
-    } catch (error) {
-      console.warn('Failed to communicate with ESP32:', error.message);
-    }
+    // We no longer push via axios.post to the ESP32 because it polls the backend 
+    // every 8 seconds via GET /api/water/status. This eliminates the 5s API latency!
 
     // Update device status
     const status = await DeviceStatus.getStatus(deviceId);

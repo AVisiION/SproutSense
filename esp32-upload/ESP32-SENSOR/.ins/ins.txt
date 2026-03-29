@@ -1,0 +1,9 @@
+Board: "ESP32 Dev Module"
+Upload Speed: 921600
+CPU Frequency: 240MHz
+Flash Frequency: 80MHz
+Flash Mode: QIO
+Flash Size: 4MB (32Mb)
+Partition Scheme: "Huge APP (3MB No OTA/1MB SPIFFS)"
+Core Debug Level: "None"
+Port: COM3 (or your ESP32 port)
