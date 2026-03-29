@@ -9,7 +9,7 @@ export default {
   IS_PRODUCTION: isProduction,
   
   // Database Configuration
-  MONGODB_URI: process.env.MONGODB_URI || 'mongodb://localhost:27017/smart-watering',
+  MONGODB_URI: process.env.MONGODB_URI,
   
   // CORS Configuration
   CORS_ORIGIN: process.env.CORS_ORIGIN || 'http://localhost:3000',

@@ -16,6 +16,7 @@ import {
 } from '../controllers/configController.js';
 import { validateConfigUpdate, validateDeviceStatus } from '../validators/requestValidator.js';
 import { readLimiter } from '../middleware/rateLimiter.js';
+import config from '../config/config.js';
 
 const router = express.Router();
 
@@ -25,7 +26,7 @@ const router = express.Router();
 // GET /api/config/status - Get device status (with optional ?deviceId= query param)
 router.get('/status', readLimiter, getStatus);
 
-// GET /api/config/status/:deviceId - Get device status by path param (supports ESP32-CAM etc.)
+// GET /api/config/status/:deviceId - Get device status by path param
 router.get('/status/:deviceId', readLimiter, getStatus);
 
 // POST /api/config/status - Update device status (ESP32 endpoint)
@@ -37,11 +38,11 @@ router.get('/health', readLimiter, getHealth);
 // GET /api/config/health/:deviceId - Get health for specific device
 router.get('/health/:deviceId', readLimiter, getHealth);
 
-// GET /api/config/testmode - Get test mode status
-router.get('/testmode', readLimiter, getTestMode);
-
-// POST /api/config/testmode - Toggle test mode
-router.post('/testmode', toggleTestMode);
+// TEST MODE ROUTES - DEVELOPMENT ONLY
+if (config.IS_DEVELOPMENT) {
+  router.get('/testmode', readLimiter, getTestMode);
+  router.post('/testmode', toggleTestMode);
+}
 
 // POST /api/config/clear-sensor-history - Clear sensor readings history
 router.post('/clear-sensor-history', clearSensorHistory);

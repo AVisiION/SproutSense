@@ -3,7 +3,7 @@ import cors from 'cors';
 import helmet from 'helmet';
 import morgan from 'morgan';
 import dotenv from 'dotenv';
-import compression from 'compression'; // <--- 1. NEW: Imported compression
+import compression from 'compression';
 
 dotenv.config();
 
@@ -15,59 +15,104 @@ import configRoutes from './routes/config.js';
 import aiRoutes from './routes/ai.js';
 import errorHandler from './middleware/errorHandler.js';
 import { apiLimiter } from './middleware/rateLimiter.js';
-import { requestLogger, notFound } from './middleware/commonMiddleware.js';
+import { requestLogger } from './middleware/commonMiddleware.js';
 
-// Connect to MongoDB (safe to call multiple times — Mongoose caches the connection)
+// Connect to MongoDB
 connectDB();
 
 const app = express();
 
-// Trust proxy in production (for reverse proxies like nginx, Render, Heroku)
+// Trust proxy in production
 if (config.IS_PRODUCTION) {
   app.set('trust proxy', 1);
 }
 
-// ── Security ─────────────────────────────────────────────────────────────────
-// Enhanced security headers
-app.use(helmet({
-  contentSecurityPolicy: config.IS_PRODUCTION,
-  crossOriginEmbedderPolicy: config.IS_PRODUCTION,
-}));
-
-const allowedOrigins = [
+// ==========================================
+// ORIGIN SETUP
+// ==========================================
+const devOrigins = [
   'http://localhost:3000',
   'http://localhost:3001',
   'http://localhost:3002',
   'http://localhost:5173',
-  'https://sproutsense-iot.netlify.app',
-  config.CORS_ORIGIN,
-].filter(Boolean);
+  'http://127.0.0.1:3000',
+  'http://127.0.0.1:5173',
+  'http://10.55.107.32:3000'
+];
 
+const allowedOrigins = config.IS_PRODUCTION
+  ? [config.CORS_ORIGIN].filter(Boolean)
+  : [...devOrigins, config.CORS_ORIGIN].filter(Boolean);
+
+const isAllowedOrigin = (origin) => {
+  if (!origin) return true;
+  return allowedOrigins.includes(origin);
+};
+
+const frontendOrigin = config.CORS_ORIGIN || 'http://localhost:3000';
+const frontendHost = frontendOrigin.replace(/^https?:\/\//, '');
+
+// ==========================================
+// SECURITY HEADERS
+// ==========================================
+app.use(helmet({
+  contentSecurityPolicy: {
+    useDefaults: true,
+    directives: {
+      defaultSrc: ["'self'"],
+      baseUri: ["'self'"],
+      objectSrc: ["'none'"],
+      frameAncestors: ["'none'"],
+      imgSrc: ["'self'", 'data:', 'blob:'],
+      scriptSrc: ["'self'"],
+      styleSrc: ["'self'", "'unsafe-inline'"],
+      fontSrc: ["'self'", 'https:', 'data:'],
+      connectSrc: config.IS_PRODUCTION
+        ? ["'self'", frontendOrigin, `wss://${frontendHost}`]
+        : ["'self'", 'http:', 'https:', 'ws:', 'wss:'],
+      upgradeInsecureRequests: config.IS_PRODUCTION ? [] : null,
+    },
+  },
+  crossOriginEmbedderPolicy: false,
+  crossOriginResourcePolicy: { policy: 'cross-origin' },
+  referrerPolicy: { policy: 'no-referrer' },
+}));
+
+// ==========================================
+// CORS
+// ==========================================
 app.use(cors({
   origin: (origin, callback) => {
-    if (!origin) return callback(null, true);
-    if (allowedOrigins.includes(origin)) return callback(null, true);
-    callback(new Error(`CORS blocked: ${origin}`));
+    if (isAllowedOrigin(origin)) {
+      return callback(null, true);
+    }
+    return callback(new Error(`CORS blocked: ${origin}`));
   },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
 }));
 
-// ── General middleware ────────────────────────────────────────────────────────
-// Use combined format for production, dev format for development
+// ==========================================
+// GENERAL MIDDLEWARE
+// ==========================================
 app.use(morgan(config.IS_PRODUCTION ? 'combined' : 'dev'));
-
-app.use(compression()); // <--- 2. NEW: Compresses responses (makes chart data load much faster)
-
+app.use(compression());
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 app.use(requestLogger);
 app.use('/api', apiLimiter);
 
-// ── Health checks ─────────────────────────────────────────────────────────────
+// ==========================================
+// HEALTH CHECKS
+// ==========================================
 app.get('/', (req, res) => {
-  res.json({ success: true, message: 'SproutSense API', version: '1.0.0', timestamp: new Date().toISOString() });
+  res.json({
+    success: true,
+    message: 'SproutSense API',
+    version: '1.0.0',
+    timestamp: new Date().toISOString(),
+  });
 });
 
 app.get('/api', (req, res) => {
@@ -86,34 +131,27 @@ app.get('/api', (req, res) => {
   });
 });
 
-// ── Routes ────────────────────────────────────────────────────────────────────
-// Standard API routes
+// ==========================================
+// API ROUTES
+// ==========================================
 app.use('/api/sensors', sensorRoutes);
 app.use('/api/water', wateringRoutes);
 app.use('/api/config', configRoutes);
 app.use('/api/ai', aiRoutes);
 
-// ============================================================================
-// 🚨 BULLETPROOF FALLBACK FOR MISSING /api PREFIX
-// If the frontend accidentally requests /sensors instead of /api/sensors,
-// this middleware intercepts it and reroutes it to the correct API router.
-// ============================================================================
-app.use('/sensors', sensorRoutes);
-app.use('/water', wateringRoutes);
-app.use('/config', configRoutes);
-app.use('/ai', aiRoutes);
-// ============================================================================
-
-// ── Error handling ────────────────────────────────────────────────────────────
-// If the route STILL isn't found, return a proper 404 JSON response
-app.use((req, res, next) => {
+// ==========================================
+// 404
+// ==========================================
+app.use((req, res) => {
   res.status(404).json({
     success: false,
     message: `Not Found - ${req.originalUrl}`,
-    hint: "Did you mean to include /api prefix?"
   });
 });
 
+// ==========================================
+// ERROR HANDLER
+// ==========================================
 app.use(errorHandler);
 
 export default app;

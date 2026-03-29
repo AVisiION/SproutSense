@@ -1,4 +1,12 @@
 /**
+ * Production Sensor Thresholds Summary (as of v1.0.0)
+ * Soil Moisture: Auto-water at <30%, target 70%
+ * Temperature: Heat alert >35°C, freeze <5°C  
+ * Humidity: Mold risk >90%
+ * pH: Optimal 5.5-7.0
+ * Flow Rate: Pump failure at 0 L/min during watering
+ */
+/**
  * Comprehensive Sensor Thresholds & Alert Conditions
  * Configured for optimal plant health and hardware safety
  */
