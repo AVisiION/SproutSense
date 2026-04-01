@@ -1,13 +1,11 @@
 /**
- * SettingsPage.jsx — v5  Full-width redesign
- * • Section tab navigation bar
- * • Accent-colored icon boxes per section
- * • Proper leading icon alignment in all inputs
- * • Full-width 2-col grid, wide cards span both columns
+ * SettingsPage.jsx
+ * Client-facing settings page that combines configuration and preferences.
  */
 import React, { useState, useEffect, useRef } from 'react';
+import { format } from 'date-fns';
 import './SettingsPage.css';
-import { configAPI } from '../../utils/api';
+import { configAPI, sensorAPI } from '../../utils/api';
 
 /* ──── Inline SVG icons ───────────────────────────────────────── */
 const SVG = {
@@ -22,6 +20,9 @@ const SVG = {
   hash:        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="4" y1="9" x2="20" y2="9"/><line x1="4" y1="15" x2="20" y2="15"/><line x1="10" y1="3" x2="8" y2="21"/><line x1="16" y1="3" x2="14" y2="21"/></svg>,
   timer:       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2 2"/><path d="M9 2h6M12 2v3"/></svg>,
   calendar:    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>,
+  download:    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>,
+  trash:       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg>,
+  database:    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>,
   check:       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>,
   spinner:     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{animation:'sp-spin 0.8s linear infinite',display:'block'}}><path d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" strokeOpacity="0.2"/><path d="M21 12a9 9 0 00-9-9"/></svg>,
   robot:       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M12 2a3 3 0 00-3 3v6h6V5a3 3 0 00-3-3z"/><line x1="8" y1="16" x2="8.01" y2="16" strokeWidth="3"/><line x1="16" y1="16" x2="16.01" y2="16" strokeWidth="3"/><line x1="12" y1="11" x2="12" y2="11" strokeWidth="3"/></svg>,
@@ -61,40 +62,10 @@ function CardIcon({ name, accent }) {
   );
 }
 
-/* Password field with show/hide toggle */
-function KeyField({ label, icon, value, onChange, placeholder, readOnly = false, hint }) {
-  const [show, setShow] = useState(false);
-  return (
-    <div className="sp-field">
-      <label className="sp-label">{label}</label>
-      <div className="sp-input-wrap">
-        <Icon name={icon} size={13} className="sp-input-icon" />
-        <input
-          type={show ? 'text' : 'password'}
-          className="sp-input sp-input--padded sp-input--pr"
-          placeholder={placeholder}
-          value={value}
-          onChange={onChange}
-          readOnly={readOnly}
-          autoComplete="off"
-        />
-        <button type="button" className="sp-eye-btn"
-          onClick={() => setShow(v => !v)}
-          aria-label={show ? 'Hide' : 'Show'}>
-          <Icon name={show ? 'eyeOff' : 'eye'} size={13} />
-        </button>
-      </div>
-      {hint && <p className="sp-field-hint">{hint}</p>}
-    </div>
-  );
-}
-
 /* Section tab IDs */
 const TABS = [
   { id: 'appearance', icon: 'palette', label: 'Appearance' },
-  { id: 'simulation', icon: 'flask',   label: 'Simulation' },
-  { id: 'hardware',   icon: 'chip',    label: 'Hardware'   },
-  { id: 'ai',         icon: 'robot',   label: 'AI Keys'    },
+  { id: 'data',       icon: 'database',label: 'Data Tools' },
   { id: 'alerts',     icon: 'bell',    label: 'Alerts'     },
   { id: 'about',      icon: 'info',    label: 'About'      },
 ];
@@ -103,35 +74,47 @@ export default function SettingsPage({
   theme,
   toggleTheme,
   onNotification,
-  forceTestMode = false,
-  onForceTestModeChange,
 }) {
   const [activeTab,       setActiveTab]       = useState('all');
-  const [geminiKey,       setGeminiKey]       = useState('');
-  const [openaiKey,       setOpenaiKey]       = useState('');
-  const [esp32IP,         setEsp32IP]         = useState('192.168.1.100');
-  const [deviceId,        setDeviceId]        = useState('ESP32-SENSOR');
-  const [refreshInterval, setRefreshInterval] = useState(5);
-  const [retentionDays,   setRetentionDays]   = useState(30);
   const [notifications,   setNotifications]   = useState({
     lowMoisture: true, highTemp: true, phAlert: true, systemAlerts: true,
   });
-  const [saving, setSaving] = useState(false);
+  const [stats, setStats] = useState({
+    totalReadings: 0,
+    todayReadings: 0,
+    lastUpdate: null,
+  });
+  const [exporting, setExporting] = useState(false);
+  const [clearing, setClearing] = useState(false);
 
   const sectionRefs = {
     appearance: useRef(null),
-    simulation: useRef(null),
-    hardware:   useRef(null),
-    ai:         useRef(null),
+    data:       useRef(null),
     alerts:     useRef(null),
     about:      useRef(null),
   };
 
   useEffect(() => {
-    setGeminiKey(localStorage.getItem('gemini_api_key') || '');
-    setOpenaiKey(localStorage.getItem('openai_api_key') || '');
-    setEsp32IP  (localStorage.getItem('esp32_ip')       || '192.168.1.100');
-    setDeviceId (localStorage.getItem('device_id')      || 'ESP32-SENSOR');
+    const loadStats = async () => {
+      try {
+        const historyRes = await sensorAPI.getHistory(24);
+        const readings = Array.isArray(historyRes)
+          ? historyRes
+          : Array.isArray(historyRes?.data)
+            ? historyRes.data
+            : [];
+        const today = new Date().toDateString();
+        setStats({
+          totalReadings: readings.length,
+          todayReadings: readings.filter(r => new Date(r.timestamp).toDateString() === today).length,
+          lastUpdate: readings[0]?.timestamp || null,
+        });
+      } catch {
+        setStats({ totalReadings: 0, todayReadings: 0, lastUpdate: null });
+      }
+    };
+
+    loadStats();
   }, []);
 
   const scrollTo = (id) => {
@@ -139,38 +122,56 @@ export default function SettingsPage({
     sectionRefs[id]?.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   };
 
-  const handleSaveKeys = () => {
-    localStorage.setItem('gemini_api_key', geminiKey);
-    localStorage.setItem('openai_api_key', openaiKey);
-    localStorage.setItem('esp32_ip',       esp32IP);
-    localStorage.setItem('device_id',      deviceId);
-    onNotification?.('Credentials saved to local storage', 'success');
+  const handleExportCsv = async () => {
+    setExporting(true);
+    try {
+      const result = await sensorAPI.getHistory(168);
+      const readings = Array.isArray(result)
+        ? result
+        : Array.isArray(result?.data)
+          ? result.data
+          : [];
+
+      if (!readings.length) {
+        onNotification?.('No records available to export', 'info');
+        return;
+      }
+
+      const csv = [
+        'Timestamp,Soil Moisture,Temperature,Humidity,Light,pH',
+        ...readings.map(r => `${r.timestamp},${r.soilMoisture},${r.temperature},${r.humidity},${r.light},${r.pH}`),
+      ].join('\n');
+
+      const blob = new Blob([csv], { type: 'text/csv' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `sproutsense-data-${new Date().toISOString().slice(0, 10)}.csv`;
+      a.click();
+      URL.revokeObjectURL(url);
+      onNotification?.(`Exported ${readings.length} records`, 'success');
+    } catch {
+      onNotification?.('Export failed', 'error');
+    } finally {
+      setExporting(false);
+    }
   };
 
-  const handleSaveHardware = async () => {
-    setSaving(true);
+  const handleClearSensorHistory = async () => {
+    if (!window.confirm('Clear sensor history older than 90 days?')) return;
+    setClearing(true);
     try {
-      await configAPI.update(deviceId, { espIp: esp32IP });
-      onNotification?.('Hardware configuration synced', 'success');
+      const res = await configAPI.clearSensorHistory('ESP32-SENSOR', 90);
+      onNotification?.(`Cleared ${res?.recordsDeleted || 0} sensor records`, 'success');
     } catch {
-      onNotification?.('Failed to reach ESP32', 'error');
+      onNotification?.('Failed to clear sensor history', 'error');
     } finally {
-      setSaving(false);
+      setClearing(false);
     }
   };
 
   const toggleNotif = key =>
     setNotifications(prev => ({ ...prev, [key]: !prev[key] }));
-
-  const handleToggleDemo = () => {
-    const next = !forceTestMode;
-    localStorage.setItem('sprout_testmode', String(next));
-    onForceTestModeChange?.(next);
-    onNotification?.(
-      next ? 'Demo ON — Analytics & Alerts show simulated data' : 'Demo OFF — showing real data',
-      next ? 'success' : 'info',
-    );
-  };
 
   const ALERT_ROWS = [
     { key: 'lowMoisture',  icon: 'droplet',     label: 'Critical Moisture Drop', desc: 'Triggers when soil needs immediate watering' },
@@ -202,8 +203,8 @@ export default function SettingsPage({
           <Icon name="gear" size={22} />
         </div>
         <div>
-          <h1 className="sp-page-title">System Settings</h1>
-          <p className="sp-page-subtitle">Device connections, preferences, and API integrations</p>
+          <h1 className="sp-page-title">Settings &amp; Configuration</h1>
+          <p className="sp-page-subtitle">Client-ready controls for appearance, data management, and alerts</p>
         </div>
       </header>
 
@@ -249,128 +250,40 @@ export default function SettingsPage({
           </div>
         </div>
 
-        {/* ── SIMULATION MODE ── */}
-        <div className="sp-card" ref={sectionRefs.simulation}>
+        {/* ── DATA TOOLS ── */}
+        <div className="sp-card" ref={sectionRefs.data}>
           <div className="sp-card-head">
-            <CardIcon name="flask" accent="accent-amber" />
-            <h2>Simulation Mode</h2>
+            <CardIcon name="database" accent="accent-teal" />
+            <h2>Data Tools</h2>
           </div>
           <div className="sp-card-body">
-            <div className="sp-row">
-              <div className="sp-row-info">
-                <span className="sp-row-label">
-                  Frontend Demo
-                  <span className="sp-pill sp-pill--blue">Analytics &amp; Alerts</span>
+            <div className="sp-about-grid sp-data-stats-grid">
+              <div className="sp-about-tile">
+                <span className="sp-about-tile-icon"><Icon name="database" size={14} /></span>
+                <span className="sp-about-tile-label">24h Readings</span>
+                <span className="sp-about-tile-value">{stats.totalReadings}</span>
+              </div>
+              <div className="sp-about-tile">
+                <span className="sp-about-tile-icon"><Icon name="calendar" size={14} /></span>
+                <span className="sp-about-tile-label">Today</span>
+                <span className="sp-about-tile-value">{stats.todayReadings}</span>
+              </div>
+              <div className="sp-about-tile">
+                <span className="sp-about-tile-icon"><Icon name="timer" size={14} /></span>
+                <span className="sp-about-tile-label">Last Sync</span>
+                <span className="sp-about-tile-value">
+                  {stats.lastUpdate ? format(new Date(stats.lastUpdate), 'HH:mm') : '--'}
                 </span>
-                <span className="sp-row-desc">
-                  Shows simulated charts and mock alerts — no ESP32 needed
-                </span>
               </div>
-              <button
-                className={`sp-toggle ${forceTestMode ? 'on' : 'off'}`}
-                onClick={handleToggleDemo}
-                aria-label="Toggle frontend demo"
-              >
-                <span className="sp-toggle-knob" />
-              </button>
-            </div>
-            {forceTestMode && (
-              <div className="sp-banner sp-banner--amber">
-                <Icon name="warning" size={14} className="sp-banner-icon" />
-                <div>
-                  <strong>Demo mode active</strong>
-                  <p>Visit <a href="/analytics">Analytics</a> or <a href="/alerts">Alerts</a> to see simulated data.</p>
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* ── HARDWARE CONFIG — WIDE ── */}
-        <div className="sp-card sp-card--wide" ref={sectionRefs.hardware}>
-          <div className="sp-card-head">
-            <CardIcon name="chip" accent="accent-cyan" />
-            <h2>Hardware Configuration</h2>
-            <span className="sp-card-badge">ESP32-WROOM</span>
-          </div>
-          <div className="sp-card-body">
-            <div className="sp-field-grid">
-
-              <div className="sp-field">
-                <label className="sp-label">ESP32 IPv4 Address</label>
-                <div className="sp-input-wrap">
-                  <Icon name="wifi" size={13} className="sp-input-icon" />
-                  <input type="text" className="sp-input sp-input--padded"
-                    placeholder="192.168.1.100" value={esp32IP}
-                    onChange={e => setEsp32IP(e.target.value)} />
-                </div>
-              </div>
-
-              <div className="sp-field">
-                <label className="sp-label">Device ID</label>
-                <div className="sp-input-wrap">
-                  <Icon name="hash" size={13} className="sp-input-icon" />
-                  <input type="text" className="sp-input sp-input--padded"
-                    placeholder="ESP32-SENSOR" value={deviceId}
-                    onChange={e => setDeviceId(e.target.value)} />
-                </div>
-              </div>
-
-              <div className="sp-field">
-                <label className="sp-label">Polling Interval (seconds)</label>
-                <div className="sp-input-wrap">
-                  <Icon name="timer" size={13} className="sp-input-icon" />
-                  <input type="number" min="1" max="60" className="sp-input sp-input--padded"
-                    value={refreshInterval}
-                    onChange={e => setRefreshInterval(Number(e.target.value))} />
-                </div>
-              </div>
-
-              <div className="sp-field">
-                <label className="sp-label">Data Retention (days)</label>
-                <div className="sp-input-wrap">
-                  <Icon name="calendar" size={13} className="sp-input-icon" />
-                  <input type="number" min="1" max="365" className="sp-input sp-input--padded"
-                    value={retentionDays}
-                    onChange={e => setRetentionDays(Number(e.target.value))} />
-                </div>
-              </div>
-
             </div>
             <div className="sp-action-row">
-              <button className="sp-btn sp-btn--primary" onClick={handleSaveHardware} disabled={saving}>
-                <Icon name={saving ? 'spinner' : 'check'} size={14} />
-                {saving ? 'Syncing…' : 'Apply Hardware Changes'}
+              <button className="sp-btn sp-btn--secondary" onClick={handleExportCsv} disabled={exporting}>
+                <Icon name={exporting ? 'spinner' : 'download'} size={14} />
+                {exporting ? 'Exporting...' : 'Export CSV'}
               </button>
-            </div>
-          </div>
-        </div>
-
-        {/* ── AI INTEGRATIONS ── */}
-        <div className="sp-card" ref={sectionRefs.ai}>
-          <div className="sp-card-head">
-            <CardIcon name="robot" accent="accent-blue" />
-            <h2>AI Integrations</h2>
-          </div>
-          <div className="sp-card-body">
-            <div className="sp-hint-row">
-              <Icon name="lock" size={12} className="sp-hint-icon" />
-              <span>Keys stored in local storage — used only for AI disease diagnosis</span>
-            </div>
-            <KeyField label="Google Gemini API Key" icon="key"
-              value={geminiKey} onChange={e => setGeminiKey(e.target.value)}
-              placeholder="AIzaSy…" />
-            <KeyField label="OpenAI API Key" icon="key"
-              value={openaiKey} onChange={e => setOpenaiKey(e.target.value)}
-              placeholder="sk-proj…" />
-            <KeyField label="OpenWeather API Key" icon="cloud"
-              value={import.meta.env.VITE_OPENWEATHER_API_KEY || ''}
-              onChange={() => {}} readOnly
-              placeholder="Set VITE_OPENWEATHER_API_KEY in .env"
-              hint="Set in .env as VITE_OPENWEATHER_API_KEY — used in Analytics weather card" />
-            <div className="sp-action-row">
-              <button className="sp-btn sp-btn--secondary" onClick={handleSaveKeys}>
-                <Icon name="save" size={14} /> Save Credentials
+              <button className="sp-btn sp-btn--danger" onClick={handleClearSensorHistory} disabled={clearing}>
+                <Icon name={clearing ? 'spinner' : 'trash'} size={14} />
+                {clearing ? 'Clearing...' : 'Clear Old Sensor History'}
               </button>
             </div>
           </div>

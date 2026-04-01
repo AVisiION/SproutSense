@@ -13,12 +13,20 @@ import sensorRoutes from './routes/sensors.js';
 import wateringRoutes from './routes/watering.js';
 import configRoutes from './routes/config.js';
 import aiRoutes from './routes/ai.js';
+import publicRoutes from './routes/public.js';
+import authRoutes from './routes/auth.js';
+import userRoutes from './routes/users.js';
+import roleRoutes from './routes/roles.js';
 import errorHandler from './middleware/errorHandler.js';
 import { apiLimiter } from './middleware/rateLimiter.js';
 import { requestLogger } from './middleware/commonMiddleware.js';
+import { seedRbac } from './utils/seedRbac.js';
 
 // Connect to MongoDB
 connectDB();
+seedRbac().catch((error) => {
+  console.error('[RBAC] Seed failed:', error.message);
+});
 
 const app = express();
 
@@ -41,8 +49,8 @@ const devOrigins = [
 ];
 
 const allowedOrigins = config.IS_PRODUCTION
-  ? [config.CORS_ORIGIN].filter(Boolean)
-  : [...devOrigins, config.CORS_ORIGIN].filter(Boolean);
+  ? [...config.CORS_ORIGINS]
+  : [...devOrigins, ...config.CORS_ORIGINS].filter(Boolean);
 
 const isAllowedOrigin = (origin) => {
   if (!origin) return true;
@@ -115,6 +123,15 @@ app.get('/', (req, res) => {
   });
 });
 
+app.get('/healthz', (req, res) => {
+  res.status(200).json({
+    success: true,
+    status: 'ok',
+    environment: config.NODE_ENV,
+    timestamp: new Date().toISOString(),
+  });
+});
+
 app.get('/api', (req, res) => {
   res.json({
     success: true,
@@ -122,6 +139,10 @@ app.get('/api', (req, res) => {
     version: '1.0.0',
     environment: config.NODE_ENV,
     endpoints: {
+      auth: '/api/auth',
+      users: '/api/users',
+      roles: '/api/roles',
+      public: '/api/public',
       sensors: '/api/sensors',
       watering: '/api/water',
       config: '/api/config',
@@ -134,6 +155,10 @@ app.get('/api', (req, res) => {
 // ==========================================
 // API ROUTES
 // ==========================================
+app.use('/api/auth', authRoutes);
+app.use('/api/users', userRoutes);
+app.use('/api/roles', roleRoutes);
+app.use('/api/public', publicRoutes);
 app.use('/api/sensors', sensorRoutes);
 app.use('/api/water', wateringRoutes);
 app.use('/api/config', configRoutes);

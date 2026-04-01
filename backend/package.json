@@ -8,6 +8,7 @@
     "start": "node src/server.js",
     "start:prod": "cross-env NODE_ENV=production node src/server.js",
     "dev": "cross-env NODE_ENV=development nodemon src/server.js",
+    "smoke:auth-rbac": "node scripts/auth-rbac-smoke.mjs",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [
@@ -24,6 +25,7 @@
   "dependencies": {
     "@google/generative-ai": "^0.24.1",
     "axios": "^1.6.0",
+    "bcryptjs": "^3.0.2",
     "compression": "^1.8.1",
     "cors": "^2.8.6",
     "date-fns": "^4.1.0",
@@ -33,6 +35,7 @@
     "express-validator": "^7.0.1",
     "helmet": "^7.1.0",
     "json2csv": "^6.0.0-alpha.2",
+    "jsonwebtoken": "^9.0.2",
     "mongodb": "^7.1.0",
     "mongoose": "^9.3.3",
     "morgan": "^1.10.0",

@@ -60,10 +60,77 @@ export const aiLimiter = rateLimit({
   }
 });
 
+// Auth: registration limiter
+export const authRegisterLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 8,
+  message: {
+    success: false,
+    message: 'Too many registration attempts. Please try again later.'
+  },
+  standardHeaders: true,
+  legacyHeaders: false
+});
+
+// Auth: login limiter
+export const authLoginLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 12,
+  message: {
+    success: false,
+    message: 'Too many login attempts. Please try again later.'
+  },
+  standardHeaders: true,
+  legacyHeaders: false,
+  skipSuccessfulRequests: false
+});
+
+// Auth: forgot password limiter
+export const authForgotPasswordLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 6,
+  message: {
+    success: false,
+    message: 'Too many password reset requests. Please try again later.'
+  },
+  standardHeaders: true,
+  legacyHeaders: false
+});
+
+// Auth: reset password limiter
+export const authResetPasswordLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 10,
+  message: {
+    success: false,
+    message: 'Too many password reset attempts. Please try again later.'
+  },
+  standardHeaders: true,
+  legacyHeaders: false,
+  skipSuccessfulRequests: false
+});
+
+// Auth: refresh limiter
+export const authRefreshLimiter = rateLimit({
+  windowMs: 5 * 60 * 1000, // 5 minutes
+  max: 60,
+  message: {
+    success: false,
+    message: 'Too many session refresh requests. Please try again later.'
+  },
+  standardHeaders: true,
+  legacyHeaders: false
+});
+
 export default {
   apiLimiter,
   wateringLimiter,
   sensorPostLimiter,
   readLimiter,
-  aiLimiter
+  aiLimiter,
+  authRegisterLimiter,
+  authLoginLimiter,
+  authForgotPasswordLimiter,
+  authResetPasswordLimiter,
+  authRefreshLimiter
 };

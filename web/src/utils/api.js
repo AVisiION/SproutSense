@@ -7,7 +7,18 @@ import {
   getMockWeather 
 } from '../services/mockDataService';
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api';
+function normalizeApiBaseUrl(rawValue) {
+  const value = String(rawValue || '').trim();
+  if (!value) return '/api';
+  if (value.startsWith('/')) return value;
+  if (/^https?:\/\//i.test(value)) return value;
+  if (/^(localhost|127\.0\.0\.1)(:\d+)?(\/.*)?$/i.test(value)) {
+    return `http://${value}`;
+  }
+  return value;
+}
+
+const API_BASE_URL = normalizeApiBaseUrl(import.meta.env.VITE_API_BASE_URL || '/api');
 
 const api = axios.create({
   baseURL: API_BASE_URL,
@@ -15,6 +26,14 @@ const api = axios.create({
   headers: {
     'Content-Type': 'application/json'
   }
+});
+
+api.interceptors.request.use((requestConfig) => {
+  const token = localStorage.getItem('ss_access_token');
+  if (token) {
+    requestConfig.headers.Authorization = `Bearer ${token}`;
+  }
+  return requestConfig;
 });
 
 // ─── MOCK HELPER ─────────────────────────────────────────────────────────────
@@ -218,12 +237,127 @@ export const configAPI = {
       params: { deviceId }
     });
     return response.data;
+  },
+
+  getAdminLogs: async (limit = 100) => {
+    if (isMockEnabled()) {
+      const res = await mockResponse([]);
+      return res.data;
+    }
+    const response = await api.get('/config/admin-logs', {
+      params: { limit }
+    });
+    return response.data;
+  },
+
+  createAdminLog: async ({ actor = 'admin', action, level = 'info', section = 'admin-panel', details = null } = {}) => {
+    if (isMockEnabled()) {
+      const res = await mockResponse({ success: true, log: { actor, action, level, section, details } });
+      return res.data;
+    }
+    const response = await api.post('/config/admin-logs', {
+      actor,
+      action,
+      level,
+      section,
+      details
+    });
+    return response.data;
+  },
+
+  exportAdminLogs: async ({ format = 'json', limit = 500, q = '', level = 'all' } = {}) => {
+    if (isMockEnabled()) {
+      const payload = format === 'csv'
+        ? 'timestamp,actor,level,section,action,details\n'
+        : JSON.stringify({ success: true, logs: [] }, null, 2);
+      const type = format === 'csv' ? 'text/csv' : 'application/json';
+      return new Blob([payload], { type });
+    }
+
+    const response = await api.get('/config/admin-logs/export', {
+      params: { format, limit, q, level },
+      responseType: 'blob'
+    });
+
+    return response.data;
   }
 };
 
 // ==========================================
 // AI API
 // ==========================================
+export const authAPI = {
+  register: async ({ fullName, email, password, confirmPassword }, options = {}) => {
+    const response = await api.post('/auth/register', { fullName, email, password, confirmPassword }, options);
+    return response.data;
+  },
+
+  login: async ({ email, password }, options = {}) => {
+    const response = await api.post('/auth/login', { email, password }, options);
+    return response.data;
+  },
+
+  refresh: async ({ refreshToken }, options = {}) => {
+    const response = await api.post('/auth/refresh', { refreshToken }, options);
+    return response.data;
+  },
+
+  logout: async ({ refreshToken }, options = {}) => {
+    const response = await api.post('/auth/logout', { refreshToken }, options);
+    return response.data;
+  },
+
+  me: async (options = {}) => {
+    const response = await api.get('/auth/me', options);
+    return response.data;
+  },
+
+  verifyEmail: async ({ token }, options = {}) => {
+    const response = await api.post('/auth/verify-email', { token }, options);
+    return response.data;
+  },
+
+  resendVerification: async ({ email }, options = {}) => {
+    const response = await api.post('/auth/resend-verification', { email }, options);
+    return response.data;
+  },
+
+  forgotPassword: async ({ email }, options = {}) => {
+    const response = await api.post('/auth/forgot-password', { email }, options);
+    return response.data;
+  },
+
+  resetPassword: async ({ token, password, confirmPassword }, options = {}) => {
+    const response = await api.post('/auth/reset-password', { token, password, confirmPassword }, options);
+    return response.data;
+  },
+
+  passwordStrength: async ({ password, fullName, email }, options = {}) => {
+    const response = await api.post('/auth/password-strength', { password, fullName, email }, options);
+    return response.data;
+  },
+};
+
+export const publicAPI = {
+  getOverview: async (options = {}) => {
+    const response = await api.get('/public/overview', options);
+    return response.data;
+  },
+
+  getAnalyticsPreview: async (hours = 24, options = {}) => {
+    const response = await api.get('/public/analytics-preview', {
+      params: { hours },
+      ...options,
+    });
+    return response.data;
+  },
+
+  getReportsPreview: async (options = {}) => {
+    const response = await api.get('/public/reports-preview', options);
+    return response.data;
+  },
+};
+
 export const aiAPI = {
   // GET /api/ai/recommend?deviceId=
   getRecommendation: async (deviceId = 'ESP32-SENSOR', options = {}) => {
@@ -235,6 +369,28 @@ export const aiAPI = {
       return res.data;
     }
     const response = await api.get('/ai/recommend', {
+      params: { deviceId },
+      ...options
+    });
+    return response.data;
+  },
+
+  // GET /api/ai/usage?deviceId=
+  getUsageStats: async (deviceId = 'ESP32-SENSOR', options = {}) => {
+    if (isMockEnabled()) {
+      const res = await mockResponse({
+        deviceId,
+        dateKey: new Date().toISOString().slice(0, 10),
+        usedCount: 0,
+        dailyLimit: 2,
+        remaining: 2,
+        exhausted: false,
+        resetAt: new Date(new Date().setUTCHours(24, 0, 0, 0)).toISOString()
+      });
+      return res.data;
+    }
+
+    const response = await api.get('/ai/usage', {
       params: { deviceId },
       ...options
     });

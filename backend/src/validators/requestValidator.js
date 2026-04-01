@@ -146,6 +146,21 @@ export const validateConfigUpdate = [
     .optional()
     .isInt({ min: 1, max: 20 })
     .withMessage('Max watering cycles must be between 1 and 20'),
+
+  body('wateringSystem.maxCyclesPerHour')
+    .optional()
+    .isInt({ min: 1, max: 24 })
+    .withMessage('Watering max cycles per hour must be between 1 and 24'),
+
+  body('wateringSystem.maxCyclesPerDay')
+    .optional()
+    .isInt({ min: 1, max: 50 })
+    .withMessage('Watering system max cycles per day must be between 1 and 50'),
+
+  body('aiConfig.dailyAnalysisLimit')
+    .optional()
+    .isInt({ min: 1, max: 100 })
+    .withMessage('AI daily analysis limit must be between 1 and 100'),
   
   body('sensorReadInterval')
     .optional()

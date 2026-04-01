@@ -7,6 +7,7 @@ import {
   ResponsiveContainer, Legend, ComposedChart
 } from 'recharts';
 import { aiAPI, sensorAPI, wateringAPI } from '../../utils/api';
+import { getAnalyticsSensors, getSensorValue, getStatusForValue } from '../../utils/sensorRegistry';
 import { GlassIcon } from '../../components/bits/GlassIcon';
 import styles from './AnalyticsPage.module.css';
 import { SkeletonLoader } from '../../components/layout/SkeletonLoader';
@@ -32,6 +33,18 @@ const COLORS = {
 };
 
 const PIE_COLORS = ['#22c55e', '#f59e0b', '#ef4444'];
+
+const CHART_COLORS = ['#00f2fe', '#f59e0b', '#22d3ee', '#facc15', '#3b82f6', '#a855f7', '#22c55e', '#ef4444'];
+
+function colorForSensor(sensorKey, index = 0) {
+  if (sensorKey?.toLowerCase().includes('moisture')) return COLORS.moisture;
+  if (sensorKey?.toLowerCase().includes('temp')) return COLORS.temp;
+  if (sensorKey?.toLowerCase().includes('humid')) return COLORS.humidity;
+  if (sensorKey?.toLowerCase().includes('light')) return COLORS.light;
+  if (sensorKey?.toLowerCase().includes('flow')) return COLORS.flow;
+  if (sensorKey?.toLowerCase().includes('ph')) return COLORS.ph;
+  return CHART_COLORS[index % CHART_COLORS.length];
+}
 
 // ─── Mock data generators (testmode / no-data fallback) ───────────────────────
 function generateMockData(hours) {
@@ -62,17 +75,16 @@ function generateMockWatering() {
   }));
 }
 
-// ─── Motion variants ──────────────────────────────────────────────────────────
 const containerVariants = {
   hidden:  { opacity: 0 },
   visible: { opacity: 1, transition: { staggerChildren: 0.07 } },
 };
+
 const itemVariants = {
   hidden:  { y: 20, opacity: 0 },
-  visible: { y: 0,  opacity: 1, transition: { duration: 0.45, ease: 'easeOut' } },
+  visible: { y: 0, opacity: 1, transition: { duration: 0.45, ease: 'easeOut' } },
 };
 
-// ─── Custom Tooltip ───────────────────────────────────────────────────────────
 const CustomTooltip = ({ active, payload, label }) => {
   if (!active || !payload?.length) return null;
   return (
@@ -83,7 +95,7 @@ const CustomTooltip = ({ active, payload, label }) => {
       {payload.map((entry, i) => (
         <p key={i} style={{ color: entry.color || entry.fill }}>
           <span className={styles.tooltipDot} style={{ backgroundColor: entry.color || entry.fill }} />
-          <strong>{entry.name}:</strong>{' '}
+          <strong>{entry.name}:</strong>&nbsp;
           {typeof entry.value === 'number' ? entry.value.toFixed(1) : entry.value}
           {entry.unit}
         </p>
@@ -92,26 +104,25 @@ const CustomTooltip = ({ active, payload, label }) => {
   );
 };
 
-// ─── OpenWeather Card ─────────────────────────────────────────────────────────
 const WEATHER_KEY = import.meta.env.VITE_OPENWEATHER_API_KEY || '';
 
 const weatherIconMap = {
-  Clear       : '☀️',
-  Clouds      : '☁️',
-  Rain        : '🌧️',
-  Drizzle     : '🌦️',
+  Clear: '☀️',
+  Clouds: '☁️',
+  Rain: '🌧️',
+  Drizzle: '🌦️',
   Thunderstorm: '⛈️',
-  Snow        : '❄️',
-  Mist        : '🌫️',
-  Fog         : '🌫️',
-  Haze        : '🌫️',
-  default     : '🌡️',
+  Snow: '❄️',
+  Mist: '🌫️',
+  Fog: '🌫️',
+  Haze: '🌫️',
+  default: '🌡️',
 };
 
 function WeatherCard() {
   const [weather, setWeather] = useState(null);
-  const [wError,  setWError]  = useState(false);
-  const [wCity,   setWCity]   = useState('Rourkela');
+  const [wError, setWError] = useState(false);
+  const [wCity, setWCity] = useState('Rourkela');
 
   const fetchWeather = useCallback(async (lat, lon) => {
     if (!WEATHER_KEY) { setWError(true); return; }
@@ -119,7 +130,7 @@ function WeatherCard() {
       const url = (lat != null && lon != null)
         ? `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&units=metric&appid=${WEATHER_KEY}`
         : `https://api.openweathermap.org/data/2.5/weather?q=${encodeURIComponent(wCity)}&units=metric&appid=${WEATHER_KEY}`;
-      const res  = await fetch(url);
+      const res = await fetch(url);
       const data = await res.json();
       if (data.cod !== 200) throw new Error(data.message);
       setWeather(data);
@@ -133,42 +144,46 @@ function WeatherCard() {
     if (!navigator.geolocation) { fetchWeather(null, null); return; }
     navigator.geolocation.getCurrentPosition(
       pos => fetchWeather(pos.coords.latitude, pos.coords.longitude),
-      ()  => fetchWeather(null, null),
+      () => fetchWeather(null, null),
       { timeout: 5000 }
     );
     const id = setInterval(() => fetchWeather(null, null), 12 * 60 * 1000);
     return () => clearInterval(id);
-  }, []);  // eslint-disable-line
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const icon = weather
-    ? (weatherIconMap[weather.weather?.[0]?.main] ?? weatherIconMap.default)
-    : '🌡️';
+  const icon = weather ? (weatherIconMap[weather.weather?.[0]?.main] ?? weatherIconMap.default) : '🌡️';
 
-  if (!WEATHER_KEY) return (
-    <div className={styles.weatherCard}>
-      <span className={styles.weatherEmoji}>🌡️</span>
-      <div className={styles.weatherInfo}>
-        <span className={styles.weatherCity}>Weather</span>
-        <span className={styles.weatherDesc}>Add VITE_OPENWEATHER_API_KEY to .env</span>
+  if (!WEATHER_KEY) {
+    return (
+      <div className={styles.weatherCard}>
+        <span className={styles.weatherEmoji}>🌡️</span>
+        <div className={styles.weatherInfo}>
+          <span className={styles.weatherCity}>Weather</span>
+          <span className={styles.weatherDesc}>Add VITE_OPENWEATHER_API_KEY to .env</span>
+        </div>
       </div>
-    </div>
-  );
+    );
+  }
 
-  if (wError) return (
-    <div className={styles.weatherCard}>
-      <span className={styles.weatherEmoji}>🌡️</span>
-      <div className={styles.weatherInfo}>
-        <span className={styles.weatherCity}>{wCity}</span>
-        <span className={styles.weatherDesc}>Weather unavailable</span>
+  if (wError) {
+    return (
+      <div className={styles.weatherCard}>
+        <span className={styles.weatherEmoji}>🌡️</span>
+        <div className={styles.weatherInfo}>
+          <span className={styles.weatherCity}>{wCity}</span>
+          <span className={styles.weatherDesc}>Weather unavailable</span>
+        </div>
       </div>
-    </div>
-  );
+    );
+  }
 
-  if (!weather) return (
-    <div className={styles.weatherCard}>
-      <SkeletonLoader width="200px" height="54px" />
-    </div>
-  );
+  if (!weather) {
+    return (
+      <div className={styles.weatherCard}>
+        <SkeletonLoader width="200px" height="54px" />
+      </div>
+    );
+  }
 
   return (
     <div className={styles.weatherCard}>
@@ -176,9 +191,7 @@ function WeatherCard() {
       <div className={styles.weatherInfo}>
         <span className={styles.weatherTemp}>{Math.round(weather.main.temp)}°C</span>
         <span className={styles.weatherCity}>{wCity}</span>
-        <span className={styles.weatherDesc}>
-          {weather.weather?.[0]?.description} · 💧 {weather.main.humidity}%
-        </span>
+        <span className={styles.weatherDesc}>{weather.weather?.[0]?.description} · 💧 {weather.main.humidity}%</span>
       </div>
       <div className={styles.weatherExtra}>
         <span>Feels {Math.round(weather.main.feels_like)}°C</span>
@@ -188,7 +201,6 @@ function WeatherCard() {
   );
 }
 
-// ─── Sparkline ────────────────────────────────────────────────────────────────
 function Sparkline({ data, dataKey, color }) {
   if (!data?.length) return null;
   return (
@@ -196,19 +208,11 @@ function Sparkline({ data, dataKey, color }) {
       <AreaChart data={data} margin={{ top: 4, right: 0, left: 0, bottom: 0 }}>
         <defs>
           <linearGradient id={`spark-${dataKey}`} x1="0" y1="0" x2="0" y2="1">
-            <stop offset="5%"  stopColor={color} stopOpacity={0.35} />
-            <stop offset="95%" stopColor={color} stopOpacity={0}    />
+            <stop offset="5%" stopColor={color} stopOpacity={0.35} />
+            <stop offset="95%" stopColor={color} stopOpacity={0} />
           </linearGradient>
         </defs>
-        <Area
-          type="monotone"
-          dataKey={dataKey}
-          stroke={color}
-          strokeWidth={2}
-          fill={`url(#spark-${dataKey})`}
-          dot={false}
-          isAnimationActive={false}
-        />
+        <Area type="monotone" dataKey={dataKey} stroke={color} strokeWidth={2} fill={`url(#spark-${dataKey})`} dot={false} isAnimationActive={false} />
       </AreaChart>
     </ResponsiveContainer>
   );
@@ -222,7 +226,23 @@ export default function AnalyticsPage() {
   const [sensorData,    setSensorData]    = useState([]);
   const [diseaseData,   setDiseaseData]   = useState([]);
   const [wateringData,  setWateringData]  = useState([]);
+  const [sensorConfigs, setSensorConfigs] = useState([]);
+  const [activeSensorId, setActiveSensorId] = useState('');
   const [kpi, setKpi] = useState({ waterUsed: 0, avgMoisture: 0, diseaseCount: 0, uptime: 99.8 });
+
+  useEffect(() => {
+    const loadSensors = () => {
+      const configured = getAnalyticsSensors();
+      setSensorConfigs(configured);
+      if (!configured.some(s => s.id === activeSensorId)) {
+        setActiveSensorId(configured[0]?.id || '');
+      }
+    };
+
+    loadSensors();
+    window.addEventListener('storage', loadSensors);
+    return () => window.removeEventListener('storage', loadSensors);
+  }, [activeSensorId]);
 
   // ─── Fetch / mock data ──────────────────────────────────────────────────────
   const fetchData = useCallback(async () => {
@@ -317,6 +337,60 @@ export default function AnalyticsPage() {
     return timeFormattedData.filter((_, i) => i % step === 0);
   }, [timeFormattedData]);
 
+  const selectedSensor = useMemo(() => {
+    if (!sensorConfigs.length) return null;
+    return sensorConfigs.find(s => s.id === activeSensorId) || sensorConfigs[0];
+  }, [sensorConfigs, activeSensorId]);
+
+  const selectedSeries = useMemo(() => {
+    if (!selectedSensor) {
+      return { key: 'soilMoisture', label: 'Sensor', unit: '', color: COLORS.moisture, chartType: 'line' };
+    }
+    return {
+      key: selectedSensor.key,
+      label: selectedSensor.name,
+      unit: selectedSensor.unit || '',
+      color: colorForSensor(selectedSensor.key, sensorConfigs.findIndex(s => s.id === selectedSensor.id)),
+      chartType: selectedSensor.chartType || 'line',
+    };
+  }, [selectedSensor, sensorConfigs]);
+
+  const trendStats = useMemo(() => {
+    const values = chartData
+      .map(d => getSensorValue(d, selectedSensor))
+      .filter(v => Number.isFinite(v));
+
+    if (!values.length) {
+      return { min: 0, max: 0, avg: 0, delta: 0 };
+    }
+
+    const min = Math.min(...values);
+    const max = Math.max(...values);
+    const avg = values.reduce((sum, v) => sum + v, 0) / values.length;
+    const delta = values[values.length - 1] - values[0];
+    return { min, max, avg, delta };
+  }, [chartData, selectedSensor]);
+
+  const currentSensorValue = useMemo(() => {
+    if (!selectedSensor || !sensorData.length) return null;
+    return getSensorValue(sensorData[sensorData.length - 1], selectedSensor);
+  }, [sensorData, selectedSensor]);
+
+  const selectedSensorStatus = useMemo(
+    () => getStatusForValue(selectedSensor, currentSensorValue),
+    [selectedSensor, currentSensorValue]
+  );
+
+  const sensorAnomalyCount = useMemo(() => {
+    if (!selectedSensor) return 0;
+    return chartData.reduce((count, row) => {
+      const value = getSensorValue(row, selectedSensor);
+      if (value == null) return count;
+      const outOfRange = value < Number(selectedSensor.minThreshold) || value > Number(selectedSensor.maxThreshold);
+      return outOfRange ? count + 1 : count;
+    }, 0);
+  }, [chartData, selectedSensor]);
+
   // Soil status distribution for pie
   const soilPie = useMemo(() => {
     const optimal = chartData.filter(d => d.soilMoisture > 40 && d.soilMoisture < 80).length;
@@ -378,6 +452,128 @@ export default function AnalyticsPage() {
       spark: { data: sparkTail, key: 'temperature' },
     },
   ];
+
+  const selectedSeriesData = useMemo(() => {
+    if (!selectedSensor) return [];
+    return chartData
+      .map(item => ({ ...item, metricValue: getSensorValue(item, selectedSensor) }))
+      .filter(item => item.metricValue != null);
+  }, [chartData, selectedSensor]);
+
+  const recommendation = useMemo(() => {
+    if (!selectedSensor) return 'No configured sensor available for analytics.';
+    if (selectedSensorStatus.level === 'critical') {
+      return `Critical reading detected for ${selectedSensor.name}. Investigate irrigation, sensor calibration, or environment controls immediately.`;
+    }
+    if (selectedSensorStatus.level === 'warning') {
+      return `${selectedSensor.name} is near threshold limits. Monitor closely and prepare a corrective action if the trend continues.`;
+    }
+    if (Math.abs(trendStats.delta) > (Number(selectedSensor.warningThreshold || 1) * 0.25)) {
+      return `${selectedSensor.name} is trending ${trendStats.delta > 0 ? 'upward' : 'downward'} quickly. Consider adjusting schedules or setpoints.`;
+    }
+    return `${selectedSensor.name} is stable in the normal operating band. Continue standard monitoring cadence.`;
+  }, [selectedSensor, selectedSensorStatus, trendStats]);
+
+  const renderDynamicSensorChart = () => {
+    if (!selectedSensor || selectedSeriesData.length === 0) {
+      return <p className={styles.emptyMsg}>No readings available for selected sensor.</p>;
+    }
+
+    const unitSuffix = selectedSeries.unit ? ` ${selectedSeries.unit}` : '';
+
+    if (selectedSeries.chartType === 'bar') {
+      return (
+        <ResponsiveContainer width="100%" height="100%">
+          <BarChart data={selectedSeriesData}>
+            <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
+            <XAxis dataKey="timeLabel" stroke="rgba(255,255,255,0.35)" fontSize={11} tickLine={false} axisLine={false} />
+            <YAxis stroke="rgba(255,255,255,0.35)" fontSize={11} tickLine={false} axisLine={false} />
+            <Tooltip content={<CustomTooltip />} />
+            <Bar dataKey="metricValue" name={selectedSeries.label} fill={selectedSeries.color} radius={[6, 6, 0, 0]} unit={unitSuffix} />
+          </BarChart>
+        </ResponsiveContainer>
+      );
+    }
+
+    if (selectedSeries.chartType === 'gauge' || selectedSeries.chartType === 'scorecard' || selectedSeries.chartType === 'status') {
+      const min = Number(selectedSensor.minThreshold || 0);
+      const max = Number(selectedSensor.maxThreshold || 100);
+      const value = Number(currentSensorValue ?? 0);
+      const normalized = Math.max(0, Math.min(100, ((value - min) / Math.max(1, max - min)) * 100));
+      return (
+        <div className={styles.statusPanel}>
+          <div className={styles.statusValue} style={{ color: selectedSensorStatus.color }}>
+            {value.toFixed(1)}{unitSuffix}
+          </div>
+          <div className={styles.statusBarTrack}>
+            <div className={styles.statusBarFill} style={{ width: `${normalized}%`, background: selectedSensorStatus.color }} />
+          </div>
+          <div className={styles.statusMeta}>
+            <span>Min {min}</span>
+            <span>Status: {selectedSensorStatus.label}</span>
+            <span>Max {max}</span>
+          </div>
+        </div>
+      );
+    }
+
+    if (selectedSeries.chartType === 'table') {
+      const tail = selectedSeriesData.slice(-10).reverse();
+      return (
+        <div className={styles.tableWrap}>
+          <table className={styles.metricTable}>
+            <thead>
+              <tr><th>Time</th><th>{selectedSeries.label}</th></tr>
+            </thead>
+            <tbody>
+              {tail.map((row) => (
+                <tr key={row.timestamp}>
+                  <td>{row.timeLabel}</td>
+                  <td>{Number(row.metricValue).toFixed(2)}{unitSuffix}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      );
+    }
+
+    if (selectedSeries.chartType === 'sparkline') {
+      return <Sparkline data={selectedSeriesData.slice(-50)} dataKey="metricValue" color={selectedSeries.color} />;
+    }
+
+    if (selectedSeries.chartType === 'line') {
+      return (
+        <ResponsiveContainer width="100%" height="100%">
+          <LineChart data={selectedSeriesData}>
+            <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
+            <XAxis dataKey="timeLabel" stroke="rgba(255,255,255,0.35)" fontSize={11} tickLine={false} axisLine={false} />
+            <YAxis stroke="rgba(255,255,255,0.35)" fontSize={11} tickLine={false} axisLine={false} />
+            <Tooltip content={<CustomTooltip />} />
+            <Line type="monotone" dataKey="metricValue" name={selectedSeries.label} stroke={selectedSeries.color} strokeWidth={2.7} dot={false} unit={unitSuffix} />
+          </LineChart>
+        </ResponsiveContainer>
+      );
+    }
+
+    return (
+      <ResponsiveContainer width="100%" height="100%">
+        <AreaChart data={selectedSeriesData}>
+          <defs>
+            <linearGradient id="gradActiveSensor" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="5%" stopColor={selectedSeries.color} stopOpacity={0.28} />
+              <stop offset="95%" stopColor={selectedSeries.color} stopOpacity={0} />
+            </linearGradient>
+          </defs>
+          <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
+          <XAxis dataKey="timeLabel" stroke="rgba(255,255,255,0.35)" fontSize={11} tickLine={false} axisLine={false} />
+          <YAxis stroke="rgba(255,255,255,0.35)" fontSize={11} tickLine={false} axisLine={false} />
+          <Tooltip content={<CustomTooltip />} />
+          <Area type="monotone" dataKey="metricValue" name={selectedSeries.label} stroke={selectedSeries.color} strokeWidth={2.7} fill="url(#gradActiveSensor)" dot={false} unit={unitSuffix} />
+        </AreaChart>
+      </ResponsiveContainer>
+    );
+  };
 
   // ─── Render ─────────────────────────────────────────────────────────────────
   return (
@@ -458,201 +654,89 @@ export default function AnalyticsPage() {
         ))}
       </div>
 
-      {/* ── Zone 2: Main Trend + Soil Radar ── */}
+      {/* ── Dynamic Sensor Analytics ── */}
       <div className={styles.mainRow}>
-
-        {/* Multi-series sensor trends */}
         <motion.div className={styles.chartCardWide} variants={itemVariants}>
           <div className={styles.chartHeader}>
             <div>
-              <h3 className={styles.chartTitle}>Sensor Trends</h3>
-              <p className={styles.chartSubtitle}>Moisture · Temperature · Humidity</p>
+              <h3 className={styles.chartTitle}>Sensor Analysis</h3>
+              <p className={styles.chartSubtitle}>Chart and thresholds are driven by Admin sensor configuration</p>
             </div>
-            <div className={styles.livePulse} />
+            <div className={styles.sensorSwitcher}>
+              {sensorConfigs.map((sensor, index) => {
+                const color = colorForSensor(sensor.key, index);
+                return (
+                  <button
+                    key={sensor.id}
+                    className={`${styles.sensorSwitchBtn} ${activeSensorId === sensor.id ? styles.activeSensorBtn : ''}`}
+                    onClick={() => setActiveSensorId(sensor.id)}
+                    style={activeSensorId === sensor.id ? { borderColor: color, color } : undefined}
+                  >
+                    {sensor.name}
+                  </button>
+                );
+              })}
+            </div>
           </div>
+
           <div className={styles.chartWrapper}>
-            {loading ? <SkeletonLoader height="100%" /> : (
-              <ResponsiveContainer width="100%" height="100%">
-                <ComposedChart data={chartData}>
-                  <defs>
-                    <linearGradient id="gradMoisture" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%"  stopColor={COLORS.moisture} stopOpacity={0.25} />
-                      <stop offset="95%" stopColor={COLORS.moisture} stopOpacity={0}    />
-                    </linearGradient>
-                  </defs>
-                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
-                  <XAxis dataKey="timeLabel" stroke="rgba(255,255,255,0.35)" fontSize={11} tickLine={false} axisLine={false} />
-                  <YAxis stroke="rgba(255,255,255,0.35)" fontSize={11} tickLine={false} axisLine={false} />
-                  <Tooltip content={<CustomTooltip />} />
-                  <Legend verticalAlign="top" height={32} />
-                  <Area
-                    type="monotone" dataKey="soilMoisture" name="Moisture (%)"
-                    stroke={COLORS.moisture} strokeWidth={2.5}
-                    fill="url(#gradMoisture)" dot={false} unit="%"
-                  />
-                  <Line
-                    type="monotone" dataKey="temperature" name="Temp (°C)"
-                    stroke={COLORS.temp} strokeWidth={2.5} dot={false} unit="°C"
-                    activeDot={{ r: 5, strokeWidth: 0 }}
-                  />
-                  <Line
-                    type="monotone" dataKey="humidity" name="Humidity (%)"
-                    stroke={COLORS.humidity} strokeWidth={2.5} dot={false} unit="%"
-                    activeDot={{ r: 5, strokeWidth: 0 }}
-                  />
-                </ComposedChart>
-              </ResponsiveContainer>
-            )}
+            {loading ? <SkeletonLoader height="100%" /> : renderDynamicSensorChart()}
           </div>
+
+          {!loading && selectedSensor && (
+            <>
+              <div className={styles.sensorStatsRow}>
+                <div className={styles.sensorStatTile}><span>Current</span><strong>{currentSensorValue != null ? `${currentSensorValue.toFixed(1)} ${selectedSeries.unit}` : '--'}</strong></div>
+                <div className={styles.sensorStatTile}><span>Status</span><strong style={{ color: selectedSensorStatus.color }}>{selectedSensorStatus.label}</strong></div>
+                <div className={styles.sensorStatTile}><span>Anomalies</span><strong>{sensorAnomalyCount}</strong></div>
+                <div className={styles.sensorStatTile}><span>Net Trend</span><strong className={trendStats.delta >= 0 ? styles.positiveTrend : styles.negativeTrend}>{trendStats.delta >= 0 ? '+' : ''}{trendStats.delta.toFixed(1)} {selectedSeries.unit}</strong></div>
+              </div>
+
+              <div className={styles.insightRow}>
+                <div className={styles.insightCard}>
+                  <h4>Thresholds</h4>
+                  <p>Min {selectedSensor.minThreshold} · Warn {selectedSensor.warningThreshold} · Critical {selectedSensor.criticalThreshold} · Max {selectedSensor.maxThreshold}</p>
+                </div>
+                <div className={styles.insightCard}>
+                  <h4>Recommendation</h4>
+                  <p>{recommendation}</p>
+                </div>
+              </div>
+            </>
+          )}
         </motion.div>
 
-        {/* Soil Health Radar */}
         <motion.div className={styles.chartCardNarrow} variants={itemVariants}>
           <div className={styles.chartHeader}>
             <div>
-              <h3 className={styles.chartTitle}>Soil Health Index</h3>
-              <p className={styles.chartSubtitle}>Latest sensor snapshot</p>
-            </div>
-          </div>
-          <div className={styles.chartWrapper}>
-            {loading ? <SkeletonLoader height="100%" /> : (
-              <ResponsiveContainer width="100%" height="100%">
-                <RadarChart cx="50%" cy="50%" outerRadius="75%" data={radarData}>
-                  <PolarGrid stroke="rgba(255,255,255,0.1)" />
-                  <PolarAngleAxis dataKey="subject" tick={{ fill: 'rgba(255,255,255,0.6)', fontSize: 12 }} />
-                  <PolarRadiusAxis angle={30} domain={[0, 100]} tick={false} axisLine={false} />
-                  <Radar name="Now" dataKey="A" stroke={COLORS.moisture} fill={COLORS.moisture} fillOpacity={0.45} />
-                  <Tooltip content={<CustomTooltip />} />
-                </RadarChart>
-              </ResponsiveContainer>
-            )}
-          </div>
-        </motion.div>
-      </div>
-
-      {/* ── Zone 3: Secondary Charts Grid ── */}
-      <div className={styles.chartsGrid}>
-
-        {/* Ambient Light */}
-        <motion.div className={styles.chartCard} variants={itemVariants}>
-          <div className={styles.chartHeader}>
-            <div>
-              <h3 className={styles.chartTitle}>Ambient Light</h3>
-              <p className={styles.chartSubtitle}>Lux over time</p>
-            </div>
-          </div>
-          <div className={styles.chartWrapper}>
-            {loading ? <SkeletonLoader height="100%" /> : (
-              <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={chartData}>
-                  <defs>
-                    <linearGradient id="gradLight" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%"  stopColor={COLORS.light} stopOpacity={0.4} />
-                      <stop offset="95%" stopColor={COLORS.light} stopOpacity={0}   />
-                    </linearGradient>
-                  </defs>
-                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
-                  <XAxis dataKey="timeLabel" stroke="rgba(255,255,255,0.35)" fontSize={11} tickLine={false} axisLine={false} />
-                  <YAxis stroke="rgba(255,255,255,0.35)" fontSize={11} tickLine={false} axisLine={false} />
-                  <Tooltip content={<CustomTooltip />} />
-                  <Area
-                    type="monotone" dataKey="light" name="Light"
-                    stroke={COLORS.light} strokeWidth={2.5}
-                    fillOpacity={1} fill="url(#gradLight)" unit=" lux" dot={false}
-                  />
-                </AreaChart>
-              </ResponsiveContainer>
-            )}
-          </div>
-        </motion.div>
-
-        {/* pH Trend */}
-        <motion.div className={styles.chartCard} variants={itemVariants}>
-          <div className={styles.chartHeader}>
-            <div>
-              <h3 className={styles.chartTitle}>pH Level Trend</h3>
-              <p className={styles.chartSubtitle}>Optimal range 6.0 – 7.5</p>
-            </div>
-          </div>
-          <div className={styles.chartWrapper}>
-            {loading ? <SkeletonLoader height="100%" /> : (
-              <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={chartData}>
-                  <defs>
-                    <linearGradient id="gradPH" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%"  stopColor={COLORS.ph} stopOpacity={0.4} />
-                      <stop offset="95%" stopColor={COLORS.ph} stopOpacity={0}   />
-                    </linearGradient>
-                  </defs>
-                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
-                  <XAxis dataKey="timeLabel" stroke="rgba(255,255,255,0.35)" fontSize={11} tickLine={false} axisLine={false} />
-                  <YAxis domain={[4, 9]} stroke="rgba(255,255,255,0.35)" fontSize={11} tickLine={false} axisLine={false} />
-                  <Tooltip content={<CustomTooltip />} />
-                  <Area
-                    type="monotone" dataKey="pH" name="pH"
-                    stroke={COLORS.ph} strokeWidth={2.5}
-                    fillOpacity={1} fill="url(#gradPH)" dot={false}
-                  />
-                </AreaChart>
-              </ResponsiveContainer>
-            )}
-          </div>
-        </motion.div>
-
-        {/* Irrigation Events */}
-        <motion.div className={styles.chartCard} variants={itemVariants}>
-          <div className={styles.chartHeader}>
-            <div>
-              <h3 className={styles.chartTitle}>Irrigation Events</h3>
-              <p className={styles.chartSubtitle}>Duration per watering burst</p>
-            </div>
-          </div>
-          <div className={styles.chartWrapper}>
-            {loading ? <SkeletonLoader height="100%" /> : (
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart
-                  data={wateringData.map(w => ({
-                    ...w,
-                    timeLabel: format(new Date(w.timestamp), 'MMM d, HH:mm'),
-                  }))}
-                >
-                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
-                  <XAxis dataKey="timeLabel" stroke="rgba(255,255,255,0.35)" fontSize={10} tickLine={false} axisLine={false} />
-                  <YAxis stroke="rgba(255,255,255,0.35)" fontSize={11} tickLine={false} axisLine={false} />
-                  <Tooltip content={<CustomTooltip />} cursor={{ fill: 'rgba(255,255,255,0.06)' }} />
-                  <Bar dataKey="duration" name="Duration" fill={COLORS.flow} radius={[6, 6, 0, 0]} unit="s" />
-                </BarChart>
-              </ResponsiveContainer>
-            )}
-          </div>
-        </motion.div>
-
-        {/* Soil Status Pie */}
-        <motion.div className={styles.chartCard} variants={itemVariants}>
-          <div className={styles.chartHeader}>
-            <div>
-              <h3 className={styles.chartTitle}>Soil Status Split</h3>
-              <p className={styles.chartSubtitle}>Optimal · Dry · Wet readings</p>
+              <h3 className={styles.chartTitle}>Sensor Coverage</h3>
+              <p className={styles.chartSubtitle}>Enabled analytics sensors by status</p>
             </div>
           </div>
           <div className={styles.chartWrapperCenter}>
-            {loading ? <SkeletonLoader height="100%" /> : soilPie.length === 0 ? (
-              <p className={styles.emptyMsg}>No data for selected range</p>
+            {sensorConfigs.length === 0 ? (
+              <p className={styles.emptyMsg}>No analytics sensors configured.</p>
             ) : (
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
                   <Pie
-                    data={soilPie}
-                    cx="50%" cy="50%"
-                    innerRadius="42%" outerRadius="68%"
-                    paddingAngle={4}
+                    data={sensorConfigs.reduce((acc, sensor, idx) => {
+                      const value = sensorData.length ? getSensorValue(sensorData[sensorData.length - 1], sensor) : null;
+                      const level = getStatusForValue(sensor, value).level;
+                      const existing = acc.find((item) => item.name === level);
+                      if (existing) existing.value += 1;
+                      else acc.push({ name: level, value: 1, color: level === 'critical' ? '#ef4444' : level === 'warning' ? '#f59e0b' : level === 'normal' ? '#22c55e' : '#94a3b8' });
+                      return acc;
+                    }, [])}
+                    cx="50%"
+                    cy="50%"
+                    innerRadius="40%"
+                    outerRadius="66%"
                     dataKey="value"
-                    label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                    label={({ name, value }) => `${name} ${value}`}
                     labelLine={false}
                   >
-                    {soilPie.map((_, i) => (
-                      <Cell key={i} fill={PIE_COLORS[i % PIE_COLORS.length]} />
-                    ))}
+                    {sensorConfigs.map((_, i) => <Cell key={i} fill={PIE_COLORS[i % PIE_COLORS.length]} />)}
                   </Pie>
                   <Tooltip content={<CustomTooltip />} />
                 </PieChart>
@@ -660,40 +744,6 @@ export default function AnalyticsPage() {
             )}
           </div>
         </motion.div>
-
-        {/* Water Volume — full width */}
-        <motion.div className={`${styles.chartCard} ${styles.colSpan2}`} variants={itemVariants}>
-          <div className={styles.chartHeader}>
-            <div>
-              <h3 className={styles.chartTitle}>Water Volume Over Time</h3>
-              <p className={styles.chartSubtitle}>Cumulative flow from YF-S401 sensor</p>
-            </div>
-          </div>
-          <div className={styles.chartWrapper}>
-            {loading ? <SkeletonLoader height="100%" /> : (
-              <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={chartData}>
-                  <defs>
-                    <linearGradient id="gradFlow" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%"  stopColor={COLORS.flow} stopOpacity={0.35} />
-                      <stop offset="95%" stopColor={COLORS.flow} stopOpacity={0}    />
-                    </linearGradient>
-                  </defs>
-                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
-                  <XAxis dataKey="timeLabel" stroke="rgba(255,255,255,0.35)" fontSize={11} tickLine={false} axisLine={false} />
-                  <YAxis stroke="rgba(255,255,255,0.35)" fontSize={11} tickLine={false} axisLine={false} />
-                  <Tooltip content={<CustomTooltip />} />
-                  <Area
-                    type="monotone" dataKey="flowVolume" name="Volume"
-                    stroke={COLORS.flow} strokeWidth={2.5}
-                    fillOpacity={1} fill="url(#gradFlow)" unit=" mL" dot={false}
-                  />
-                </AreaChart>
-              </ResponsiveContainer>
-            )}
-          </div>
-        </motion.div>
-
       </div>
     </motion.div>
   );

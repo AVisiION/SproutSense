@@ -1,5 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { GlassIcon } from '../../components/bits/GlassIcon.jsx';
+import { useState, useRef, useEffect } from 'react';
 import { AIRecommendation } from '../../components/AIRecommendation.jsx';
 import './AIChat.css';
 
@@ -11,12 +10,32 @@ Be concise, practical, and friendly.`;
 function TypingIndicator() {
   return (
     <div className="chat-msg assistant">
+      <div className="chat-msg-avatar" aria-hidden="true">
+        <i className="fa-solid fa-robot" />
+      </div>
       <div className="chat-bubble typing">
         <span /><span /><span />
       </div>
     </div>
   );
 }
+
+const QUICK_PROMPTS = [
+  { icon: 'fa-heart-pulse', label: 'Is my plant healthy right now?' },
+  { icon: 'fa-faucet-drip', label: 'Should I water the plant?' },
+  { icon: 'fa-vial', label: 'What does my soil pH indicate?' },
+  { icon: 'fa-seedling', label: 'Optimal conditions for tomatoes?' },
+  { icon: 'fa-leaf', label: 'Why are my plant leaves yellowing?' },
+  { icon: 'fa-wave-square', label: 'Analyze all sensor readings' },
+];
+
+const SENSOR_META = {
+  soilMoisture: { icon: 'fa-droplet', label: 'Moisture', unit: '%' },
+  temperature: { icon: 'fa-temperature-half', label: 'Temp', unit: '\u00b0C' },
+  humidity: { icon: 'fa-cloud-rain', label: 'Humidity', unit: '%' },
+  light: { icon: 'fa-sun', label: 'Light', unit: ' lux' },
+  pH: { icon: 'fa-vial', label: 'pH', unit: '' },
+};
 
 export default function AIChat({ sensors }) {
   const [messages, setMessages] = useState([
@@ -46,6 +65,16 @@ export default function AIChat({ sensors }) {
 - Light: ${sensors.light ?? 'N/A'} lux
 - pH: ${sensors.pH ?? 'N/A'}`
     : 'No sensor data currently available.';
+
+  const sensorChips = sensors
+    ? Object.entries(SENSOR_META)
+        .filter(([key]) => sensors[key] !== undefined && sensors[key] !== null)
+        .map(([key, meta]) => ({
+          key,
+          icon: meta.icon,
+          text: `${meta.label} ${sensors[key]}${meta.unit}`,
+        }))
+    : [];
 
   const sendMessage = async () => {
     const text = input.trim();
@@ -105,14 +134,13 @@ export default function AIChat({ sensors }) {
     }
   };
 
-  const quickPrompts = [
-    'Is my plant healthy right now?',
-    'Should I water the plant?',
-    'What does my soil pH indicate?',
-    'Optimal conditions for tomatoes?',
-    'Why are my plant leaves yellowing?',
-    'Analyze all sensor readings',
-  ];
+  const handleInputChange = (e) => {
+    setInput(e.target.value);
+    const area = inputRef.current;
+    if (!area) return;
+    area.style.height = 'auto';
+    area.style.height = `${Math.min(area.scrollHeight, 140)}px`;
+  };
 
   const formatTime = (d) => d instanceof Date
     ? d.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' })
@@ -120,77 +148,80 @@ export default function AIChat({ sensors }) {
 
   return (
     <div className="ai-chat-page">
-      {/* Header */}
-      <div className="ai-chat-header">
-        <div className="ai-chat-header-left">
-          <div className="ai-avatar">
-            <GlassIcon name="bot" />
+      <div className="ai-chat-topbar">
+        <div className="ai-chat-header">
+          <div className="ai-chat-header-left">
+            <div className="ai-avatar">
+              <i className="fa-solid fa-robot" aria-hidden="true" />
+            </div>
+            <div>
+              <h1 className="ai-chat-title">SproutSense AI Assistant</h1>
+              <p className="ai-chat-subtitle">
+                Smart diagnostics, plant guidance, and live sensor-aware recommendations
+              </p>
+            </div>
           </div>
-          <div>
-            <h1 className="ai-chat-title">SproutSense AI</h1>
-            <p className="ai-chat-subtitle">
-              Powered by Google Gemini &mdash; Plant intelligence at your fingertips
-            </p>
-          </div>
-        </div>
-        <div className="ai-chat-tabs">
-          <button
-            className={`ai-tab${activeTab === 'chat' ? ' active' : ''}`}
-            onClick={() => setActiveTab('chat')}
-          >
-            <GlassIcon name="chat" /> Chat
-          </button>
-          <button
-            className={`ai-tab${activeTab === 'recommend' ? ' active' : ''}`}
-            onClick={() => setActiveTab('recommend')}
-          >
-            <GlassIcon name="leaf" /> Insights
-          </button>
-        </div>
-      </div>
 
-      {/* API Key Prompt */}
-      {showKeyPrompt && !apiKey && (
-        <div className="ai-key-prompt">
-          <GlassIcon name="warning" />
-          <span>Gemini API key required. Add it in </span>
-          <a href="/settings" className="ai-settings-link">Settings</a>
-          <button className="ai-key-dismiss" onClick={() => setShowKeyPrompt(false)}>×</button>
+          <div className="ai-chat-header-meta">
+            <span className="ai-live-pill">
+              <i className="fa-solid fa-signal" aria-hidden="true" />
+              Live AI
+            </span>
+            <span className="ai-model-pill">
+              <i className="fa-solid fa-wand-magic-sparkles" aria-hidden="true" />
+              Gemini
+            </span>
+          </div>
+
+          <div className="ai-chat-tabs">
+            <button
+              className={`ai-tab${activeTab === 'chat' ? ' active' : ''}`}
+              onClick={() => setActiveTab('chat')}
+            >
+              <i className="fa-solid fa-comments" aria-hidden="true" />
+              Chat
+            </button>
+            <button
+              className={`ai-tab${activeTab === 'recommend' ? ' active' : ''}`}
+              onClick={() => setActiveTab('recommend')}
+            >
+              <i className="fa-solid fa-lightbulb" aria-hidden="true" />
+              Insights
+            </button>
+          </div>
         </div>
-      )}
+
+        {showKeyPrompt && !apiKey && (
+          <div className="ai-key-prompt">
+            <i className="fa-solid fa-triangle-exclamation" aria-hidden="true" />
+            <span>Gemini API key required. Add it in </span>
+            <a href="/settings" className="ai-settings-link">Settings</a>
+            <button className="ai-key-dismiss" onClick={() => setShowKeyPrompt(false)}>×</button>
+          </div>
+        )}
+      </div>
 
       {activeTab === 'chat' ? (
         <div className="ai-chat-body">
-          {/* Sensor context strip */}
-          {sensors && (
+          {sensorChips.length > 0 && (
             <div className="ai-sensor-strip">
-              <GlassIcon name="sensors" />
+              <i className="fa-solid fa-microchip" aria-hidden="true" />
               <span className="ai-sensor-label">Live data:</span>
-              {sensors.soilMoisture !== undefined && (
-                <span className="ai-sensor-chip">Moisture {sensors.soilMoisture}%</span>
-              )}
-              {sensors.temperature !== undefined && (
-                <span className="ai-sensor-chip">{sensors.temperature}°C</span>
-              )}
-              {sensors.humidity !== undefined && (
-                <span className="ai-sensor-chip">Humidity {sensors.humidity}%</span>
-              )}
-              {sensors.light !== undefined && (
-                <span className="ai-sensor-chip">{sensors.light} lux</span>
-              )}
-              {sensors.pH !== undefined && (
-                <span className="ai-sensor-chip">pH {sensors.pH}</span>
-              )}
+              {sensorChips.map((chip) => (
+                <span key={chip.key} className="ai-sensor-chip">
+                  <i className={`fa-solid ${chip.icon}`} aria-hidden="true" />
+                  {chip.text}
+                </span>
+              ))}
             </div>
           )}
 
-          {/* Messages */}
           <div className="chat-messages">
             {messages.map((msg, i) => (
               <div key={i} className={`chat-msg ${msg.role}${msg.isError ? ' error' : ''}`}>
                 {msg.role === 'assistant' && (
                   <div className="chat-msg-avatar">
-                    <GlassIcon name="bot" />
+                    <i className="fa-solid fa-robot" aria-hidden="true" />
                   </div>
                 )}
                 <div className="chat-bubble">
@@ -203,48 +234,58 @@ export default function AIChat({ sensors }) {
             <div ref={messagesEndRef} />
           </div>
 
-          {/* Quick prompts */}
-          {messages.length <= 1 && (
-            <div className="chat-quick-prompts">
-              {quickPrompts.map(p => (
-                <button
-                  key={p}
-                  className="chat-quick-btn"
-                  onClick={() => { setInput(p); inputRef.current?.focus(); }}
-                >
-                  {p}
-                </button>
-              ))}
+          <div className="chat-composer">
+            {messages.length <= 1 && (
+              <div className="chat-quick-prompts">
+                {QUICK_PROMPTS.map((p) => (
+                  <button
+                    key={p.label}
+                    className="chat-quick-btn"
+                    onClick={() => {
+                      setInput(p.label);
+                      if (inputRef.current) {
+                        inputRef.current.style.height = 'auto';
+                        inputRef.current.style.height = `${Math.min(inputRef.current.scrollHeight, 140)}px`;
+                      }
+                      inputRef.current?.focus();
+                    }}
+                  >
+                    <i className={`fa-solid ${p.icon}`} aria-hidden="true" />
+                    {p.label}
+                  </button>
+                ))}
+              </div>
+            )}
+
+            <div className="chat-input-area">
+              <textarea
+                ref={inputRef}
+                id="ai-chat-input"
+                className="chat-input"
+                placeholder={apiKey ? 'Ask about your plants...' : 'Add Gemini API key in Settings to chat...'}
+                value={input}
+                onChange={handleInputChange}
+                onKeyDown={handleKeyDown}
+                rows={1}
+                disabled={!apiKey}
+                aria-label="Ask SproutSense AI"
+              />
+              <button
+                className="chat-send-btn"
+                onClick={sendMessage}
+                disabled={!input.trim() || loading || !apiKey}
+                aria-label="Send message"
+              >
+                <i className="fa-solid fa-paper-plane" aria-hidden="true" />
+              </button>
             </div>
-          )}
 
-          {/* Input */}
-          <div className="chat-input-area">
-            <textarea
-              ref={inputRef}
-              className="chat-input"
-              placeholder={apiKey ? 'Ask about your plants...' : 'Add Gemini API key in Settings to chat...'}
-              value={input}
-              onChange={e => setInput(e.target.value)}
-              onKeyDown={handleKeyDown}
-              rows={1}
-              disabled={!apiKey}
-            />
-            <button
-              className="chat-send-btn"
-              onClick={sendMessage}
-              disabled={!input.trim() || loading || !apiKey}
-              aria-label="Send message"
-            >
-              <GlassIcon name="send" />
-            </button>
+            {!apiKey && (
+              <p className="chat-no-key-hint">
+                Add your Gemini API key in <a href="/settings">Settings</a> to enable AI chat.
+              </p>
+            )}
           </div>
-
-          {!apiKey && (
-            <p className="chat-no-key-hint">
-              Add your Gemini API key in <a href="/settings">Settings</a> to enable AI chat.
-            </p>
-          )}
         </div>
       ) : (
         <div className="ai-insights-body">

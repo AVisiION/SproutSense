@@ -4,6 +4,72 @@ import DeviceStatus from '../models/DeviceStatus.js';
 import SensorReading from '../models/SensorReading.js';
 import WateringLog from '../models/WateringLog.js';
 import DiseaseDetection from '../models/DiseaseDetection.js';
+import AdminLog from '../models/AdminLog.js';
+
+const flattenForSet = (source, prefix = '', target = {}) => {
+  Object.entries(source || {}).forEach(([key, value]) => {
+    const path = prefix ? `${prefix}.${key}` : key;
+
+    if (value === undefined) {
+      return;
+    }
+
+    if (value && typeof value === 'object' && !Array.isArray(value) && !(value instanceof Date)) {
+      flattenForSet(value, path, target);
+      return;
+    }
+
+    target[path] = value;
+  });
+
+  return target;
+};
+
+const buildAdminLogQuery = (query = {}) => {
+  const {
+    level,
+    actor,
+    section,
+    q,
+    startDate,
+    endDate
+  } = query;
+
+  const mongoQuery = {};
+
+  if (level && level !== 'all') {
+    mongoQuery.level = level;
+  }
+
+  if (actor) {
+    mongoQuery.actor = actor;
+  }
+
+  if (section) {
+    mongoQuery.section = section;
+  }
+
+  if (q) {
+    mongoQuery.$or = [
+      { action: { $regex: q, $options: 'i' } },
+      { actor: { $regex: q, $options: 'i' } },
+      { section: { $regex: q, $options: 'i' } }
+    ];
+  }
+
+  if (startDate || endDate) {
+    mongoQuery.createdAt = {};
+    if (startDate) mongoQuery.createdAt.$gte = new Date(startDate);
+    if (endDate) mongoQuery.createdAt.$lte = new Date(endDate);
+  }
+
+  return mongoQuery;
+};
+
+const csvEscape = (value) => {
+  const text = value == null ? '' : String(value);
+  return `"${text.replace(/"/g, '""')}"`;
+};
 
 // ─── GET CONFIG ────────────────────────────────────────────────────────────────
 export const getConfig = async (req, res, next) => {
@@ -25,9 +91,11 @@ export const updateConfig = async (req, res, next) => {
     const deviceId = req.params.deviceId || req.body.deviceId || 'ESP32-SENSOR';
     const updates = req.body;
     delete updates.deviceId;
+    const normalizedUpdates = flattenForSet(updates);
+
     const config = await SystemConfig.findOneAndUpdate(
       { deviceId },
-      { ...updates, lastUpdated: new Date() },
+      { $set: { ...normalizedUpdates, lastUpdated: new Date() } },
       { new: true, upsert: true, runValidators: true }
     );
     res.json({ success: true, config });
@@ -180,4 +248,84 @@ export const getDataRetentionPolicy = async (req, res) => {
 
 export const updateDataRetentionPolicy = async (req, res) => {
   res.json({ success: true, message: 'Retention policy updated', policy: req.body });
+};
+
+// ─── ADMIN LOGS ───────────────────────────────────────────────────────────────
+export const createAdminLog = async (req, res, next) => {
+  try {
+    const {
+      actor = 'admin',
+      action,
+      level = 'info',
+      section = 'admin-panel',
+      details = null
+    } = req.body;
+
+    if (!action || typeof action !== 'string') {
+      return res.status(400).json({ success: false, message: 'action is required' });
+    }
+
+    const log = await AdminLog.create({
+      actor,
+      action,
+      level,
+      section,
+      details
+    });
+
+    res.status(201).json({ success: true, log });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getAdminLogs = async (req, res, next) => {
+  try {
+    const limit = Math.min(parseInt(req.query.limit, 10) || 100, 500);
+    const mongoQuery = buildAdminLogQuery(req.query);
+    const logs = await AdminLog.find(mongoQuery)
+      .sort({ createdAt: -1 })
+      .limit(limit)
+      .lean();
+
+    res.json({ success: true, logs });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const exportAdminLogs = async (req, res, next) => {
+  try {
+    const format = (req.query.format || 'json').toLowerCase();
+    const limit = Math.min(parseInt(req.query.limit, 10) || 500, 2000);
+    const mongoQuery = buildAdminLogQuery(req.query);
+
+    const logs = await AdminLog.find(mongoQuery)
+      .sort({ createdAt: -1 })
+      .limit(limit)
+      .lean();
+
+    if (format === 'csv') {
+      const headers = ['timestamp', 'actor', 'level', 'section', 'action', 'details'];
+      const rows = logs.map((entry) => ([
+        csvEscape(entry.createdAt ? new Date(entry.createdAt).toISOString() : ''),
+        csvEscape(entry.actor),
+        csvEscape(entry.level),
+        csvEscape(entry.section),
+        csvEscape(entry.action),
+        csvEscape(entry.details ? JSON.stringify(entry.details) : '')
+      ].join(',')));
+
+      const csv = [headers.join(','), ...rows].join('\n');
+      res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+      res.setHeader('Content-Disposition', `attachment; filename="admin-logs-${Date.now()}.csv"`);
+      return res.status(200).send(csv);
+    }
+
+    res.setHeader('Content-Type', 'application/json');
+    res.setHeader('Content-Disposition', `attachment; filename="admin-logs-${Date.now()}.json"`);
+    return res.status(200).json({ success: true, logs });
+  } catch (error) {
+    next(error);
+  }
 };

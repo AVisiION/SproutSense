@@ -33,8 +33,9 @@ import { isMockEnabled, getMockSensors, getMockAlerts, subscribeToMockUpdates } 
 import Aurora from './components/background/Aurora';
 
 // ── Admin auth ─────────────────────────────────────────────────────────────
-import { AdminAuthProvider, useAdminAuth } from './context/AdminAuthContext';
-import AdminLoginPage from './pages/Admin/AdminLoginPage';
+import { useAuth } from './context/AuthContext';
+import ProtectedRoute from './components/auth/ProtectedRoute';
+import { PERMISSION, ROLE, ACCOUNT_STATUS } from './auth/permissions';
 import AdminPanelPage from './pages/Admin/AdminPanelPage';
 
 // ── Shared components ──────────────────────────────────────────────────────
@@ -42,7 +43,6 @@ import { Navbar } from './components/layout/Navbar';
 import { SensorCard } from './components/SensorCard';
 import { ControlCard } from './components/ControlCard';
 import { AIRecommendation } from './components/AIRecommendation';
-import { ConfigCard } from './components/ConfigCard';
 import { Notification } from './components/Notification';
 import { GlassIcon } from './components/bits/GlassIcon';
 import SproutSenseLogo from './components/SproutSenseLogo';
@@ -55,6 +55,22 @@ import AnalyticsPage from './pages/Analytics/AnalyticsPage.jsx';
 import AlertsPage from './pages/Alerts/AlertsPage.jsx';
 import AIChat from './pages/AIChat/AIChat.jsx';
 import InsightsPage from './pages/Insights/InsightsPage.jsx';
+import LoginPage from './pages/Auth/LoginPage';
+import RegisterPage from './pages/Auth/RegisterPage';
+import ForgotPasswordPage from './pages/Auth/ForgotPasswordPage';
+import ResetPasswordPage from './pages/Auth/ResetPasswordPage';
+import VerifyEmailPage from './pages/Auth/VerifyEmailPage';
+import VerifyPendingPage from './pages/Auth/VerifyPendingPage';
+import AccessDeniedPage from './pages/Auth/AccessDeniedPage';
+import ViewerReportsPage from './pages/Viewer/ViewerReportsPage';
+import {
+  PublicAboutPage,
+  PublicContactPage,
+  PublicDemoPage,
+  PublicFeaturesPage,
+  PublicHomePage,
+  PublicPlantLibraryPage,
+} from './pages/Public/PublicPages';
 
 // ── Styles ─────────────────────────────────────────────────────────────────
 import './App.css';
@@ -76,10 +92,9 @@ const AURORA_LIGHT = ['#F3FBF4', '#00897B', '#388E3C', '#E4F4E7'];
 // PROTECTED ADMIN ROUTE
 // ───────────────────────────────────────────────────────────────────────────
 function ProtectedAdminRoute({ children }) {
-  const { isAdminAuthenticated } = useAdminAuth();
-  return isAdminAuthenticated
-    ? children
-    : <Navigate to="/admin/login" replace />;
+  const auth = useAuth();
+  const allowed = auth.isAuthenticated && auth.role === ROLE.ADMIN;
+  return allowed ? children : <Navigate to="/access-denied" replace />;
 }
 
 // ───────────────────────────────────────────────────────────────────────────
@@ -118,13 +133,56 @@ const sidebarCategories = [
     items: [
       { path: '/backend', label: 'Backend', icon: 'server' },
       { path: '/esp32', label: 'Device Connected', icon: 'esp32' },
-      { path: '/config', label: 'Config', icon: 'config' },
       { path: '/settings', label: 'Settings', icon: 'settings' },
     ]
   },
 ];
 
 const allSidebarItems = sidebarCategories.flatMap(c => c.items);
+
+const publicSidebarCategories = [
+  {
+    label: 'Public',
+    items: [
+      { path: '/', label: 'Home', icon: 'home' },
+      { path: '/about', label: 'About', icon: 'insights' },
+      { path: '/features', label: 'Features', icon: 'analytics' },
+      { path: '/plant-library', label: 'Plant Library', icon: 'sprout' },
+      { path: '/demo', label: 'Demo', icon: 'monitoring' },
+      { path: '/contact', label: 'Contact', icon: 'bell' },
+    ]
+  },
+];
+
+const allPublicSidebarItems = publicSidebarCategories.flatMap((c) => c.items);
+
+const routePermissions = {
+  '/home': [PERMISSION.DASHBOARD_READ],
+  '/sensors': [PERMISSION.SENSORS_READ],
+  '/analytics': [PERMISSION.ANALYTICS_READ],
+  '/alerts': [PERMISSION.ANALYTICS_READ],
+  '/controls': [PERMISSION.WATERING_START],
+  '/ai': [PERMISSION.AI_CHAT],
+  '/insights': [PERMISSION.AI_INSIGHTS_READ],
+  '/backend': [PERMISSION.CONFIG_READ],
+  '/esp32': [PERMISSION.CONFIG_READ],
+  '/settings': [PERMISSION.CONFIG_UPDATE],
+  '/viewer/dashboard': [PERMISSION.DASHBOARD_READ],
+  '/viewer/analytics': [PERMISSION.ANALYTICS_READ],
+  '/viewer/reports': [PERMISSION.ANALYTICS_READ],
+};
+
+const publicRoutes = [
+  '/',
+  '/about',
+  '/features',
+  '/contact',
+  '/plant-library',
+  '/demo',
+  '/preview/dashboard',
+  '/preview/analytics',
+  '/reports-preview',
+];
 
 // ───────────────────────────────────────────────────────────────────────────
 // HELPER UTILITIES & COMPONENTS
@@ -191,8 +249,13 @@ function formatDiseaseName(name) {
 // ───────────────────────────────────────────────────────────────────────────
 function App() {
   const location = useLocation();
+  const auth = useAuth();
 
   const isAdminRoute = location.pathname.startsWith('/admin');
+  const authPages = ['/login', '/register', '/forgot-password', '/reset-password', '/verify-email', '/verify-email-pending', '/access-denied'];
+  const isAuthPage = authPages.some((path) => location.pathname === path);
+  const isPublicPage = publicRoutes.includes(location.pathname);
+  const isGuestPublic = isPublicPage && !auth.isAuthenticated;
 
   // ── State ──────────────────────────────────────────────────────────────
   const [sensors, setSensors] = useState(null);
@@ -244,6 +307,7 @@ function App() {
   }, []);
 
   useEffect(() => {
+    if (isGuestPublic) return;
     if (isMockEnabled()) {
       setAlerts(getMockAlerts());
       return;
@@ -266,9 +330,10 @@ function App() {
       ...newAlerts,
       ...prev.filter(a => a.source === 'ESP32-CAM'),
     ]);
-  }, [sensors, pumpActive]);
+  }, [sensors, pumpActive, isGuestPublic]);
 
   const fetchDiseaseAlerts = useCallback(async () => {
+    if (isGuestPublic) return;
     if (isMockEnabled()) return;
     try {
       const end = new Date();
@@ -293,7 +358,7 @@ function App() {
         newAlert,
       ]);
     } catch { /* Silently ignore */ }
-  }, []);
+  }, [isGuestPublic]);
 
   useEffect(() => {
     fetchDiseaseAlerts();
@@ -348,7 +413,21 @@ function App() {
 
   const toggleSidebar = () => setIsSidebarCollapsed(prev => !prev);
   const closeSidebar  = () => { if (isMobile) setIsSidebarCollapsed(true); };
-  const pageTitle = allSidebarItems.find(i => i.path === location.pathname)?.label || 'SproutSense';
+
+  const filteredSidebarCategories = sidebarCategories
+    .map((category) => ({
+      ...category,
+      items: category.items.filter((item) => {
+        const permissions = routePermissions[item.path] || [];
+        return permissions.every((permission) => auth.hasPermission(permission));
+      }),
+    }))
+    .filter((category) => category.items.length > 0);
+
+  const filteredAllSidebarItems = filteredSidebarCategories.flatMap((category) => category.items);
+  const activeSidebarCategories = isGuestPublic ? publicSidebarCategories : filteredSidebarCategories;
+  const activeSidebarItems = isGuestPublic ? allPublicSidebarItems : filteredAllSidebarItems;
+  const pageTitle = activeSidebarItems.find((i) => i.path === location.pathname)?.label || 'SproutSense';
 
   // ── WebSocket ──────────────────────────────────────────────────────────
   const handleWebSocketMessage = useCallback((data) => {
@@ -378,6 +457,7 @@ function App() {
   }, [isConnected]);
 
   useEffect(() => {
+    if (isGuestPublic) return;
     let esp32OfflineTimeout, esp32CamOfflineTimeout;
     let lastEsp32Online = true, lastEsp32CamOnline = true;
 
@@ -480,7 +560,7 @@ function App() {
       if (esp32OfflineTimeout)    clearTimeout(esp32OfflineTimeout);
       if (esp32CamOfflineTimeout) clearTimeout(esp32CamOfflineTimeout);
     };
-  }, []);
+  }, [isGuestPublic]);
 
   // ── Watering & Config handlers ─────────────────────────────────────────
   const handleStartWatering = async () => {
@@ -519,25 +599,61 @@ function App() {
 
   // ── Render ─────────────────────────────────────────────────────────────
 
+  if (auth.loading) {
+    return <div style={{ minHeight: '100vh', display: 'grid', placeItems: 'center', color: 'var(--text-color)' }}>Loading secure session...</div>;
+  }
+
+  if (isAuthPage) {
+    if (auth.isAuthenticated && !['/access-denied', '/verify-email-pending', '/verify-email'].includes(location.pathname)) {
+      return <Navigate to={auth.homeForRole()} replace />;
+    }
+
+    return (
+      <Routes>
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/register" element={<RegisterPage />} />
+        <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+        <Route path="/reset-password" element={<ResetPasswordPage />} />
+        <Route path="/verify-email" element={<VerifyEmailPage />} />
+        <Route path="/verify-email-pending" element={<VerifyPendingPage />} />
+        <Route path="/access-denied" element={<AccessDeniedPage />} />
+      </Routes>
+    );
+  }
+
+  if (isPublicPage && auth.isAuthenticated) {
+    return <Navigate to={auth.homeForRole()} replace />;
+  }
+
+  if (!auth.isAuthenticated && !isPublicPage) {
+    return <Navigate to="/login" replace />;
+  }
+
+  if (auth.accountStatus === ACCOUNT_STATUS.PENDING_VERIFICATION) {
+    return <Navigate to="/verify-email-pending" replace />;
+  }
+
+  if ([ACCOUNT_STATUS.SUSPENDED, ACCOUNT_STATUS.DISABLED].includes(auth.accountStatus)) {
+    return <Navigate to="/access-denied" replace state={{ reason: auth.accountStatus }} />;
+  }
+
   if (isAdminRoute) {
     return (
-      <AdminAuthProvider>
-        <Routes>
-          <Route path="/admin/login" element={<AdminLoginPage />} />
-          <Route path="/admin/panel" element={
-            <ProtectedAdminRoute>
-              <AdminPanelPage />
-            </ProtectedAdminRoute>
-          } />
-          <Route path="/admin" element={<Navigate to="/admin/login" replace />} />
-          <Route path="/admin/*" element={<Navigate to="/admin/login" replace />} />
-        </Routes>
-      </AdminAuthProvider>
+      <Routes>
+        <Route path="/admin/login" element={<Navigate to="/login" replace />} />
+        <Route path="/admin/panel" element={
+          <ProtectedAdminRoute>
+            <AdminPanelPage />
+          </ProtectedAdminRoute>
+        } />
+        <Route path="/admin" element={<Navigate to="/admin/panel" replace />} />
+        <Route path="/admin/*" element={<Navigate to="/admin/panel" replace />} />
+      </Routes>
     );
   }
 
   return (
-    <AdminAuthProvider>
+    <>
       {/* ── Aurora: fixed full-screen WebGL background layer ── */}
       <Aurora
         colorStops={auroraStops}
@@ -560,7 +676,7 @@ function App() {
           </div>
 
           <nav className="sidebar-nav">
-            {sidebarCategories.map((category) => (
+            {activeSidebarCategories.map((category) => (
               <div key={category.label} className="sidebar-category">
                 <span className="sidebar-cat-label">{category.label}</span>
                 {category.items.map((item) => (
@@ -592,15 +708,17 @@ function App() {
             ))}
           </nav>
 
-          <div className="sidebar-system-status">
-            {[['Backend', systemStatus.backend], ['ESP32', systemStatus.esp32], ['ESP32-CAM', systemStatus.esp32Cam]]
-              .map(([label, status]) => (
-                <div key={label} className="sidebar-system-row">
-                  <span className="sidebar-system-label">{label}</span>
-                  <span className={`sidebar-system-pill ${status}`}>{statusLabel(status)}</span>
-                </div>
-              ))}
-          </div>
+          {!isGuestPublic && (
+            <div className="sidebar-system-status">
+              {[['Backend', systemStatus.backend], ['ESP32', systemStatus.esp32], ['ESP32-CAM', systemStatus.esp32Cam]]
+                .map(([label, status]) => (
+                  <div key={label} className="sidebar-system-row">
+                    <span className="sidebar-system-label">{label}</span>
+                    <span className={`sidebar-system-pill ${status}`}>{statusLabel(status)}</span>
+                  </div>
+                ))}
+            </div>
+          )}
         </aside>
 
         {/* ── Main content area ── */}
@@ -615,8 +733,9 @@ function App() {
             toggleSidebar={toggleSidebar}
             theme={theme}
             toggleTheme={toggleTheme}
-            alertCount={alerts.length}
+            alertCount={isGuestPublic ? 0 : alerts.length}
             isConnected={isConnected}
+            auth={auth}
           />
 
           {notification.message && (
@@ -660,130 +779,167 @@ function App() {
 
           <AnimatePresence mode="wait">
             <Routes location={location} key={location.pathname}>
+              {isGuestPublic ? (
+                <>
+                  <Route path="/" element={<PageWrapper><section className="dashboard-section"><PublicHomePage /></section></PageWrapper>} />
+                  <Route path="/about" element={<PageWrapper><section className="dashboard-section"><PublicAboutPage /></section></PageWrapper>} />
+                  <Route path="/features" element={<PageWrapper><section className="dashboard-section"><PublicFeaturesPage /></section></PageWrapper>} />
+                  <Route path="/contact" element={<PageWrapper><section className="dashboard-section"><PublicContactPage /></section></PageWrapper>} />
+                  <Route path="/plant-library" element={<PageWrapper><section className="dashboard-section"><PublicPlantLibraryPage /></section></PageWrapper>} />
+                  <Route path="/demo" element={<PageWrapper><section className="dashboard-section"><PublicDemoPage /></section></PageWrapper>} />
+                  <Route path="/preview/dashboard" element={<Navigate to="/demo" replace />} />
+                  <Route path="/preview/analytics" element={<Navigate to="/demo" replace />} />
+                  <Route path="/reports-preview" element={<Navigate to="/demo" replace />} />
+                  <Route path="*" element={<Navigate to="/" replace />} />
+                </>
+              ) : (
+                <>
               <Route path="/" element={<Navigate to="/home" replace />} />
 
               <Route path="/home" element={
-                <PageWrapper><HomePage theme={theme} sensors={sensors} isConnected={isConnected} /></PageWrapper>
+                <ProtectedRoute requiredPermissions={[PERMISSION.DASHBOARD_READ]}>
+                  <PageWrapper><HomePage theme={theme} sensors={sensors} isConnected={isConnected} /></PageWrapper>
+                </ProtectedRoute>
               } />
 
               <Route path="/backend" element={
-                <PageWrapper>
-                  <section className="dashboard-section">
-                    <div className="dashboard dashboard-single">
-                      <div className="card">
-                        <h2 className="card-title"><GlassIcon name="server" className="card-title-icon" /> Backend Status</h2>
-                        <div className="status-grid">
-                          {[['server', 'API Server', systemStatus.backend], ['database', 'Database', systemStatus.database]]
-                            .map(([icon, label, status]) => (
-                              <div key={label} className="status-item">
-                                <div className="status-item-header"><GlassIcon name={icon} /><span className="status-item-label">{label}</span></div>
-                                <span className={`status-badge status-${status}`}>{statusLabel(status)}</span>
-                              </div>
-                            ))}
+                <ProtectedRoute requiredPermissions={[PERMISSION.CONFIG_READ]}>
+                  <PageWrapper>
+                    <section className="dashboard-section">
+                      <div className="dashboard dashboard-single">
+                        <div className="card">
+                          <h2 className="card-title"><GlassIcon name="server" className="card-title-icon" /> Backend Status</h2>
+                          <div className="status-grid">
+                            {[['server', 'API Server', systemStatus.backend], ['database', 'Database', systemStatus.database]]
+                              .map(([icon, label, status]) => (
+                                <div key={label} className="status-item">
+                                  <div className="status-item-header"><GlassIcon name={icon} /><span className="status-item-label">{label}</span></div>
+                                  <span className={`status-badge status-${status}`}>{statusLabel(status)}</span>
+                                </div>
+                              ))}
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  </section>
-                </PageWrapper>
+                    </section>
+                  </PageWrapper>
+                </ProtectedRoute>
               } />
 
               <Route path="/esp32" element={
-                <PageWrapper>
-                  <section className="dashboard-section">
-                    <div className="dashboard dashboard-single">
-                      <div className="card">
-                        <h2 className="card-title"><GlassIcon name="esp32" className="card-title-icon" /> ESP32 Device Status</h2>
-                        <div className="status-grid">
-                          <div className="status-item">
-                            <div className="status-item-header"><GlassIcon name="esp32" /><span className="status-item-label">ESP32 Sensor Board</span></div>
-                            <div><span className={`status-badge status-${systemStatus.esp32}`}>{statusLabel(systemStatus.esp32)}</span><div className="status-subtext">Last seen: {formatLastSeen(systemStatus.esp32LastSeen)}</div></div>
-                          </div>
-                          <div className="status-item">
-                            <div className="status-item-header"><GlassIcon name="image" /><span className="status-item-label">ESP32-CAM</span></div>
-                            <div><span className={`status-badge status-${systemStatus.esp32Cam}`}>{statusLabel(systemStatus.esp32Cam)}</span><div className="status-subtext">Last seen: {formatLastSeen(systemStatus.esp32CamLastSeen)}</div></div>
+                <ProtectedRoute requiredPermissions={[PERMISSION.CONFIG_READ]}>
+                  <PageWrapper>
+                    <section className="dashboard-section">
+                      <div className="dashboard dashboard-single">
+                        <div className="card">
+                          <h2 className="card-title"><GlassIcon name="esp32" className="card-title-icon" /> ESP32 Device Status</h2>
+                          <div className="status-grid">
+                            <div className="status-item">
+                              <div className="status-item-header"><GlassIcon name="esp32" /><span className="status-item-label">ESP32 Sensor Board</span></div>
+                              <div><span className={`status-badge status-${systemStatus.esp32}`}>{statusLabel(systemStatus.esp32)}</span><div className="status-subtext">Last seen: {formatLastSeen(systemStatus.esp32LastSeen)}</div></div>
+                            </div>
+                            <div className="status-item">
+                              <div className="status-item-header"><GlassIcon name="image" /><span className="status-item-label">ESP32-CAM</span></div>
+                              <div><span className={`status-badge status-${systemStatus.esp32Cam}`}>{statusLabel(systemStatus.esp32Cam)}</span><div className="status-subtext">Last seen: {formatLastSeen(systemStatus.esp32CamLastSeen)}</div></div>
+                            </div>
                           </div>
                         </div>
                       </div>
-                    </div>
-                  </section>
-                </PageWrapper>
+                    </section>
+                  </PageWrapper>
+                </ProtectedRoute>
               } />
 
               <Route path="/sensors" element={
-                <PageWrapper>
-                  <section className="dashboard-section dashboard-section-wide">
-                    <div className="dashboard dashboard-single dashboard-wide">
-                      <SensorCard sensors={sensors} isConnected={isConnected} />
-                    </div>
-                  </section>
-                </PageWrapper>
+                <ProtectedRoute requiredPermissions={[PERMISSION.SENSORS_READ]}>
+                  <PageWrapper>
+                    <section className="dashboard-section dashboard-section-wide">
+                      <div className="dashboard dashboard-single dashboard-wide">
+                        <SensorCard sensors={sensors} isConnected={isConnected} />
+                      </div>
+                    </section>
+                  </PageWrapper>
+                </ProtectedRoute>
               } />
 
               <Route path="/analytics" element={
-                <PageWrapper><section className="dashboard-section"><AnalyticsPage /></section></PageWrapper>
+                <ProtectedRoute requiredPermissions={[PERMISSION.ANALYTICS_READ]}>
+                  <PageWrapper><section className="dashboard-section"><AnalyticsPage /></section></PageWrapper>
+                </ProtectedRoute>
               } />
 
               <Route path="/alerts" element={
-                <PageWrapper>
-                  <section className="dashboard-section">
-                    <div style={{ marginTop: '2rem' }}>
-                      <AlertsPage alerts={alerts} sensors={sensors} onClearAlert={handleClearAlert} onClearAllAlerts={handleClearAllAlerts} />
-                    </div>
-                  </section>
-                </PageWrapper>
+                <ProtectedRoute requiredPermissions={[PERMISSION.ANALYTICS_READ]}>
+                  <PageWrapper>
+                    <section className="dashboard-section">
+                      <div style={{ marginTop: '2rem' }}>
+                        <AlertsPage alerts={alerts} sensors={sensors} onClearAlert={handleClearAlert} onClearAllAlerts={handleClearAllAlerts} />
+                      </div>
+                    </section>
+                  </PageWrapper>
+                </ProtectedRoute>
               } />
 
               <Route path="/controls" element={
-                <PageWrapper>
-                  <section className="dashboard-section dashboard-section-wide">
-                    <div className="dashboard dashboard-single dashboard-wide">
-                      <ControlCard
-                        pumpActive={pumpActive} onStartWatering={handleStartWatering} onStopWatering={handleStopWatering}
-                        moistureThreshold={moistureThreshold} onMoistureThresholdChange={setMoistureThreshold}
-                        onSaveMoistureThreshold={handleSaveMoistureThreshold} isThresholdSaving={isThresholdSaving}
-                        plantGrowthEnabled={plantGrowthEnabled} onPlantGrowthEnabledChange={setPlantGrowthEnabled}
-                        plantGrowthStage={plantGrowthStage} onPlantGrowthStageChange={setPlantGrowthStage}
-                        aiInsightsMode={aiInsightsMode} onAiInsightsModeChange={setAiInsightsMode}
-                        onSaveAiControls={handleSaveAiControls} isAiControlSaving={isAiControlSaving}
-                        sensors={sensors} onNotification={showNotification}
-                      />
-                    </div>
-                  </section>
-                </PageWrapper>
+                <ProtectedRoute requiredPermissions={[PERMISSION.WATERING_START]}>
+                  <PageWrapper>
+                    <section className="dashboard-section dashboard-section-wide">
+                      <div className="dashboard dashboard-single dashboard-wide">
+                        <ControlCard
+                          pumpActive={pumpActive} onStartWatering={handleStartWatering} onStopWatering={handleStopWatering}
+                          moistureThreshold={moistureThreshold} onMoistureThresholdChange={setMoistureThreshold}
+                          onSaveMoistureThreshold={handleSaveMoistureThreshold} isThresholdSaving={isThresholdSaving}
+                          plantGrowthEnabled={plantGrowthEnabled} onPlantGrowthEnabledChange={setPlantGrowthEnabled}
+                          plantGrowthStage={plantGrowthStage} onPlantGrowthStageChange={setPlantGrowthStage}
+                          aiInsightsMode={aiInsightsMode} onAiInsightsModeChange={setAiInsightsMode}
+                          onSaveAiControls={handleSaveAiControls} isAiControlSaving={isAiControlSaving}
+                          sensors={sensors} onNotification={showNotification}
+                        />
+                      </div>
+                    </section>
+                  </PageWrapper>
+                </ProtectedRoute>
               } />
 
               <Route path="/ai" element={
-                <PageWrapper><section className="dashboard-section"><AIChat sensors={sensors} /></section></PageWrapper>
+                <ProtectedRoute requiredPermissions={[PERMISSION.AI_CHAT]}>
+                  <PageWrapper><section className="dashboard-section dashboard-section-wide ai-chat-section"><AIChat sensors={sensors} /></section></PageWrapper>
+                </ProtectedRoute>
               } />
 
               <Route path="/insights" element={
-                <PageWrapper><section className="dashboard-section"><InsightsPage /></section></PageWrapper>
+                <ProtectedRoute requiredPermissions={[PERMISSION.AI_INSIGHTS_READ]}>
+                  <PageWrapper><section className="dashboard-section dashboard-section-wide insights-section"><InsightsPage /></section></PageWrapper>
+                </ProtectedRoute>
               } />
 
-              <Route path="/config" element={
-                <PageWrapper>
-                  <section className="dashboard-section">
-                    <div className="dashboard dashboard-single">
-                      <ConfigCard onNotification={showNotification} systemStatus={systemStatus} />
-                    </div>
-                  </section>
-                </PageWrapper>
+              <Route path="/viewer/dashboard" element={<Navigate to="/sensors" replace />} />
+              <Route path="/viewer/analytics" element={<Navigate to="/analytics" replace />} />
+              <Route path="/viewer/reports" element={
+                <ProtectedRoute requiredPermissions={[PERMISSION.ANALYTICS_READ]}>
+                  <PageWrapper><ViewerReportsPage /></PageWrapper>
+                </ProtectedRoute>
               } />
+
+              <Route path="/config" element={<Navigate to="/settings" replace />} />
 
               <Route path="/settings" element={
-                <PageWrapper>
-                  <section className="dashboard-section">
-                    <SettingsPage theme={theme} toggleTheme={toggleTheme} onNotification={showNotification} />
-                  </section>
-                </PageWrapper>
+                <ProtectedRoute requiredPermissions={[PERMISSION.CONFIG_UPDATE]}>
+                  <PageWrapper>
+                    <section className="dashboard-section">
+                      <SettingsPage theme={theme} toggleTheme={toggleTheme} onNotification={showNotification} />
+                    </section>
+                  </PageWrapper>
+                </ProtectedRoute>
               } />
 
               <Route path="*" element={<Navigate to="/home" replace />} />
+                </>
+              )}
             </Routes>
           </AnimatePresence>
         </div>
       </div>
-    </AdminAuthProvider>
+    </>
   );
 }
 

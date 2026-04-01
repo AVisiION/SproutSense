@@ -48,6 +48,11 @@ MONGODB_URI=mongodb+srv://user:pass@cluster.mongodb.net/sproutsense?retryWrites=
 
 ## 🏗️ Architecture
 
+## Auth/RBAC Validation
+
+- Smoke checklist: `docs/AUTH_RBAC_SMOKE_CHECKLIST.md`
+- Automated script: `cd backend && node scripts/auth-rbac-smoke.mjs`
+
 ### Dual ESP32 System
 
 | Device | ID | Role | Firmware |
@@ -173,11 +178,21 @@ Branch         : main
 NODE_ENV=production
 PORT=5000
 MONGODB_URI=mongodb+srv://user:pass@cluster.mongodb.net/sproutsense?retryWrites=true&w=majority
+CORS_ORIGIN=https://your-app.netlify.app
+# Optional legacy alias (also accepted by backend)
 CLIENT_URL=https://your-app.netlify.app
 GEMINI_API_KEY=your_key_here
+
+# Optional: bootstrap admin account (RBAC seed)
+ADMIN_EMAIL=admin@yourdomain.com
+ADMIN_PASSWORD=strong_admin_password_here
+ADMIN_FULL_NAME=System Administrator
+# Optional: reset admin password from env on each startup (default false)
+ADMIN_FORCE_PASSWORD_UPDATE=false
 ```
 
-**Health Check:** `GET /api/config/health`
+**Health Check (platform probe):** `GET /healthz`
+**Detailed Health Check:** `GET /api/config/health`
 ```json
 { "status": "ok", "database": "connected", "dbName": "sproutsense" }
 ```

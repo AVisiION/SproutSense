@@ -15,7 +15,29 @@ import SensorReading from './models/SensorReading.js';
 import wsService from './utils/websocketService.js';
 import { initTestMode } from './utils/testModeManager.js';
 
-const PORT = config.PORT;
+function validateProductionEnv() {
+  if (!config.IS_PRODUCTION) {
+    return;
+  }
+
+  const missingVars = [];
+  if (!process.env.MONGODB_URI) {
+    missingVars.push('MONGODB_URI');
+  }
+
+  if (!(process.env.CORS_ORIGIN || process.env.CLIENT_URL)) {
+    missingVars.push('CORS_ORIGIN (or CLIENT_URL)');
+  }
+
+  if (missingVars.length > 0) {
+    console.error(`[FATAL] Missing required production env vars: ${missingVars.join(', ')}`);
+    process.exit(1);
+  }
+}
+
+validateProductionEnv();
+
+const PORT = Number(config.PORT);
 
 // Create HTTP server
 const server = http.createServer(app);
@@ -100,22 +122,40 @@ cron.schedule('0 6,10,14,18,22 * * *', async () => {
   }
 });
 
-// Start server
-server.listen(PORT, '0.0.0.0', () => {
-  console.log(`
+function startServer(port, retryCount = 0) {
+  server.listen(port, '0.0.0.0', () => {
+    console.log(`
 [START] Smart Watering System Backend
-Server:     http://localhost:${PORT}
-WebSocket:  ws://localhost:${PORT}${config.WEBSOCKET.PATH}
+Server:     http://localhost:${port}
+WebSocket:  ws://localhost:${port}${config.WEBSOCKET.PATH}
 Database:   MongoDB
 Environment: ${config.NODE_ENV}
 Rate Limit: ${config.RATE_LIMIT.MAX_REQUESTS} req/${config.RATE_LIMIT.WINDOW_MS / 1000 / 60}min
   `);
 
-  // Disable test sensor simulation in production
-  if (config.IS_DEVELOPMENT) {
-    initTestMode(false);
+    // Disable test sensor simulation in production
+    if (config.IS_DEVELOPMENT) {
+      initTestMode(false);
+    }
+  });
+}
+
+function handleListenError(error) {
+  if (error?.code === 'EADDRINUSE') {
+    console.error(`[FATAL] Port ${PORT} is already in use.`);
+    console.error('[FATAL] Stop the existing backend process or set a different PORT in backend/.env.');
+    process.exit(1);
   }
-});
+
+  console.error('[FATAL] Server startup error:', error?.message || error);
+  process.exit(1);
+}
+
+server.on('error', handleListenError);
+wss.on('error', handleListenError);
+
+// Start server
+startServer(PORT);
 
 // Handle unhandled promise rejections
 process.on('unhandledRejection', (err) => {

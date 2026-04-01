@@ -416,6 +416,49 @@
 .adm-config-row:last-child { border-bottom: none; }
 .adm-config-key { font-size:0.82rem; color:rgba(200,230,203,0.60); font-weight:600; display:flex; align-items:center; gap:0.5rem; }
 .adm-config-val { font-size:0.82rem; color:#E8F5E9; font-weight:600; text-align:right; word-break:break-all; }
+.adm-input {
+  width: 140px;
+  border-radius: 10px;
+  border: 1px solid rgba(255,255,255,0.15);
+  background: rgba(255,255,255,0.05);
+  color: #E8F5E9;
+  padding: 0.42rem 0.6rem;
+  font-size: 0.82rem;
+  font-weight: 600;
+}
+.adm-input:focus {
+  outline: none;
+  border-color: rgba(67,160,71,0.65);
+  box-shadow: 0 0 0 2px rgba(67,160,71,0.2);
+}
+.adm-input-error {
+  margin-top: 0.35rem;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: #fca5a5;
+}
+
+.adm-log-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.8rem;
+}
+.adm-log-table th,
+.adm-log-table td {
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+  padding: 0.55rem 0.5rem;
+  text-align: left;
+  color: rgba(232,245,233,0.92);
+  vertical-align: top;
+}
+.adm-log-table th {
+  color: rgba(200,230,203,0.72);
+  font-weight: 700;
+}
+.adm-log-table-empty {
+  text-align: center !important;
+  color: rgba(200,230,203,0.6) !important;
+}
 
 /* ══════════════════════════════════════════════════════
    RAW DATA / JSON VIEWER

@@ -11,6 +11,9 @@ export function AdminAuthProvider({ children }) {
   const [isAdminAuthenticated, setIsAdminAuthenticated] = useState(
     () => sessionStorage.getItem('ss_admin_auth') === 'true'
   );
+  const [adminUser, setAdminUser] = useState(
+    () => sessionStorage.getItem('ss_admin_user') || 'admin'
+  );
 
   const adminLogin = useCallback((username, password) => {
     const validUser = import.meta.env.VITE_ADMIN_USER || 'admin';
@@ -18,7 +21,9 @@ export function AdminAuthProvider({ children }) {
 
     if (username === validUser && password === validPass) {
       sessionStorage.setItem('ss_admin_auth', 'true');
+      sessionStorage.setItem('ss_admin_user', username);
       setIsAdminAuthenticated(true);
+      setAdminUser(username);
       return true;
     }
     return false;
@@ -26,11 +31,13 @@ export function AdminAuthProvider({ children }) {
 
   const adminLogout = useCallback(() => {
     sessionStorage.removeItem('ss_admin_auth');
+    sessionStorage.removeItem('ss_admin_user');
     setIsAdminAuthenticated(false);
+    setAdminUser('admin');
   }, []);
 
   return (
-    <AdminAuthContext.Provider value={{ isAdminAuthenticated, adminLogin, adminLogout }}>
+    <AdminAuthContext.Provider value={{ isAdminAuthenticated, adminUser, adminLogin, adminLogout }}>
       {children}
     </AdminAuthContext.Provider>
   );

@@ -4,15 +4,30 @@
 Write-Host "Starting Smart Watering System (Development Mode)..." -ForegroundColor Green
 Write-Host ""
 
-# Check if MongoDB is running
-Write-Host "Checking MongoDB..." -ForegroundColor Cyan
-$mongoProcess = Get-Process mongod -ErrorAction SilentlyContinue
-if ($null -eq $mongoProcess) {
-    Write-Host "WARNING: MongoDB not running. Please start MongoDB first:" -ForegroundColor Yellow
-    Write-Host "   Run: mongod" -ForegroundColor Yellow
-    Write-Host ""
+# Check database mode (.env Atlas URI vs local mongod)
+Write-Host "Checking database mode..." -ForegroundColor Cyan
+$backendEnvPath = Join-Path $PSScriptRoot "backend\.env"
+$usesAtlas = $false
+
+if (Test-Path $backendEnvPath) {
+    $mongoLine = Get-Content $backendEnvPath | Where-Object { $_ -match '^\s*MONGODB_URI\s*=' } | Select-Object -First 1
+    if ($mongoLine -match 'mongodb\+srv://') {
+        $usesAtlas = $true
+    }
+}
+
+if ($usesAtlas) {
+    Write-Host "MongoDB Atlas URI detected. Local mongod is not required." -ForegroundColor Green
 } else {
-    Write-Host "MongoDB is running" -ForegroundColor Green
+    $mongoProcess = Get-Process mongod -ErrorAction SilentlyContinue
+    if ($null -eq $mongoProcess) {
+        Write-Host "WARNING: Local MongoDB process (mongod) is not running." -ForegroundColor Yellow
+        Write-Host "If you are using Atlas, this warning can be ignored." -ForegroundColor Yellow
+        Write-Host "To use local MongoDB, run: mongod" -ForegroundColor Yellow
+        Write-Host ""
+    } else {
+        Write-Host "Local MongoDB is running" -ForegroundColor Green
+    }
 }
 
 # Start Backend

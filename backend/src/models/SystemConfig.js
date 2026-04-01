@@ -124,6 +124,7 @@ const systemConfigSchema = new mongoose.Schema({
     tipsMode: { type: String, enum: ['auto', 'manual'], default: 'auto' },
     updateInterval: { type: Number, default: 300000 }, // 5 minutes
     provider: { type: String, default: 'gemini' },
+    dailyAnalysisLimit: { type: Number, default: 2, min: 1, max: 100 },
     diseaseDetectionEnabled: { type: Boolean, default: true },
     contextualAdvice: { type: Boolean, default: true },
     lastTipsRefresh: { type: Date }
@@ -369,6 +370,7 @@ systemConfigSchema.methods.getSummary = function() {
     sensorReadInterval: this.sensorReadInterval,
     weatherEnabled: this.weather.enabled,
     aiTipsEnabled: this.aiConfig.enabled,
+    aiDailyAnalysisLimit: this.aiConfig.dailyAnalysisLimit,
     diseaseDetectionEnabled: this.diseaseDetection.enabled,
     lastTipsRefresh: this.aiConfig.lastTipsRefresh,
     plantGrowthStage: this.plantGrowth.stage,

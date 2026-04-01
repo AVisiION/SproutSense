@@ -1,12 +1,18 @@
 import { useEffect, useRef, useState } from 'react';
 
 function resolveWebSocketUrl() {
-  const explicitWsUrl = import.meta.env.VITE_WS_URL;
+  const explicitWsUrl = String(import.meta.env.VITE_WS_URL || '').trim();
   if (explicitWsUrl) {
+    if (/^(ws|wss):\/\//i.test(explicitWsUrl)) {
+      return explicitWsUrl;
+    }
+    if (/^(localhost|127\.0\.0\.1)(:\d+)?(\/.*)?$/i.test(explicitWsUrl)) {
+      return `ws://${explicitWsUrl}`;
+    }
     return explicitWsUrl;
   }
 
-  const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || '/api';
+  const apiBaseUrl = String(import.meta.env.VITE_API_BASE_URL || '/api').trim();
   const normalizedApiPath = apiBaseUrl.replace(/\/api\/?$/, '/ws');
 
   if (/^https?:\/\//i.test(normalizedApiPath)) {

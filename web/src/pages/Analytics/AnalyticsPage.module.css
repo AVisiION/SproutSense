@@ -69,6 +69,7 @@
   align-items: center;
   gap: 0.75rem;
   background: var(--glass-color);
+  -webkit-backdrop-filter: blur(var(--glass-blur));
   backdrop-filter: blur(var(--glass-blur));
   border: var(--glass-border);
   border-radius: 14px;
@@ -128,6 +129,7 @@
 
 .kpiCard {
   background: var(--glass-color);
+  -webkit-backdrop-filter: blur(var(--glass-blur));
   backdrop-filter: blur(var(--glass-blur));
   border: var(--glass-border);
   border-radius: var(--glass-radius);
@@ -226,6 +228,7 @@
 .chartCardWide,
 .chartCardNarrow {
   background: var(--glass-color);
+  -webkit-backdrop-filter: blur(var(--glass-blur));
   backdrop-filter: blur(var(--glass-blur));
   border: var(--glass-border);
   border-radius: var(--glass-radius);
@@ -264,10 +267,164 @@
   margin: 0;
 }
 
+.sensorSwitcher {
+  display: flex;
+  gap: 0.45rem;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.sensorSwitchBtn {
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.12);
+  color: var(--text-secondary);
+  padding: 0.36rem 0.72rem;
+  border-radius: 999px;
+  font-size: 0.74rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.sensorSwitchBtn:hover {
+  color: var(--text-primary);
+  background: rgba(255,255,255,0.08);
+  transform: translateY(-1px);
+}
+
+.activeSensorBtn {
+  background: rgba(255,255,255,0.08);
+  box-shadow: inset 0 0 0 1px currentColor;
+}
+
 .chartWrapper {
   flex: 1;
   width: 100%;
   min-height: 260px;
+}
+
+.sensorStatsRow {
+  margin-top: 0.9rem;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.65rem;
+}
+
+.sensorStatTile {
+  border: 1px solid rgba(255,255,255,0.09);
+  background: rgba(255,255,255,0.03);
+  border-radius: 10px;
+  padding: 0.62rem 0.72rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.18rem;
+}
+
+.sensorStatTile span {
+  font-size: 0.67rem;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.sensorStatTile strong {
+  font-size: 0.9rem;
+  color: var(--text-primary);
+}
+
+.positiveTrend {
+  color: #22c55e;
+}
+
+.negativeTrend {
+  color: #ef4444;
+}
+
+.insightRow {
+  margin-top: 0.8rem;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.65rem;
+}
+
+.insightCard {
+  border: 1px solid rgba(255,255,255,0.1);
+  background: rgba(255,255,255,0.03);
+  border-radius: 10px;
+  padding: 0.72rem 0.84rem;
+}
+
+.insightCard h4 {
+  margin: 0 0 0.25rem 0;
+  font-size: 0.78rem;
+  color: var(--text-primary);
+}
+
+.insightCard p {
+  margin: 0;
+  font-size: 0.76rem;
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+
+.statusPanel {
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+  width: 100%;
+  max-width: 540px;
+}
+
+.statusValue {
+  font-size: 2.1rem;
+  font-weight: 800;
+}
+
+.statusBarTrack {
+  height: 12px;
+  border-radius: 999px;
+  background: rgba(255,255,255,0.1);
+  overflow: hidden;
+}
+
+.statusBarFill {
+  height: 100%;
+  border-radius: 999px;
+  transition: width 0.3s ease;
+}
+
+.statusMeta {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.5rem;
+  font-size: 0.78rem;
+  color: var(--text-secondary);
+}
+
+.tableWrap {
+  width: 100%;
+  overflow: auto;
+}
+
+.metricTable {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.82rem;
+}
+
+.metricTable th,
+.metricTable td {
+  border-bottom: 1px solid rgba(255,255,255,0.1);
+  padding: 0.5rem;
+  text-align: left;
+}
+
+.metricTable th {
+  color: var(--text-secondary);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  font-size: 0.68rem;
 }
 
 .chartWrapperCenter {
@@ -306,6 +463,7 @@
 .chartTooltip {
   background: rgba(15, 23, 42, 0.92);
   border: 1px solid rgba(255,255,255,0.1);
+  -webkit-backdrop-filter: blur(10px);
   backdrop-filter: blur(10px);
   padding: 0.9rem 1rem;
   border-radius: 10px;
@@ -360,6 +518,9 @@
   .chartCardNarrow { min-height: 300px; padding: 1.1rem; }
   .chartWrapper,
   .chartWrapperCenter { min-height: 220px; }
+  .sensorSwitcher { justify-content: flex-start; }
+  .sensorStatsRow { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .insightRow { grid-template-columns: 1fr; }
   .title        { font-size: 1.5rem; }
 }
 

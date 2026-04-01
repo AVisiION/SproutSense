@@ -3,6 +3,7 @@ import WateringLog from '../models/WateringLog.js';
 import SystemConfig from '../models/SystemConfig.js';
 import DiseaseDetection from '../models/DiseaseDetection.js';
 import DeviceStatus from '../models/DeviceStatus.js';
+import AIUsageQuota from '../models/AIUsageQuota.js';
 import { successResponse, errorResponse } from '../utils/helpers.js';
 import { HTTP_STATUS, AI_ACTION, AI_PRIORITY } from '../config/constants.js';
 import config from '../config/config.js';
@@ -10,6 +11,34 @@ import websocketService from '../utils/websocketService.js';
 import aiProviderService from '../utils/aiProviderService.js';
 import weatherService from '../utils/weatherService.js';
 import { SENSOR_THRESHOLDS } from '../config/sensorThresholds.js';
+
+function resolveAIQuotaDeviceId(req, fallback = 'ESP32-SENSOR') {
+  return req.query?.deviceId || req.body?.deviceId || fallback;
+}
+
+async function enforceDailyAIQuota(req, res, deviceId) {
+  const systemConfig = await SystemConfig.getConfig(deviceId);
+  const dailyLimit = systemConfig?.aiConfig?.dailyAnalysisLimit || 2;
+  const quota = await AIUsageQuota.consumeTodayQuota(deviceId, dailyLimit);
+
+  if (quota.consumed) {
+    return null;
+  }
+
+  return res.status(HTTP_STATUS.TOO_MANY_REQUESTS).json({
+    success: false,
+    message: `Daily AI analysis limit reached (${quota.usedCount}/${quota.dailyLimit}). Try again after reset.`,
+    data: {
+      deviceId: quota.deviceId,
+      dateKey: quota.dateKey,
+      usedCount: quota.usedCount,
+      dailyLimit: quota.dailyLimit,
+      remaining: quota.remaining,
+      exhausted: quota.exhausted,
+      resetAt: quota.resetAt
+    }
+  });
+}
 
 // Get AI recommendation
 export const getAIRecommendation = async (req, res, next) => {
@@ -21,6 +50,11 @@ export const getAIRecommendation = async (req, res, next) => {
     
     if (!latestReading) {
       return errorResponse(res, 'No sensor data available for AI analysis', HTTP_STATUS.NOT_FOUND);
+    }
+
+    const quotaBlocked = await enforceDailyAIQuota(req, res, deviceId);
+    if (quotaBlocked) {
+      return quotaBlocked;
     }
 
     // Get configuration
@@ -140,6 +174,12 @@ function generateRecommendation(reading, config, todayCount, todayVolume) {
 export const getAIInsights = async (req, res, next) => {
   try {
     const { deviceId = 'ESP32-SENSOR', days = 7 } = req.query;
+
+    const quotaBlocked = await enforceDailyAIQuota(req, res, deviceId);
+    if (quotaBlocked) {
+      return quotaBlocked;
+    }
+
     const startDate = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
     const insights = [];
     const predictions = [];
@@ -642,9 +682,15 @@ function calculateOverallHealthScore(stats, diseases, wateringCount) {
 export const chatWithAI = async (req, res, next) => {
   try {
     const { message, sensorContext = '', history = [], apiKey = '' } = req.body;
+    const deviceId = resolveAIQuotaDeviceId(req);
 
     if (!message) {
       return errorResponse(res, 'Message is required', HTTP_STATUS.BAD_REQUEST);
+    }
+
+    const quotaBlocked = await enforceDailyAIQuota(req, res, deviceId);
+    if (quotaBlocked) {
+      return quotaBlocked;
     }
 
     const key = apiKey || config.API_KEYS.GEMINI;
@@ -707,6 +753,23 @@ export const chatWithAI = async (req, res, next) => {
     }
     // Always return JSON with the real error message so frontend can display it
     return res.status(500).json({ success: false, error: `AI error: ${msg}` });
+  }
+};
+
+/**
+ * GET /api/ai/usage
+ * Return daily AI usage for admin visibility
+ */
+export const getAIUsageStats = async (req, res, next) => {
+  try {
+    const deviceId = resolveAIQuotaDeviceId(req);
+    const systemConfig = await SystemConfig.getConfig(deviceId);
+    const dailyLimit = systemConfig?.aiConfig?.dailyAnalysisLimit || 2;
+    const usage = await AIUsageQuota.getTodayUsageWithLimit(deviceId, dailyLimit);
+
+    successResponse(res, usage);
+  } catch (error) {
+    next(error);
   }
 };
 

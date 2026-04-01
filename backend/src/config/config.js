@@ -1,6 +1,13 @@
 const isDevelopment = process.env.NODE_ENV !== 'production';
 const isProduction = process.env.NODE_ENV === 'production';
 
+const rawCorsOrigins = process.env.CORS_ORIGIN || process.env.CLIENT_URL || '';
+const parsedCorsOrigins = rawCorsOrigins
+  .split(',')
+  .map((origin) => origin.trim())
+  .filter(Boolean);
+const defaultDevOrigin = 'http://localhost:3000';
+
 export default {
   // Server Configuration
   PORT: process.env.PORT || 5000,
@@ -12,7 +19,8 @@ export default {
   MONGODB_URI: process.env.MONGODB_URI,
   
   // CORS Configuration
-  CORS_ORIGIN: process.env.CORS_ORIGIN || 'http://localhost:3000',
+  CORS_ORIGIN: parsedCorsOrigins[0] || defaultDevOrigin,
+  CORS_ORIGINS: parsedCorsOrigins.length > 0 ? parsedCorsOrigins : [defaultDevOrigin],
   
   // Test Mode Configuration
   TEST_MODE: {

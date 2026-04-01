@@ -18,7 +18,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { formatDiseaseName } from '../../utils/formatters';
 import './InsightsPage.css';
 
-const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000';
+const API_BASE = (import.meta.env.VITE_API_BASE_URL || '/api').replace(/\/$/, '');
 
 // ─── helpers ──────────────────────────────────────────────────────────────────
 const SEV_META = {
@@ -143,7 +143,7 @@ function PredictionCard({ p }) {
       </div>
       <p className="ip-pred-msg">{p.message}</p>
       <p className="ip-pred-text">
-        <i className="fa-solid fa-crystal-ball" aria-hidden="true" style={{ marginRight: 5 }} />
+        <i className="fa-solid fa-wand-magic-sparkles" aria-hidden="true" style={{ marginRight: 5 }} />
         {p.prediction}
       </p>
       <div className="ip-pred-footer">
@@ -338,7 +338,7 @@ function InsightsPage() {
 
   const fetchInsights = useCallback(async () => {
     try {
-      const res  = await fetch(`${API_BASE}/api/ai/insights?days=${days}`);
+      const res  = await fetch(`${API_BASE}/ai/insights?days=${days}`);
       if (!res.ok) throw new Error('Failed to fetch insights');
       const json = await res.json();
       setInsights(json.data);
@@ -395,40 +395,43 @@ function InsightsPage() {
   return (
     <div className="ip-root">
 
-      {/* ══ PAGE HEADER ══════════════════════════════════════════ */}
-      <div className="ip-header">
-        <div className="ip-header-left">
-          <span className="ip-header-icon-wrap" aria-hidden="true">
-            <i className="fa-solid fa-chart-mixed" />
-          </span>
-          <div>
-            <h1 className="ip-header-title">Plant Insights</h1>
-            <p className="ip-header-sub">AI-powered analysis &bull; Edge Impulse disease detection</p>
+      <div className="ip-sticky-head">
+        {/* ══ PAGE HEADER ══════════════════════════════════════════ */}
+        <div className="ip-header">
+          <div className="ip-header-left">
+            <span className="ip-header-icon-wrap" aria-hidden="true">
+              <i className="fa-solid fa-chart-line" />
+            </span>
+            <div>
+              <h1 className="ip-header-title">Plant Insights</h1>
+              <p className="ip-header-sub">AI-powered analysis &bull; Edge Impulse disease detection</p>
+            </div>
+          </div>
+          <div className="ip-header-right">
+            {/* Time range */}
+            <div className="ip-time-tabs">
+              {[['1','24h'],[' 7','7d'],['30','30d']].map(([d,l]) => (
+                <button key={d} className={`ip-time-tab${days === +d.trim() ? ' active' : ''}`}
+                  onClick={() => setDays(+d.trim())}>{l}</button>
+              ))}
+            </div>
+            <button className="ip-refresh-btn" onClick={fetchInsights} disabled={loading}>
+              <i className={`fa-solid fa-rotate${loading ? ' fa-spin' : ''}`} aria-hidden="true" />
+              Refresh
+            </button>
           </div>
         </div>
-        <div className="ip-header-right">
-          {/* Time range */}
-          <div className="ip-time-tabs">
-            {[['1','24h'],[' 7','7d'],['30','30d']].map(([d,l]) => (
-              <button key={d} className={`ip-time-tab${days === +d.trim() ? ' active' : ''}`}
-                onClick={() => setDays(+d.trim())}>{l}</button>
-            ))}
-          </div>
-          <button className="ip-refresh-btn" onClick={fetchInsights} disabled={loading}>
-            <i className={`fa-solid fa-rotate${loading ? ' fa-spin' : ''}`} aria-hidden="true" />
-            Refresh
-          </button>
-        </div>
+
+        {lastRefreshed && (
+          <p className="ip-last-refresh">
+            <i className="fa-solid fa-clock" aria-hidden="true" /> Last updated: {lastRefreshed}
+          </p>
+        )}
       </div>
 
-      {lastRefreshed && (
-        <p className="ip-last-refresh">
-          <i className="fa-solid fa-clock" aria-hidden="true" /> Last updated: {lastRefreshed}
-        </p>
-      )}
-
-      {loading && !insights ? <Skeleton /> : (
-        <>
+      <div className="ip-content-scroll">
+        {loading && !insights ? <Skeleton /> : (
+          <>
           {/* ══ KPI BAR ══════════════════════════════════════════════ */}
           <div className="ip-kpi-bar">
             <KpiPill fa="fa-heart-pulse" label="Health Score"
@@ -498,7 +501,7 @@ function InsightsPage() {
                 ))}
                 {filteredInsights.length === 0 && (
                   <div className="ip-no-results">
-                    <i className="fa-solid fa-filter-circle-xmark" aria-hidden="true" />
+                    <i className="fa-solid fa-filter" aria-hidden="true" />
                     No insights match this filter.
                   </div>
                 )}
@@ -617,8 +620,9 @@ function InsightsPage() {
               </div>
             </div>
           )}
-        </>
-      )}
+          </>
+        )}
+      </div>
     </div>
   );
 }

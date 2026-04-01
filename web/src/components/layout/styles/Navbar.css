@@ -294,6 +294,101 @@
 }
 
 /* ============================================================
+   ACCOUNT MENU
+============================================================ */
+.navbar-account-wrap {
+  position: relative;
+}
+
+.navbar-account-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  border: 1px solid var(--border-color);
+  border-radius: 999px;
+  background: var(--sidebar-hover, rgba(6,182,212,.07));
+  color: var(--text-color);
+  height: 2.5rem;
+  padding: 0 0.8rem;
+  cursor: pointer;
+}
+
+.navbar-account-avatar {
+  width: 1.45rem;
+  height: 1.45rem;
+  border-radius: 999px;
+  background: rgba(34, 197, 94, 0.2);
+  color: #d8ffe3;
+  display: grid;
+  place-items: center;
+  font-size: 0.74rem;
+  font-weight: 700;
+}
+
+.navbar-role-pill {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  border-radius: 999px;
+  padding: 0.12rem 0.45rem;
+  border: 1px solid transparent;
+}
+
+.navbar-role-pill.role-admin { background: rgba(239, 68, 68, 0.14); border-color: rgba(239, 68, 68, 0.45); }
+.navbar-role-pill.role-user { background: rgba(34, 197, 94, 0.12); border-color: rgba(34, 197, 94, 0.35); }
+.navbar-role-pill.role-viewer { background: rgba(56, 189, 248, 0.14); border-color: rgba(56, 189, 248, 0.36); }
+
+.navbar-account-panel {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 0.5rem);
+  min-width: 250px;
+  border-radius: 0.8rem;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(8, 18, 14, 0.93);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+  padding: 0.45rem;
+  box-shadow: 0 14px 26px rgba(0, 0, 0, 0.3);
+  z-index: 1200;
+}
+
+.navbar-account-meta {
+  padding: 0.5rem 0.55rem;
+  display: grid;
+  gap: 0.15rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  margin-bottom: 0.35rem;
+}
+
+.navbar-account-meta strong { font-size: 0.88rem; }
+.navbar-account-meta span { font-size: 0.77rem; opacity: 0.82; }
+
+.navbar-account-link {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.48rem 0.55rem;
+  border-radius: 0.55rem;
+  text-decoration: none;
+  color: #d9f5e5;
+  border: none;
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+}
+
+.navbar-account-link:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.navbar-account-logout {
+  margin-top: 0.25rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  padding-top: 0.55rem;
+}
+
+/* ============================================================
    VISIBILITY — which variant shows where
 ============================================================ */
 /* Desktop: show square, hide circle */
