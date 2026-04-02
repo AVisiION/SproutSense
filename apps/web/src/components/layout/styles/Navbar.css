@@ -24,7 +24,7 @@
   backdrop-filter  : blur(var(--glass-blur, 18px));
   box-shadow       : 0 8px 32px rgba(0,0,0,.10),
                      inset 0 0 30px rgba(255,255,255,.04);
-  animation        : navbarSlideIn .4s cubic-bezier(.4,0,.2,1);
+  animation        : navbarSlideIn .1s cubic-bezier(.4,0,.2,1);
   position         : sticky;
   top              : 0;
   z-index          : 1000;
@@ -61,7 +61,7 @@
   background    : var(--sidebar-hover, rgba(6,182,212,.07));
   color         : var(--text-color);
   cursor        : pointer;
-  transition    : all .3s cubic-bezier(.4,0,.2,1);
+  transition    : all .1s cubic-bezier(.4,0,.2,1);
   display       : flex;
   align-items   : center;
   justify-content: center;
@@ -214,7 +214,7 @@
 .navbar-connection.connected .connection-icon {
   color     : var(--plant-green, #22c55e);
   filter    : drop-shadow(0 0 4px var(--plant-green, #22c55e));
-  animation : connectionIconPulse 2.4s ease-in-out infinite;
+  animation : connectionIconPulse 2.1s ease-in-out infinite;
 }
 .navbar-connection.disconnected {
   color       : var(--danger-color, #ef4444);
@@ -257,7 +257,7 @@
     inset 0 3px 6px rgba(0, 0, 0, 0.6),
     inset 0 -1px 2px rgba(255, 255, 255, 0.05),
     0 1px 1px rgba(255, 255, 255, 0.05);
-  transition: all 4s cubic-bezier(0.4, 0.0, 0.2, 1);
+  transition: all 1s cubic-bezier(0.4, 0.0, 0.2, 1);
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -277,7 +277,7 @@
     0 2px 4px rgba(0, 0, 0, 0.3),
     inset 0 1px 1px rgba(255, 255, 255, 0.1),
     inset 0 -1px 1px rgba(0, 0, 0, 0.4);
-  transition: transform 4s ease-in-out, background 4s ease, box-shadow 4s ease;
+  transition: transform 1s ease-in-out, background 1s ease, box-shadow 1s ease;
   z-index: 2;
   animation: sproutThumbBreathe 2.8s ease-in-out infinite;
 }
@@ -286,7 +286,7 @@
   width: 18px;
   height: 18px;
   z-index: 1;
-  transition: all 4s ease;
+  transition: all 1s ease;
 }
 
 .sun-icon {
@@ -306,11 +306,11 @@
 .sprout-toggle-checkbox:checked + .sprout-toggle-track .sprout-toggle-thumb {
   transform: translateX(42px);
   background: linear-gradient(145deg, #102116, #04191700);
-  animation: sproutThumbTranslateOn 4s ease-in-out forwards, sproutThumbBreathe 2.8s ease-in-out 4s infinite;
+  animation: sproutThumbTranslateOn 1s ease-in-out forwards, sproutThumbBreathe 2.8s ease-in-out 1s infinite;
 }
 
 .sprout-toggle-checkbox:not(:checked) + .sprout-toggle-track .sprout-toggle-thumb {
-  animation: sproutThumbTranslateOff 4s ease-in-out forwards, sproutThumbBreathe 2.8s ease-in-out 4s infinite;
+  animation: sproutThumbTranslateOff 1s ease-in-out forwards, sproutThumbBreathe 2.8s ease-in-out 1s infinite;
 }
 
 .sprout-toggle-checkbox:checked + .sprout-toggle-track .sun-icon {
@@ -332,7 +332,7 @@
     inset 0 3px 6px rgba(0, 0, 0, 0.6),
     inset 0 -1px 2px rgba(16, 185, 129, 0.05),
     0 1px 1px rgba(255, 255, 255, 0.02);
-  animation: sproutTrackGlow 4s ease-out;
+  animation: sproutTrackGlow 1s ease-out;
 }
 
 .sprout-toggle-checkbox:focus-visible + .sprout-toggle-track {
@@ -442,7 +442,7 @@
   height: 2.5rem;
   padding: 0 1rem;
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: all 0.1s ease;
   max-width: 320px;
   overflow: hidden;
 }
@@ -513,7 +513,7 @@
   font-size: 0.7rem;
   flex-shrink: 0;
   box-shadow: 0 3px 12px rgba(251, 191, 36, 0.25);
-  animation: adminBadgePulse 2.4s ease-in-out infinite;
+  animation: adminBadgePulse 2.1s ease-in-out infinite;
 }
 
 .navbar-account-panel {

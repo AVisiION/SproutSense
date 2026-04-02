@@ -56,11 +56,12 @@ import {
   faChalkboardUser,  // demo
   faBook,            // guide
   faBrain,           // brain
+  faGaugeHigh,       // sensors
 } from '@fortawesome/free-solid-svg-icons';
 
 const nameToFA = {
   home: faHouse,
-  sensors: faCircleInfo,
+  sensors: faGaugeHigh,
   controls: faSlidersH,
   ai: faRobot,
   config: faGear,
@@ -90,7 +91,7 @@ const nameToFA = {
   records: faClipboardList,
   'arrow-right': faArrowRight,
   water: faWater,
-  settings: faGears,
+  settings: faGear,
   wifi: faWifi,
   wifiOff: faWifi,
   'wifi-off': faWifi,

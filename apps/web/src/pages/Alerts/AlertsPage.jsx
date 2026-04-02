@@ -307,10 +307,10 @@ export default function AlertsPage({ alerts = [], sensors, onClearAlert, onClear
       {/* ── KPI Strip ── */}
       <motion.div className={styles.kpiStrip} variants={itemVariants}>
         {[
-          { label: 'Critical',       value: kpiSummary.critical,      color: '#ef4444', icon: 'alert'   },
-          { label: 'Warnings',       value: kpiSummary.warnings,      color: '#f59e0b', icon: 'warning' },
-          { label: 'Disease Events', value: kpiSummary.diseaseEvents, color: '#a855f7', icon: 'disease' },
-          { label: 'Healthy Scans',  value: kpiSummary.healthy,       color: '#22c55e', icon: 'success' },
+          { label: 'Critical',       value: kpiSummary.critical,      color: '#ef4444', icon: 'triangle-exclamation'   },
+          { label: 'Warnings',       value: kpiSummary.warnings,      color: '#f59e0b', icon: 'circle-exclamation' },
+          { label: 'Disease Events', value: kpiSummary.diseaseEvents, color: '#a855f7', icon: 'viruses' },
+          { label: 'Healthy Scans',  value: kpiSummary.healthy,       color: '#22c55e', icon: 'check-circle' },
         ].map((k, i) => (
           <motion.div
             key={i}
@@ -319,7 +319,7 @@ export default function AlertsPage({ alerts = [], sensors, onClearAlert, onClear
             style={{ borderColor: k.color + '44' }}
           >
             <div className={styles.kpiTop}>
-              <GlassIcon name={k.icon} className={styles.kpiIcon} />
+              <i className={`fa-solid fa-${k.icon} ${styles.kpiIcon}`} style={{ color: k.color }} />
               <span className={styles.kpiLabel}>{k.label}</span>
             </div>
             <div className={styles.kpiValue} style={{ color: k.color }}>

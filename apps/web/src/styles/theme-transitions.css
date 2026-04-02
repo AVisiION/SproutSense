@@ -12,7 +12,7 @@
 /* Enable View Transitions API for smooth theme changes */
 ::view-transition-old(root),
 ::view-transition-new(root) {
-  animation-duration: 4s;
+  animation-duration: 1.5s;
   animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
 }
 
@@ -50,12 +50,12 @@
 /* Fallback animation for browsers without View Transitions API */
 html.theme-transitioning * {
   transition: 
-    background-color 4s cubic-bezier(0.22, 1, 0.36, 1),
-    background 4s cubic-bezier(0.22, 1, 0.36, 1),
-    color 4s cubic-bezier(0.22, 1, 0.36, 1),
-    border-color 4s cubic-bezier(0.22, 1, 0.36, 1),
-    box-shadow 4s cubic-bezier(0.22, 1, 0.36, 1),
-    opacity 4s cubic-bezier(0.22, 1, 0.36, 1) ;
+    background-color 1.5s cubic-bezier(0.22, 1, 0.36, 1),
+    background 1.5s cubic-bezier(0.22, 1, 0.36, 1),
+    color 1.5s cubic-bezier(0.22, 1, 0.36, 1),
+    border-color 1.5s cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 1.5s cubic-bezier(0.22, 1, 0.36, 1),
+    opacity 1.5s cubic-bezier(0.22, 1, 0.36, 1) ;
 }
 
 html.theme-transitioning::after {
@@ -78,11 +78,11 @@ html.theme-transitioning::after {
   mix-blend-mode: soft-light;
   filter: blur(var(--theme-blur));
   transform: translate3d(var(--theme-sweep-from-x), var(--theme-sweep-from-y), 0);
-  animation: theme-directional-sweep 4s var(--theme-ease) forwards;
+  animation: theme-directional-sweep 1.5s var(--theme-ease) forwards;
 }
 
 html.theme-transitioning body {
-  animation: theme-content-drift 4s var(--theme-ease) both;
+  animation: theme-content-drift 1.5s var(--theme-ease) both;
   will-change: transform;
 }
 
@@ -133,16 +133,16 @@ html,
 body,
 .app-shell {
   transition:
-    background-color 4s cubic-bezier(0.25, 0.8, 0.25, 1),
-    background 4s cubic-bezier(0.25, 0.8, 0.25, 1),
-    color 4s cubic-bezier(0.25, 0.8, 0.25, 1);
+    background-color 1.5s cubic-bezier(0.25, 0.8, 0.25, 1),
+    background 1.5s cubic-bezier(0.25, 0.8, 0.25, 1),
+    color 1.5s cubic-bezier(0.25, 0.8, 0.25, 1);
 }
 
 html::before {
   transition:
-    background 4s cubic-bezier(0.25, 0.8, 0.25, 1),
-    opacity 4s cubic-bezier(0.25, 0.8, 0.25, 1),
-    filter 4s cubic-bezier(0.25, 0.8, 0.25, 1);
+    background 1.5s cubic-bezier(0.25, 0.8, 0.25, 1),
+    opacity 1.5s cubic-bezier(0.25, 0.8, 0.25, 1),
+    filter 1.5s cubic-bezier(0.25, 0.8, 0.25, 1);
 }
 
 .sidebar,
@@ -156,11 +156,11 @@ input,
 textarea,
 select {
   transition: 
-    background-color 4s cubic-bezier(0.25, 0.8, 0.25, 1),
-    background 4s cubic-bezier(0.25, 0.8, 0.25, 1),
-    color 4s cubic-bezier(0.25, 0.8, 0.25, 1),
-    border-color 4s cubic-bezier(0.25, 0.8, 0.25, 1),
-    box-shadow 4s cubic-bezier(0.25, 0.8, 0.25, 1);
+    background-color 1.5s cubic-bezier(0.25, 0.8, 0.25, 1),
+    background 1.5s cubic-bezier(0.25, 0.8, 0.25, 1),
+    color 1.5s cubic-bezier(0.25, 0.8, 0.25, 1),
+    border-color 1.5s cubic-bezier(0.25, 0.8, 0.25, 1),
+    box-shadow 1.5s cubic-bezier(0.25, 0.8, 0.25, 1);
 }
 /* ═══════════════════════════════════════════
    ACCESSIBILITY: REDUCED MOTION OVERRIDES

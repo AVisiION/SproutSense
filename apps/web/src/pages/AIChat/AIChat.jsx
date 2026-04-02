@@ -71,19 +71,37 @@ const SENSOR_META = {
 
 // History Management Utilities
 const historyManager = {
-  save: (messages) => {
+  save: (messages, sessionId) => {
+    if (!sessionId) return;
     const entry = {
-      timestamp: Date.now(),
+      timestamp: sessionId, // Use sessionId as the stable timestamp identity
+      lastUpdated: Date.now(), // track when it was last updated
       messages: messages.filter(m => m.role && m.content),
     };
-    const history = JSON.parse(localStorage.getItem('sproutsense_chat_history') || '[]');
-    history.unshift(entry);
+    let history = JSON.parse(localStorage.getItem('sproutsense_chat_history') || '[]');
+    
+    // Update existing session or append new one
+    const existingIndex = history.findIndex(h => h.timestamp === sessionId);
+    if (existingIndex >= 0) {
+      history[existingIndex] = entry;
+    } else {
+      history.unshift(entry);
+    }
+
     // Keep only 7 days of history
     const sevenDaysAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
-    const filtered = history.filter(h => h.timestamp > sevenDaysAgo);
-    localStorage.setItem('sproutsense_chat_history', JSON.stringify(filtered));
+    history = history.filter(h => h.lastUpdated > sevenDaysAgo || h.timestamp > sevenDaysAgo);
+    localStorage.setItem('sproutsense_chat_history', JSON.stringify(history));
   },
-  get: () => JSON.parse(localStorage.getItem('sproutsense_chat_history') || '[]'),
+  get: () => {
+    try {
+      const parsed = JSON.parse(localStorage.getItem('sproutsense_chat_history') || '[]');
+      // Filter out invalid or corrupted entries that might have been saved incorrectly
+      return parsed.filter(h => h && h.timestamp && h.messages && h.messages.length > 0);
+    } catch {
+      return [];
+    }
+  },
   clear: () => localStorage.removeItem('sproutsense_chat_history'),
 };
 
@@ -123,6 +141,7 @@ export default function AIChat({ sensors, defaultTab = 'chat' }) {
   const [showPlantSelector, setShowPlantSelector] = useState(false);
   const [chatHistory, setChatHistory] = useState([]);
   const [expandedHistoryId, setExpandedHistoryId] = useState(null);
+  const [sessionId, setSessionId] = useState(() => Date.now());
   
   const messagesEndRef = useRef(null);
   const inputRef = useRef(null);
@@ -147,9 +166,10 @@ export default function AIChat({ sensors, defaultTab = 'chat' }) {
   // Save to history when messages change
   useEffect(() => {
     if (messages.length > 1) {
-      historyManager.save(messages);
+      historyManager.save(messages, sessionId);
+      setChatHistory(historyManager.get()); // keep history tab up-to-date
     }
-  }, [messages]);
+  }, [messages, sessionId]);
 
   // Load history on mount
   useEffect(() => {
@@ -263,7 +283,9 @@ export default function AIChat({ sensors, defaultTab = 'chat' }) {
     : '';
 
   const formatHistoryDate = (timestamp) => {
+    if (!timestamp) return 'Unknown Session';
     const date = new Date(timestamp);
+    if (isNaN(date.getTime())) return 'Invalid Date';
     const now = new Date();
     const diffHours = (now - date) / (1000 * 60 * 60);
     if (diffHours < 1) return 'Just now';
@@ -277,6 +299,7 @@ export default function AIChat({ sensors, defaultTab = 'chat' }) {
       ...m,
       time: new Date(m.time || Date.now()),
     })));
+    setSessionId(historyEntry.timestamp); // assume this history session is the active
     setActiveTab('chat');
     setExpandedHistoryId(null);
   };
@@ -286,6 +309,14 @@ export default function AIChat({ sensors, defaultTab = 'chat' }) {
     const filtered = history.filter(h => h.timestamp !== timestamp);
     localStorage.setItem('sproutsense_chat_history', JSON.stringify(filtered));
     setChatHistory(filtered);
+  };
+
+  const clearAllHistory = () => {
+    if (window.confirm("Are you sure you want to completely clear all AI chat history? This cannot be undone.")) {
+      historyManager.clear();
+      setChatHistory([]);
+      setExpandedHistoryId(null);
+    }
   };
 
   return (
@@ -492,54 +523,65 @@ export default function AIChat({ sensors, defaultTab = 'chat' }) {
               <p>Your chat history will appear here (retained for 7 days)</p>
             </div>
           ) : (
-            <div className="ai-history-list">
-              {chatHistory.map((session, idx) => (
-                <div key={session.timestamp} className="ai-history-item">
-                  <button
-                    className="ai-history-header"
-                    onClick={() => setExpandedHistoryId(expandedHistoryId === session.timestamp ? null : session.timestamp)}
-                  >
-                    <div className="ai-history-info">
-                      <span className="ai-history-date">{formatHistoryDate(session.timestamp)}</span>
-                      <span className="ai-history-count">{session.messages.filter(m => m.role === 'user').length} messages</span>
-                    </div>
-                    <div className="ai-history-actions">
-                      <i className={`fa-solid fa-chevron-down${expandedHistoryId === session.timestamp ? ' open' : ''}`} />
-                    </div>
-                  </button>
+            <div className="ai-history-container">
+              <div className="ai-history-toolbar">
+                <h3 className="ai-history-title">Recent Conversations</h3>
+                <button className="ai-history-clear-btn" onClick={clearAllHistory}>
+                  <i className="fa-solid fa-trash-can" />
+                  Clear All
+                </button>
+              </div>
+              <div className="ai-history-list">
+                {chatHistory.map((session, idx) => (
+                  <div key={session.timestamp || idx} className="ai-history-item">
+                    <button
+                      className="ai-history-header"
+                      onClick={() => setExpandedHistoryId(expandedHistoryId === session.timestamp ? null : session.timestamp)}
+                    >
+                      <div className="ai-history-info">
+                        <span className="ai-history-date">{formatHistoryDate(session.timestamp)}</span>
+                        <span className="ai-history-count">{(session.messages || []).filter(m => m.role === 'user').length} messages</span>
+                      </div>
+                      <div className="ai-history-actions">
+                        <i className={`fa-solid fa-chevron-down${expandedHistoryId === session.timestamp ? ' open' : ''}`} />
+                      </div>
+                    </button>
 
-                  {expandedHistoryId === session.timestamp && (
-                    <div className="ai-history-preview">
-                      <div className="ai-history-messages">
-                        {session.messages.slice(0, 3).map((msg, i) => (
-                          <div key={i} className={`ai-history-message ${msg.role}`}>
-                            <span className="ai-history-message-content">{msg.content.substring(0, 100)}{msg.content.length > 100 ? '...' : ''}</span>
-                          </div>
-                        ))}
-                        {session.messages.length > 3 && (
-                          <span className="ai-history-more">+{session.messages.length - 3} more</span>
-                        )}
+                    {expandedHistoryId === session.timestamp && session.messages && (
+                      <div className="ai-history-preview">
+                        <div className="ai-history-messages">
+                          {session.messages.slice(0, 3).map((msg, i) => (
+                            <div key={i} className={`ai-history-message ${msg.role}`}>
+                              <span className="ai-history-message-content">
+                                {msg.content ? (msg.content.length > 100 ? msg.content.substring(0, 100) + '...' : msg.content) : '...'}
+                              </span>
+                            </div>
+                          ))}
+                          {session.messages.length > 3 && (
+                            <span className="ai-history-more">+{session.messages.length - 3} more</span>
+                          )}
+                        </div>
+                        <div className="ai-history-footer">
+                          <button 
+                            className="ai-history-load-btn"
+                            onClick={() => loadHistorySession(session)}
+                          >
+                            <i className="fa-solid fa-arrow-up-right-from-square" />
+                            Load Conversation
+                          </button>
+                          <button 
+                            className="ai-history-delete-btn"
+                            onClick={() => deleteHistorySession(session.timestamp)}
+                            title="Delete this conversation"
+                          >
+                            <i className="fa-solid fa-trash-can" />
+                          </button>
+                        </div>
                       </div>
-                      <div className="ai-history-footer">
-                        <button 
-                          className="ai-history-load-btn"
-                          onClick={() => loadHistorySession(session)}
-                        >
-                          <i className="fa-solid fa-arrow-up-right-from-square" />
-                          Load Conversation
-                        </button>
-                        <button 
-                          className="ai-history-delete-btn"
-                          onClick={() => deleteHistorySession(session.timestamp)}
-                          title="Delete this conversation"
-                        >
-                          <i className="fa-solid fa-trash-can" />
-                        </button>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              ))}
+                    )}
+                  </div>
+                ))}
+              </div>
             </div>
           )}
         </div>
