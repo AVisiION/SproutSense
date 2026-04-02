@@ -14,16 +14,16 @@ SproutSense is an IoT platform for automated plant care using a dual ESP32 and M
 - **Hardware**: ESP32 for sensors/actuators and ESP32-CAM for disease detection.
 
 **Key Documentation:**
-- [README.md](README.md)
-- [Architecture](docs/ARCHITECTURE.md)
-- [Deployment Checklist](docs/DEPLOYMENT_CHECKLIST.md)
-- [Render Deployment](docs/RENDER_DEPLOYMENT.md)
+- [README.md](../README.md)
+- [Architecture](../docs/architecture/system-architecture.md)
+- [Deployment Checklist](../docs/operations/deployment-checklist.md)
+- [Render Deployment](../docs/operations/render-deployment.md)
 
 ---
 
 ## 2. Build and Run Commands
 
-### Backend (`backend/`)
+### Backend (`apps/api/`)
 
 - **Development**: `npm run dev`
   - Runs the server with `nodemon` for auto-reloading.
@@ -32,12 +32,12 @@ SproutSense is an IoT platform for automated plant care using a dual ESP32 and M
 - **All-in-one Dev (PowerShell)**: `.\start.ps1`
   - Starts both backend and frontend in development mode.
 
-### Frontend (`web/`)
+### Frontend (`apps/web/`)
 
 - **Development**: `npm run dev`
   - Starts the Vite development server.
 - **Production Build**: `npm run build`
-  - Creates a production build in `web/dist`.
+  - Creates a production build in `apps/web/dist`.
 - **Preview Production Build**: `npm run preview`
   - Serves the production build locally.
 
@@ -45,9 +45,9 @@ SproutSense is an IoT platform for automated plant care using a dual ESP32 and M
 
 ## 3. Project Structure
 
-- `backend/`: The Node.js API server, handling all business logic, database interactions, and communication with the ESP32 devices.
-- `web/`: The React-based frontend application, providing a user interface for monitoring and controlling the system.
-- `esp32-upload/`: Firmware for the ESP32 microcontrollers.
+- `apps/api/`: The Node.js API server, handling all business logic, database interactions, and communication with the ESP32 devices.
+- `apps/web/`: The React-based frontend application, providing a user interface for monitoring and controlling the system.
+- `firmware/`: Firmware for the ESP32 microcontrollers.
 - `docs/`: Project documentation.
 
 ---
@@ -56,20 +56,20 @@ SproutSense is an IoT platform for automated plant care using a dual ESP32 and M
 
 ### Backend
 
-- `backend/src/app.js`: Main Express application setup, middleware, and routes.
-- `backend/src/server.js`: The entry point of the application, sets up the HTTP and WebSocket servers.
-- `backend/src/config/config.js`: Loads all configuration from environment variables.
-- `backend/src/config/db.js`: Handles the MongoDB connection.
-- `backend/src/config/sensorThresholds.js`: Defines the thresholds for sensor readings that trigger alerts.
-- `backend/src/routes/`: Contains all the API route definitions.
+- `apps/api/src/app.js`: Main Express application setup, middleware, and routes.
+- `apps/api/src/server.js`: The entry point of the application, sets up the HTTP and WebSocket servers.
+- `apps/api/src/config/config.js`: Loads all configuration from environment variables.
+- `apps/api/src/config/db.js`: Handles the MongoDB connection.
+- `apps/api/src/config/sensorThresholds.js`: Defines the thresholds for sensor readings that trigger alerts.
+- `apps/api/src/routes/`: Contains all the API route definitions.
 
 ### Frontend
 
-- `web/src/App.jsx`: The main React component, which includes routing and global state management.
-- `web/src/main.jsx`: The entry point for the React application.
-- `web/src/utils/api.js`: A module for making API calls to the backend.
-- `web/src/hooks/useWebSocket.js`: A custom hook for managing the WebSocket connection.
-- `web/src/components/`: Contains all the reusable React components.
+- `apps/web/src/App.jsx`: The main React component, which includes routing and global state management.
+- `apps/web/src/main.jsx`: The entry point for the React application.
+- `apps/web/src/utils/api.js`: A module for making API calls to the backend.
+- `apps/web/src/hooks/useWebSocket.js`: A custom hook for managing the WebSocket connection.
+- `apps/web/src/components/`: Contains all the reusable React components.
 
 ---
 
@@ -82,7 +82,7 @@ The backend exposes a RESTful API for managing the system.
 - **`/api/config`**: For system configuration and status.
 - **`/api/ai`**: For AI-powered recommendations and disease detection.
 
-For a detailed list of endpoints, see the files in `backend/src/routes/`.
+For a detailed list of endpoints, see the files in `apps/api/src/routes/`.
 
 ---
 
@@ -106,4 +106,4 @@ For a detailed list of endpoints, see the files in `backend/src/routes/`.
 ## 7. Deployment
 
 - **Backend**: Deployed on **Render** as a Node.js service. The build command is `npm install` and the start command is `npm start`. See `render.yaml`.
-- **Frontend**: Deployed on **Netlify**. The build command is `npm run build` and the publish directory is `web/dist`. See `netlify.toml`.
+- **Frontend**: Deployed on **Netlify**. The build command is `npm run build` and the publish directory is `apps/web/dist`. See `netlify.toml`.

@@ -1,0 +1,137 @@
+﻿Project: SproutSense — IoT Smart Plant Care System
+Repo: https://github.com/AV-iot-ai/SproutSense
+
+Core Idea:
+- Dual-ESP32 architecture + MERN stack.
+- Automate plant care with multi-sensor monitoring, AI disease detection, and smart irrigation.
+- Edge devices send data to a Node/Express backend; React/Vite frontend visualizes data and controls watering.
+
+Hard Invariants:
+- Always keep two physical devices:
+  - ESP32-SENSOR: sensors + pump + flow + TFT.
+  - ESP32-CAM: camera + disease detection.
+- Use ADC1 pins (GPIO 32–39) only for analog sensors. Never move sensors to ADC2 because Wi-Fi becomes unstable.
+- Pump and valve power must come from an external PSU. The ESP32 pin only drives the relay input.
+- Any new fields stored must be added to MongoDB schemas first, not “just used” in firmware or UI.
+- Respect backend rate limits (e.g., 5 sensor POSTs / 5 seconds per device).
+- Document new WebSocket events and keep them backward compatible.
+
+High-Level Architecture:
+- Edge:
+  - ESP32-SENSOR:
+    - Reads soil moisture, pH, temperature, humidity, light (ADC1).
+    - YF-S401 flow sensor with interrupt counts, converts to mL.
+    - Relay pump control with target volume + max runtime safety.
+    - ST7735R TFT pages: soil/env, climate, watering, network.
+    - HTTP POST to backend: /api/sensors, /api/water/start, /api/water/stop, /api/config/status.
+  - ESP32-CAM:
+    - Captures leaf images.
+    - Runs Edge Impulse TF Lite Micro model (9 classes: healthy, leaf_spot, rust, blight, etc.).
+    - Sends JSON with deviceId, label, confidence, timestamp (+ optional image reference) to /api/ai/disease.
+
+- Backend (Render.com):
+  - Node.js + Express app in apps/api/src.
+  - Connects to MongoDB Atlas DB “sproutsense”.
+  - REST APIs:
+    - /api/sensors: latest, history, trends, CSV export.
+    - /api/water: start, stop, status, history, today.
+    - /api/ai: disease (POST), latest, history, recommend, insights, chat (Gemini).
+    - /api/config: get/update config, device status heartbeat, health, testmode.
+  - WebSocket endpoint broadcasts:
+    - New SensorReading.
+    - New WateringLog.
+    - New DiseaseDetection.
+    - DeviceStatus changes (online/offline).
+  - Middleware:
+    - Rate limiting (sensor POSTs).
+    - Payload validation (validators).
+    - Central error handling.
+  - Uses models (Mongoose):
+    - SensorReading
+    - WateringLog
+    - DiseaseDetection
+    - SystemConfig
+    - DeviceStatus
+
+- Frontend (Netlify):
+  - React 18 + Vite app in apps/web/.
+  - Uses:
+    - VITE_API_BASE_URL (REST).
+    - VITE_WS_URL (WebSocket).
+  - Main pages:
+    - Home: hero, quick metrics, features.
+    - Sensors: live cards + charts.
+    - Analytics: history, trends, CSV export.
+    - Controls: pump trigger, moisture thresholds, schedules.
+    - Insights: AI disease history and recommendations.
+    - AI Chat: Gemini chat about plant care.
+  - Styling:
+    - Glassmorphic theme.
+    - Sidebar layout with collapsible mode.
+    - Components for cards, metrics, charts.
+
+Database:
+- MongoDB Atlas DB: sproutsense.
+- Collections:
+  - sensorreadings:
+    - deviceId, timestamp, soilMoisture, temperature, humidity, pH, light, raw payload.
+  - wateringlogs:
+    - deviceId, startedAt, endedAt, volumeMl, durationSec, triggerType (schedule/threshold/manual), status.
+  - diseasedetections:
+    - deviceId, label, confidence, timestamp, plantId (optional), notes.
+  - systemconfigs:
+    - deviceId, moistureThresholds, wateringSchedules, calibration factors, feature flags (e.g. autoWaterEnabled).
+  - devicestatuses:
+    - deviceId, lastSeenAt, online (bool), firmwareVersion, extra telemetry.
+
+Deployment Defaults:
+- Backend:
+  - Root: backend
+  - Build: npm install
+  - Start: npm start
+  - Environment:
+    - NODE_ENV=production
+    - PORT=5000
+    - MONGODB_URI=mongodb+srv://user:pass@cluster.mongodb.net/sproutsense?retryWrites=true&w=majority
+    - CLIENT_URL=https://<frontend-url>
+    - GEMINI_API_KEY=<key> (optional).
+- Frontend:
+  - Base: web
+  - Build: npm run build
+  - Publish: dist
+  - Env:
+    - VITE_API_BASE_URL=https://<backend-url>/api
+    - VITE_WS_URL=wss://<backend-url>
+
+Testing and Test Mode:
+- /api/config/testmode toggles mock-data mode so UI can be tested without hardware.
+- When testmode=true:
+  - Backend can generate synthetic sensor readings and wateringlogs; ESP32 devices can remain offline.
+  - AI endpoints can return canned responses for demo.
+
+Common Pitfalls the AI should watch for:
+- Forgetting to include “/sproutsense” in MONGODB_URI → data goes into “test” DB.
+- Using ADC2 pins for sensors → Wi-Fi disconnects.
+- Driving pump directly from ESP32 5V pin → overcurrent risk.
+- Adding new JSON fields in firmware/UI without updating Mongoose models and docs.
+- Hardcoding URLs instead of using config constants on ESP32 and Vite env vars.
+- Blocking loops in Arduino `loop()` that break Wi-Fi or HTTP; always design non-blocking or with small delays.
+- Ignoring WebSocket disconnects on the frontend; should auto-reconnect and resubscribe.
+
+How AI agents should behave:
+- When editing firmware:
+  - Keep the dual-board separation.
+  - Respect GPIO pin mapping and ADC1-only rule.
+  - Preserve safety checks for pump and volume limits.
+  - Add exponential backoff/retry for HTTP if needed.
+- When editing backend:
+  - Update Joi/Zod validators and Mongoose models together.
+  - Keep REST paths and collection names consistent with docs.
+  - Document new WebSocket event types.
+- When editing frontend:
+  - Use existing API client and WebSocket utilities.
+  - Keep new env vars prefixed with VITE_.
+  - Avoid blocking rendering; keep polling or streaming efficient.
+- When unsure:
+  - Prefer making small, well-documented changes.
+  - Do not change pin assignments, DB names, or core endpoints without explicit instruction.

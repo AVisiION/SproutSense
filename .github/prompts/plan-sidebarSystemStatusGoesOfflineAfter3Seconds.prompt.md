@@ -28,9 +28,9 @@ The sidebar system status (Backend, ESP32, ESP32-CAM) is showing "offline" after
    - Check browser console for errors or warnings related to WebSocket or fetch failures.
 
 **Relevant files**
-- web/src/App.jsx — All logic for system status, WebSocket, and polling.
-- web/src/hooks/useWebSocket.js — WebSocket connection management.
-- backend/src/app.js, backend/src/api/index.js — Backend health endpoints (if needed for debugging).
+- apps/web/src/App.jsx — All logic for system status, WebSocket, and polling.
+- apps/web/src/hooks/useWebSocket.js — WebSocket connection management.
+- apps/api/src/app.js, apps/api/api/index.js — Backend health endpoints (if needed for debugging).
 
 **Verification**
 1. Observe the sidebar system status for at least 10 seconds after page load.

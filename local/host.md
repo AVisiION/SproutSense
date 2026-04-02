@@ -9,9 +9,9 @@ This document explains exactly what to change when switching between
 
 ```
 SproutSense/
-├── backend/          ← Node.js Express API
+├── apps/api/         ← Node.js Express API
 │   └── .env          ← Backend environment variables (NOT committed to Git)
-├── web/              ← React + Vite frontend
+├── apps/web/         ← React + Vite frontend
 │   └── .env          ← Frontend environment variables (NOT committed to Git)
 └── local/
     └── host.md       ← This file
@@ -31,7 +31,7 @@ Use this mode for development, testing, and project presentations on a local Wi-
 
 ---
 
-### Step 2: Backend `.env` (file location: `backend/.env`)
+### Step 2: Backend `.env` (file location: `apps/api/.env`)
 
 Create this file if it does not exist. Copy and paste the following:
 
@@ -71,7 +71,7 @@ JWT_SECRET=local-dev-secret-replace-in-production
 
 ---
 
-### Step 3: Frontend `.env` (file location: `web/.env`)
+### Step 3: Frontend `.env` (file location: `apps/web/.env`)
 
 Create this file if it does not exist. Replace `192.168.1.X` with your actual laptop IPv4 address:
 
@@ -92,7 +92,7 @@ VITE_ADMIN_PASS=sproutsense2025
 
 ### Step 4: Update CORS in Backend
 
-Open `backend/src/` and find your CORS configuration. Allow phones on the local network:
+Open `apps/api/src/` and find your CORS configuration. Allow phones on the local network:
 
 ```javascript
 const allowedOrigins = [
@@ -155,14 +155,14 @@ Open two terminal windows:
 
 **Terminal 1 — Backend:**
 ```bash
-cd backend
+cd apps/api
 npm install
 npm start
 ```
 
 **Terminal 2 — Frontend (exposed to network):**
 ```bash
-cd web
+cd apps/web
 npm install
 npm run dev -- --host
 ```
@@ -244,9 +244,9 @@ Set up a free ping service to keep your backend alive:
 
 | What to Change            | Local Mode                          | Hosted Mode                                      |
 |---------------------------|-------------------------------------|--------------------------------------------------|
-| `backend/.env MONGODB_URI`| `mongodb://127.0.0.1:27017/...`     | MongoDB Atlas connection string                  |
-| `backend/.env CORS_ORIGIN`| `http://localhost:5173`             | `https://your-app.netlify.app`                   |
-| `web/.env VITE_API_BASE_URL` | `http://192.168.1.X:5000/api`   | `https://sproutsense-backend.onrender.com/api`   |
+| `apps/api/.env MONGODB_URI`| `mongodb://127.0.0.1:27017/...`     | MongoDB Atlas connection string                  |
+| `apps/api/.env CORS_ORIGIN`| `http://localhost:5173`             | `https://your-app.netlify.app`                   |
+| `apps/web/.env VITE_API_BASE_URL` | `http://192.168.1.X:5000/api`   | `https://sproutsense-backend.onrender.com/api`   |
 | ESP32 URL prefix          | `http://192.168.1.X:5000/...`       | `https://sproutsense-backend.onrender.com/...`   |
 | ESP32 HTTP library        | `WiFiClient` (plain HTTP)           | `WiFiClientSecure` (HTTPS)                       |
 | Frontend start command    | `npm run dev -- --host`             | `npm run build` → deploy to Netlify              |

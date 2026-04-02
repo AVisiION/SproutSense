@@ -1,52 +1,36 @@
-backend/src
-├── server.js          # HTTP + WebSocket server bootstrap
-├── app.js             # Express app, middleware, routes
-├── config/
-│   ├── db.js          # MongoDB connection + logging
-│   └── env.js         # Env var loading & validation
-├── models/
-│   ├── SensorReading.js
-│   ├── WateringLog.js
-│   ├── DiseaseDetection.js
-│   ├── SystemConfig.js
-│   └── DeviceStatus.js
-├── controllers/
-│   ├── sensorController.js
-│   ├── wateringController.js
-│   ├── aiController.js
-│   └── configController.js
-├── routes/
-│   ├── sensorRoutes.js
-│   ├── wateringRoutes.js
-│   ├── aiRoutes.js
-│   └── configRoutes.js
-├── middleware/
-│   ├── errorHandler.js
-│   ├── rateLimiter.js      # e.g., 5 sensor req / 5s
-│   └── validatePayload.js
-├── utils/
-│   ├── websocket.js        # WS broadcast helpers
-│   └── logger.js
-└── validators/
-    └── *.js                # Joi/Zod request schemas
+﻿# Quick Reference
 
+## Canonical Paths
 
-## 🧱 System Architecture (Detailed)
+- Backend: apps/api
+- Frontend: apps/web
+- Firmware Sensor: firmware/esp32-sensor
+- Firmware CAM: firmware/esp32-cam
 
-SproutSense is a dual‑ESP32 + MERN system split into **edge devices**, a **Node.js API backend**, a **React/Vite dashboard**, and **MongoDB Atlas** for storage.
+## Common Commands
 
-### High‑Level Flow
+From repository root:
 
-```text
-  [ESP32-SENSOR] ── HTTP/JSON ──►  /api/sensors, /api/water, /api/config
-       ▲                                      │
-       │ ADC1 sensors, relay, flow           │
-       │                                      ▼
-  [ESP32-CAM] ── HTTP/JSON ──►       Node.js / Express
-       ▲                                 (Render.com)
-       │ Image + AI result                    │
-       │                                      ▼
-       └────────────── WebSocket ◄──── React / Vite Dashboard
-                             ▲           (Netlify)
-                             │
-                      MongoDB Atlas (DB: sproutsense)
+- Start both apps: powershell -ExecutionPolicy ByPass -File .\start.ps1
+- Start production mode helpers: powershell -ExecutionPolicy ByPass -File .\start-production.ps1
+
+Backend only:
+
+- cd apps/api; npm run dev
+- cd apps/api; npm start
+- cd apps/api; node scripts/auth-rbac-smoke.mjs
+
+Frontend only:
+
+- cd apps/web; npm run dev
+- cd apps/web; npm run build
+- cd apps/web; npm run preview
+
+## Key Docs
+
+- docs/README.md
+- docs/operations/configuration-guide.md
+- docs/firmware/wiring-guide.md
+- docs/operations/deployment-checklist.md
+- docs/operations/render-deployment.md
+- docs/backend/auth-rbac-smoke-checklist.md

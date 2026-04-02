@@ -1,0 +1,120 @@
+﻿SPROUTSENSE - 10 MIN PROFESSIONAL PRESENTATION GUIDE
+====================================================
+
+Total Duration: 10 minutes
+Slides: 10
+Goal: Clear, confident, and demo-focused delivery
+
+SLIDE 1 (0:00-0:40) - "SproutSense: Intelligent Plant Care, End to End"
+-------------------------------------------------------------------------
+Core message:
+- We built a full IoT + AI system that monitors plant health, automates watering, and detects disease risk early.
+
+Speaker notes:
+- "SproutSense combines embedded systems, cloud backend, and AI assistance into one practical plant-care platform."
+
+SLIDE 2 (0:40-1:20) - "The Real Problem: Plants Fail Quietly"
+---------------------------------------------------------------
+Core message:
+- Most plant loss happens because stress signals are missed.
+- Manual watering is inconsistent and disease signs are detected too late.
+
+Speaker notes:
+- "Our focus is not only automation, but timely decision support before visible damage appears."
+
+SLIDE 3 (1:20-2:20) - "Architecture at a Glance: Dual ESP32 + MERN"
+-----------------------------------------------------------------------
+Core message:
+- ESP32-SENSOR board handles sensing, pumping, and local TFT output.
+- ESP32-CAM handles image capture and disease classification.
+- Node/Express + MongoDB + React dashboard complete the pipeline.
+
+Speaker notes:
+- "We split responsibilities across two boards for reliability and smoother real-time performance."
+
+SLIDE 4 (2:20-3:20) - "Hardware Stack Built for Reliability"
+--------------------------------------------------------------
+Show:
+- ESP32 Dev Board
+- ESP32-CAM
+- DHT22, soil moisture sensor, pH sensor, LDR, flow sensor
+- Relay module + external pump power
+
+Speaker notes:
+- "Sensor fidelity and electrical safety were major design priorities, especially around pump control."
+
+SLIDE 5 (3:20-4:20) - "Data Journey: From Leaf to Dashboard"
+-------------------------------------------------------------
+Core flow:
+- Edge devices collect telemetry and events.
+- Backend APIs process and persist into MongoDB.
+- Frontend dashboard visualizes live state, trends, and controls.
+
+Speaker notes:
+- "This closed-loop flow enables both monitoring and immediate control actions from one interface."
+
+SLIDE 6 (4:20-5:20) - "Autonomous Watering with Safety Guardrails"
+--------------------------------------------------------------------
+Core message:
+- Watering is triggered by thresholds and system rules.
+- Runtime and volume checks prevent overwatering.
+- Every cycle is logged for traceability and analytics.
+
+Speaker notes:
+- "Automation is only useful when it is safe, measurable, and easy to audit."
+
+SLIDE 7 (5:20-6:30) - "On-Device Intelligence: TFT Live Control Panel"
+----------------------------------------------------------------------
+Show TFT pages:
+- Overview page
+- Soil + water page
+- Climate page
+- Alerts + watering history page
+
+Wiring reference (ST7735R):
+- CS GPIO5
+- RST GPIO4
+- DC GPIO27
+- MOSI GPIO23
+- SCLK GPIO18
+
+Speaker notes:
+- "The TFT gives a local, no-internet fallback view for field operation and quick diagnostics."
+
+SLIDE 8 (6:30-7:30) - "AI Vision Pipeline: Detect Before Damage"
+------------------------------------------------------------------
+Core message:
+- ESP32-CAM captures leaf images.
+- AI classification pipeline predicts disease categories and confidence.
+- Alerts are pushed to backend and surfaced in the dashboard.
+
+Speaker notes:
+- "This shifts plant care from reactive treatment to proactive intervention."
+
+SLIDE 9 (7:30-8:40) - "Live Demo: 60-Second System Walkthrough"
+-----------------------------------------------------------------
+Demo script:
+1. Show live sensor updates on dashboard.
+2. Show TFT page transitions and status.
+3. Trigger a watering action.
+4. Show resulting log/history update.
+
+Speaker notes:
+- "The goal of the demo is to prove real-time synchronization across edge, backend, and UI."
+
+SLIDE 10 (8:40-10:00) - "Outcomes, Impact, and What Comes Next"
+-----------------------------------------------------------------
+Key outcomes:
+- Real-time multi-sensor monitoring achieved.
+- Controlled automated watering implemented.
+- AI disease workflow integrated with alerting.
+- Modular architecture ready for scaling to more crops/devices.
+
+Closing line:
+- "SproutSense demonstrates how low-cost edge hardware and practical AI can improve consistency in plant care."
+
+Q&A BACKUP POINTS
+-----------------
+- Why dual ESP32 design? Separation of workloads improves stability and maintainability.
+- Why include TFT locally? It enables immediate visibility without needing phone/web access.
+- Why this matters? Faster response, fewer avoidable losses, and a path to smart farming scale.

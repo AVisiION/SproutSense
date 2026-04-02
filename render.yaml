@@ -2,7 +2,7 @@ services:
   - type: web
     name: sproutsense-backend
     runtime: node
-    rootDir: backend
+    rootDir: apps/api
     buildCommand: npm install
     startCommand: npm start
     healthCheckPath: /api

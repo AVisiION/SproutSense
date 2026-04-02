@@ -1,0 +1,450 @@
+/**
+ * Sidebar.css — components/layout/
+ * Modern floating glass sidebar — tuned for dark green glass palette.
+ */
+
+/* ─────────────────────────────────────────
+   1. DESKTOP — Floating Sidebar Structure
+   ───────────────────────────────────────── */
+.sidebar {
+  flex-shrink: 0;
+  padding: 1.75rem 1.25rem;
+  /* Increased opacity: aurora must not bleed through sidebar */
+  background: rgba(4, 14, 9, 0.88);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 1.5rem;
+  box-shadow:
+    0 12px 40px rgba(0, 0, 0, 0.55),
+    inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  -webkit-backdrop-filter: blur(22px);
+  backdrop-filter: blur(22px);
+  transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  display: flex;
+  flex-direction: column;
+  z-index: 100;
+  overflow-y: auto;
+  overflow-x: visible;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+/* Uncollapsed desktop gets the full liquid-glass treatment */
+@media (min-width: 769px) {
+  .app-shell:not(.sidebar-collapsed) .sidebar {
+    background:
+      linear-gradient(150deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.02) 34%, rgba(18, 48, 30, 0.46) 100%),
+      rgba(4, 14, 9, 0.62);
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    box-shadow:
+      0 18px 48px rgba(0, 0, 0, 0.45),
+      inset 0 1px 0 rgba(255, 255, 255, 0.22),
+      inset 0 -10px 28px rgba(0, 0, 0, 0.16);
+    -webkit-backdrop-filter: blur(26px) saturate(170%);
+    backdrop-filter: blur(26px) saturate(170%);
+  }
+
+  .app-shell:not(.sidebar-collapsed) .sidebar-link {
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.06),
+      0 1px 0 rgba(0, 0, 0, 0.08);
+  }
+
+  .app-shell:not(.sidebar-collapsed) .sidebar-link:hover {
+    background: rgba(255, 255, 255, 0.10);
+    border-color: rgba(255, 255, 255, 0.16);
+    box-shadow:
+      0 10px 24px rgba(0, 0, 0, 0.26),
+      inset 0 1px 0 rgba(255, 255, 255, 0.18);
+    color: #d9f3dd;
+  }
+
+  .app-shell:not(.sidebar-collapsed) .sidebar-link.active {
+    background: rgba(78, 168, 82, 0.20);
+    border-color: rgba(126, 200, 128, 0.38);
+    box-shadow:
+      0 8px 20px rgba(58, 143, 62, 0.24),
+      inset 0 1px 0 rgba(255, 255, 255, 0.20);
+    color: #d4ffd5;
+  }
+
+  [data-theme='light'] .app-shell:not(.sidebar-collapsed) .sidebar {
+    background:
+      linear-gradient(155deg, rgba(255, 255, 255, 0.86) 0%, rgba(255, 255, 255, 0.62) 36%, rgba(232, 246, 236, 0.84) 100%);
+    border-color: rgba(46, 125, 50, 0.18);
+    box-shadow:
+      0 12px 32px rgba(10, 40, 15, 0.14),
+      inset 0 1px 0 rgba(255, 255, 255, 0.95);
+  }
+
+  [data-theme='light'] .app-shell:not(.sidebar-collapsed) .sidebar-link {
+    background: rgba(255, 255, 255, 0.55);
+    border-color: rgba(46, 125, 50, 0.12);
+  }
+
+  [data-theme='light'] .app-shell:not(.sidebar-collapsed) .sidebar-link:hover {
+    background: rgba(255, 255, 255, 0.82);
+    border-color: rgba(46, 125, 50, 0.24);
+    color: #123617;
+  }
+
+  [data-theme='light'] .app-shell:not(.sidebar-collapsed) .sidebar-link.active {
+    background: rgba(58, 143, 62, 0.14);
+    border-color: rgba(46, 125, 50, 0.32);
+    color: #236b2a;
+  }
+}
+
+[data-theme='light'] .sidebar {
+  background: rgba(255, 255, 255, 0.90);
+  border-color: rgba(46, 125, 50, 0.12);
+  box-shadow:
+    0 8px 28px rgba(10, 40, 15, 0.12),
+    inset 0 1px 0 rgba(255, 255, 255, 0.80);
+}
+
+/* ─────────────────────────────────────────
+   2. COLLAPSED MODE
+   ───────────────────────────────────────── */
+@media (min-width: 769px) {
+
+  /* ── Container: fully invisible, no border, no bg, no shadow ── */
+  .app-shell.sidebar-collapsed .sidebar {
+    width: 72px;
+    min-width: 72px;
+    padding: 2rem 0.5rem;
+    background: transparent;
+    border: none;
+    box-shadow: none;
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+
+  .app-shell.sidebar-collapsed .sidebar-brand,
+  .app-shell.sidebar-collapsed .sidebar-cat-label {
+    display: none;
+  }
+
+  .app-shell.sidebar-collapsed .sidebar-nav {
+    padding-top: 1rem;
+    gap: 0.4rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  /* ── Liquid Glass pill — default (idle) ── */
+  .app-shell.sidebar-collapsed .sidebar-link {
+    justify-content: center;
+    width: 52px;
+    height: 52px;
+    padding: 0;
+    border-radius: 16px;
+    margin-bottom: 0;
+
+    /* Liquid glass base */
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.10);
+    box-shadow:
+      0 2px 8px rgba(0, 0, 0, 0.25),
+      inset 0 1px 0 rgba(255, 255, 255, 0.08);
+    -webkit-backdrop-filter: blur(16px) saturate(160%);
+    backdrop-filter: blur(16px) saturate(160%);
+
+    transition:
+      background 0.25s ease,
+      border-color 0.25s ease,
+      box-shadow 0.25s ease,
+      transform 0.2s ease;
+  }
+
+  /* ── Liquid Glass pill — hover ── */
+  .app-shell.sidebar-collapsed .sidebar-link:hover {
+    background: rgba(255, 255, 255, 0.12);
+    border-color: rgba(255, 255, 255, 0.22);
+    box-shadow:
+      0 6px 24px rgba(0, 0, 0, 0.35),
+      inset 0 1px 0 rgba(255, 255, 255, 0.18),
+      inset 0 -1px 0 rgba(0, 0, 0, 0.12);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    backdrop-filter: blur(20px) saturate(180%);
+    transform: translateY(-2px) scale(1.05);
+  }
+
+  /* ── Liquid Glass pill — active ── */
+  .app-shell.sidebar-collapsed .sidebar-link.active {
+    background: rgba(58, 143, 62, 0.22);
+    border-color: rgba(78, 168, 82, 0.45);
+    box-shadow:
+      0 4px 20px rgba(58, 143, 62, 0.28),
+      inset 0 1px 0 rgba(255, 255, 255, 0.15),
+      inset 0 -1px 0 rgba(0, 0, 0, 0.10);
+    -webkit-backdrop-filter: blur(18px) saturate(170%);
+    backdrop-filter: blur(18px) saturate(170%);
+    color: #7EC880;
+  }
+
+  /* Light theme liquid glass overrides */
+  [data-theme='light'] .app-shell.sidebar-collapsed .sidebar-link {
+    background: rgba(255, 255, 255, 0.45);
+    border-color: rgba(46, 125, 50, 0.14);
+    box-shadow:
+      0 2px 10px rgba(10, 40, 15, 0.10),
+      inset 0 1px 0 rgba(255, 255, 255, 0.90);
+  }
+
+  [data-theme='light'] .app-shell.sidebar-collapsed .sidebar-link:hover {
+    background: rgba(255, 255, 255, 0.72);
+    border-color: rgba(46, 125, 50, 0.28);
+    box-shadow:
+      0 6px 20px rgba(10, 40, 15, 0.14),
+      inset 0 1px 0 rgba(255, 255, 255, 1);
+    transform: translateY(-2px) scale(1.05);
+  }
+
+  [data-theme='light'] .app-shell.sidebar-collapsed .sidebar-link.active {
+    background: rgba(58, 143, 62, 0.12);
+    border-color: rgba(46, 125, 50, 0.35);
+    box-shadow:
+      0 4px 16px rgba(58, 143, 62, 0.18),
+      inset 0 1px 0 rgba(255, 255, 255, 0.95);
+    color: #2E7D32;
+  }
+
+  /* ── Tooltip label on hover ── */
+  .app-shell.sidebar-collapsed .sidebar-label {
+    position: fixed;
+    left: 82px;
+    background: rgba(4, 14, 9, 0.92);
+    border: 1px solid rgba(255, 255, 255, 0.10);
+    -webkit-backdrop-filter: blur(14px);
+    backdrop-filter: blur(14px);
+    padding: 0.45rem 0.9rem;
+    border-radius: 0.5rem;
+    opacity: 0;
+    pointer-events: none;
+    transform: translateX(-10px);
+    transition: all 0.25s ease;
+    color: #C8DCC8;
+    font-size: 0.82rem;
+    white-space: nowrap;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35);
+  }
+
+  .app-shell.sidebar-collapsed .sidebar-link:hover .sidebar-label {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* ─────────────────────────────────────────
+   3. BRAND & NAV LINKS
+   ───────────────────────────────────────── */
+.sidebar-brand {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0 0.25rem;
+  margin-bottom: 2rem;
+  transition: opacity 0.3s ease;
+}
+
+.sidebar-brand-icon {
+  width: 3.2rem;
+  height: 3.2rem;
+  object-fit: contain;
+  animation: float 3s ease-in-out infinite;
+}
+
+.sidebar-brand-text {
+  font-size: 1rem;
+  font-weight: 700;
+  /* Muted forest green — not vivid */
+  color: #4EA852;
+}
+
+[data-theme='light'] .sidebar-brand-text {
+  color: #2E7D32;
+}
+
+.sidebar-category {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  margin-bottom: 1.25rem;
+}
+
+.sidebar-cat-label {
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+  padding: 0 0.5rem;
+  opacity: 0.45;
+  letter-spacing: 0.08em;
+}
+
+.sidebar-nav {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  overflow-y: auto;
+}
+
+.sidebar-link {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.75rem 1rem;
+  border-radius: 0.85rem;
+  color: var(--text-secondary);
+  transition: all 0.3s ease;
+  text-decoration: none;
+  border: 1px solid transparent;
+}
+
+/* Hover: subtle glass lift — visible but not garish */
+.sidebar-link:hover {
+  background: rgba(58, 143, 62, 0.10);
+  border-color: rgba(78, 168, 82, 0.18);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+  color: #C8DCC8;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
+  font-weight: 400;
+}
+
+[data-theme='light'] .sidebar-link:hover {
+  background: rgba(58, 143, 62, 0.08);
+  border-color: rgba(46, 125, 50, 0.18);
+  color: #132016;
+}
+
+/* Active: forest green glow — no teal */
+.sidebar-link.active {
+  background: rgba(58, 143, 62, 0.16);
+  border-color: rgba(78, 168, 82, 0.30);
+  color: #7EC880;
+  box-shadow: 0 4px 18px rgba(58, 143, 62, 0.18);
+  font-weight: 700;
+}
+
+[data-theme='light'] .sidebar-link.active {
+  background: rgba(58, 143, 62, 0.10);
+  border-color: rgba(46, 125, 50, 0.28);
+  color: #2E7D32;
+  box-shadow: 0 4px 14px rgba(58, 143, 62, 0.12);
+}
+
+/* ─────────────────────────────────────────
+   4. BADGE, OVERLAY, ANIMATIONS
+   ───────────────────────────────────────── */
+.sidebar-badge {
+  position: absolute;
+  top: -6px;
+  right: -8px;
+  background: #CC3333;
+  color: #fff;
+  font-size: 0.65rem;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 10px;
+  box-shadow: 0 2px 8px rgba(204, 51, 51, 0.40);
+}
+
+.sidebar-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  -webkit-backdrop-filter: blur(4px);
+  backdrop-filter: blur(4px);
+  z-index: 99;
+  animation: fadeIn 0.4s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50%       { transform: translateY(-4px); }
+}
+
+/* ─────────────────────────────────────────
+   5. INLINE STATUS DOT
+   ───────────────────────────────────────── */
+.sidebar-status-dot {
+  position: absolute;
+  top: -2px;
+  right: -2px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  /* Updated border: obsidian-green, not slate */
+  border: 2px solid rgba(2, 9, 5, 0.95);
+}
+
+.sidebar-status-dot.online {
+  background: #4EA852;
+  box-shadow: 0 0 8px rgba(78, 168, 82, 0.45);
+}
+
+.sidebar-status-dot.offline {
+  background: #CC3333;
+  box-shadow: 0 0 8px rgba(204, 51, 51, 0.40);
+}
+
+.sidebar-status-dot.checking {
+  background: rgba(170, 180, 170, 0.55);
+}
+
+/* ─────────────────────────────────────────
+   7. MOBILE — Slide-in drawer (≤ 768px)
+   ───────────────────────────────────────── */
+@media (max-width: 768px) {
+
+  /* Sidebar becomes a fixed full-height drawer */
+  .sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 100dvh;
+    width: 280px;
+    border-radius: 0 1.5rem 1.5rem 0;   /* round only right side on mobile */
+    z-index: 300;
+    transform: translateX(-100%);        /* hidden off-screen by default */
+    transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+    overflow-y: auto;
+    overflow-x: hidden;
+  }
+
+  /* Open state — parent adds .sidebar-open class */
+  .sidebar-open .sidebar {
+    transform: translateX(0);
+  }
+
+  /* Overlay — shown when sidebar is open */
+  .sidebar-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.55);
+    -webkit-backdrop-filter: blur(4px);
+    backdrop-filter: blur(4px);
+    z-index: 299;
+    animation: fadeIn 0.3s ease;
+  }
+
+  .sidebar-open .sidebar-overlay {
+    display: block;
+  }
+  .sidebar-brand {
+    display: none;
+  }
+  .sidebar-nav {
+    margin-top: 2.5rem;
+  }
+}

@@ -32,9 +32,9 @@ Rebuild Notification Error UI (Bottom Right, Close Button)
    - Confirm error notifications are styled with a red accent and icon.
 
 **Relevant Files:**
-- web/src/components/Notification.jsx
-- web/src/styles/notification.css
-- web/src/App.jsx (for notification usage)
+- apps/web/src/components/Notification.jsx
+- apps/web/src/styles/notification.css
+- apps/web/src/App.jsx (for notification usage)
 
 ---
 

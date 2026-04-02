@@ -1,0 +1,181 @@
+/**
+ * theme-transitions.css
+ * ─────────────────────────────────────────────────────
+ * Handles view transitions, fallback sweeps, and component
+ * transition properties when the theme changes.
+ */
+
+/* ═══════════════════════════════════════════
+   INDUSTRY-LEVEL THEME TRANSITION ANIMATIONS
+═══════════════════════════════════════════ */
+
+/* Enable View Transitions API for smooth theme changes */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation-duration: 4s;
+  animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Fade and scale animation for View Transitions API */
+::view-transition-old(root) {
+  animation-name: theme-fade-out;
+}
+
+::view-transition-new(root) {
+  animation-name: theme-fade-in;
+}
+
+@keyframes theme-fade-out {
+  0% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(0.98);
+  }
+}
+
+@keyframes theme-fade-in {
+  0% {
+    opacity: 0;
+    transform: scale(1.02);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Fallback animation for browsers without View Transitions API */
+html.theme-transitioning * {
+  transition: 
+    background-color 4s cubic-bezier(0.22, 1, 0.36, 1),
+    background 4s cubic-bezier(0.22, 1, 0.36, 1),
+    color 4s cubic-bezier(0.22, 1, 0.36, 1),
+    border-color 4s cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 4s cubic-bezier(0.22, 1, 0.36, 1),
+    opacity 4s cubic-bezier(0.22, 1, 0.36, 1) ;
+}
+
+html.theme-transitioning::after {
+  content: '';
+  position: fixed;
+  inset: -20%;
+  pointer-events: none;
+  z-index: 2147483646;
+  opacity: 0;
+  background:
+    linear-gradient(
+      var(--theme-sweep-angle),
+      transparent 30%,
+      rgba(255, 255, 255, 0.16) 48%,
+      rgba(20, 184, 166, 0.28) 50%,
+      rgba(255, 255, 255, 0.16) 52%,
+      transparent 70%
+    ),
+    radial-gradient(circle at 50% 50%, rgba(20, 184, 166, 0.12), transparent 64%);
+  mix-blend-mode: soft-light;
+  filter: blur(var(--theme-blur));
+  transform: translate3d(var(--theme-sweep-from-x), var(--theme-sweep-from-y), 0);
+  animation: theme-directional-sweep 4s var(--theme-ease) forwards;
+}
+
+html.theme-transitioning body {
+  animation: theme-content-drift 4s var(--theme-ease) both;
+  will-change: transform;
+}
+
+@keyframes theme-directional-sweep {
+  0% {
+    opacity: 0;
+    transform: translate3d(var(--theme-sweep-from-x), var(--theme-sweep-from-y), 0) scale(var(--theme-scale));
+  }
+  16% {
+    opacity: 0.82;
+  }
+  85% {
+    opacity: 0.5;
+  }
+  100% {
+    opacity: 0;
+    transform: translate3d(var(--theme-sweep-to-x), var(--theme-sweep-to-y), 0) scale(1);
+  }
+}
+
+@keyframes theme-content-drift {
+  0% {
+    transform: translate3d(var(--theme-drift-x), var(--theme-drift-y), 0) scale(0.995);
+  }
+  55% {
+    transform: translate3d(calc(var(--theme-drift-x) * -0.25), calc(var(--theme-drift-y) * -0.25), 0) scale(1.002);
+  }
+  100% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+}
+
+/* ═══════════════════════════════════════════
+   COMPONENT LEVEL THEME TRANSITIONS
+═══════════════════════════════════════════ */
+html,
+body,
+.app-shell,
+.sidebar,
+.top-navbar,
+.card,
+.btn,
+.sensor-item,
+.control-section,
+.settings-card,
+input,
+html,
+body,
+.app-shell {
+  transition:
+    background-color 4s cubic-bezier(0.25, 0.8, 0.25, 1),
+    background 4s cubic-bezier(0.25, 0.8, 0.25, 1),
+    color 4s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+html::before {
+  transition:
+    background 4s cubic-bezier(0.25, 0.8, 0.25, 1),
+    opacity 4s cubic-bezier(0.25, 0.8, 0.25, 1),
+    filter 4s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+.sidebar,
+.top-navbar,
+.card,
+.btn,
+.sensor-item,
+.control-section,
+.settings-card,
+input,
+textarea,
+select {
+  transition: 
+    background-color 4s cubic-bezier(0.25, 0.8, 0.25, 1),
+    background 4s cubic-bezier(0.25, 0.8, 0.25, 1),
+    color 4s cubic-bezier(0.25, 0.8, 0.25, 1),
+    border-color 4s cubic-bezier(0.25, 0.8, 0.25, 1),
+    box-shadow 4s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+/* ═══════════════════════════════════════════
+   ACCESSIBILITY: REDUCED MOTION OVERRIDES
+═══════════════════════════════════════════ */
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-old(root),
+  ::view-transition-new(root) {
+    animation: none ;
+  }
+  
+  html.theme-transitioning *,
+  html.theme-transitioning::after,
+  .navbar-theme-toggle::before,
+  .navbar-theme-toggle::after {
+    animation: none ;
+    transition-duration: 0.01ms ;
+  }
+}
