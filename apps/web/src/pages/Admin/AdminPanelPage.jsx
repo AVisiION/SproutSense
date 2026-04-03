@@ -769,6 +769,54 @@ export default function AdminPanelPage() {
     log(`Analytics graph ${checked ? 'enabled' : 'disabled'} for ${sensor.name}`, LOG_TYPES.info);
   };
 
+  const handleUiSensorDashboardToggle = (sensor, checked) => {
+    const next = upsertSensor({ ...sensor, showInDashboard: checked });
+    setSensorRegistry(next);
+    log(`Dashboard card ${checked ? 'enabled' : 'disabled'} for ${sensor.name}`, LOG_TYPES.info);
+  };
+
+  const handleAddCustomSensor = () => {
+    const name = window.prompt("Enter new sensor name (e.g. Light Level):");
+    if (!name) return;
+    const key = name.toLowerCase().replace(/[^a-z0-9]/g, '') + Date.now().toString().slice(-4);
+    
+    const next = upsertSensor({
+      id: key,
+      name,
+      key,
+      unit: '%',
+      minThreshold: 0,
+      maxThreshold: 100,
+      warningThreshold: 80,
+      criticalThreshold: 90,
+      chartType: 'line',
+      enabled: true,
+      showInDashboard: true,
+      showInAnalytics: true,
+      faIcon: 'fa-microchip',
+      color: '#6366f1'
+    });
+    setSensorRegistry(next);
+    log(`Custom sensor added: ${name}`, LOG_TYPES.success);
+  };
+
+  const handleDeleteCustomSensor = (id) => {
+    if (!window.confirm("Are you sure you want to delete this sensor?")) return;
+    const next = removeSensor(id);
+    setSensorRegistry(next);
+    log(`Sensor removed: ${id}`, LOG_TYPES.info);
+  };
+
+  const handleUiSensorIconChange = (sensor, faIcon) => {
+    const next = upsertSensor({ ...sensor, faIcon });
+    setSensorRegistry(next);
+  };
+
+  const handleUiSensorColorChange = (sensor, color) => {
+    const next = upsertSensor({ ...sensor, color });
+    setSensorRegistry(next);
+  };
+
   const handleUiSensorChartTypeChange = (sensor, chartType) => {
     const next = upsertSensor({ ...sensor, chartType });
     setSensorRegistry(next);
@@ -1228,7 +1276,12 @@ export default function AdminPanelPage() {
                   </div>
 
                   <div className="adm-glass-box">
-                    <h3><i className="fa-solid fa-chart-line" /> Graph Visibility & Chart Type</h3>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+                      <h3 style={{ margin: 0 }}><i className="fa-solid fa-chart-line" /> Sensors & UI Visibility</h3>
+                      <button className="adm-btn btn-primary" onClick={handleAddCustomSensor}>
+                        <i className="fa-solid fa-plus" /> Add Sensor
+                      </button>
+                    </div>
                     {sensorRegistry.length === 0 ? (
                       <p className="adm-empty"><i className="fa-solid fa-circle-info" /> No sensors available for UI graph control.</p>
                     ) : (
@@ -1237,8 +1290,12 @@ export default function AdminPanelPage() {
                           <thead>
                             <tr>
                               <th>Sensor</th>
+                              <th>Icon</th>
+                              <th>Color</th>
                               <th>Show Graph</th>
+                              <th>Show in Dashboard</th>
                               <th>Chart Type</th>
+                              <th>Actions</th>
                             </tr>
                           </thead>
                           <tbody>
@@ -1246,7 +1303,27 @@ export default function AdminPanelPage() {
                               <tr key={`ui-graph-${sensor.id}`}>
                                 <td>{sensor.name}</td>
                                 <td>
+                                  <input 
+                                    className="adm-input" 
+                                    style={{ width: '120px', padding: '4px' }} 
+                                    value={sensor.faIcon || ''} 
+                                    onChange={(e) => handleUiSensorIconChange(sensor, e.target.value)} 
+                                    placeholder="fa-microchip" 
+                                  />
+                                </td>
+                                <td>
+                                  <input 
+                                    type="color" 
+                                    value={sensor.color || '#6366f1'} 
+                                    onChange={(e) => handleUiSensorColorChange(sensor, e.target.value)} 
+                                    style={{ padding: '0', cursor: 'pointer', border: 'none', background: 'none' }}
+                                  />
+                                </td>
+                                <td>
                                   <input type="checkbox" checked={Boolean(sensor.showInAnalytics)} onChange={(e) => handleUiSensorAnalyticsToggle(sensor, e.target.checked)} />
+                                </td>
+                                <td>
+                                  <input type="checkbox" checked={Boolean(sensor.showInDashboard)} onChange={(e) => handleUiSensorDashboardToggle(sensor, e.target.checked)} />
                                 </td>
                                 <td>
                                   <select className="adm-input" value={sensor.chartType || 'line'} onChange={(e) => handleUiSensorChartTypeChange(sensor, e.target.value)}>
@@ -1259,6 +1336,11 @@ export default function AdminPanelPage() {
                                     <option value="table">Table</option>
                                     <option value="sparkline">Sparkline</option>
                                   </select>
+                                </td>
+                                <td>
+                                  <button className="adm-btn btn-danger" style={{ padding: '4px 8px', fontSize: '0.8rem' }} onClick={() => handleDeleteCustomSensor(sensor.id)} title="Delete Sensor">
+                                    <i className="fa-solid fa-trash" />
+                                  </button>
                                 </td>
                               </tr>
                             ))}

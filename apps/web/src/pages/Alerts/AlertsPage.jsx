@@ -175,22 +175,19 @@ export default function AlertsPage({ alerts = [], sensors, onClearAlert, onClear
       const detections = resp?.data?.detections || [];
 
       if (detections.length === 0) {
-        // No real data → testmode
-        setIsTestMode(true);
-        const mock = generateMockDetections();
-        setHistory(mock);
-        setLatestDetection(mock[0]);
+        setIsTestMode(false);
+        setHistory([]);
+        setLatestDetection(null);
       } else {
         setIsTestMode(false);
         setHistory(detections);
         setLatestDetection(detections[0]);
       }
     } catch {
-      // Full API failure → testmode
-      setIsTestMode(true);
-      const mock = generateMockDetections();
-      setHistory(mock);
-      setLatestDetection(mock[0]);
+      // Full API failure
+      setIsTestMode(false);
+      setHistory([]);
+      setLatestDetection(null);
     } finally {
       setLoading(false);
     }
@@ -225,10 +222,9 @@ export default function AlertsPage({ alerts = [], sensors, onClearAlert, onClear
 
   // ─── Derived data ─────────────────────────────────────────────────────────
 
-  // System alerts: use real ones from App.jsx, or mock if none
+  // System alerts: use real ones from App.jsx, or empty array if none
   const displayAlerts = useMemo(() => {
     if (alerts.length > 0) return alerts;
-    if (isTestMode)        return generateMockSystemAlerts(sensors);
     return [];
   }, [alerts, sensors, isTestMode]);
 
@@ -288,20 +284,8 @@ export default function AlertsPage({ alerts = [], sensors, onClearAlert, onClear
         </div>
       </motion.div>
 
-      {/* ── Testmode Banner ── */}
+      {/* ── Removed Testmode Banner ── */}
       <AnimatePresence>
-        {isTestMode && (
-          <motion.div
-            className={styles.testmodeBanner}
-            initial={{ opacity: 0, y: -8 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -8 }}
-            transition={{ duration: 0.3 }}
-          >
-            ⚠️&nbsp;<strong>Demo / Test Mode</strong> — No real detection data found.
-            Showing simulated alerts &amp; disease history. This banner disappears once ESP32-CAM sends real data.
-          </motion.div>
-        )}
       </AnimatePresence>
 
       {/* ── KPI Strip ── */}
@@ -351,7 +335,7 @@ export default function AlertsPage({ alerts = [], sensors, onClearAlert, onClear
                 ) : (
                   <div className={styles.placeholderImage}>
                     <GlassIcon name="camera" size={44} />
-                    <p>{isTestMode ? 'Demo Mode — No real image' : 'No recent image available'}</p>
+                    <p>No recent image available</p>
                   </div>
                 )}
 
@@ -380,9 +364,6 @@ export default function AlertsPage({ alerts = [], sensors, onClearAlert, onClear
                     ? format(new Date(latestDetection.timestamp), 'MMM d, yyyy · HH:mm:ss')
                     : 'Waiting for data...'}
                 </p>
-                {latestDetection?.isMock && (
-                  <span className={styles.mockTag}>Simulated reading</span>
-                )}
               </div>
             </>
           )}
@@ -482,7 +463,6 @@ export default function AlertsPage({ alerts = [], sensors, onClearAlert, onClear
                           </div>
                           <span className={styles.timelineDate}>
                             {format(new Date(item.timestamp), 'MMM d, HH:mm')}
-                            {item.isMock && <span className={styles.mockTag}> · demo</span>}
                           </span>
                         </div>
                       </motion.div>

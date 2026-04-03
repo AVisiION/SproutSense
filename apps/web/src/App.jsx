@@ -56,6 +56,7 @@ const AIChat = lazy(() => import('./pages/AIChat/AIChat.jsx'));
 const InsightsPage = lazy(() => import('./pages/Insights/InsightsPage.jsx'));
 const AdminPanelPage = lazy(() => import('./pages/Admin/AdminPanelPage.jsx'));
 const ViewerReportsPage = lazy(() => import('./pages/Viewer/ViewerReportsPage.jsx'));
+const ESP32StatusPage = lazy(() => import('./pages/ESP32Status/ESP32StatusPage.jsx'));
 const LoginPage = lazy(() => import('./pages/Auth/LoginPage'));
 const RegisterPage = lazy(() => import('./pages/Auth/RegisterPage'));
 const ForgotPasswordPage = lazy(() => import('./pages/Auth/ForgotPasswordPage'));
@@ -160,7 +161,7 @@ const routePermissions = {
   '/controls': [PERMISSION.WATERING_START],
   '/ai': [PERMISSION.AI_CHAT],
   '/insights': [PERMISSION.AI_INSIGHTS_READ],
-  '/esp32': [PERMISSION.CONFIG_READ],
+  '/esp32': [],
   '/settings': [PERMISSION.CONFIG_READ],
   '/viewer/dashboard': [PERMISSION.DASHBOARD_READ],
   '/viewer/analytics': [PERMISSION.ANALYTICS_READ],
@@ -896,23 +897,16 @@ function App() {
               } />
 
               <Route path="/esp32" element={
-                <ProtectedRoute requiredPermissions={[PERMISSION.CONFIG_READ]}>
+                <ProtectedRoute>
                   <PageWrapper>
                     <section className="dashboard-section">
                       <div className="dashboard dashboard-single">
-                        <div className="card">
-                          <h2 className="card-title"><GlassIcon name="esp32" className="card-title-icon" /> ESP32 Device Status</h2>
-                          <div className="status-grid">
-                            <div className="status-item">
-                              <div className="status-item-header"><GlassIcon name="esp32" /><span className="status-item-label">ESP32 Sensor Board</span></div>
-                              <div><span className={`status-badge status-${systemStatus.esp32}`}>{statusLabel(systemStatus.esp32)}</span><div className="status-subtext">Last seen: {formatLastSeen(systemStatus.esp32LastSeen)}</div></div>
-                            </div>
-                            <div className="status-item">
-                              <div className="status-item-header"><GlassIcon name="image" /><span className="status-item-label">ESP32-CAM</span></div>
-                              <div><span className={`status-badge status-${systemStatus.esp32Cam}`}>{statusLabel(systemStatus.esp32Cam)}</span><div className="status-subtext">Last seen: {formatLastSeen(systemStatus.esp32CamLastSeen)}</div></div>
-                            </div>
-                          </div>
-                        </div>
+                        <React.Suspense fallback={<div>Loading...</div>}>
+                          <ESP32StatusPage 
+                            isConnected={isConnected} 
+                            systemStatus={systemStatus} 
+                          />
+                        </React.Suspense>
                       </div>
                     </section>
                   </PageWrapper>

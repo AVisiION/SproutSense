@@ -627,7 +627,7 @@ export default function SettingsPage({
                   </div>
                 ))
               ) : (
-                <p className="sp-row-desc">No paired devices yet. Generate a code, then enter it in the ESP32 provisioning flow.</p>
+                <p className="sp-row-desc">No paired devices yet. Connect a device from the section above using your Device Key.</p>
               )}
             </div>
           </div>

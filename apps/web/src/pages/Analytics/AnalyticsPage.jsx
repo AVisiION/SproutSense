@@ -46,34 +46,7 @@ function colorForSensor(sensorKey, index = 0) {
   return CHART_COLORS[index % CHART_COLORS.length];
 }
 
-// ─── Mock data generators (testmode / no-data fallback) ───────────────────────
-function generateMockData(hours) {
-  const now      = Date.now();
-  const interval = hours <= 1 ? 30_000 : hours <= 24 ? 5 * 60_000 : 60 * 60_000;
-  const count    = Math.min(Math.floor((hours * 3_600_000) / interval), 300);
-  return Array.from({ length: count }, (_, i) => {
-    const t = new Date(now - (count - i) * interval);
-    return {
-      timestamp   : t.toISOString(),
-      timestampMs : t.getTime(),
-      soilMoisture: 45 + 20 * Math.sin(i / 15) + (Math.random() - 0.5) * 8,
-      temperature : 25 + 5  * Math.sin(i / 20) + (Math.random() - 0.5) * 2,
-      humidity    : 55 + 10 * Math.cos(i / 18) + (Math.random() - 0.5) * 5,
-      light       : Math.max(0, 800 + 600 * Math.sin((i / count) * Math.PI) + (Math.random() - 0.5) * 200),
-      pH          : 6.5 + 0.5 * Math.sin(i / 25) + (Math.random() - 0.5) * 0.2,
-      flowVolume  : Math.random() > 0.85 ? 80 + Math.random() * 40 : 0,
-      flowRate    : 0,
-    };
-  });
-}
 
-function generateMockWatering() {
-  return Array.from({ length: 8 }, (_, i) => ({
-    timestamp : new Date(Date.now() - i * 8 * 3_600_000).toISOString(),
-    duration  : 15 + Math.floor(Math.random() * 25),
-    volumeML  : 80 + Math.floor(Math.random() * 60),
-  }));
-}
 
 const containerVariants = {
   hidden:  { opacity: 0 },
@@ -231,14 +204,14 @@ function Sparkline({ data, dataKey, color }) {
 // ─── Main Page ────────────────────────────────────────────────────────────────
 export default function AnalyticsPage() {
   const [loading,       setLoading]       = useState(true);
-  const [isTestMode,    setIsTestMode]    = useState(false);
+  
   const [selectedRange, setSelectedRange] = useState(TIME_RANGES[1]);
   const [sensorData,    setSensorData]    = useState([]);
   const [diseaseData,   setDiseaseData]   = useState([]);
   const [wateringData,  setWateringData]  = useState([]);
   const [sensorConfigs, setSensorConfigs] = useState([]);
   const [activeSensorId, setActiveSensorId] = useState('');
-  const [kpi, setKpi] = useState({ waterUsed: 0, avgMoisture: 0, diseaseCount: 0, uptime: 99.8 });
+  const [kpi, setKpi] = useState({ waterUsed: 0, avgMoisture: 0, diseaseCount: 0, uptime: 0 });
 
   useEffect(() => {
     const loadSensors = () => {
@@ -273,14 +246,8 @@ export default function AnalyticsPage() {
       const diseases  = diseaseResp?.data?.detections || [];
       let waterLogs = wateringResp?.data || [];
 
-      // Testmode / no-data fallback
-      if (sensors.length === 0) {
-        setIsTestMode(true);
-        sensors   = generateMockData(selectedRange.hours);
-        waterLogs = waterLogs.length === 0 ? generateMockWatering() : waterLogs;
-      } else {
-        setIsTestMode(false);
-      }
+      // No mock data generation fallback anymore
+      setIsTestMode(false);
 
       const parsed = sensors.map(s => ({
         ...s,
@@ -296,28 +263,19 @@ export default function AnalyticsPage() {
 
       const avgMoisture      = parsed.length ? parsed.reduce((a, c) => a + (c.soilMoisture || 0), 0) / parsed.length : 0;
       const totalWater       = parsed.reduce((a, c) => a + (c.flowVolume || 0), 0);
-      const expectedPayloads = (selectedRange.hours * 3600) / 15;
-      const uptimeCalc       = parsed.length > 0 ? Math.min(100, (parsed.length / expectedPayloads) * 100) : 99.8;
+      const expectedPayloads = (selectedRange.hours * 3600) / 15; // Assuming payload every 15s
+      const uptimeCalc       = parsed.length > 0 ? Math.min(100, (parsed.length / expectedPayloads) * 100) : 0;
 
       setKpi({
         waterUsed   : totalWater,
         avgMoisture,
         diseaseCount: diseases.length,
-        uptime      : uptimeCalc >= 99 ? uptimeCalc.toFixed(1) : 99.9,
+        uptime      : uptimeCalc.toFixed(1),
       });
 
     } catch (e) {
       if (e.name !== 'CanceledError' && e.message !== 'canceled') {
-        // Full API failure — show mock data so page never looks broken
-        setIsTestMode(true);
-        const mock      = generateMockData(selectedRange.hours);
-        const mockWater = generateMockWatering();
-        setSensorData(mock);
-        setWateringData(mockWater);
-        setDiseaseData([]);
-        const avgMoisture = mock.reduce((a, c) => a + c.soilMoisture, 0) / mock.length;
-        setKpi({ waterUsed: 850, avgMoisture, diseaseCount: 0, uptime: 99.9 });
-        console.warn('[AnalyticsPage] API failed — showing mock data.');
+        console.warn('[AnalyticsPage] API failed: ', e);
       }
     } finally {
       setLoading(false);
@@ -594,44 +552,7 @@ export default function AnalyticsPage() {
       variants={containerVariants}
     >
 
-      {/* ── Header ── */}
-      <header className={styles.header}>
-        <motion.div variants={itemVariants}>
-          <h1 className={styles.title}>Analytics &amp; Intelligence</h1>
-          <p className={styles.subtitle}>Historical sensor data, trends &amp; plant health overview</p>
-        </motion.div>
-
-        <motion.div className={styles.headerRight} variants={itemVariants}>
-          <WeatherCard />
-          <div className={styles.controls}>
-            {TIME_RANGES.map(r => (
-              <button
-                key={r.label}
-                className={`${styles.timeRangeBtn} ${selectedRange.label === r.label ? styles.active : ''}`}
-                onClick={() => setSelectedRange(r)}
-              >
-                {r.label}
-              </button>
-            ))}
-          </div>
-        </motion.div>
-      </header>
-
-      {/* ── Testmode Banner ── */}
-      <AnimatePresence>
-        {isTestMode && (
-          <motion.div
-            className={styles.testmodeBanner}
-            initial={{ opacity: 0, y: -8 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -8 }}
-            transition={{ duration: 0.3 }}
-          >
-            ⚠️&nbsp; <strong>Demo / Test Mode</strong> — No real sensor data found for this range.
-            Showing simulated data. This banner disappears automatically once ESP32 sends readings.
-          </motion.div>
-        )}
-      </AnimatePresence>
+      
 
       {/* ── KPI Row ── */}
       <div className={styles.kpiGrid}>

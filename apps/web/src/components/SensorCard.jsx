@@ -14,6 +14,7 @@
  */
 import React, { useState, useEffect, useRef } from 'react';
 import '../styles/sensorcard.css';
+import { getSensorRegistry, getStatusForValue, getSensorValue } from '../utils/sensorRegistry';
 
 // ── Sensor meta-data ────────────────────────────────────────────────────────
 const SENSORS = {
@@ -253,10 +254,44 @@ function ConnDot({ live }) {
 
 // ── Root export ─────────────────────────────────────────────────────────────
 export function SensorCard({ sensors, isConnected }) {
-  const entries = Object.entries(SENSORS).map(([key, info]) => ({
-    key, info,
-    value: sensors?.[key],
-  }));
+  const activeSensors = getSensorRegistry().filter(s => s.showInDashboard !== false && s.enabled !== false);
+
+  const entries = activeSensors.map(s => {
+    const defaultVisuals = SENSORS[s.key] || {
+      faIcon: 'fa-microchip',
+      color: '#6366f1', // Indigo fallback
+      hardware: { model: 'Custom Sensor', type: 'Generic', range: 'N/A', voltage: 'N/A', output: 'N/A', accuracy: 'N/A', description: 'User-defined custom sensor.' },
+    };
+
+    let value = undefined;
+    if (sensors) {
+      value = getSensorValue(sensors, s);
+      if (value === null) value = undefined;
+    }
+
+    const maxThreshold = Number(s.maxThreshold) || 100;
+    const warningThreshold = Number(s.warningThreshold) || maxThreshold;
+    const minThreshold = Number(s.minThreshold) || 0;
+
+    const info = {
+      label: s.name,
+      unit: s.unit || '',
+      faIcon: s.faIcon || defaultVisuals.faIcon,
+      color: s.color || defaultVisuals.color,
+      maxDisplay: maxThreshold > 0 ? Math.ceil(maxThreshold * 1.2) : 100,
+      hardware: defaultVisuals.hardware,
+      optimal: { min: minThreshold, max: warningThreshold },
+      status: (val) => {
+        if (val === undefined || val === null) return 'good';
+        const res = getStatusForValue(s, val);
+        if (res.level === 'critical') return 'critical';
+        if (res.level === 'warning') return 'warning';
+        return 'good';
+      },
+    };
+
+    return { key: s.key, info, value };
+  });
 
   const liveCount = entries.filter(e => e.value !== undefined).length;
 
