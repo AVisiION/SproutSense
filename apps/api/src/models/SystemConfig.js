@@ -70,6 +70,10 @@ const systemConfigSchema = new mongoose.Schema({
     type: Boolean,
     default: false
   },
+  wifiConfiguration: {
+    ssid: { type: String, default: '' },
+    password: { type: String, default: '' }
+  },
   espIp: {
     type: String,
     default: ''

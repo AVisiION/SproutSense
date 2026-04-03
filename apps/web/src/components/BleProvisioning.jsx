@@ -1,86 +1,59 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import api from '../utils/api';
 import './BleProvisioning.css';
-
-const PROV_SERVICE_UUID     = '4fafc201-1fb5-459e-8fcc-c5c9c331914b';
-const PROV_CHAR_SSID_UUID   = 'beb5483e-36e1-4688-b7f5-ea07361b26a8';
-const PROV_CHAR_PASS_UUID   = '1cce1ea8-bd34-4813-a00a-c676ef9d107b';
-const PROV_CHAR_STATUS_UUID = '190bf8c3-3765-4f32-bbec-9dcd61a6b0c2';
 
 export default function BleProvisioning() {
   const [ssid, setSsid] = useState('');
   const [password, setPassword] = useState('');
   const [status, setStatus] = useState('');
   const [isProvisioning, setIsProvisioning] = useState(false);
-  const [deviceConnected, setDeviceConnected] = useState(false);
 
-  const startProvisioning = async () => {
-    if (!navigator.bluetooth) {
-      alert('Web Bluetooth is not supported in this browser. Please use Chrome or Edge.');
-      return;
-    }
-    
+  useEffect(() => {
+    // Optionally fetch current config to pre-fill SSID if needed
+    const fetchConfig = async () => {
+      try {
+        const res = await api.get('/config');
+        if (res.data?.config?.wifiConfiguration?.ssid) {
+          setSsid(res.data.config.wifiConfiguration.ssid);
+        }
+      } catch (err) {
+        console.error('Failed to load config', err);
+      }
+    };
+    fetchConfig();
+  }, []);
+
+  const saveWifiConfig = async () => {
     if (!ssid || !password) {
       alert('Please enter both SSID and Password.');
       return;
     }
 
     setIsProvisioning(true);
-    setStatus('Requesting Bluetooth Device...');
+    setStatus('Saving WiFi credentials to backend...');
 
     try {
-      const device = await navigator.bluetooth.requestDevice({
-        filters: [{ services: [PROV_SERVICE_UUID] }],
-        optionalServices: [PROV_SERVICE_UUID]
+      await api.patch('/config/ESP32-SENSOR', {
+        wifiConfiguration: { ssid, password }
+      });
+      await api.patch('/config/ESP32-CAM', {
+        wifiConfiguration: { ssid, password }
       });
 
-      setStatus('Connecting to GATT Server...');
-      const server = await device.gatt.connect();
-      setDeviceConnected(true);
-
-      setStatus('Getting Service...');
-      const service = await server.getPrimaryService(PROV_SERVICE_UUID);
-
-      setStatus('Getting Characteristics...');
-      const ssidChar = await service.getCharacteristic(PROV_CHAR_SSID_UUID);
-      const passChar = await service.getCharacteristic(PROV_CHAR_PASS_UUID);
-      const statusChar = await service.getCharacteristic(PROV_CHAR_STATUS_UUID);
-
-      setStatus('Writing SSID...');
-      await ssidChar.writeValue(new TextEncoder().encode(ssid));
-
-      setStatus('Writing Password...');
-      await passChar.writeValue(new TextEncoder().encode(password));
-
-      setStatus('Waiting for device connection status...');
-      
-      // Start listening for notifications on the status characteristic
-      await statusChar.startNotifications();
-      statusChar.addEventListener('characteristicvaluechanged', (event) => {
-        const value = new TextDecoder().decode(event.target.value);
-        setStatus(`Device Status: ${value}`);
-        if (value === 'CONNECTED') {
-          setStatus('Provisioning Successful! Device is connected to WiFi.');
-          setTimeout(() => {
-            device.gatt.disconnect();
-            setDeviceConnected(false);
-            setIsProvisioning(false);
-          }, 3000);
-        }
-      });
-      
+      setStatus('Credentials saved successfully! Your devices will sync them shortly.');
     } catch (error) {
       console.error(error);
       setStatus(`Error: ${error.message}`);
+    } finally {
       setIsProvisioning(false);
-      setDeviceConnected(false);
     }
   };
 
   return (
     <div className="ble-provisioning-container">
-      <h3>Bluetooth Device Provisioning</h3>
+      <h3>Device WiFi Settings</h3>
       <p className="help-text">
-        If your device cannot connect to WiFi, put it in provisioning mode and use Bluetooth to send new credentials.
+        Set the target WiFi network for your devices. The devices must first connect via the default "SproutSense_Default" network before they can download these settings.
       </p>
 
       <div className="form-group">
@@ -107,14 +80,14 @@ export default function BleProvisioning() {
 
       <button 
         className="btn-primary btn-provision" 
-        onClick={startProvisioning} 
+        onClick={saveWifiConfig} 
         disabled={isProvisioning}
       >
-        {isProvisioning ? 'Provisioning...' : 'Provision via Bluetooth'}
+        {isProvisioning ? 'Saving...' : 'Save WiFi Credentials'}
       </button>
 
       {status && (
-        <div className={`status-message ${deviceConnected ? 'active' : ''}`}>
+        <div className="status-message active">
           {status}
         </div>
       )}

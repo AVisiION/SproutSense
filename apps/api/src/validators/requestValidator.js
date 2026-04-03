@@ -167,6 +167,16 @@ export const validateConfigUpdate = [
     .isInt({ min: 1000, max: 3600000 })
     .withMessage('Sensor read interval must be between 1000ms and 3600000ms'),
 
+  body('wifiConfiguration.ssid')
+    .optional()
+    .isString()
+    .withMessage('WiFi SSID must be a string'),
+
+  body('wifiConfiguration.password')
+    .optional()
+    .isString()
+    .withMessage('WiFi Password must be a string'),
+
   body('espIp')
     .optional({ checkFalsy: true })
     .isIP()

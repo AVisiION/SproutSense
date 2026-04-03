@@ -658,8 +658,23 @@ function App() {
 
   // ── Render ─────────────────────────────────────────────────────────────
 
+  useEffect(() => {
+    if (!auth.loading) {
+      // Signal the loading screen to dismiss once auth is resolved and UI is updating.
+      // Double rAF ensures the browser has committed the first paint,
+      // then a 150 ms buffer guarantees the initial layout is visible.
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          setTimeout(() => {
+            window.dispatchEvent(new Event('sproutsense:ready'));
+          }, 150);
+        });
+      });
+    }
+  }, [auth.loading]);
+
   if (auth.loading) {
-    return <div style={{ minHeight: '100vh', display: 'grid', placeItems: 'center', color: 'var(--text-color)' }}>Loading secure session...</div>;
+    return null; // The #ss-loader in index.html will remain visible during this time
   }
 
   if (isAuthPage) {
