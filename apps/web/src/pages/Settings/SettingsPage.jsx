@@ -7,6 +7,7 @@ import { format } from 'date-fns';
 import './SettingsPage.css';
 import { configAPI, sensorAPI, deviceAPI } from '../../utils/api';
 import { useAuth } from '../../context/AuthContext';
+import BleProvisioning from '../../components/BleProvisioning';
 
 /* ──── Inline SVG icons ───────────────────────────────────────── */
 const SVG = {
@@ -506,6 +507,8 @@ export default function SettingsPage({
             <h2>Device Pairing</h2>
           </div>
           <div className="sp-card-body">
+            <BleProvisioning />
+
             <div className="sp-device-fields">
               <div className="sp-field">
                 <label className="sp-label">Device ID</label>
