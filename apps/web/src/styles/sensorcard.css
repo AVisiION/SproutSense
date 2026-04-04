@@ -89,12 +89,18 @@
 /* ── Sensor grid ─────────────────────────────────────────── */
 .sc-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  grid-template-columns: 1fr;
   gap: 14px;
 }
 
 @media (min-width: 1280px) {
-  .sc-grid { grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 18px; }
+  .sc-grid { grid-template-columns: 1fr; gap: 18px; }
+}
+
+@media (max-width: 1080px) {
+  .sc-grid {
+    grid-template-columns: 1fr;
+  }
 }
 
 /* ── Metric card ─────────────────────────────────────────── */
@@ -469,6 +475,27 @@
 [data-theme='light'] .sc-drawer-desc { color: #374151; }
 
 /* ── Responsive ───────────────────────────────────────────── */
+@media (max-width: 900px) {
+  .sc-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .sc-card-btn {
+    grid-template-columns: 70px minmax(0, 1fr) auto;
+    gap: 10px;
+  }
+
+  .sc-gauge-wrap,
+  .sc-gauge-svg {
+    width: 70px;
+    height: 70px;
+  }
+
+  .sc-card-value {
+    font-size: 24px;
+  }
+}
+
 @media (max-width: 600px) {
   .sc-card-btn {
     grid-template-columns: 64px 1fr auto;

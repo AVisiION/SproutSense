@@ -116,7 +116,7 @@
 ══════════════════════════════════════════════════════ */
 .sp-grid {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 420px), 1fr));
   gap: 1.25rem;
   width: 100%;
 }
@@ -139,6 +139,7 @@
   display: flex;
   flex-direction: column;
   transition: box-shadow 0.25s;
+  min-width: 0;
 }
 
 .sp-card--hidden {
@@ -452,13 +453,14 @@
    SETTINGS SELECT
 ══════════════════════════════════════════════════════ */
 .sp-select {
-  min-width: 220px;
+  min-width: 0;
+  width: min(100%, 320px);
   max-width: 100%;
   padding: 0.5rem 2rem 0.5rem 0.8rem;
   border-radius: 10px;
-  border: 1px solid rgba(255,255,255,0.12);
-  background: rgba(255,255,255,0.06);
-  color: var(--text-color);
+  border: 1px solid rgba(255,255,255,0.15);
+  background: rgba(255,255,255,0.05);
+  color: var(--text-color, #f0fdf4);
   font-size: 0.82rem;
   font-weight: 600;
   font-family: inherit;
@@ -472,7 +474,25 @@
 }
 
 .sp-select option {
+  color: #f0fdf4;
+  background: #1a1a1a;
+  padding: 0.5rem;
+}
+
+[data-theme='light'] .sp-select {
+  background: rgba(0,0,0,0.04);
+  border-color: rgba(0,0,0,0.10);
   color: #0b1410;
+}
+
+[data-theme='light'] .sp-select:focus {
+  border-color: rgba(34, 197, 94,0.50);
+  box-shadow: 0 0 0 3px rgba(34, 197, 94,0.12);
+}
+
+[data-theme='light'] .sp-select option {
+  color: #0b1410;
+  background: #ffffff;
 }
 
 /* ══════════════════════════════════════════════════════
@@ -785,6 +805,26 @@
 /* Tablet: 2-col grid still works, field-grid goes 1-col */
 @media (max-width: 900px) {
   .sp-page { padding: 1.25rem 1rem 2.5rem; }
+}
+
+@media (max-width: 1100px) {
+  .sp-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .sp-card-body {
+    padding: 1.1rem 1.15rem;
+  }
+
+  .sp-select {
+    width: 100%;
+  }
+
+  .sp-field-grid,
+  .sp-device-fields,
+  .sp-about-grid {
+    grid-template-columns: 1fr;
+  }
 }
 
 /* Tablet portrait: single column grid */

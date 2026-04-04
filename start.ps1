@@ -4,6 +4,48 @@
 Write-Host "Starting Smart Watering System (Development Mode)..." -ForegroundColor Green
 Write-Host ""
 
+function Wait-ForTcpPort {
+    param(
+        [Parameter(Mandatory = $true)][int]$Port,
+        [int]$TimeoutSeconds = 30,
+        [string]$Label = "Service"
+    )
+
+    $deadline = (Get-Date).AddSeconds($TimeoutSeconds)
+    while ((Get-Date) -lt $deadline) {
+        $listening = Get-NetTCPConnection -State Listen -ErrorAction SilentlyContinue |
+            Where-Object { $_.LocalPort -eq $Port } |
+            Select-Object -First 1
+
+        if ($null -ne $listening) {
+            Write-Host "$Label is listening on port $Port" -ForegroundColor Green
+            return $true
+        }
+
+        Start-Sleep -Milliseconds 500
+    }
+
+    Write-Host "$Label did not become ready on port $Port within $TimeoutSeconds seconds" -ForegroundColor Yellow
+    return $false
+}
+
+function Test-HttpUrl {
+    param(
+        [Parameter(Mandatory = $true)][string]$Url,
+        [string]$Label = "Service"
+    )
+
+    try {
+        $res = Invoke-WebRequest -Uri $Url -UseBasicParsing -TimeoutSec 5
+        Write-Host "$Label reachable: $Url (HTTP $($res.StatusCode))" -ForegroundColor Green
+        return $true
+    }
+    catch {
+        Write-Host "$Label not reachable yet: $Url" -ForegroundColor Yellow
+        return $false
+    }
+}
+
 # Check database mode (.env Atlas URI vs local mongod)
 Write-Host "Checking database mode..." -ForegroundColor Cyan
 $backendEnvPath = Join-Path $PSScriptRoot "apps\api\.env"
@@ -34,12 +76,17 @@ if ($usesAtlas) {
 Write-Host ""
 Write-Host "Starting Backend Server..." -ForegroundColor Cyan
 Start-Process powershell -ArgumentList "-NoExit", "-Command", "cd apps/api; Write-Host 'Backend Server (DEV - Legacy Watch)' -ForegroundColor Green; npm run dev -- -L"
-Start-Sleep -Seconds 3
+Wait-ForTcpPort -Port 5000 -TimeoutSeconds 40 -Label "Backend API" | Out-Null
+Test-HttpUrl -Url "http://localhost:5000" -Label "Backend API" | Out-Null
 
 # Start Frontend
 Write-Host "Starting Frontend Dashboard..." -ForegroundColor Cyan
 Start-Process powershell -ArgumentList "-NoExit", "-Command", "cd apps/web; Write-Host 'Frontend Dashboard (DEV - Polling Watch)' -ForegroundColor Blue; `$env:CHOKIDAR_USEPOLLING='true'; `$env:CHOKIDAR_INTERVAL='300'; npm run dev"
-Start-Sleep -Seconds 2
+Wait-ForTcpPort -Port 3000 -TimeoutSeconds 40 -Label "Frontend Dashboard" | Out-Null
+Test-HttpUrl -Url "http://localhost:3000" -Label "Frontend Dashboard" | Out-Null
+
+Write-Host "Opening dashboard in browser..." -ForegroundColor Cyan
+Start-Process "http://localhost:3000"
 
 Write-Host ""
 Write-Host "Development System Started!" -ForegroundColor Green

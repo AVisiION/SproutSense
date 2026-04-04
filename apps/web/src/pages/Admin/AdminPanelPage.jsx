@@ -4,12 +4,12 @@
  * Sections: Overview, Devices, Config, Raw Data, Logs, Mock Data
  * Features: Font Awesome icons, animated cards, live log feed, interactive controls
  */
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { aiAPI, configAPI, sensorAPI, wateringAPI, usersAPI, deviceAPI } from '../../utils/api';
 import { getSensorRegistry, upsertSensor, removeSensor } from '../../utils/sensorRegistry';
-import { ACCOUNT_STATUS, ROLE } from '../../auth/permissions';
+import { ACCOUNT_STATUS, ROLE, PERMISSION } from '../../auth/permissions';
 import './Admin.css';
 import { setMockEnabled, isMockEnabled } from '../../services/mockDataService';
 import MockDataPanel from './MockDataPanel';
@@ -46,6 +46,50 @@ const DEVICE_KEY_PRESETS = [
 ];
 
 const LOG_TYPES = { info: 'info', success: 'success', warning: 'warning', error: 'error' };
+
+// ─── Validation Utilities ─────────────────────────────────────────────────────
+const validateEmail = (email) => {
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return emailRegex.test(email) ? null : 'Invalid email format';
+};
+
+const validatePassword = (password, minLength = 12) => {
+  if (password.length < minLength) return `Must be at least ${minLength} characters`;
+  if (!/[a-z]/.test(password)) return 'Must contain lowercase letters';
+  if (!/[A-Z]/.test(password)) return 'Must contain uppercase letters';
+  if (!/[0-9]/.test(password)) return 'Must contain numbers';
+  if (!/[!@#$%^&*(),.?":{}|<>]/.test(password)) return 'Must contain special characters';
+  return null;
+};
+
+const validateSensorForm = (form) => {
+  const errors = {};
+  if (!form.name?.trim()) errors.name = 'Sensor name required';
+  if (!form.key?.trim()) errors.key = 'Sensor key required';
+  if (!form.unit?.trim()) errors.unit = 'Unit required';
+  if (typeof form.minThreshold !== 'number') errors.minThreshold = 'Min threshold required';
+  if (typeof form.maxThreshold !== 'number') errors.maxThreshold = 'Max threshold required';
+  if (form.minThreshold >= form.maxThreshold) {
+    errors.maxThreshold = 'Must be greater than min threshold';
+  }
+  return errors;
+};
+
+const validateUserForm = (form, isCreate = true) => {
+  const errors = {};
+  if (!form.fullName?.trim()) errors.fullName = 'Full name required';
+  if (!form.email?.trim()) errors.email = 'Email required';
+  const emailError = validateEmail(form.email);
+  if (emailError) errors.email = emailError;
+  if (isCreate) {
+    if (!form.password) errors.password = 'Password required';
+    const minLen = form.roleKey === ROLE.ADMIN ? 14 : 12;
+    const passError = validatePassword(form.password, minLen);
+    if (passError) errors.password = passError;
+  }
+  return errors;
+};
+
 
 const DEFAULT_SENSOR_FORM = {
   name: '',
@@ -134,10 +178,17 @@ const buildDefaultPlantWateringConfig = (cfgRaw) => {
 };
 
 export default function AdminPanelPage() {
-  const { logout, user } = useAuth();
+  const { logout, user, hasPermission } = useAuth();
   const adminUser = user?.fullName || user?.email || 'admin';
   const navigate = useNavigate();
   const logEndRef = useRef(null);
+
+  // Permission checks
+  const canManageUsers = hasPermission(PERMISSION.USERS_UPDATE);
+  const canCreateUsers = hasPermission(PERMISSION.USERS_CREATE);
+  const canDisableUsers = hasPermission(PERMISSION.USERS_DISABLE);
+  const canUpdateConfig = hasPermission(PERMISSION.CONFIG_UPDATE);
+  const canReadConfig = hasPermission(PERMISSION.CONFIG_READ);
 
   const [activeSection, setActiveSection]   = useState('overview');
   const [systemInfo,    setSystemInfo]      = useState(null);
@@ -160,14 +211,16 @@ export default function AdminPanelPage() {
   const [refreshing,    setRefreshing]       = useState(false);
   const [actionLog,     setActionLog]        = useState([]);
   const [uptime,        setUptime]           = useState(0);
-  const [sidebarOpen,   setSidebarOpen]      = useState(true);
+  const [sidebarOpen,   setSidebarOpen]      = useState(typeof window !== 'undefined' && window.innerWidth >= 768);
   const [sensorRegistry, setSensorRegistry] = useState([]);
   const [sensorForm, setSensorForm] = useState(DEFAULT_SENSOR_FORM);
+  const [sensorFormErrors, setSensorFormErrors] = useState({});
   const [editingSensorId, setEditingSensorId] = useState(null);
   const [users, setUsers] = useState([]);
   const [usersLoading, setUsersLoading] = useState(false);
   const [usersQuery, setUsersQuery] = useState('');
   const [userForm, setUserForm] = useState(DEFAULT_USER_FORM);
+  const [userFormErrors, setUserFormErrors] = useState({});
   const [creatingUser, setCreatingUser] = useState(false);
   const [uiPreferences, setUiPreferences] = useState(DEFAULT_UI_PREFERENCES);
   const [savingUiPreferences, setSavingUiPreferences] = useState(false);
@@ -429,6 +482,11 @@ export default function AdminPanelPage() {
       return;
     }
 
+    if (!canUpdateConfig) {
+      log('Device key creation blocked: insufficient permissions', LOG_TYPES.error);
+      return;
+    }
+
     setCreatingDeviceKey(true);
     try {
       const res = await deviceAPI.createKey({
@@ -438,15 +496,21 @@ export default function AdminPanelPage() {
       setGeneratedDeviceSecret(res?.device?.deviceSecret);
       setDeviceKeyForm({ deviceId: '', displayName: '' });
       await loadDeviceKeys();
-      log(`Device key created for ${deviceId}`, LOG_TYPES.success);
+      log(`Device key created for ${deviceId}`, LOG_TYPES.success, { deviceId });
     } catch (error) {
-      log(`Failed to create device key: ${error?.response?.data?.message || error.message}`, LOG_TYPES.error);
+      const message = error?.response?.data?.message || error.message;
+      log(`Failed to create device key: ${message}`, LOG_TYPES.error, { deviceId });
     } finally {
       setCreatingDeviceKey(false);
     }
   };
 
   const handleCreatePresetDeviceKey = async (preset) => {
+    if (!canUpdateConfig) {
+      log('Device key creation blocked: insufficient permissions', LOG_TYPES.error);
+      return;
+    }
+
     setDeviceKeyForm({
       deviceId: preset.deviceId,
       displayName: preset.displayName,
@@ -461,30 +525,43 @@ export default function AdminPanelPage() {
       await loadDeviceKeys();
       log(`Device key created for ${preset.deviceId}`, LOG_TYPES.success);
     } catch (error) {
-      log(`Failed to create device key: ${error?.response?.data?.message || error.message}`, LOG_TYPES.error);
+      const message = error?.response?.data?.message || error.message;
+      log(`Failed to create device key: ${message}`, LOG_TYPES.error);
     } finally {
       setCreatingDeviceKey(false);
     }
   };
 
   const handleDeleteDeviceKey = async (deviceId) => {
-    if (!window.confirm(`Delete device key for ${deviceId}?`)) return;
+    if (!canUpdateConfig) {
+      log('Device key deletion blocked: insufficient permissions', LOG_TYPES.error);
+      return;
+    }
+
+    if (!window.confirm(`Delete device key for ${deviceId}? This action cannot be undone.`)) return;
     try {
       await deviceAPI.deleteKey(deviceId);
       await loadDeviceKeys();
-      log(`Device key ${deviceId} deleted`, LOG_TYPES.warning);
+      log(`Device key ${deviceId} deleted`, LOG_TYPES.warning, { deviceId });
     } catch (error) {
-      log(`Failed to delete device key: ${error?.response?.data?.message || error.message}`, LOG_TYPES.error);
+      const message = error?.response?.data?.message || error.message;
+      log(`Failed to delete device key: ${message}`, LOG_TYPES.error);
     }
   };
 
   const handleToggleDeviceKeyStatus = async (deviceId) => {
+    if (!canUpdateConfig) {
+      log('Device key toggle blocked: insufficient permissions', LOG_TYPES.error);
+      return;
+    }
+
     try {
       await deviceAPI.toggleKeyStatus(deviceId);
       await loadDeviceKeys();
-      log(`Device key ${deviceId} status toggled`, LOG_TYPES.info);
+      log(`Device key ${deviceId} status toggled`, LOG_TYPES.info, { deviceId });
     } catch (error) {
-      log(`Failed to toggle device key status: ${error?.response?.data?.message || error.message}`, LOG_TYPES.error);
+      const message = error?.response?.data?.message || error.message;
+      log(`Failed to toggle device key status: ${message}`, LOG_TYPES.error);
     }
   };
 
@@ -569,22 +646,36 @@ export default function AdminPanelPage() {
 
   const handleSensorFormChange = (field, value) => {
     setSensorForm(prev => ({ ...prev, [field]: value }));
+    // Real-time validation
+    setSensorFormErrors(prev => {
+      const next = { ...prev };
+      if (field === 'name' && !value?.trim()) next.name = 'Sensor name required';
+      else if (field === 'name') delete next.name;
+      if (field === 'key' && !value?.trim()) next.key = 'Sensor key required';
+      else if (field === 'key') delete next.key;
+      return next;
+    });
   };
 
   const resetSensorForm = () => {
     setSensorForm(DEFAULT_SENSOR_FORM);
+    setSensorFormErrors({});
     setEditingSensorId(null);
   };
 
   const handleSensorEdit = (sensor) => {
     setEditingSensorId(sensor.id);
     setSensorForm({ ...sensor });
+    setSensorFormErrors({});
     setActiveSection('sensors');
   };
 
   const handleSensorSave = () => {
-    if (!sensorForm.name.trim() || !sensorForm.key.trim()) {
-      log('Sensor save blocked: name and key are required', LOG_TYPES.warning);
+    const errors = validateSensorForm(sensorForm);
+    setSensorFormErrors(errors);
+    
+    if (Object.keys(errors).length > 0) {
+      log('Sensor save blocked: validation failed', LOG_TYPES.warning, errors);
       return;
     }
 
@@ -618,6 +709,11 @@ export default function AdminPanelPage() {
         return;
       }
 
+      if (!canUpdateConfig) {
+        log('Limits update blocked: insufficient permissions', LOG_TYPES.error);
+        return;
+      }
+
       setSavingLimits(true);
 
       const payload = {
@@ -633,10 +729,11 @@ export default function AdminPanelPage() {
       };
 
       await configAPI.update('ESP32-SENSOR', payload);
-      log('Limits updated from admin panel', LOG_TYPES.success, payload);
+      log('System limits updated successfully', LOG_TYPES.success, payload);
       await fetchAllData(true);
     } catch (err) {
-      log(`Failed to update limits: ${err.message}`, LOG_TYPES.error);
+      const message = err?.response?.data?.message || err.message;
+      log(`Failed to update limits: ${message}`, LOG_TYPES.error);
     } finally {
       setSavingLimits(false);
     }
@@ -644,44 +741,68 @@ export default function AdminPanelPage() {
 
   const handleUserRoleUpdate = async (targetUser, nextRole) => {
     if (!targetUser?.id || !nextRole || targetUser.role === nextRole) return;
+    
+    if (!canManageUsers) {
+      log('Role update blocked: insufficient permissions', LOG_TYPES.error);
+      return;
+    }
 
     try {
       await usersAPI.updateRole(targetUser.id, nextRole);
       setUsers((prev) => prev.map((item) => (item.id === targetUser.id ? { ...item, role: nextRole } : item)));
-      log(`Role updated for ${targetUser.email} -> ${nextRole}`, LOG_TYPES.success);
+      log(`Role updated for ${targetUser.email}: ${targetUser.role} → ${nextRole}`, LOG_TYPES.success);
     } catch (err) {
-      log(`Role update failed for ${targetUser.email}: ${err.message}`, LOG_TYPES.error);
+      const message = err?.response?.data?.message || err.message;
+      log(`Role update failed for ${targetUser.email}: ${message}`, LOG_TYPES.error);
     }
   };
 
   const handleUserStatusUpdate = async (targetUser, nextStatus) => {
     if (!targetUser?.id || !nextStatus || targetUser.accountStatus === nextStatus) return;
+    
+    if (!canDisableUsers) {
+      log('Status update blocked: insufficient permissions', LOG_TYPES.error);
+      return;
+    }
 
     try {
       await usersAPI.updateAccountStatus(targetUser.id, nextStatus);
       setUsers((prev) => prev.map((item) => (item.id === targetUser.id ? { ...item, accountStatus: nextStatus } : item)));
-      log(`Status updated for ${targetUser.email} -> ${nextStatus}`, LOG_TYPES.success);
+      log(`Account status updated for ${targetUser.email}: ${targetUser.accountStatus} → ${nextStatus}`, LOG_TYPES.success);
     } catch (err) {
-      log(`Status update failed for ${targetUser.email}: ${err.message}`, LOG_TYPES.error);
+      const message = err?.response?.data?.message || err.message;
+      log(`Status update failed for ${targetUser.email}: ${message}`, LOG_TYPES.error);
     }
   };
 
   const handleDeleteUser = async (targetUser) => {
     if (!targetUser?.id) return;
-    if (!window.confirm(`Delete user ${targetUser.email}? This cannot be undone.`)) return;
+    
+    if (!canDisableUsers) {
+      log('User deletion blocked: insufficient permissions', LOG_TYPES.error);
+      return;
+    }
+    
+    if (!window.confirm(`Delete user ${targetUser.email}? This action cannot be undone.`)) return;
 
     try {
       await usersAPI.delete(targetUser.id);
       setUsers((prev) => prev.filter((item) => item.id !== targetUser.id));
-      log(`User deleted: ${targetUser.email}`, LOG_TYPES.warning);
+      log(`User deleted: ${targetUser.email}`, LOG_TYPES.warning, { userId: targetUser.id });
     } catch (err) {
-      log(`Delete failed for ${targetUser.email}: ${err.message}`, LOG_TYPES.error);
+      const message = err?.response?.data?.message || err.message;
+      log(`User deletion failed for ${targetUser.email}: ${message}`, LOG_TYPES.error);
     }
   };
 
   const handleUserSensorVisibilityUpdate = async (targetUser, nextVisible) => {
     if (!targetUser?.id || typeof nextVisible !== 'boolean') return;
     if ((targetUser.sensorDataVisible !== false) === nextVisible) return;
+    
+    if (!canManageUsers) {
+      log('Sensor visibility update blocked: insufficient permissions', LOG_TYPES.error);
+      return;
+    }
 
     try {
       await usersAPI.updateSensorVisibility(targetUser.id, nextVisible);
@@ -690,51 +811,70 @@ export default function AdminPanelPage() {
       )));
       log(`Sensor data ${nextVisible ? 'enabled' : 'hidden'} for ${targetUser.email}`, LOG_TYPES.success);
     } catch (err) {
-      log(`Sensor visibility update failed for ${targetUser.email}: ${err.message}`, LOG_TYPES.error);
+      const message = err?.response?.data?.message || err.message;
+      log(`Sensor visibility update failed for ${targetUser.email}: ${message}`, LOG_TYPES.error);
     }
   };
 
   const handleUserFormChange = (field, value) => {
     setUserForm((prev) => ({ ...prev, [field]: value }));
+    // Real-time validation
+    setUserFormErrors(prev => {
+      const next = { ...prev };
+      if (field === 'fullName' && !value?.trim()) next.fullName = 'Full name required';
+      else if (field === 'fullName') delete next.fullName;
+      if (field === 'email') {
+        const emailErr = validateEmail(value);
+        if (emailErr) next.email = emailErr;
+        else delete next.email;
+      }
+      if (field === 'password' && value) {
+        const minLen = userForm.roleKey === ROLE.ADMIN ? 14 : 12;
+        const passErr = validatePassword(value, minLen);
+        if (passErr) next.password = passErr;
+        else delete next.password;
+      }
+      return next;
+    });
   };
 
   const resetUserForm = () => {
     setUserForm(DEFAULT_USER_FORM);
+    setUserFormErrors({});
   };
 
   const handleCreateUser = async () => {
-    const fullName = userForm.fullName.trim();
-    const email = userForm.email.trim();
-    const password = userForm.password;
-    const minPasswordLength = userForm.roleKey === ROLE.ADMIN ? 14 : 12;
-
-    if (!fullName || !email || !password) {
-      log('User create blocked: full name, email, and password are required', LOG_TYPES.warning);
+    // Validate before submission
+    const errors = validateUserForm(userForm, true);
+    setUserFormErrors(errors);
+    
+    if (Object.keys(errors).length > 0) {
+      log('User create blocked: validation failed', LOG_TYPES.warning, errors);
       return;
     }
 
-    if (password.length < minPasswordLength) {
-      log(`User create blocked: password must be at least ${minPasswordLength} characters for ${userForm.roleKey}`, LOG_TYPES.warning);
+    if (!canCreateUsers) {
+      log('User create blocked: insufficient permissions', LOG_TYPES.error);
       return;
     }
 
     try {
       setCreatingUser(true);
       await usersAPI.create({
-        fullName,
-        email,
-        password,
+        fullName: userForm.fullName.trim(),
+        email: userForm.email.trim(),
+        password: userForm.password,
         roleKey: userForm.roleKey,
         accountStatus: userForm.accountStatus,
         emailVerified: userForm.emailVerified,
         sensorDataVisible: userForm.sensorDataVisible,
       });
-      log(`User created manually: ${email}`, LOG_TYPES.success);
+      log(`User created successfully: ${userForm.email.trim()}`, LOG_TYPES.success);
       resetUserForm();
       await loadUsers();
     } catch (err) {
       const message = err?.response?.data?.message || err.message;
-      log(`User create failed: ${message}`, LOG_TYPES.error);
+      log(`User creation failed: ${message}`, LOG_TYPES.error, { email: userForm.email });
     } finally {
       setCreatingUser(false);
     }
@@ -751,13 +891,19 @@ export default function AdminPanelPage() {
   };
 
   const handleSaveUiPreferences = async () => {
+    if (!canUpdateConfig) {
+      log('UI preferences save blocked: insufficient permissions', LOG_TYPES.error);
+      return;
+    }
+
     try {
       setSavingUiPreferences(true);
       await configAPI.update('ESP32-SENSOR', { uiPreferences });
       log('UI preferences saved successfully', LOG_TYPES.success, uiPreferences);
       await fetchAllData(true);
     } catch (err) {
-      log(`Failed to save UI preferences: ${err.message}`, LOG_TYPES.error);
+      const message = err?.response?.data?.message || err.message;
+      log(`Failed to save UI preferences: ${message}`, LOG_TYPES.error);
     } finally {
       setSavingUiPreferences(false);
     }
@@ -848,6 +994,11 @@ export default function AdminPanelPage() {
   };
 
   const handleSavePlantSensorConfig = async () => {
+    if (!canUpdateConfig) {
+      log('Plant config save blocked: insufficient permissions', LOG_TYPES.error);
+      return;
+    }
+
     try {
       setSavingPlantSensorConfig(true);
       const normalizedConfig = Object.entries(plantSensorConfig || {}).reduce((plantAcc, [plantKey, sensorMap]) => {
@@ -877,10 +1028,11 @@ export default function AdminPanelPage() {
         plantSensorConfig: normalizedConfig,
         plantWateringConfig: normalizedWateringConfig,
       });
-      log(`Plant sensor thresholds saved for ${selectedPlantKey}`, LOG_TYPES.success, { selectedPlantKey });
+      log(`Plant configuration saved for ${selectedPlantKey}`, LOG_TYPES.success, { selectedPlantKey, normalizedConfig, normalizedWateringConfig });
       await fetchAllData(true);
     } catch (err) {
-      log(`Failed to save plant sensor thresholds: ${err.message}`, LOG_TYPES.error);
+      const message = err?.response?.data?.message || err.message;
+      log(`Failed to save plant configuration: ${message}`, LOG_TYPES.error);
     } finally {
       setSavingPlantSensorConfig(false);
     }
@@ -926,7 +1078,13 @@ export default function AdminPanelPage() {
             <button
               key={s.id}
               className={`adm-nav-item${activeSection === s.id ? ' active' : ''}`}
-              onClick={() => setActiveSection(s.id)}
+              onClick={() => {
+                setActiveSection(s.id);
+                // Close sidebar on mobile when nav item is clicked
+                if (window.innerWidth < 768) {
+                  setSidebarOpen(false);
+                }
+              }}
             >
               <i className={`fa-solid ${s.icon} adm-nav-icon`} />
               <span className="adm-nav-label">{s.label}</span>
@@ -940,12 +1098,31 @@ export default function AdminPanelPage() {
             <i className="fa-solid fa-clock" />
             <span>Session: {formatUptime(uptime)}</span>
           </div>
+          <button 
+            className="adm-sidebar-close-btn" 
+            onClick={() => setSidebarOpen(false)}
+            title="Close sidebar"
+          >
+            <i className="fa-solid fa-xmark" />
+            <span>Close</span>
+          </button>
           <button className="adm-logout-btn" onClick={handleLogout}>
             <i className="fa-solid fa-right-from-bracket" />
             <span>Logout</span>
           </button>
         </div>
       </aside>
+
+      {/* Mobile Overlay - Closes sidebar when clicked */}
+      <div 
+        className="adm-sidebar-overlay"
+        onClick={() => setSidebarOpen(false)}
+        role="button"
+        tabIndex={0}
+        onKeyDown={(e) => e.key === 'Escape' && setSidebarOpen(false)}
+        aria-label="Close sidebar"
+        style={{ display: sidebarOpen ? 'block' : 'none' }}
+      />
 
       {/* ── Main ──────────────────────────────────────── */}
       <main className="adm-main">
@@ -1174,19 +1351,12 @@ export default function AdminPanelPage() {
                     ) : (
                       <div className="adm-device-keys-table">
                         {deviceKeys.map((key) => (
-                          <div key={key.deviceId} style={{
-                            padding: '1rem',
-                            borderBottom: '1px solid rgba(148, 163, 184, 0.1)',
-                            display: 'grid',
-                            gridTemplateColumns: '1fr auto auto auto',
-                            gap: '0.8rem',
-                            alignItems: 'center',
-                          }}>
-                            <div>
-                              <p style={{ margin: '0 0 0.3rem 0', fontSize: '0.95rem', fontWeight: '600', color: '#e2e8f0' }}>
+                          <div key={key.deviceId} className="adm-device-key-item">
+                            <div className="adm-device-key-info">
+                              <p className="adm-device-key-id">
                                 {key.deviceId}
                               </p>
-                              <p style={{ margin: 0, fontSize: '0.8rem', color: '#94a3b8' }}>
+                              <p className="adm-device-key-display">
                                 {key.displayName || '(No display name)'}
                               </p>
                             </div>

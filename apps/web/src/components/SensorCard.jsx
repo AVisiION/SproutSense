@@ -153,17 +153,18 @@ function RangeBar({ value, min, max, maxDisplay, color }) {
   );
 }
 
-// ── Hardware spec drawer ────────────────────────────────────────────────────
+// ── Main metric card ────────────────────────────────────────────────────────
 function HwDrawer({ hw, unit, optimal, color }) {
   const specs = [
-    ['fa-tag',          'Model',    hw.model],
-    ['fa-microchip',    'Type',     hw.type],
+    ['fa-tag', 'Model', hw.model],
+    ['fa-microchip', 'Type', hw.type],
     ['fa-arrows-left-right', 'Range', hw.range],
-    ['fa-bolt',         'Voltage',  hw.voltage],
-    ['fa-wave-square',  'Output',   hw.output],
-    ['fa-bullseye',     'Accuracy', hw.accuracy],
-    ['fa-circle-check', 'Optimal',  `${optimal.min}–${optimal.max}${unit}`],
+    ['fa-bolt', 'Voltage', hw.voltage],
+    ['fa-wave-square', 'Output', hw.output],
+    ['fa-bullseye', 'Accuracy', hw.accuracy],
+    ['fa-circle-check', 'Optimal', `${optimal.min}–${optimal.max}${unit}`],
   ];
+
   return (
     <div className="sc-drawer">
       <p className="sc-drawer-desc">{hw.description}</p>
@@ -183,20 +184,32 @@ function HwDrawer({ hw, unit, optimal, color }) {
 }
 
 // ── Main metric card ────────────────────────────────────────────────────────
-function MetricCard({ sensorKey, info, value, isConnected }) {
-  const [open, setOpen] = useState(false);
+function MetricCard({ info, value, isOpen, onToggle }) {
   const hasValue = value !== undefined && value !== null;
   const status   = hasValue ? info.status(value) : 'good';
   const pct      = hasValue ? Math.min(1, Math.max(0, value / info.maxDisplay)) : 0;
   const sc       = STATUS_CFG[status];
+  const open = isOpen;
+
+  const handleKeyDown = (event) => {
+    if (event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault();
+      onToggle();
+    }
+  };
 
   return (
     <div
       className={`sc-card sc-card--${status}${open ? ' sc-card--open' : ''}`}
       style={{ '--sc-color': info.color, '--sc-status-color': sc.color }}
+      role="button"
+      tabIndex={0}
+      aria-expanded={open}
+      onClick={onToggle}
+      onKeyDown={handleKeyDown}
     >
       {/* ── Card header (always visible) ── */}
-      <button className="sc-card-btn" onClick={() => setOpen(o => !o)} aria-expanded={open}>
+      <div className="sc-card-btn">
 
         {/* Gauge + icon */}
         <div className="sc-gauge-wrap">
@@ -224,7 +237,7 @@ function MetricCard({ sensorKey, info, value, isConnected }) {
           </span>
           <i className={`fa-solid fa-chevron-down sc-caret${open ? ' sc-caret--up' : ''}`} aria-hidden="true" />
         </div>
-      </button>
+      </div>
 
       {/* Range bar */}
       {hasValue && (
@@ -233,10 +246,10 @@ function MetricCard({ sensorKey, info, value, isConnected }) {
         </div>
       )}
 
-      {/* Hardware drawer */}
       {open && (
         <HwDrawer hw={info.hardware} unit={info.unit} optimal={info.optimal} color={info.color} />
       )}
+
     </div>
   );
 }
@@ -254,9 +267,10 @@ function ConnDot({ live }) {
 
 // ── Root export ─────────────────────────────────────────────────────────────
 export function SensorCard({ sensors, isConnected }) {
+  const [openedCardIndex, setOpenedCardIndex] = useState(null);
   const activeSensors = getSensorRegistry().filter(s => s.showInDashboard !== false && s.enabled !== false);
 
-  const entries = activeSensors.map(s => {
+  const entries = activeSensors.map((s, index) => {
     const defaultVisuals = SENSORS[s.key] || {
       faIcon: 'fa-microchip',
       color: '#6366f1', // Indigo fallback
@@ -290,7 +304,8 @@ export function SensorCard({ sensors, isConnected }) {
       },
     };
 
-    return { key: s.key, info, value };
+    const cardId = `${s.id || s.key || 'sensor'}-${index}`;
+    return { cardId, cardIndex: index, info, value };
   });
 
   const liveCount = entries.filter(e => e.value !== undefined).length;
@@ -313,8 +328,14 @@ export function SensorCard({ sensors, isConnected }) {
       {/* ── Sensor grid ── */}
       {entries.some(e => e.value !== undefined) || !sensors ? (
         <div className="sc-grid">
-          {entries.map(({ key, info, value }) => (
-            <MetricCard key={key} sensorKey={key} info={info} value={value} isConnected={isConnected} />
+          {entries.map(({ cardId, cardIndex, info, value }) => (
+            <MetricCard
+              key={cardId}
+              info={info}
+              value={value}
+              isOpen={openedCardIndex === cardIndex}
+              onToggle={() => setOpenedCardIndex((prev) => (prev === cardIndex ? null : cardIndex))}
+            />
           ))}
         </div>
       ) : (
@@ -328,7 +349,7 @@ export function SensorCard({ sensors, isConnected }) {
 
       <p className="sc-footer-hint">
         <i className="fa-solid fa-hand-pointer" aria-hidden="true" />
-        &ensp;Tap any sensor card to view hardware specifications
+        &ensp;Tap any sensor card to open the details section.
       </p>
     </section>
   );

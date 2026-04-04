@@ -13,9 +13,9 @@
   transform: translateY(16px);
   transition: opacity 0.7s ease, transform 0.7s ease;
   width: 100%;
-  max-width: 1600px;
+  max-width: 100%;
   margin: 0 auto;
-  padding: 0 1.5rem 4rem;
+  padding: 0 clamp(0.9rem, 2vw, 1.5rem) 4rem;
 }
 .hp--visible { opacity: 1; transform: translateY(0); }
 
@@ -51,8 +51,8 @@
    SECTION SHARED
 ══════════════════════════════════════════════════════ */
 .hp-section {
-  max-width: 1400px;
-  margin: 0 auto 5rem;
+  max-width: 100%;
+  margin: 0 auto clamp(2.5rem, 5vw, 5rem);
   width: 100%;
 }
 .hp-section__head {
@@ -68,7 +68,7 @@
 .hp-section__head p {
   font-size: 1rem;
   color: var(--text-secondary);
-  max-width: 580px;
+  max-width: 100%;
   margin: 0 auto;
   line-height: 1.6;
 }
@@ -118,7 +118,8 @@
 .hp-hero__inner {
   position: relative;
   z-index: 2;
-  max-width: 760px;
+  max-width: 100%;
+  width: 100%;
   margin: 0 auto;
   text-align: center;
   display: flex;
@@ -168,7 +169,7 @@
   font-size: clamp(0.95rem,1.6vw,1.05rem);
   color: var(--text-secondary);
   line-height: 1.8;
-  max-width: 640px;
+  max-width: 100%;
   margin: 0;
 }
 
@@ -223,7 +224,7 @@
 ══════════════════════════════════════════════════════ */
 .hp-stats__grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 210px), 1fr));
   gap: 1.25rem;
 }
 .hp-stat-card {
@@ -277,10 +278,10 @@
 /* ══════════════════════════════════════════════════════
    CORE FEATURES — original animation fully preserved
 ══════════════════════════════════════════════════════ */
-.hp-features { max-width:1400px; }
+.hp-features { max-width:100%; }
 .features-grid-new {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px,1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr));
   gap: 1.5rem;
 }
 .feature-card-new {
@@ -377,7 +378,7 @@
 ══════════════════════════════════════════════════════ */
 .hp-tech__grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr));
   gap: 1.25rem;
 }
 
@@ -480,7 +481,7 @@
 /* ══════════════════════════════════════════════════════
    QUICK ACTIONS
 ══════════════════════════════════════════════════════ */
-.hp-actions { max-width:900px; }
+.hp-actions { max-width:100%; }
 .hp-actions__card { padding:2.2rem 2.5rem; }
 .hp-actions__grid { display:flex; flex-wrap:wrap; gap:0.9rem; }
 .hp-action-btn {
@@ -508,10 +509,10 @@
 /* ══════════════════════════════════════════════════════
    QUICK ACTIONS — Device Management
 ══════════════════════════════════════════════════════ */
-.hp-actions { max-width: 1200px; }
+.hp-actions { max-width: 100%; }
 .hp-actions__grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 250px), 1fr));
   gap: 1.5rem;
 }
 
@@ -643,7 +644,7 @@
 /* ══════════════════════════════════════════════════════
    SYSTEM STATUS
 ══════════════════════════════════════════════════════ */
-.hp-status { max-width:900px; }
+.hp-status { max-width:100%; }
 .hp-status__card { padding:2rem 2.5rem; }
 .hp-status__card h3 { font-size:1.05rem; font-weight:600; color:var(--text-color); margin:0 0 1.25rem; }
 .hp-status__grid { display:flex; flex-wrap:wrap; gap:1.1rem 2rem; margin-bottom:1rem; }
@@ -673,11 +674,34 @@
   .hp-btn { width:100%; justify-content:center; }
   .hp-stats__grid { grid-template-columns:1fr; }
   .features-grid-new { grid-template-columns:1fr; }
-  .hp-actions__grid { flex-direction:column; }
-  .hp-action-btn { width:100%; justify-content:center; }
+  .hp-actions__grid { grid-template-columns:1fr; }
   .hp-status__grid { gap:0.75rem 1.25rem; }
   .hp-section__head h2 { font-size:1.45rem; }
   .hp-tech__grid { grid-template-columns:1fr; }
+}
+@media (max-width: 1040px) {
+  .hp-hero {
+    padding: 84px 28px 100px;
+  }
+
+  .hp-actions__grid,
+  .features-grid-new,
+  .hp-tech__grid {
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr));
+  }
+}
+
+@media (max-width: 860px) {
+  .hp-hero {
+    padding: 68px 20px 84px;
+  }
+
+  .hp-stats__grid,
+  .features-grid-new,
+  .hp-tech__grid,
+  .hp-actions__grid {
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 200px), 1fr));
+  }
 }
 @media (min-width: 1024px) {
   .hp-about__grid { grid-template-columns:repeat(3,1fr); }
