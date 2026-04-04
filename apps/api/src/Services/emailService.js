@@ -28,6 +28,9 @@ function createTransporter() {
     port,
     secure,
     auth: authUser || authPass ? { user: authUser, pass: authPass } : undefined,
+    tls: {
+      rejectUnauthorized: false
+    }
   });
 }
 
