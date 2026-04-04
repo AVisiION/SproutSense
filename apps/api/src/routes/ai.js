@@ -16,6 +16,7 @@ import { PERMISSIONS } from '../config/rbac.js';
 import authenticate from '../middleware/authenticate.js';
 import authenticateDevice from '../middleware/authenticateDevice.js';
 import requireAccountState from '../middleware/requireAccountState.js';
+import requireLinkedDevice from '../middleware/requireLinkedDevice.js';
 import requirePermissions from '../middleware/requirePermissions.js';
 
 const router = express.Router();
@@ -38,6 +39,7 @@ router.post('/disease/device',
 // ============================================================================
 
 router.use(authenticate, requireAccountState());
+router.use(requireLinkedDevice());
 
 // Existing routes
 // GET /api/ai/recommend - Get AI watering recommendation

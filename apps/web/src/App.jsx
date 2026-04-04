@@ -965,13 +965,13 @@ function App() {
               } />
 
               <Route path="/ai" element={
-                <ProtectedRoute requiredPermissions={[PERMISSION.AI_CHAT]}>
+                <ProtectedRoute requiredPermissions={[PERMISSION.AI_CHAT]} requireLinkedDevice>
                   <PageWrapper><section className="dashboard-section dashboard-section-wide ai-chat-section"><AIChat sensors={sensors} /></section></PageWrapper>
                 </ProtectedRoute>
               } />
 
               <Route path="/insights" element={
-                <ProtectedRoute requiredPermissions={[PERMISSION.AI_CHAT]}>
+                <ProtectedRoute requiredPermissions={[PERMISSION.AI_CHAT]} requireLinkedDevice>
                   <PageWrapper><section className="dashboard-section dashboard-section-wide ai-chat-section"><AIChat sensors={sensors} defaultTab="insights" /></section></PageWrapper>
                 </ProtectedRoute>
               } />
