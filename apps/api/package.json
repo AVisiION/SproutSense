@@ -1,7 +1,7 @@
 {
-  "name": "smart-watering-backend",
+  "name": "SproutSense-API",
   "version": "1.0.0",
-  "description": "SproutSense BACKEND",
+  "description": "Backend API for SproutSense IoT application",
   "main": "src/server.js",
   "type": "module",
   "scripts": {
