@@ -2,7 +2,8 @@ import nodemailer from 'nodemailer';
 import config from '../config/config.js';
 
 function uiBaseUrl() {
-  return process.env.FRONTEND_URL || config.CORS_ORIGIN || 'http://localhost:5173';
+  const raw = process.env.FRONTEND_URL || config.CORS_ORIGIN || 'http://localhost:5173';
+  return String(raw).trim().replace(/\/+$/, '');
 }
 
 function hasSmtpConfig() {
@@ -48,7 +49,7 @@ async function sendEmail({ to, subject, text, html }) {
 }
 
 export async function sendVerificationEmail({ email, token }) {
-  const verifyLink = `${uiBaseUrl()}/verify-email?token=${encodeURIComponent(token)}`;
+  const verifyLink = `${uiBaseUrl()}/verify-email?token=${encodeURIComponent(token)}&email=${encodeURIComponent(email)}`;
   const subject = 'Verify your SproutSense account';
   const text = [
     'Verify your SproutSense account',
