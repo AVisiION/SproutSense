@@ -1,5 +1,9 @@
 import nodemailer from 'nodemailer';
 import config from '../config/config.js';
+import dns from 'node:dns';
+
+// Force Node.js to prefer IPv4 (fixes ENETUNREACH for IPv6 addresses like Gmail SMTP)
+dns.setDefaultResultOrder('ipv4first');
 
 function uiBaseUrl() {
   return process.env.FRONTEND_URL || config.CORS_ORIGIN || 'http://localhost:5173';
