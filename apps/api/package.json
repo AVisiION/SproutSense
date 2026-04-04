@@ -1,5 +1,5 @@
 {
-  "name": "SproutSense-API",
+  "name": "sproutsense-api",
   "version": "1.0.0",
   "description": "Backend API for SproutSense IoT application",
   "main": "src/server.js",
