@@ -1182,12 +1182,26 @@ export default function AdminPanelPage() {
           <img src="/assets/icon.svg" alt="" className="adm-brand-logo" />
           <div className="adm-brand-text">
             <span className="adm-brand-name">SproutSense</span>
-            <span className="adm-brand-role">Admin Panel</span>
+            <span className="adm-brand-role">Control Panel</span>
+          </div>
+        </div>
+
+        {/* Admin Profile Mini */}
+        <div className="adm-sidebar-profile">
+          <div className="adm-profile-avatar">
+            {(adminUser?.charAt(0) || 'A').toUpperCase()}
+          </div>
+          <div className="adm-profile-info">
+            <span className="adm-profile-name">{adminUser}</span>
+            <span className="adm-profile-role">
+              <i className="fa-solid fa-shield-halved" /> Administrator
+            </span>
           </div>
         </div>
 
         <div className="adm-sidebar-divider" />
 
+        <div className="adm-nav-group-label">Navigation</div>
         <nav className="adm-nav">
           {SECTIONS.map(s => (
             <button
@@ -1195,7 +1209,6 @@ export default function AdminPanelPage() {
               className={`adm-nav-item${activeSection === s.id ? ' active' : ''}`}
               onClick={() => {
                 setActiveSection(s.id);
-                // Close sidebar on mobile when nav item is clicked
                 if (window.innerWidth < 768) {
                   setSidebarOpen(false);
                 }
@@ -1210,8 +1223,12 @@ export default function AdminPanelPage() {
 
         <div className="adm-sidebar-footer">
           <div className="adm-session-info">
-            <i className="fa-solid fa-clock" />
-            <span>Session: {formatUptime(uptime)}</span>
+            <i className="fa-solid fa-signal" />
+            <span>Uptime: {formatUptime(uptime)}</span>
+          </div>
+          <div className="adm-sidebar-version">
+            <i className="fa-solid fa-code-branch" />
+            <span>v{systemInfo?.version || '3.1.0'}</span>
           </div>
           <button 
             className="adm-sidebar-close-btn" 
@@ -1223,12 +1240,12 @@ export default function AdminPanelPage() {
           </button>
           <button className="adm-logout-btn" onClick={handleLogout}>
             <i className="fa-solid fa-right-from-bracket" />
-            <span>Logout</span>
+            <span>Sign Out</span>
           </button>
         </div>
       </aside>
 
-      {/* Mobile Overlay - Closes sidebar when clicked */}
+      {/* Mobile Overlay */}
       <div 
         className="adm-sidebar-overlay"
         onClick={() => setSidebarOpen(false)}
@@ -1242,23 +1259,28 @@ export default function AdminPanelPage() {
       {/* ── Main ──────────────────────────────────────── */}
       <main className="adm-main">
 
-        {/* Header */}
+        {/* Header / Navbar */}
         <header className="adm-header">
           <div className="adm-header-left">
             <button className="adm-toggle-btn" onClick={() => setSidebarOpen(o => !o)}>
-              <i className="fa-solid fa-bars" />
+              <i className={`fa-solid ${sidebarOpen ? 'fa-indent' : 'fa-bars'}`} />
             </button>
-            <div>
-              <h1 className="adm-header-title">
+            <div className="adm-header-breadcrumb">
+              <span className="adm-breadcrumb-root">Admin</span>
+              <i className="fa-solid fa-chevron-right adm-breadcrumb-sep" />
+              <span className="adm-breadcrumb-current">
                 <i className={`fa-solid ${SECTIONS.find(s => s.id === activeSection)?.icon}`} />
-                &ensp;{SECTIONS.find(s => s.id === activeSection)?.label}
-              </h1>
-              <p className="adm-header-sub">SproutSense Control Panel</p>
+                {SECTIONS.find(s => s.id === activeSection)?.label}
+              </span>
             </div>
           </div>
           <div className="adm-header-right">
+            <div className="adm-header-env">
+              <span className="adm-env-dot" />
+              <span>{mockEnabled ? 'Mock Mode' : 'Production'}</span>
+            </div>
             <span className="adm-badge adm-badge--green">
-              <i className="fa-solid fa-shield-halved" /> Authenticated
+              <i className="fa-solid fa-shield-halved" /> Secure
             </span>
             <button
               className={`adm-refresh-btn${refreshing ? ' spinning' : ''}`}
@@ -1670,111 +1692,169 @@ export default function AdminPanelPage() {
                     <span className="adm-section-badge">Live UI Config</span>
                   </div>
 
-                  <div className="adm-device-grid" style={{ marginBottom: '1rem' }}>
-                    <div className="adm-glass-box">
-                      <h3><i className="fa-solid fa-table-columns" /> Sidebar Visibility</h3>
-                      {Object.entries(uiPreferences.sidebarVisibility).map(([key, enabled]) => (
-                        <div className="adm-config-row" key={`sidebar-${key}`}>
-                          <span className="adm-config-key">Show {key}</span>
-                          <input type="checkbox" checked={Boolean(enabled)} onChange={(e) => handleUiPreferenceChange('sidebarVisibility', key, e.target.checked)} />
+                  {/* Visibility Controls Grid */}
+                  <div className="adm-ui-controls-grid">
+                    {/* Sidebar Visibility */}
+                    <div className="adm-glass-box adm-ui-panel">
+                      <div className="adm-ui-panel-header">
+                        <div className="adm-ui-panel-icon" style={{ background: 'rgba(34, 211, 238, 0.1)', color: '#22d3ee' }}>
+                          <i className="fa-solid fa-table-columns" />
                         </div>
-                      ))}
+                        <div>
+                          <h3>Sidebar Visibility</h3>
+                          <span className="adm-ui-panel-sub">Control which items appear in the navigation sidebar</span>
+                        </div>
+                      </div>
+                      <div className="adm-ui-toggle-list">
+                        {Object.entries(uiPreferences.sidebarVisibility).map(([key, enabled]) => (
+                          <label className="adm-ui-toggle-item" key={`sidebar-${key}`}>
+                            <div className="adm-ui-toggle-info">
+                              <i className="fa-solid fa-circle" style={{ fontSize: '0.4rem', color: enabled ? '#4ade80' : '#334155' }} />
+                              <span>{key.charAt(0).toUpperCase() + key.slice(1)}</span>
+                            </div>
+                            <div className="adm-ui-switch">
+                              <input type="checkbox" checked={Boolean(enabled)} onChange={(e) => handleUiPreferenceChange('sidebarVisibility', key, e.target.checked)} />
+                              <span className="adm-ui-switch-slider" />
+                            </div>
+                          </label>
+                        ))}
+                      </div>
                     </div>
 
-                    <div className="adm-glass-box">
-                      <h3><i className="fa-solid fa-layer-group" /> Dashboard Sections</h3>
-                      {Object.entries(uiPreferences.dashboardSections).map(([key, enabled]) => (
-                        <div className="adm-config-row" key={`dash-${key}`}>
-                          <span className="adm-config-key">Show {key}</span>
-                          <input type="checkbox" checked={Boolean(enabled)} onChange={(e) => handleUiPreferenceChange('dashboardSections', key, e.target.checked)} />
+                    {/* Dashboard Sections & Widgets */}
+                    <div className="adm-glass-box adm-ui-panel">
+                      <div className="adm-ui-panel-header">
+                        <div className="adm-ui-panel-icon" style={{ background: 'rgba(167, 139, 250, 0.1)', color: '#a78bfa' }}>
+                          <i className="fa-solid fa-layer-group" />
                         </div>
-                      ))}
-                      <h3 style={{ marginTop: '1rem' }}><i className="fa-solid fa-sliders" /> Widgets</h3>
-                      {Object.entries(uiPreferences.widgets).map(([key, enabled]) => (
-                        <div className="adm-config-row" key={`widget-${key}`}>
-                          <span className="adm-config-key">{key}</span>
-                          <input type="checkbox" checked={Boolean(enabled)} onChange={(e) => handleUiPreferenceChange('widgets', key, e.target.checked)} />
+                        <div>
+                          <h3>Dashboard Sections</h3>
+                          <span className="adm-ui-panel-sub">Toggle visibility of main dashboard modules</span>
                         </div>
-                      ))}
+                      </div>
+                      <div className="adm-ui-toggle-list">
+                        {Object.entries(uiPreferences.dashboardSections).map(([key, enabled]) => (
+                          <label className="adm-ui-toggle-item" key={`dash-${key}`}>
+                            <div className="adm-ui-toggle-info">
+                              <i className="fa-solid fa-circle" style={{ fontSize: '0.4rem', color: enabled ? '#4ade80' : '#334155' }} />
+                              <span>{key.charAt(0).toUpperCase() + key.slice(1)}</span>
+                            </div>
+                            <div className="adm-ui-switch">
+                              <input type="checkbox" checked={Boolean(enabled)} onChange={(e) => handleUiPreferenceChange('dashboardSections', key, e.target.checked)} />
+                              <span className="adm-ui-switch-slider" />
+                            </div>
+                          </label>
+                        ))}
+                      </div>
+
+                      <div className="adm-ui-divider" />
+
+                      <div className="adm-ui-panel-header" style={{ marginBottom: '0.5rem' }}>
+                        <div className="adm-ui-panel-icon" style={{ background: 'rgba(245, 158, 11, 0.1)', color: '#fbbf24' }}>
+                          <i className="fa-solid fa-sliders" />
+                        </div>
+                        <div>
+                          <h3>Widget Controls</h3>
+                          <span className="adm-ui-panel-sub">Fine-tune widget appearance</span>
+                        </div>
+                      </div>
+                      <div className="adm-ui-toggle-list">
+                        {Object.entries(uiPreferences.widgets).map(([key, enabled]) => (
+                          <label className="adm-ui-toggle-item" key={`widget-${key}`}>
+                            <div className="adm-ui-toggle-info">
+                              <i className="fa-solid fa-circle" style={{ fontSize: '0.4rem', color: enabled ? '#4ade80' : '#334155' }} />
+                              <span>{key.replace(/([A-Z])/g, ' $1').replace(/^./, s => s.toUpperCase())}</span>
+                            </div>
+                            <div className="adm-ui-switch">
+                              <input type="checkbox" checked={Boolean(enabled)} onChange={(e) => handleUiPreferenceChange('widgets', key, e.target.checked)} />
+                              <span className="adm-ui-switch-slider" />
+                            </div>
+                          </label>
+                        ))}
+                      </div>
                     </div>
                   </div>
 
-                  <div className="adm-glass-box">
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-                      <h3 style={{ margin: 0 }}><i className="fa-solid fa-chart-line" /> Sensors & UI Visibility</h3>
-                      <button className="adm-btn btn-primary" onClick={handleAddCustomSensor}>
+                  {/* Sensor Graph Config */}
+                  <div className="adm-glass-box" style={{ marginTop: '1.5rem' }}>
+                    <div className="adm-threshold-header">
+                      <h3><i className="fa-solid fa-chart-line" /> Sensor Graph Configuration</h3>
+                      <button className="adm-action-btn adm-action-btn--start" onClick={handleAddCustomSensor} style={{ padding: '0.5rem 1rem', fontSize: '0.8rem' }}>
                         <i className="fa-solid fa-plus" /> Add Sensor
                       </button>
                     </div>
+
                     {sensorRegistry.length === 0 ? (
-                      <p className="adm-empty"><i className="fa-solid fa-circle-info" /> No sensors available for UI graph control.</p>
+                      <div className="adm-empty-state">
+                        <i className="fa-solid fa-chart-area" />
+                        <p>No sensors configured for UI graph control.</p>
+                        <span>Add a sensor to configure its visual appearance.</span>
+                      </div>
                     ) : (
-                      <div style={{ overflowX: 'auto' }}>
-                        <table className="adm-log-table">
-                          <thead>
-                            <tr>
-                              <th>Sensor</th>
-                              <th>Icon</th>
-                              <th>Color</th>
-                              <th>Show Graph</th>
-                              <th>Show in Dashboard</th>
-                              <th>Chart Type</th>
-                              <th>Actions</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {sensorRegistry.map((sensor) => (
-                              <tr key={`ui-graph-${sensor.id}`}>
-                                <td>{sensor.name}</td>
-                                <td>
-                                  <input 
-                                    className="adm-input" 
-                                    style={{ width: '120px', padding: '4px' }} 
-                                    value={sensor.faIcon || ''} 
-                                    onChange={(e) => handleUiSensorIconChange(sensor, e.target.value)} 
-                                    placeholder="fa-microchip" 
-                                  />
-                                </td>
-                                <td>
-                                  <input 
-                                    type="color" 
-                                    value={sensor.color || '#6366f1'} 
-                                    onChange={(e) => handleUiSensorColorChange(sensor, e.target.value)} 
-                                    style={{ padding: '0', cursor: 'pointer', border: 'none', background: 'none' }}
-                                  />
-                                </td>
-                                <td>
+                      <div className="adm-sensor-ui-grid">
+                        {sensorRegistry.map((sensor) => (
+                          <div key={`ui-graph-${sensor.id}`} className="adm-sensor-ui-card">
+                            <div className="adm-sensor-ui-header">
+                              <div className="adm-sensor-ui-color" style={{ background: sensor.color || '#6366f1' }} />
+                              <div className="adm-sensor-ui-name">
+                                <h4>{sensor.name}</h4>
+                                <span>{sensor.key}</span>
+                              </div>
+                              <button className="adm-card-btn adm-card-btn--danger" onClick={() => handleDeleteCustomSensor(sensor.id)} title="Delete Sensor">
+                                <i className="fa-solid fa-trash" />
+                              </button>
+                            </div>
+
+                            <div className="adm-sensor-ui-controls">
+                              <div className="adm-sensor-ui-field">
+                                <label>Icon Class</label>
+                                <input className="adm-input" value={sensor.faIcon || ''} onChange={(e) => handleUiSensorIconChange(sensor, e.target.value)} placeholder="fa-microchip" />
+                              </div>
+                              <div className="adm-sensor-ui-field">
+                                <label>Color</label>
+                                <div className="adm-color-picker-wrap">
+                                  <input type="color" value={sensor.color || '#6366f1'} onChange={(e) => handleUiSensorColorChange(sensor, e.target.value)} />
+                                  <span className="adm-color-hex">{sensor.color || '#6366f1'}</span>
+                                </div>
+                              </div>
+                              <div className="adm-sensor-ui-field">
+                                <label>Chart Type</label>
+                                <select className="adm-input" value={sensor.chartType || 'line'} onChange={(e) => handleUiSensorChartTypeChange(sensor, e.target.value)}>
+                                  <option value="line">Line</option>
+                                  <option value="area">Area</option>
+                                  <option value="bar">Bar</option>
+                                  <option value="gauge">Gauge</option>
+                                  <option value="scorecard">Scorecard</option>
+                                  <option value="status">Status</option>
+                                  <option value="table">Table</option>
+                                  <option value="sparkline">Sparkline</option>
+                                </select>
+                              </div>
+                            </div>
+
+                            <div className="adm-sensor-ui-toggles">
+                              <label className="adm-ui-toggle-item">
+                                <span>Show Graph</span>
+                                <div className="adm-ui-switch">
                                   <input type="checkbox" checked={Boolean(sensor.showInAnalytics)} onChange={(e) => handleUiSensorAnalyticsToggle(sensor, e.target.checked)} />
-                                </td>
-                                <td>
+                                  <span className="adm-ui-switch-slider" />
+                                </div>
+                              </label>
+                              <label className="adm-ui-toggle-item">
+                                <span>Show in Dashboard</span>
+                                <div className="adm-ui-switch">
                                   <input type="checkbox" checked={Boolean(sensor.showInDashboard)} onChange={(e) => handleUiSensorDashboardToggle(sensor, e.target.checked)} />
-                                </td>
-                                <td>
-                                  <select className="adm-input" value={sensor.chartType || 'line'} onChange={(e) => handleUiSensorChartTypeChange(sensor, e.target.value)}>
-                                    <option value="line">Line</option>
-                                    <option value="area">Area</option>
-                                    <option value="bar">Bar</option>
-                                    <option value="gauge">Gauge</option>
-                                    <option value="scorecard">Scorecard</option>
-                                    <option value="status">Status</option>
-                                    <option value="table">Table</option>
-                                    <option value="sparkline">Sparkline</option>
-                                  </select>
-                                </td>
-                                <td>
-                                  <button className="adm-btn btn-danger" style={{ padding: '4px 8px', fontSize: '0.8rem' }} onClick={() => handleDeleteCustomSensor(sensor.id)} title="Delete Sensor">
-                                    <i className="fa-solid fa-trash" />
-                                  </button>
-                                </td>
-                              </tr>
-                            ))}
-                          </tbody>
-                        </table>
+                                  <span className="adm-ui-switch-slider" />
+                                </div>
+                              </label>
+                            </div>
+                          </div>
+                        ))}
                       </div>
                     )}
                   </div>
 
-                  <div className="adm-btn-row" style={{ marginTop: '0.75rem' }}>
+                  <div className="adm-btn-row" style={{ marginTop: '1.5rem' }}>
                     <button className="adm-action-btn adm-action-btn--start" onClick={handleSaveUiPreferences} disabled={savingUiPreferences}>
                       <i className="fa-solid fa-floppy-disk" /> {savingUiPreferences ? 'Saving...' : 'Save UI Preferences'}
                     </button>
@@ -1833,7 +1913,8 @@ export default function AdminPanelPage() {
                     <h3 style={{ borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: '0.75rem', marginBottom: '1.25rem' }}>
                       <i className="fa-solid fa-user-plus" style={{ color: '#22d3ee' }} /> Identity Provisioning
                     </h3>
-                    <div className="adm-form-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '1.25rem' }}>
+                    
+                    <div className="adm-form-grid">
                       <div className="adm-form-group">
                         <label>Full Identity Name</label>
                         <input className="adm-input" type="text" placeholder="e.g. John Doe" value={userForm.fullName} onChange={(e) => handleUserFormChange('fullName', e.target.value)} />
@@ -1856,7 +1937,7 @@ export default function AdminPanelPage() {
                       </div>
                     </div>
                     
-                    <div style={{ display: 'flex', gap: '1.5rem', marginTop: '1.25rem', padding: '1rem', background: 'rgba(255,255,255,0.02)', borderRadius: '0.6rem' }}>
+                    <div className="adm-toggle-group">
                       <label className="adm-toggle-label">
                         <input type="checkbox" checked={Boolean(userForm.emailVerified)} onChange={(e) => handleUserFormChange('emailVerified', e.target.checked)} />
                         <span>Pre-Verify Email</span>
@@ -1867,8 +1948,8 @@ export default function AdminPanelPage() {
                       </label>
                     </div>
 
-                    <div className="adm-btn-row" style={{ marginTop: '1.5rem', justifyContent: 'flex-start' }}>
-                      <button className="adm-action-btn adm-action-btn--start" style={{ padding: '0.75rem 1.5rem' }} onClick={handleCreateUser} disabled={creatingUser}>
+                    <div className="adm-btn-row" style={{ marginTop: '1.5rem' }}>
+                      <button className="adm-action-btn adm-action-btn--start" onClick={handleCreateUser} disabled={creatingUser}>
                         <i className="fa-solid fa-plus-circle" /> {creatingUser ? 'Provisioning...' : 'Provision New Identity'}
                       </button>
                       <button className="adm-action-btn adm-action-btn--ghost" onClick={resetUserForm}>Reset Form</button>
@@ -2034,116 +2115,173 @@ export default function AdminPanelPage() {
                     <span className="adm-section-badge">Per Plant Thresholds</span>
                   </div>
 
-                  <div className="adm-glass-box" style={{ marginBottom: '1rem' }}>
-                    <div className="adm-config-row">
-                      <span className="adm-config-key">Select Plant Type</span>
-                      <select className="adm-input" value={selectedPlantKey} onChange={(e) => setSelectedPlantKey(e.target.value)}>
+                  {/* Plant Selector Hero */}
+                  <div className="adm-glass-box adm-plant-hero">
+                    <div className="adm-plant-hero-inner">
+                      <div className="adm-plant-hero-icon">
+                        <i className="fa-solid fa-leaf" />
+                      </div>
+                      <div className="adm-plant-hero-info">
+                        <span className="adm-plant-hero-label">Active Plant Profile</span>
+                        <h3 className="adm-plant-hero-name">
+                          {PLANT_OPTIONS.find(p => p.key === selectedPlantKey)?.label || selectedPlantKey}
+                        </h3>
+                      </div>
+                      <select className="adm-input adm-plant-select" value={selectedPlantKey} onChange={(e) => setSelectedPlantKey(e.target.value)}>
                         {PLANT_OPTIONS.map((plant) => (
                           <option key={plant.key} value={plant.key}>{plant.label}</option>
                         ))}
                       </select>
                     </div>
-                  </div>
-
-                  <div className="adm-glass-box" style={{ marginBottom: '1rem' }}>
-                    <h3><i className="fa-solid fa-droplet" /> Moisture & Watering</h3>
-                    <div className="adm-config-row">
-                      <span className="adm-config-key">Soil Moisture Threshold (%)</span>
-                        <input
-                          className="adm-input"
-                          type="number"
-                          min="0"
-                          max="100"
-                          placeholder="Moisture (%)"
-                          value={plantWateringConfig?.[selectedPlantKey]?.moistureThreshold ?? 30}
-                          onChange={(e) => handlePlantWateringChange('moistureThreshold', e.target.value)}
-                        />
-                    </div>
-                    <div className="adm-config-row">
-                      <span className="adm-config-key">Max Watering Cycles / Day</span>
-                      <input
-                        className="adm-input"
-                        type="number"
-                        min="1"
-                        max="20"
-                        placeholder="Cycles/Day"
-                        value={plantWateringConfig?.[selectedPlantKey]?.maxWateringCyclesPerDay ?? 3}
-                        onChange={(e) => handlePlantWateringChange('maxWateringCyclesPerDay', e.target.value)}
-                      />
-                    </div>
-                    <div className="adm-config-row">
-                      <span className="adm-config-key">Watering System Max Cycles / Hour</span>
-                      <input
-                        className="adm-input"
-                        type="number"
-                        min="1"
-                        max="24"
-                        placeholder="Cycles/Hour"
-                        value={plantWateringConfig?.[selectedPlantKey]?.maxCyclesPerHour ?? 4}
-                        onChange={(e) => handlePlantWateringChange('maxCyclesPerHour', e.target.value)}
-                      />
-                    </div>
-                    <div className="adm-config-row">
-                      <span className="adm-config-key">Watering System Max Cycles / Day</span>
-                      <input
-                        className="adm-input"
-                        type="number"
-                        min="1"
-                        max="50"
-                        placeholder="Cycles/Day"
-                        value={plantWateringConfig?.[selectedPlantKey]?.maxCyclesPerDay ?? 6}
-                        onChange={(e) => handlePlantWateringChange('maxCyclesPerDay', e.target.value)}
-                      />
+                    <div className="adm-plant-chips">
+                      {PLANT_OPTIONS.map((plant) => (
+                        <button
+                          key={plant.key}
+                          className={`adm-plant-chip ${selectedPlantKey === plant.key ? 'adm-plant-chip--active' : ''}`}
+                          onClick={() => setSelectedPlantKey(plant.key)}
+                        >
+                          <i className="fa-solid fa-seedling" /> {plant.label}
+                        </button>
+                      ))}
                     </div>
                   </div>
 
+                  {/* Watering Parameters Grid */}
+                  <div className="adm-watering-grid">
+                    <div className="adm-watering-card">
+                      <div className="adm-watering-card-icon" style={{ background: 'rgba(59, 130, 246, 0.1)', color: '#60a5fa' }}>
+                        <i className="fa-solid fa-droplet" />
+                      </div>
+                      <div className="adm-watering-card-body">
+                        <span className="adm-watering-card-label">Soil Moisture Threshold</span>
+                        <div className="adm-watering-card-input-wrap">
+                          <input
+                            className="adm-input"
+                            type="number" min="0" max="100"
+                            value={plantWateringConfig?.[selectedPlantKey]?.moistureThreshold ?? 30}
+                            onChange={(e) => handlePlantWateringChange('moistureThreshold', e.target.value)}
+                          />
+                          <span className="adm-watering-unit">%</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="adm-watering-card">
+                      <div className="adm-watering-card-icon" style={{ background: 'rgba(34, 197, 94, 0.1)', color: '#4ade80' }}>
+                        <i className="fa-solid fa-arrows-rotate" />
+                      </div>
+                      <div className="adm-watering-card-body">
+                        <span className="adm-watering-card-label">Max Watering Cycles / Day</span>
+                        <div className="adm-watering-card-input-wrap">
+                          <input
+                            className="adm-input"
+                            type="number" min="1" max="20"
+                            value={plantWateringConfig?.[selectedPlantKey]?.maxWateringCyclesPerDay ?? 3}
+                            onChange={(e) => handlePlantWateringChange('maxWateringCyclesPerDay', e.target.value)}
+                          />
+                          <span className="adm-watering-unit">cycles</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="adm-watering-card">
+                      <div className="adm-watering-card-icon" style={{ background: 'rgba(245, 158, 11, 0.1)', color: '#fbbf24' }}>
+                        <i className="fa-solid fa-clock" />
+                      </div>
+                      <div className="adm-watering-card-body">
+                        <span className="adm-watering-card-label">System Max Cycles / Hour</span>
+                        <div className="adm-watering-card-input-wrap">
+                          <input
+                            className="adm-input"
+                            type="number" min="1" max="24"
+                            value={plantWateringConfig?.[selectedPlantKey]?.maxCyclesPerHour ?? 4}
+                            onChange={(e) => handlePlantWateringChange('maxCyclesPerHour', e.target.value)}
+                          />
+                          <span className="adm-watering-unit">/hr</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="adm-watering-card">
+                      <div className="adm-watering-card-icon" style={{ background: 'rgba(167, 139, 250, 0.1)', color: '#a78bfa' }}>
+                        <i className="fa-solid fa-calendar-day" />
+                      </div>
+                      <div className="adm-watering-card-body">
+                        <span className="adm-watering-card-label">System Max Cycles / Day</span>
+                        <div className="adm-watering-card-input-wrap">
+                          <input
+                            className="adm-input"
+                            type="number" min="1" max="50"
+                            value={plantWateringConfig?.[selectedPlantKey]?.maxCyclesPerDay ?? 6}
+                            onChange={(e) => handlePlantWateringChange('maxCyclesPerDay', e.target.value)}
+                          />
+                          <span className="adm-watering-unit">/day</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Sensor Threshold Cards */}
                   <div className="adm-glass-box">
-                    <h3><i className="fa-solid fa-sliders" /> Thresholds for {PLANT_OPTIONS.find((item) => item.key === selectedPlantKey)?.label || selectedPlantKey}</h3>
+                    <div className="adm-threshold-header">
+                      <h3><i className="fa-solid fa-sliders" /> Sensor Thresholds</h3>
+                      <span className="adm-threshold-plant-badge">
+                        <i className="fa-solid fa-leaf" /> {PLANT_OPTIONS.find((item) => item.key === selectedPlantKey)?.label || selectedPlantKey}
+                      </span>
+                    </div>
 
                     {sensorRegistry.length === 0 ? (
-                      <p className="adm-empty"><i className="fa-solid fa-circle-info" /> No sensors available. Configure sensor registry first.</p>
+                      <div className="adm-empty-state">
+                        <i className="fa-solid fa-microchip" />
+                        <p>No sensors registered yet.</p>
+                        <span>Configure the sensor registry to set per-plant thresholds.</span>
+                      </div>
                     ) : (
-                      <div style={{ overflowX: 'auto' }}>
-                        <table className="adm-log-table">
-                          <thead>
-                            <tr>
-                              <th>Sensor</th>
-                              <th>Key</th>
-                              <th>Min</th>
-                              <th>Max</th>
-                              <th>Warning</th>
-                              <th>Critical</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {sensorRegistry.map((sensor) => {
-                              const sensorThresholds = plantSensorConfig?.[selectedPlantKey]?.[sensor.key]
-                                || buildSensorThresholdPreset(sensor);
-                              return (
-                                <tr key={`plant-threshold-${selectedPlantKey}-${sensor.id}`}>
-                                  <td>{sensor.name}</td>
-                                  <td>{sensor.key}</td>
-                                  <td>
-                                    <input className="adm-input" type="number" placeholder="Min" value={sensorThresholds.minThreshold} onChange={(e) => handlePlantThresholdChange(sensor.key, 'minThreshold', e.target.value)} />
-                                  </td>
-                                  <td>
-                                    <input className="adm-input" type="number" placeholder="Max" value={sensorThresholds.maxThreshold} onChange={(e) => handlePlantThresholdChange(sensor.key, 'maxThreshold', e.target.value)} />
-                                  </td>
-                                  <td>
-                                    <input className="adm-input" type="number" placeholder="Warning" value={sensorThresholds.warningThreshold} onChange={(e) => handlePlantThresholdChange(sensor.key, 'warningThreshold', e.target.value)} />
-                                  </td>
-                                  <td>
-                                    <input className="adm-input" type="number" placeholder="Critical" value={sensorThresholds.criticalThreshold} onChange={(e) => handlePlantThresholdChange(sensor.key, 'criticalThreshold', e.target.value)} />
-                                  </td>
-                                </tr>
-                              );
-                            })}
-                          </tbody>
-                        </table>
+                      <div className="adm-threshold-grid">
+                        {sensorRegistry.map((sensor) => {
+                          const sensorThresholds = plantSensorConfig?.[selectedPlantKey]?.[sensor.key]
+                            || buildSensorThresholdPreset(sensor);
+                          return (
+                            <div key={`plant-threshold-${selectedPlantKey}-${sensor.id}`} className="adm-threshold-card">
+                              <div className="adm-threshold-card-head">
+                                <div className="adm-threshold-sensor-icon">
+                                  <i className="fa-solid fa-microchip" />
+                                </div>
+                                <div>
+                                  <h4 className="adm-threshold-sensor-name">{sensor.name}</h4>
+                                  <span className="adm-threshold-sensor-key">{sensor.key}</span>
+                                </div>
+                              </div>
+
+                              <div className="adm-threshold-fields">
+                                <div className="adm-threshold-field">
+                                  <label>Min</label>
+                                  <input className="adm-input" type="number" value={sensorThresholds.minThreshold} onChange={(e) => handlePlantThresholdChange(sensor.key, 'minThreshold', e.target.value)} />
+                                  <div className="adm-threshold-bar" style={{ background: '#3b82f6' }} />
+                                </div>
+                                <div className="adm-threshold-field">
+                                  <label>Max</label>
+                                  <input className="adm-input" type="number" value={sensorThresholds.maxThreshold} onChange={(e) => handlePlantThresholdChange(sensor.key, 'maxThreshold', e.target.value)} />
+                                  <div className="adm-threshold-bar" style={{ background: '#22c55e' }} />
+                                </div>
+                                <div className="adm-threshold-field">
+                                  <label>Warning</label>
+                                  <input className="adm-input" type="number" value={sensorThresholds.warningThreshold} onChange={(e) => handlePlantThresholdChange(sensor.key, 'warningThreshold', e.target.value)} />
+                                  <div className="adm-threshold-bar" style={{ background: '#f59e0b' }} />
+                                </div>
+                                <div className="adm-threshold-field">
+                                  <label>Critical</label>
+                                  <input className="adm-input" type="number" value={sensorThresholds.criticalThreshold} onChange={(e) => handlePlantThresholdChange(sensor.key, 'criticalThreshold', e.target.value)} />
+                                  <div className="adm-threshold-bar" style={{ background: '#ef4444' }} />
+                                </div>
+                              </div>
+                            </div>
+                          );
+                        })}
                       </div>
                     )}
 
-                    <div className="adm-btn-row" style={{ marginTop: '1rem' }}>
+                    <div className="adm-btn-row" style={{ marginTop: '1.5rem' }}>
                       <button className="adm-action-btn adm-action-btn--start" onClick={handleSavePlantSensorConfig} disabled={savingPlantSensorConfig || sensorRegistry.length === 0}>
                         <i className="fa-solid fa-floppy-disk" /> {savingPlantSensorConfig ? 'Saving...' : 'Save Plant Sensor Configuration'}
                       </button>
@@ -2157,35 +2295,85 @@ export default function AdminPanelPage() {
                 <div className="adm-section">
                   <div className="adm-section-header">
                     <h2><i className="fa-solid fa-gauge-high" /> Limits & Quotas</h2>
+                    <span className="adm-section-badge">System Governance</span>
                   </div>
 
-                  <div className="adm-device-grid" style={{ marginBottom: '1rem' }}>
-                    <div className="adm-glass-box">
-                      <h3><i className="fa-solid fa-robot" /> AI Quota</h3>
-                      <div className="adm-config-row">
-                        <span className="adm-config-key">AI Analyses / Day</span>
-                        <div>
-                          <input className="adm-input" type="number" min="1" max="100" value={limitsForm.aiDailyAnalysisLimit} onChange={(e) => handleLimitChange('aiDailyAnalysisLimit', e.target.value)} />
-                          {limitErrors.aiDailyAnalysisLimit && <div className="adm-input-error">{limitErrors.aiDailyAnalysisLimit}</div>}
+                  {/* Limits Dashboard Grid */}
+                  <div className="adm-limits-grid">
+                    {/* AI Quota Card */}
+                    <div className="adm-glass-box adm-limits-card">
+                      <div className="adm-limits-card-header">
+                        <div className="adm-limits-card-icon" style={{ background: 'rgba(167, 139, 250, 0.12)', color: '#a78bfa' }}>
+                          <i className="fa-solid fa-robot" />
                         </div>
+                        <div>
+                          <h3>AI Analysis Quota</h3>
+                          <span className="adm-limits-card-sub">Disease detection & crop health</span>
+                        </div>
+                      </div>
 
-                  <div className="adm-glass-box" style={{ marginBottom: '1rem' }}>
-                    <h3><i className="fa-solid fa-circle-info" /> Plant Watering Limits</h3>
-                    <p className="adm-header-sub">Moisture and watering limits are now managed in Plant Sensors section for each plant type.</p>
-                  </div>
+                      <div className="adm-limits-control">
+                        <label className="adm-limits-label">Daily Limit</label>
+                        <div className="adm-limits-input-row">
+                          <input
+                            className="adm-input"
+                            type="number" min="1" max="100"
+                            value={limitsForm.aiDailyAnalysisLimit}
+                            onChange={(e) => handleLimitChange('aiDailyAnalysisLimit', e.target.value)}
+                          />
+                          <span className="adm-limits-unit">analyses / day</span>
+                        </div>
+                        {limitErrors.aiDailyAnalysisLimit && <div className="adm-input-error">{limitErrors.aiDailyAnalysisLimit}</div>}
                       </div>
-                      <div className="adm-config-row">
-                        <span className="adm-config-key">Usage Today</span>
-                        <span className="adm-config-val">{aiUsageData ? `${aiUsageData.usedCount}/${aiUsageData.dailyLimit}` : 'N/A'}</span>
+
+                      {/* Usage Gauge */}
+                      <div className="adm-limits-usage">
+                        <div className="adm-limits-usage-header">
+                          <span>Today's Usage</span>
+                          <span className="adm-limits-usage-count">
+                            {aiUsageData ? `${aiUsageData.usedCount} / ${aiUsageData.dailyLimit}` : 'N/A'}
+                          </span>
+                        </div>
+                        <div className="adm-limits-progress-bg">
+                          <div
+                            className="adm-limits-progress-fill"
+                            style={{
+                              width: aiUsageData ? `${Math.min((aiUsageData.usedCount / aiUsageData.dailyLimit) * 100, 100)}%` : '0%',
+                              background: aiUsageData && (aiUsageData.usedCount / aiUsageData.dailyLimit) > 0.8 ? '#ef4444' : '#a78bfa',
+                            }}
+                          />
+                        </div>
+                        <div className="adm-limits-usage-footer">
+                          <span><i className="fa-solid fa-circle-check" style={{ color: '#4ade80' }} /> Remaining: <strong>{aiUsageData ? aiUsageData.remaining : 'N/A'}</strong></span>
+                        </div>
                       </div>
-                      <div className="adm-config-row">
-                        <span className="adm-config-key">Remaining</span>
-                        <span className="adm-config-val">{aiUsageData ? aiUsageData.remaining : 'N/A'}</span>
+                    </div>
+
+                    {/* Plant Watering Info Card */}
+                    <div className="adm-glass-box adm-limits-card adm-limits-card--info">
+                      <div className="adm-limits-card-header">
+                        <div className="adm-limits-card-icon" style={{ background: 'rgba(34, 197, 94, 0.12)', color: '#4ade80' }}>
+                          <i className="fa-solid fa-seedling" />
+                        </div>
+                        <div>
+                          <h3>Plant Watering Limits</h3>
+                          <span className="adm-limits-card-sub">Per-plant configuration</span>
+                        </div>
+                      </div>
+
+                      <div className="adm-limits-info-body">
+                        <div className="adm-limits-info-icon">
+                          <i className="fa-solid fa-arrow-right-arrow-left" />
+                        </div>
+                        <p>Moisture thresholds and watering cycle limits are now configured <strong>per plant type</strong> in the Plant Sensors section.</p>
+                        <button className="adm-action-btn adm-action-btn--start" style={{ marginTop: '1rem' }} onClick={() => setActiveSection('sensors')}>
+                          <i className="fa-solid fa-seedling" /> Go to Plant Sensors
+                        </button>
                       </div>
                     </div>
                   </div>
 
-                  <div className="adm-btn-row" style={{ marginTop: '0.75rem' }}>
+                  <div className="adm-btn-row" style={{ marginTop: '1.5rem' }}>
                     <button className="adm-action-btn adm-action-btn--start" onClick={handleSaveLimits} disabled={savingLimits || Object.keys(limitErrors).length > 0}>
                       <i className="fa-solid fa-save" /> {savingLimits ? 'Saving...' : 'Save Limits'}
                     </button>
