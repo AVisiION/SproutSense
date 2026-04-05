@@ -91,9 +91,9 @@ export async function listPreRegisteredDevices(req, res, next) {
     // Format the response to be cleaner for the frontend
     const formatted = devices.map(d => ({
       ...d,
-      isLinked: Boolean(d.pairingInfo),
+      isLinked: Boolean(d.pairingInfo && d.pairingInfo.isActive),
       lastSeenAt: d.pairingInfo?.lastSeenAt || null,
-      linkedUser: d.owner ? {
+      linkedUser: d.owner && d.pairingInfo?.isActive ? {
         fullName: d.owner.fullName,
         email: d.owner.email,
         id: String(d.owner._id)

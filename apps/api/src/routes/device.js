@@ -8,6 +8,8 @@ import {
 	pairDevice,
 	rotateDeviceToken,
 	unpairDevice,
+	forcePairDevice,
+	adminUnpairDevice,
 } from '../controllers/deviceController.js';
 import {
 	createPreRegisteredDevice,
@@ -34,5 +36,9 @@ router.get('/keys/list', requirePermissions([PERMISSIONS.CONFIG_READ]), listPreR
 router.delete('/keys/batch', requirePermissions([PERMISSIONS.CONFIG_UPDATE]), batchDeletePreRegisteredDevices);
 router.delete('/keys/:deviceId', requirePermissions([PERMISSIONS.CONFIG_UPDATE]), deletePreRegisteredDevice);
 router.patch('/keys/:deviceId/toggle', requirePermissions([PERMISSIONS.CONFIG_UPDATE]), togglePreRegisteredDeviceStatus);
+
+// Administrative force actions
+router.post('/force-pair', requirePermissions([PERMISSIONS.CONFIG_UPDATE]), forcePairDevice);
+router.delete('/force-unpair/:deviceId', requirePermissions([PERMISSIONS.CONFIG_UPDATE]), adminUnpairDevice);
 
 export default router;

@@ -450,6 +450,16 @@ export const deviceAPI = {
     const response = await api.delete('/device/keys/batch', { data: { deviceIds }, ...options });
     return response.data;
   },
+
+  forcePair: async ({ deviceId, userId, displayName }, options = {}) => {
+    const response = await api.post('/device/force-pair', { deviceId, userId, displayName }, options);
+    return response.data;
+  },
+
+  adminUnpair: async (deviceId, options = {}) => {
+    const response = await api.delete(`/device/force-unpair/${encodeURIComponent(deviceId)}`, options);
+    return response.data;
+  },
 };
 
 export const publicAPI = {

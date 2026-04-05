@@ -49,7 +49,7 @@ export async function pairDevice(req, res, next) {
 
     // Check if device already paired to another user
     const existingBinding = await UserDevice.findOne({ deviceId });
-    if (existingBinding && String(existingBinding.userId) !== String(userId)) {
+    if (existingBinding && existingBinding.isActive && String(existingBinding.userId) !== String(userId)) {
       return res.status(409).json({ success: false, message: 'This device is already paired to another user.' });
     }
 
@@ -203,6 +203,91 @@ export async function unpairDevice(req, res, next) {
     );
 
     return res.json({ success: true, message: 'Device unpaired successfully.' });
+  } catch (error) {
+    return next(error);
+  }
+}
+
+export async function forcePairDevice(req, res, next) {
+  try {
+    const { deviceId, userId, displayName } = req.body;
+    const adminId = req.auth?.userId;
+
+    if (!deviceId || !userId) {
+      return res.status(400).json({ success: false, message: 'deviceId and userId are required.' });
+    }
+
+    const normalizedDeviceId = String(deviceId).trim().toUpperCase();
+
+    // Ensure device is pre-registered
+    const preDevice = await PreRegisteredDevice.findOne({ deviceId: normalizedDeviceId });
+    if (!preDevice) {
+      return res.status(404).json({ success: false, message: 'Device not pre-registered.' });
+    }
+
+    const now = new Date();
+    const deviceToken = generateDeviceToken();
+    const tokenHash = hashValue(deviceToken);
+
+    const binding = await UserDevice.findOneAndUpdate(
+      { deviceId: normalizedDeviceId },
+      {
+        userId,
+        deviceId: normalizedDeviceId,
+        displayName: displayName || preDevice.displayName || normalizedDeviceId,
+        tokenHash,
+        tokenIssuedAt: now,
+        lastSeenAt: now,
+        isActive: true,
+      },
+      { upsert: true, new: true }
+    );
+
+    await DeviceStatus.findOneAndUpdate(
+      { deviceId: normalizedDeviceId },
+      { online: true, lastSeen: now },
+      { upsert: true }
+    );
+
+    return res.json({
+      success: true,
+      message: `Device ${normalizedDeviceId} force-paired to user ${userId}`,
+      device: {
+        deviceId: normalizedDeviceId,
+        deviceToken,
+        displayName: binding.displayName,
+      },
+    });
+  } catch (error) {
+    return next(error);
+  }
+}
+
+export async function adminUnpairDevice(req, res, next) {
+  try {
+    const deviceId = String(req.params?.deviceId || req.body?.deviceId || '').trim().toUpperCase();
+
+    if (!deviceId) {
+      return res.status(400).json({ success: false, message: 'deviceId is required.' });
+    }
+
+    const device = await UserDevice.findOne({ deviceId, isActive: true });
+    if (!device) {
+      return res.status(404).json({ success: false, message: 'Active device binding not found.' });
+    }
+
+    device.isActive = false;
+    device.tokenHash = null;
+    device.tokenIssuedAt = null;
+    await device.save();
+
+    await DeviceStatus.findOneAndUpdate(
+      { deviceId },
+      { online: false },
+      { new: true }
+    );
+
+    return res.json({ success: true, message: `Device ${deviceId} force-unpaired by admin.` });
   } catch (error) {
     return next(error);
   }

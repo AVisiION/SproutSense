@@ -251,6 +251,12 @@ export default function AdminPanelPage() {
   const [keySearch, setKeySearch] = useState('');
   const [isBatchRevoking, setIsBatchRevoking] = useState(false);
 
+  // Force Pair State
+  const [isForcePairModalOpen, setIsForcePairModalOpen] = useState(false);
+  const [targetDeviceIdForForcePair, setTargetDeviceIdForForcePair] = useState(null);
+  const [selectedUserIdForForcePair, setSelectedUserIdForForcePair] = useState('');
+  const [isForcePairing, setIsForcePairing] = useState(false);
+
   const validateLimits = useCallback((values) => {
     const errors = {};
     const checks = [
@@ -627,6 +633,43 @@ export default function AdminPanelPage() {
     } catch (error) {
       const message = error?.response?.data?.message || error.message;
       log(`Failed to toggle device key status: ${message}`, LOG_TYPES.error);
+    }
+  };
+
+  const handleForceUnpair = async (deviceId) => {
+    if (!window.confirm(`Force unpair device ${deviceId}? The user will lose access immediately.`)) return;
+    try {
+      await deviceAPI.adminUnpair(deviceId);
+      log(`Force unpaired device ${deviceId}`, LOG_TYPES.warning, { deviceId });
+      await loadDeviceKeys();
+    } catch (error) {
+      log(`Force unpair failed: ${error.message}`, LOG_TYPES.error);
+    }
+  };
+
+  const handleOpenForcePairModal = (deviceId) => {
+    setTargetDeviceIdForForcePair(deviceId);
+    setSelectedUserIdForForcePair('');
+    setIsForcePairModalOpen(true);
+  };
+
+  const handleConfirmForcePair = async () => {
+    if (!targetDeviceIdForForcePair || !selectedUserIdForForcePair) return;
+    
+    setIsForcePairing(true);
+    try {
+      const res = await deviceAPI.forcePair({
+        deviceId: targetDeviceIdForForcePair,
+        userId: selectedUserIdForForcePair
+      });
+      setGeneratedDeviceSecret(res?.device?.deviceToken); // Re-use secret display for the new token
+      log(`Force paired ${targetDeviceIdForForcePair} to user ${selectedUserIdForForcePair}`, LOG_TYPES.success);
+      setIsForcePairModalOpen(false);
+      await loadDeviceKeys();
+    } catch (error) {
+      log(`Force pair failed: ${error.message}`, LOG_TYPES.error);
+    } finally {
+      setIsForcePairing(false);
     }
   };
 
@@ -1604,20 +1647,52 @@ export default function AdminPanelPage() {
                                     <div className="adm-owner-avatar">
                                       {key.linkedUser?.fullName?.charAt(0).toUpperCase() || '?'}
                                     </div>
-                                    <div className="adm-owner-info">
+                                    <div className="adm-owner-info" style={{ flex: 1 }}>
                                       <span className="adm-owner-name">{key.linkedUser?.fullName}</span>
                                       <span className="adm-owner-email">{key.linkedUser?.email}</span>
                                     </div>
+                                    <button 
+                                      className="adm-key-action-btn adm-key-action-btn--revoke"
+                                      onClick={() => handleForceUnpair(key.deviceId)}
+                                      title="Force Unpair"
+                                      style={{
+                                        padding: '0.4rem',
+                                        background: 'rgba(239, 68, 68, 0.1)',
+                                        border: '1px solid rgba(239, 68, 68, 0.2)',
+                                        color: '#ef4444',
+                                        borderRadius: '0.4rem',
+                                        cursor: 'pointer'
+                                      }}
+                                    >
+                                      <i className="fa-solid fa-link-slash" />
+                                    </button>
                                   </div>
                                 ) : (
-                                  <div className="adm-key-owner" style={{ opacity: 0.5, borderStyle: 'dashed' }}>
+                                  <div className="adm-key-owner" style={{ opacity: 0.8, borderStyle: 'dashed' }}>
                                     <div className="adm-owner-avatar" style={{ background: 'rgba(148, 163, 184, 0.2)' }}>
                                       <i className="fa-solid fa-unlink" style={{ fontSize: '0.7rem' }} />
                                     </div>
-                                    <div className="adm-owner-info">
+                                    <div className="adm-owner-info" style={{ flex: 1 }}>
                                       <span className="adm-owner-name">Not Linked</span>
-                                      <span className="adm-owner-email">Pending assignment</span>
+                                      <span className="adm-owner-email">Available for pairing</span>
                                     </div>
+                                    <button 
+                                      className="adm-key-action-btn adm-key-action-btn--pair"
+                                      onClick={() => handleOpenForcePairModal(key.deviceId)}
+                                      title="Force Pair"
+                                      style={{
+                                        padding: '0.3rem 0.6rem',
+                                        background: 'rgba(34, 211, 238, 0.1)',
+                                        border: '1px solid rgba(34, 211, 238, 0.2)',
+                                        color: '#22d3ee',
+                                        borderRadius: '0.4rem',
+                                        cursor: 'pointer',
+                                        fontSize: '0.7rem',
+                                        fontWeight: '600'
+                                      }}
+                                    >
+                                      <i className="fa-solid fa-link" /> Pair
+                                    </button>
                                   </div>
                                 )}
 
@@ -1625,7 +1700,7 @@ export default function AdminPanelPage() {
                                   <div className="adm-last-seen">
                                     <i className="fa-solid fa-clock" />
                                     {key.lastSeenAt 
-                                      ? `Active ${new Date(key.lastSeenAt).toLocaleDateString()} ${new Date(key.lastSeenAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}` 
+                                      ? `Last Seen ${new Date(key.lastSeenAt).toLocaleDateString()} ${new Date(key.lastSeenAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}` 
                                       : 'Never Connected'
                                     }
                                   </div>
@@ -1638,7 +1713,7 @@ export default function AdminPanelPage() {
                                   <button 
                                     className="adm-icon-btn ad-icon-btn--yellow"
                                     onClick={() => handleToggleDeviceKeyStatus(key.deviceId)}
-                                    title={key.isActive ? 'Revoke Access' : 'Restore Access'}
+                                    title={key.isActive ? 'Deactivate access' : 'Restore access'}
                                   >
                                     <i className={`fa-solid ${key.isActive ? 'fa-toggle-on' : 'fa-toggle-off'}`} />
                                   </button>
@@ -2626,6 +2701,79 @@ export default function AdminPanelPage() {
           )}
         </div>
       </main>
+
+      {/* Force Pair Modal */}
+      {isForcePairModalOpen && (
+        <div className="adm-modal-overlay">
+          <div className="adm-modal adm-glass-box" style={{ maxWidth: '500px', width: '90%' }}>
+            <div className="adm-modal-header">
+              <h3><i className="fa-solid fa-link" /> Force Pair Device</h3>
+              <button 
+                className="adm-modal-close" 
+                onClick={() => setIsForcePairModalOpen(false)}
+              >
+                <i className="fa-solid fa-xmark" />
+              </button>
+            </div>
+            <div className="adm-modal-body">
+              <p style={{ fontSize: '0.85rem', color: '#94a3b8', marginBottom: '1.2rem' }}>
+                Manually link <strong>{targetDeviceIdForForcePair}</strong> to a specific user account. 
+                This will generate a new access token for the device.
+              </p>
+              
+              <div className="adm-form-group">
+                <label>Select User</label>
+                <select 
+                  value={selectedUserIdForForcePair}
+                  onChange={(e) => setSelectedUserIdForForcePair(e.target.value)}
+                  style={{
+                    width: '100%',
+                    padding: '0.8rem',
+                    background: 'rgba(0,0,0,0.3)',
+                    border: '1px solid rgba(255,255,255,0.1)',
+                    borderRadius: '0.5rem',
+                    color: '#fff',
+                    outline: 'none'
+                  }}
+                >
+                  <option value="">-- Choose a user --</option>
+                  {users.map(u => (
+                    <option key={u.id} value={u.id}>
+                      {u.fullName} ({u.email})
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="adm-modal-footer" style={{ marginTop: '1.5rem', display: 'flex', gap: '1rem', justifyContent: 'flex-end' }}>
+                <button 
+                  className="adm-btn adm-btn--ghost" 
+                  onClick={() => setIsForcePairModalOpen(false)}
+                  disabled={isForcePairing}
+                >
+                  Cancel
+                </button>
+                <button 
+                  className="adm-btn adm-btn--primary"
+                  onClick={handleConfirmForcePair}
+                  disabled={isForcePairing || !selectedUserIdForForcePair}
+                  style={{
+                    background: 'linear-gradient(135deg, #22d3ee, #0ea5e9)',
+                    color: '#fff',
+                    padding: '0.6rem 1.2rem',
+                    border: 'none',
+                    borderRadius: '0.5rem',
+                    fontWeight: '600',
+                    cursor: 'pointer'
+                  }}
+                >
+                  {isForcePairing ? <i className="fa-solid fa-spinner fa-spin" /> : <i className="fa-solid fa-check" />} Confirm Pairing
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
