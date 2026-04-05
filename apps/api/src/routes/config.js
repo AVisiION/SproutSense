@@ -32,6 +32,11 @@ const router = express.Router();
 // POST /api/config/status/device - Update device status with device token auth
 router.post('/status/device', validateDeviceStatus, authenticateDevice, updateStatus);
 
+// GET /api/config/device - Get config with device token auth
+router.get('/device', readLimiter, authenticateDevice, getConfig);
+// GET /api/config/device/:deviceId - Get config with device token auth
+router.get('/device/:deviceId', readLimiter, authenticateDevice, getConfig);
+
 router.use(authenticate, requireAccountState());
 
 // IMPORTANT: Specific routes must come BEFORE dynamic parameter routes

@@ -13,8 +13,17 @@ import { PERMISSIONS } from '../config/rbac.js';
 import authenticate from '../middleware/authenticate.js';
 import requireAccountState from '../middleware/requireAccountState.js';
 import requirePermissions from '../middleware/requirePermissions.js';
+import authenticateDevice from '../middleware/authenticateDevice.js';
 
 const router = express.Router();
+
+// Device authenticated routes
+// POST /api/water/device/start - Start watering via device token
+router.post('/device/start', wateringLimiter, validateWateringRequest, authenticateDevice, startWatering);
+// POST /api/water/device/stop - Stop watering via device token
+router.post('/device/stop', wateringLimiter, validateWateringRequest, authenticateDevice, stopWatering);
+// GET /api/water/device/status/:deviceId - Get watering status via device token
+router.get('/device/status/:deviceId', readLimiter, authenticateDevice, getWateringStatus);
 
 router.use(authenticate, requireAccountState());
 
