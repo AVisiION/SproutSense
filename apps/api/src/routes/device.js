@@ -13,6 +13,7 @@ import {
 	createPreRegisteredDevice,
 	listPreRegisteredDevices,
 	deletePreRegisteredDevice,
+	batchDeletePreRegisteredDevices,
 	togglePreRegisteredDeviceStatus,
 } from '../controllers/deviceKeyController.js';
 
@@ -30,6 +31,7 @@ router.delete('/:deviceId', requirePermissions([PERMISSIONS.PROFILE_UPDATE]), un
 // Device key management (admin only - requires CONFIG_UPDATE permission)
 router.post('/keys/create', requirePermissions([PERMISSIONS.CONFIG_UPDATE]), createPreRegisteredDevice);
 router.get('/keys/list', requirePermissions([PERMISSIONS.CONFIG_READ]), listPreRegisteredDevices);
+router.delete('/keys/batch', requirePermissions([PERMISSIONS.CONFIG_UPDATE]), batchDeletePreRegisteredDevices);
 router.delete('/keys/:deviceId', requirePermissions([PERMISSIONS.CONFIG_UPDATE]), deletePreRegisteredDevice);
 router.patch('/keys/:deviceId/toggle', requirePermissions([PERMISSIONS.CONFIG_UPDATE]), togglePreRegisteredDeviceStatus);
 

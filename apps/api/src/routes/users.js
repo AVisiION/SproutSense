@@ -6,6 +6,7 @@ import {
 	updateUserAccountStatus,
 	updateUserRole,
 	updateUserSensorVisibility,
+	bulkUserAction
 } from '../controllers/userAdminController.js';
 import { PERMISSIONS } from '../config/rbac.js';
 import authenticate from '../middleware/authenticate.js';
@@ -18,6 +19,7 @@ router.use(authenticate, requireAccountState());
 
 router.get('/', requirePermissions([PERMISSIONS.USERS_READ]), listUsers);
 router.post('/', requirePermissions([PERMISSIONS.USERS_CREATE]), createUser);
+router.post('/bulk-action', requirePermissions([PERMISSIONS.USERS_UPDATE]), bulkUserAction);
 router.patch('/:userId/role', requirePermissions([PERMISSIONS.USERS_UPDATE]), updateUserRole);
 router.patch('/:userId/sensor-visibility', requirePermissions([PERMISSIONS.USERS_UPDATE]), updateUserSensorVisibility);
 router.patch('/:userId/account-status', requirePermissions([PERMISSIONS.USERS_DISABLE]), updateUserAccountStatus);

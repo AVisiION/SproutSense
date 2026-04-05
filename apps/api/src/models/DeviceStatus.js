@@ -40,6 +40,10 @@ const deviceStatusSchema = new mongoose.Schema({
   freeHeap: {
     type: Number // bytes
   },
+  latency: {
+    type: Number, // ms
+    default: 0
+  },
   errors: [{
     code: String,
     message: String,

@@ -17,13 +17,15 @@ function notifyUpdate() {
 
 export const mockDataStore = {
   enabled: false,
+  simulationActive: false, // Drift mode
   scenario: 'normal',
+  _timer: null,
 
   sensors: [
-    { id: 'S001', name: 'Field A - Zone 1', moisture: 62, temperature: 28.4, humidity: 71, status: 'active', lastUpdate: '2 min ago' },
-    { id: 'S002', name: 'Field A - Zone 2', moisture: 45, temperature: 31.2, humidity: 65, status: 'active', lastUpdate: '1 min ago' },
-    { id: 'S003', name: 'Field B - Zone 1', moisture: 78, temperature: 26.8, humidity: 80, status: 'active', lastUpdate: '3 min ago' },
-    { id: 'S004', name: 'Field B - Zone 2', moisture: 33, temperature: 29.1, humidity: 68, status: 'warning', lastUpdate: '5 min ago' },
+    { id: 'S001', name: 'Field A - Zone 1', moisture: 62, temperature: 28.4, humidity: 71, status: 'active', lastUpdate: 'just now', activityIndex: 0 },
+    { id: 'S002', name: 'Field A - Zone 2', moisture: 45, temperature: 31.2, humidity: 65, status: 'active', lastUpdate: 'just now', activityIndex: 0 },
+    { id: 'S003', name: 'Field B - Zone 1', moisture: 78, temperature: 26.8, humidity: 80, status: 'active', lastUpdate: 'just now', activityIndex: 0 },
+    { id: 'S004', name: 'Field B - Zone 2', moisture: 33, temperature: 29.1, humidity: 68, status: 'warning', lastUpdate: 'just now', activityIndex: 0 },
   ],
 
   alerts: [
@@ -102,11 +104,53 @@ const SCENARIOS = {
 };
 
 // ─── API ──────────────────────────────────────────────────────────────────────
-export function isMockEnabled()       { return mockDataStore.enabled; }
-
 export function setMockEnabled(val) { 
   mockDataStore.enabled = !!val; 
+  if (!mockDataStore.enabled) setSimulationActive(false);
   notifyUpdate(); 
+}
+
+export function isMockEnabled() { return mockDataStore.enabled; }
+
+export function isSimulationActive() { return mockDataStore.simulationActive; }
+
+export function setSimulationActive(val) {
+  mockDataStore.simulationActive = !!val;
+  
+  if (mockDataStore.simulationActive) {
+    if (mockDataStore._timer) clearInterval(mockDataStore._timer);
+    mockDataStore._timer = setInterval(() => {
+      if (!mockDataStore.sensors) return;
+      
+      let changed = false;
+      mockDataStore.sensors = mockDataStore.sensors.map(s => {
+        if (s.status !== 'active') return s;
+        
+        // Random drift +/- 0.5 to 1.5
+        const driftM = (Math.random() - 0.5) * 2;
+        const driftT = (Math.random() - 0.5) * 0.4;
+        const driftH = (Math.random() - 0.5) * 1.2;
+        
+        changed = true;
+        return {
+          ...s,
+          moisture: Math.max(0, Math.min(100, +(s.moisture + driftM).toFixed(1))),
+          temperature: Math.max(0, Math.min(50, +(s.temperature + driftT).toFixed(1))),
+          humidity: Math.max(0, Math.min(100, +(s.humidity + driftH).toFixed(1))),
+          activityIndex: (s.activityIndex || 0) + 1,
+          lastUpdate: 'pulsing'
+        };
+      });
+      
+      if (changed) notifyUpdate();
+    }, 3000);
+  } else {
+    if (mockDataStore._timer) {
+      clearInterval(mockDataStore._timer);
+      mockDataStore._timer = null;
+    }
+  }
+  notifyUpdate();
 }
 
 export function applyScenario(name) {

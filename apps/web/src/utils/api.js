@@ -173,6 +173,20 @@ export const configAPI = {
     return response.data;
   },
 
+  getSystemStats: async () => {
+    if (isMockEnabled()) {
+      const res = await mockResponse({
+        stats: {
+          users: { total: 10, online: 2, topPlant: 'Tomato', roleDistribution: { admin: { total: 1, online: 1 }, user: { total: 7, online: 1 }, viewer: { total: 2, online: 0 } } },
+          devices: { sensors: { total: 2, online: 1, offline: 1, avgLatency: 45 }, cams: { total: 1, online: 1, offline: 0, avgLatency: 120 } }
+        }
+      });
+      return res.data;
+    }
+    const response = await api.get('/config/system-stats');
+    return response.data;
+  },
+
   // POST /api/config (body includes deviceId)
   update: async (deviceId = 'ESP32-SENSOR', config) => {
     if (isMockEnabled()) {
@@ -383,6 +397,11 @@ export const usersAPI = {
     const response = await api.delete(`/users/${userId}`, options);
     return response.data;
   },
+
+  bulkAction: async (userIds, action, value, options = {}) => {
+    const response = await api.post('/users/bulk-action', { userIds, action, value }, options);
+    return response.data;
+  },
 };
 
 export const deviceAPI = {
@@ -424,6 +443,11 @@ export const deviceAPI = {
 
   toggleKeyStatus: async (deviceId, options = {}) => {
     const response = await api.patch(`/device/keys/${encodeURIComponent(deviceId)}/toggle`, {}, options);
+    return response.data;
+  },
+
+  batchDeleteKeys: async (deviceIds, options = {}) => {
+    const response = await api.delete('/device/keys/batch', { data: { deviceIds }, ...options });
     return response.data;
   },
 };

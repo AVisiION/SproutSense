@@ -17,6 +17,7 @@ import {
   getAdminLogs,
   exportAdminLogs
 } from '../controllers/configController.js';
+import { getSystemStats } from '../controllers/adminStatsController.js';
 import { validateConfigUpdate, validateDeviceStatus } from '../validators/requestValidator.js';
 import { readLimiter } from '../middleware/rateLimiter.js';
 import config from '../config/config.js';
@@ -50,6 +51,9 @@ router.get('/health', readLimiter, requirePermissions([PERMISSIONS.CONFIG_READ])
 
 // GET /api/config/health/:deviceId - Get health for specific device
 router.get('/health/:deviceId', readLimiter, requirePermissions([PERMISSIONS.CONFIG_READ]), getHealth);
+
+// GET /api/config/system-stats - Get system-wide stats
+router.get('/system-stats', readLimiter, requirePermissions([PERMISSIONS.CONFIG_READ]), getSystemStats);
 
 // TEST MODE ROUTES - DEVELOPMENT ONLY
 if (config.IS_DEVELOPMENT) {

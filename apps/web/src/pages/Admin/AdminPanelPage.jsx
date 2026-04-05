@@ -229,8 +229,17 @@ export default function AdminPanelPage() {
   const [plantWateringConfig, setPlantWateringConfig] = useState(buildDefaultPlantWateringConfig());
   const [savingPlantSensorConfig, setSavingPlantSensorConfig] = useState(false);
   
+  // User Management State
+  const [selectedUserIds, setSelectedUserIds] = useState([]);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [userToDelete, setUserToDelete] = useState(null);
+  const [isBulkActionLoading, setIsBulkActionLoading] = useState(false);
+
   // Mock Data master toggle state
   const [mockEnabled, setMockEnabledState] = useState(isMockEnabled());
+
+  // System Stats (new)
+  const [systemStats, setSystemStats] = useState(null);
 
   // Device Key Management state
   const [deviceKeyForm, setDeviceKeyForm] = useState({ deviceId: '', displayName: '' });
@@ -238,6 +247,9 @@ export default function AdminPanelPage() {
   const [loadingDeviceKeys, setLoadingDeviceKeys] = useState(false);
   const [creatingDeviceKey, setCreatingDeviceKey] = useState(false);
   const [generatedDeviceSecret, setGeneratedDeviceSecret] = useState(null);
+  const [selectedKeys, setSelectedKeys] = useState([]);
+  const [keySearch, setKeySearch] = useState('');
+  const [isBatchRevoking, setIsBatchRevoking] = useState(false);
 
   const validateLimits = useCallback((values) => {
     const errors = {};
@@ -389,22 +401,42 @@ export default function AdminPanelPage() {
     }
   }, []);
 
-  const fetchAllData = useCallback(async (silent = false) => {
-    if (!silent) setLoading(true);
-    else setRefreshing(true);
+  const fetchAllData = useCallback(async (showLoading = false) => {
+    if (showLoading) setRefreshing(true);
+    else setLoading(true);
     try {
-      const [health, latest, cfg, water, aiUsage] = await Promise.all([
+      const [
+        health, 
+        latest, 
+        cfg, 
+        water, 
+        aiUsage, 
+        usersRes, 
+        keysRes,
+        statsRes
+      ] = await Promise.all([
         configAPI.getHealth().catch(() => null),
-        sensorAPI.getLatest().catch(() => null),
-        configAPI.get().catch(() => null),
-        wateringAPI.getStatus().catch(() => null),
-        aiAPI.getUsageStats().catch(() => null),
+        sensorAPI.getLatest('ESP32-SENSOR').catch(() => null),
+        configAPI.get('ESP32-SENSOR').catch(() => null),
+        wateringAPI.getStatus('ESP32-SENSOR').catch(() => null),
+        aiAPI.getUsageStats('ESP32-SENSOR').catch(() => null),
+        usersAPI.list().catch(() => null),
+        deviceAPI.listKeys().catch(() => null),
+        configAPI.getSystemStats().catch(() => null)
       ]);
-      setSystemInfo(health?.data || health);
+      
+      setSystemInfo({
+        backend: health?.backend || health?.data?.backend || 'Online',
+        database: health?.database || health?.data?.database || 'Connected',
+        version: health?.version || health?.data?.version || '1.0.0',
+      });
+      setSystemStats(statsRes?.stats || statsRes?.data?.stats || null);
       setSensorData(latest?.data || latest);
       setConfigData(cfg?.data || cfg);
       setWaterStatus(water?.data || water);
       setAIUsageData(aiUsage?.data || aiUsage);
+      setUsers(usersRes?.users || []);
+      setDeviceKeys(keysRes?.devices || []);
       hydrateLimitsForm(cfg?.data || cfg);
       hydrateUiPreferences(cfg?.data || cfg);
       log('System data refreshed successfully', LOG_TYPES.success);
@@ -472,6 +504,39 @@ export default function AdminPanelPage() {
       log(`Failed to load device keys: ${error?.response?.data?.message || error.message}`, LOG_TYPES.error);
     } finally {
       setLoadingDeviceKeys(false);
+    }
+  };
+
+  const handleSelectKey = (deviceId, checked) => {
+    if (checked) {
+      setSelectedKeys(prev => [...prev, deviceId]);
+    } else {
+      setSelectedKeys(prev => prev.filter(id => id !== deviceId));
+    }
+  };
+
+  const handleSelectAllKeys = (checked, list) => {
+    if (checked) {
+      setSelectedKeys(list.map(k => k.deviceId));
+    } else {
+      setSelectedKeys([]);
+    }
+  };
+
+  const handleBatchRevoke = async () => {
+    if (selectedKeys.length === 0) return;
+    if (!window.confirm(`Are you sure you want to revoke ${selectedKeys.length} device keys? All linked users will be disconnected.`)) return;
+
+    setIsBatchRevoking(true);
+    try {
+      await deviceAPI.batchDeleteKeys(selectedKeys);
+      log(`Batch revoked ${selectedKeys.length} device keys`, LOG_TYPES.warning, { count: selectedKeys.length });
+      setSelectedKeys([]);
+      await loadDeviceKeys();
+    } catch (error) {
+      log(`Batch revocation failed: ${error.message}`, LOG_TYPES.error);
+    } finally {
+      setIsBatchRevoking(false);
     }
   };
 
@@ -869,6 +934,7 @@ export default function AdminPanelPage() {
         emailVerified: userForm.emailVerified,
         sensorDataVisible: userForm.sensorDataVisible,
       });
+
       log(`User created successfully: ${userForm.email.trim()}`, LOG_TYPES.success);
       resetUserForm();
       await loadUsers();
@@ -877,6 +943,55 @@ export default function AdminPanelPage() {
       log(`User creation failed: ${message}`, LOG_TYPES.error, { email: userForm.email });
     } finally {
       setCreatingUser(false);
+    }
+  };
+
+  const handleOpenDeleteModal = (user) => {
+    setUserToDelete(user);
+    setIsDeleteModalOpen(true);
+  };
+
+  const handleConfirmDeleteUser = async () => {
+    if (!userToDelete) return;
+    try {
+      await usersAPI.delete(userToDelete.id);
+      toast.success('User deleted successfully');
+      loadUsers();
+    } catch (err) {
+      toast.error('Failed to delete user: ' + (err.response?.data?.message || err.message));
+    } finally {
+      setIsDeleteModalOpen(false);
+      setUserToDelete(null);
+    }
+  };
+
+  const handleToggleUserSelection = (userId) => {
+    setSelectedUserIds(prev => 
+      prev.includes(userId) ? prev.filter(id => id !== userId) : [...prev, userId]
+    );
+  };
+
+  const handleSelectAllUsers = (filteredUsers) => {
+    if (selectedUserIds.length === filteredUsers.length) {
+      setSelectedUserIds([]);
+    } else {
+      setSelectedUserIds(filteredUsers.map(u => u.id));
+    }
+  };
+
+  const handleBulkAction = async (action, value = null) => {
+    if (selectedUserIds.length === 0) return;
+    
+    setIsBulkActionLoading(true);
+    try {
+      await usersAPI.bulkAction(selectedUserIds, action, value);
+      toast.success(`Bulk ${action} completed successfully`);
+      setSelectedUserIds([]);
+      loadUsers();
+    } catch (err) {
+      toast.error(`Bulk ${action} failed: ` + (err.response?.data?.message || err.message));
+    } finally {
+      setIsBulkActionLoading(false);
     }
   };
 
@@ -1168,14 +1283,78 @@ export default function AdminPanelPage() {
               {activeSection === 'overview' && (
                 <div className="adm-section">
                   <div className="adm-section-header">
-                    <h2><i className="fa-solid fa-chart-line" /> System Overview</h2>
-                    <span className="adm-section-badge">Live</span>
+                    <h2><i className="fa-solid fa-chart-line" /> Dashboard Overview</h2>
+                    <span className="adm-section-badge">Live Intelligence</span>
                   </div>
 
-                  <div className="adm-cards-grid">
-                    <StatCard icon="fa-server"       color="blue"   label="Backend"      value={systemInfo?.backend   || 'Online'} />
-                    <StatCard icon="fa-database"     color="green"  label="Database"     value={systemInfo?.database  || 'Connected'} />
-                    <StatCard icon="fa-tachometer-alt" color="red" label="API Version"   value={systemInfo?.version || '1.0.0'} />
+                  <div className="adm-dashboard-grid">
+                    {/* User Distribution Card */}
+                    <div className="adm-glass-box adm-stat-widget">
+                      <div className="adm-widget-header">
+                        <div className="adm-widget-icon" style={{ background: 'rgba(34, 211, 238, 0.1)', color: '#22d3ee' }}>
+                          <i className="fa-solid fa-users" />
+                        </div>
+                        <div className="adm-widget-title">
+                          <h3>User Activity</h3>
+                          <p>{systemStats?.users?.online || 0} active in last 15m</p>
+                        </div>
+                        <div className="adm-widget-value">{systemStats?.users?.total || 0}</div>
+                      </div>
+                      <div className="adm-widget-content">
+                        <div className="adm-role-bars">
+                          {Object.entries(systemStats?.users?.roleDistribution || {}).map(([role, data]) => (
+                            <div key={role} className="adm-role-bar-item">
+                              <div className="adm-role-label">
+                                <span>{role.charAt(0).toUpperCase() + role.slice(1)}s</span>
+                                <span>{data.total}</span>
+                              </div>
+                              <div className="adm-progress-bg">
+                                <div 
+                                  className={`adm-progress-fill adm-progress-fill--${role}`} 
+                                  style={{ width: `${(data.total / (systemStats?.users?.total || 1)) * 100}%` }}
+                                />
+                              </div>
+                              <div className="adm-role-online">
+                                <span className="adm-pulse-dot" /> {data.online} Online
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Most Used Plant & Network Health */}
+                    <div className="adm-dashboard-side">
+                      <div className="adm-glass-box adm-mini-widget">
+                        <div className="adm-mini-icon" style={{ background: 'rgba(34, 197, 94, 0.1)', color: '#22c55e' }}>
+                          <i className="fa-solid fa-leaf" />
+                        </div>
+                        <div className="adm-mini-info">
+                          <span className="adm-mini-label">Popular Growth Choice</span>
+                          <span className="adm-mini-value">{systemStats?.users?.topPlant || 'None'}</span>
+                        </div>
+                      </div>
+
+                      <div className="adm-glass-box adm-mini-widget">
+                        <div className="adm-mini-icon" style={{ background: 'rgba(245, 158, 11, 0.1)', color: '#f59e0b' }}>
+                          <i className="fa-solid fa-database" />
+                        </div>
+                        <div className="adm-mini-info">
+                          <span className="adm-mini-label">Database Sync</span>
+                          <span className="adm-mini-value">{systemInfo?.database || 'Connected'}</span>
+                        </div>
+                      </div>
+
+                      <div className="adm-glass-box adm-mini-widget">
+                        <div className="adm-mini-icon" style={{ background: 'rgba(139, 92, 246, 0.1)', color: '#8b5cf6' }}>
+                          <i className="fa-solid fa-code-branch" />
+                        </div>
+                        <div className="adm-mini-info">
+                          <span className="adm-mini-label">System Kernel</span>
+                          <span className="adm-mini-value">v{systemInfo?.version || '1.0.0'}</span>
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 </div>
               )}
@@ -1342,72 +1521,146 @@ export default function AdminPanelPage() {
                     )}
                   </div>
 
-                  {/* Device Keys List */}
+                  {/* Registered Device Keys with Search and Cards */}
                   <div className="adm-glass-box">
-                    <h3><i className="fa-solid fa-list" /> Registered Device Keys</h3>
-                    {loadingDeviceKeys ? (
-                      <p style={{ color: '#94a3b8' }}><i className="fa-solid fa-spinner fa-spin" /> Loading device keys...</p>
-                    ) : deviceKeys.length === 0 ? (
-                      <p style={{ color: '#94a3b8' }}>No device keys registered yet.</p>
-                    ) : (
-                      <div className="adm-device-keys-table">
-                        {deviceKeys.map((key) => (
-                          <div key={key.deviceId} className="adm-device-key-item">
-                            <div className="adm-device-key-info">
-                              <p className="adm-device-key-id">
-                                {key.deviceId}
-                              </p>
-                              <p className="adm-device-key-display">
-                                {key.displayName || '(No display name)'}
-                              </p>
-                            </div>
-                            <span style={{
-                              padding: '0.3rem 0.8rem',
-                              borderRadius: '0.4rem',
-                              fontSize: '0.75rem',
-                              fontWeight: '600',
-                              background: key.isActive ? 'rgba(34, 197, 94, 0.2)' : 'rgba(148, 163, 184, 0.2)',
-                              color: key.isActive ? '#22c55e' : '#94a3b8',
-                            }}>
-                              {key.isActive ? 'Active' : 'Inactive'}
-                            </span>
-                            <button
-                              onClick={() => handleToggleDeviceKeyStatus(key.deviceId)}
-                              style={{
-                                padding: '0.5rem 0.8rem',
-                                background: 'rgba(148, 163, 184, 0.2)',
-                                border: '1px solid rgba(148, 163, 184, 0.3)',
-                                borderRadius: '0.4rem',
-                                color: '#cbd5e1',
-                                cursor: 'pointer',
-                                fontSize: '0.8rem',
-                                fontWeight: '600',
-                              }}
-                            >
-                              <i className={`fa-solid ${key.isActive ? 'fa-toggle-on' : 'fa-toggle-off'}`} />
-                            </button>
-                            <button
-                              onClick={() => handleDeleteDeviceKey(key.deviceId)}
-                              style={{
-                                padding: '0.5rem 0.8rem',
-                                background: 'rgba(239, 68, 68, 0.2)',
-                                border: '1px solid rgba(239, 68, 68, 0.3)',
-                                borderRadius: '0.4rem',
-                                color: '#ef4444',
-                                cursor: 'pointer',
-                                fontSize: '0.8rem',
-                                fontWeight: '600',
-                              }}
-                            >
-                              <i className="fa-solid fa-trash" />
-                            </button>
-                          </div>
-                        ))}
+                    <div className="adm-search-row">
+                      <div className="adm-search-container">
+                        <i className="fa-solid fa-magnifying-glass" />
+                        <input 
+                          type="text" 
+                          className="adm-search-input" 
+                          placeholder="Search by ID, Name or User Email..." 
+                          value={keySearch}
+                          onChange={(e) => setKeySearch(e.target.value)}
+                        />
                       </div>
+                      <button className="adm-icon-btn" onClick={loadDeviceKeys} title="Refresh Device Keys">
+                        <i className={`fa-solid fa-rotate ${loadingDeviceKeys ? 'fa-spin' : ''}`} />
+                      </button>
+                    </div>
+
+                    {loadingDeviceKeys ? (
+                      <div className="adm-loading">
+                        <i className="fa-solid fa-spinner fa-spin" />
+                        <span>Synchronizing Secure Keys...</span>
+                      </div>
+                    ) : (
+                      <>
+                        <div className="adm-key-grid">
+                          {deviceKeys
+                            .filter(k => {
+                              const q = keySearch.toLowerCase().trim();
+                              if (!q) return true;
+                              return (
+                                k.deviceId.toLowerCase().includes(q) ||
+                                (k.displayName || '').toLowerCase().includes(q) ||
+                                (k.linkedUser?.email || '').toLowerCase().includes(q) ||
+                                (k.linkedUser?.fullName || '').toLowerCase().includes(q)
+                              );
+                            })
+                            .map((key) => (
+                              <div 
+                                key={key.deviceId} 
+                                className={`adm-key-card ${selectedKeys.includes(key.deviceId) ? 'adm-key-card--selected' : ''}`}
+                              >
+                                <div className="adm-key-selection">
+                                  <input 
+                                    type="checkbox" 
+                                    className="adm-key-checkbox"
+                                    checked={selectedKeys.includes(key.deviceId)}
+                                    onChange={(e) => handleSelectKey(key.deviceId, e.target.checked)}
+                                  />
+                                </div>
+
+                                <div className="adm-key-header">
+                                  <span className="adm-key-id">{key.deviceId}</span>
+                                  <span className="adm-key-name">{key.displayName || 'Unnamed Terminal'}</span>
+                                </div>
+
+                                {key.isLinked ? (
+                                  <div className="adm-key-owner">
+                                    <div className="adm-owner-avatar">
+                                      {key.linkedUser?.fullName?.charAt(0).toUpperCase() || '?'}
+                                    </div>
+                                    <div className="adm-owner-info">
+                                      <span className="adm-owner-name">{key.linkedUser?.fullName}</span>
+                                      <span className="adm-owner-email">{key.linkedUser?.email}</span>
+                                    </div>
+                                  </div>
+                                ) : (
+                                  <div className="adm-key-owner" style={{ opacity: 0.5, borderStyle: 'dashed' }}>
+                                    <div className="adm-owner-avatar" style={{ background: 'rgba(148, 163, 184, 0.2)' }}>
+                                      <i className="fa-solid fa-unlink" style={{ fontSize: '0.7rem' }} />
+                                    </div>
+                                    <div className="adm-owner-info">
+                                      <span className="adm-owner-name">Not Linked</span>
+                                      <span className="adm-owner-email">Pending assignment</span>
+                                    </div>
+                                  </div>
+                                )}
+
+                                <div className="adm-key-meta">
+                                  <div className="adm-last-seen">
+                                    <i className="fa-solid fa-clock" />
+                                    {key.lastSeenAt 
+                                      ? `Active ${new Date(key.lastSeenAt).toLocaleDateString()} ${new Date(key.lastSeenAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}` 
+                                      : 'Never Connected'
+                                    }
+                                  </div>
+                                  <span className={`adm-badge ${key.isActive ? 'adm-badge--green' : 'adm-badge--gray'}`}>
+                                    {key.isActive ? 'ACTIVE' : 'REVOKED'}
+                                  </span>
+                                </div>
+
+                                <div className="adm-key-footer">
+                                  <button 
+                                    className="adm-icon-btn ad-icon-btn--yellow"
+                                    onClick={() => handleToggleDeviceKeyStatus(key.deviceId)}
+                                    title={key.isActive ? 'Revoke Access' : 'Restore Access'}
+                                  >
+                                    <i className={`fa-solid ${key.isActive ? 'fa-toggle-on' : 'fa-toggle-off'}`} />
+                                  </button>
+                                  <button 
+                                    className="adm-btn-revoke"
+                                    onClick={() => handleDeleteDeviceKey(key.deviceId)}
+                                  >
+                                    <i className="fa-solid fa-trash-can" /> Delete Key
+                                  </button>
+                                </div>
+                              </div>
+                            ))}
+                        </div>
+
+                        {deviceKeys.length === 0 && (
+                          <div className="adm-empty">
+                            <i className="fa-solid fa-key" />
+                            <span>No device keys found. Generate one to get started.</span>
+                          </div>
+                        )}
+                      </>
                     )}
                   </div>
                 </div>
               )}
+
+              {/* Batch Action Bar */}
+              <div className={`adm-batch-bar ${selectedKeys.length > 0 ? 'adm-batch-bar--visible' : ''}`}>
+                <div className="adm-batch-count">
+                  <span>{selectedKeys.length}</span> Device Keys Selected
+                </div>
+                <div className="adm-batch-actions">
+                  <button className="adm-batch-btn adm-batch-btn--ghost" onClick={() => setSelectedKeys([])}>
+                    Cancel
+                  </button>
+                  <button 
+                    className="adm-batch-btn adm-batch-btn--danger" 
+                    onClick={handleBatchRevoke}
+                    disabled={isBatchRevoking}
+                  >
+                    {isBatchRevoking ? 'Revoking...' : `Revoke Selected`}
+                  </button>
+                </div>
+              </div>
 
               {/* ── UI ─────────────────────────────────────── */}
               {activeSection === 'ui' && (
@@ -1533,222 +1786,243 @@ export default function AdminPanelPage() {
               {activeSection === 'users' && (
                 <div className="adm-section">
                   <div className="adm-section-header">
-                    <h2><i className="fa-solid fa-users" /> User Management</h2>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                      <h2><i className="fa-solid fa-users" /> Identity & Access</h2>
+                      <span className="adm-section-badge">{filteredUsers.length} Logged Identities</span>
+                    </div>
                     <div className="adm-btn-row">
-                      <button className="adm-icon-btn" onClick={loadUsers} title="Refresh users">
+                      <button className="adm-icon-btn" onClick={loadUsers} title="Sync User Data">
                         <i className={`fa-solid fa-rotate ${usersLoading ? 'fa-spin' : ''}`} />
                       </button>
                     </div>
                   </div>
 
-                  <div className="adm-glass-box" style={{ marginBottom: '1rem' }}>
-                    <h3><i className="fa-solid fa-user-plus" /> Add User Manually</h3>
-                    <div className="adm-config-row">
-                      <span className="adm-config-key">Full Name</span>
-                      <input
-                        className="adm-input"
-                        style={{ width: '260px' }}
-                        type="text"
-                        value={userForm.fullName}
-                        onChange={(e) => handleUserFormChange('fullName', e.target.value)}
-                        placeholder="User full name"
-                      />
-                    </div>
-                    <div className="adm-config-row">
-                      <span className="adm-config-key">Email</span>
-                      <input
-                        className="adm-input"
-                        style={{ width: '260px' }}
-                        type="email"
-                        value={userForm.email}
-                        onChange={(e) => handleUserFormChange('email', e.target.value)}
-                        placeholder="user@example.com"
-                      />
-                    </div>
-                    <div className="adm-config-row">
-                      <span className="adm-config-key">Temporary Password</span>
-                      <input
-                        className="adm-input"
-                        style={{ width: '260px' }}
-                        type="password"
-                        value={userForm.password}
-                        onChange={(e) => handleUserFormChange('password', e.target.value)}
-                        placeholder="Minimum 12 chars"
-                      />
-                    </div>
-                    <div className="adm-config-row">
-                      <span className="adm-config-key">Role</span>
-                      <select
-                        className="adm-input"
-                        value={userForm.roleKey}
-                        onChange={(e) => handleUserFormChange('roleKey', e.target.value)}
-                      >
-                        <option value={ROLE.ADMIN}>admin</option>
-                        <option value={ROLE.USER}>user</option>
-                        <option value={ROLE.VIEWER}>viewer</option>
-                      </select>
-                    </div>
-                    <div className="adm-config-row">
-                      <span className="adm-config-key">Account Status</span>
-                      <select
-                        className="adm-input"
-                        value={userForm.accountStatus}
-                        onChange={(e) => handleUserFormChange('accountStatus', e.target.value)}
-                      >
-                        <option value={ACCOUNT_STATUS.PENDING_VERIFICATION}>pending_verification</option>
-                        <option value={ACCOUNT_STATUS.ACTIVE}>active</option>
-                        <option value={ACCOUNT_STATUS.SUSPENDED}>suspended</option>
-                        <option value={ACCOUNT_STATUS.DISABLED}>disabled</option>
-                      </select>
-                    </div>
-                    <div className="adm-config-row">
-                      <span className="adm-config-key">Email Verified</span>
-                      <input
-                        type="checkbox"
-                        checked={Boolean(userForm.emailVerified)}
-                        onChange={(e) => handleUserFormChange('emailVerified', e.target.checked)}
-                      />
-                    </div>
-                    <div className="adm-config-row">
-                      <span className="adm-config-key">Sensor Data Visible</span>
-                      <input
-                        type="checkbox"
-                        checked={Boolean(userForm.sensorDataVisible)}
-                        onChange={(e) => handleUserFormChange('sensorDataVisible', e.target.checked)}
-                      />
-                    </div>
-                    <div className="adm-btn-row" style={{ marginTop: '0.75rem' }}>
-                      <button className="adm-action-btn adm-action-btn--start" onClick={handleCreateUser} disabled={creatingUser}>
-                        <i className="fa-solid fa-user-plus" /> {creatingUser ? 'Creating...' : 'Create User'}
-                      </button>
-                      <button className="adm-action-btn adm-action-btn--stop" onClick={resetUserForm} disabled={creatingUser}>
-                        <i className="fa-solid fa-rotate-left" /> Reset
-                      </button>
-                    </div>
-                  </div>
-
-                  <div className="adm-glass-box" style={{ marginBottom: '1rem' }}>
-                    <div className="adm-config-row">
-                      <span className="adm-config-key">Search Users</span>
-                      <input
-                        className="adm-input"
-                        style={{ width: '260px' }}
-                        type="text"
-                        value={usersQuery}
-                        onChange={(e) => setUsersQuery(e.target.value)}
-                        placeholder="Name, email, role, status"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="adm-glass-box">
-                    <h3><i className="fa-solid fa-user-shield" /> Accounts ({filteredUsers.length})</h3>
-                    {usersLoading ? (
-                      <p className="adm-empty"><i className="fa-solid fa-circle-notch fa-spin" /> Loading users...</p>
-                    ) : filteredUsers.length === 0 ? (
-                      <p className="adm-empty"><i className="fa-solid fa-circle-info" /> No users match your filters.</p>
-                    ) : (
-                      <div style={{ overflowX: 'auto' }}>
-                        <table className="adm-log-table">
-                          <thead>
-                            <tr>
-                              <th>Name</th>
-                              <th>Email</th>
-                              <th>Role</th>
-                              <th>Status</th>
-                              <th>Plant Type</th>
-                              <th>Email Verified</th>
-                              <th>Sensor Data</th>
-                              <th>Last Login</th>
-                              <th>Dashboard View</th>
-                              <th>Actions</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {filteredUsers.map((entry) => {
-                              const isSelf = entry.email === user?.email;
-                              return (
-                                <tr key={entry.id}>
-                                  <td>{entry.fullName || '-'}</td>
-                                  <td>{entry.email}</td>
-                                  <td>{entry.role || ROLE.USER}</td>
-                                  <td>
-                                    <select
-                                      className="adm-input"
-                                      value={entry.accountStatus || ACCOUNT_STATUS.PENDING_VERIFICATION}
-                                      onChange={(e) => handleUserStatusUpdate(entry, e.target.value)}
-                                      disabled={isSelf && entry.role === ROLE.ADMIN}
-                                    >
-                                      <option value={ACCOUNT_STATUS.PENDING_VERIFICATION}>pending_verification</option>
-                                      <option value={ACCOUNT_STATUS.ACTIVE}>active</option>
-                                      <option value={ACCOUNT_STATUS.SUSPENDED}>suspended</option>
-                                      <option value={ACCOUNT_STATUS.DISABLED}>disabled</option>
-                                    </select>
-                                  </td>
-                                  <td>{entry.preferredPlant || 'tomato'}</td>
-                                  <td>{entry.emailVerified ? 'Yes' : 'No'}</td>
-                                  <td>
-                                    <button
-                                      className="adm-action-btn"
-                                      style={{
-                                        padding: '0.35rem 0.75rem',
-                                        border: entry.sensorDataVisible === false
-                                          ? '1px solid rgba(239,68,68,0.35)'
-                                          : '1px solid rgba(67,160,71,0.35)',
-                                        color: entry.sensorDataVisible === false ? '#ffb3b3' : '#b9f6ca'
-                                      }}
-                                      onClick={() => handleUserSensorVisibilityUpdate(entry, entry.sensorDataVisible === false)}
-                                    >
-                                      <i className={`fa-solid ${entry.sensorDataVisible === false ? 'fa-eye-slash' : 'fa-eye'}`} />
-                                      {entry.sensorDataVisible === false ? ' Hidden' : ' Visible'}
-                                    </button>
-                                  </td>
-                                  <td>{entry.lastLoginAt ? new Date(entry.lastLoginAt).toLocaleString() : 'Never'}</td>
-                                  <td>
-                                    <button
-                                      className="adm-action-btn adm-action-btn--start"
-                                      style={{ padding: '0.4rem 0.85rem', boxShadow: '0 0 14px rgba(67,160,71,0.45)' }}
-                                      onClick={() => handleViewUserDashboard(entry)}
-                                    >
-                                      <i className="fa-solid fa-arrow-up-right-from-square" /> View
-                                    </button>
-                                  </td>
-                                  <td>
-                                    <div className="adm-btn-row" style={{ gap: '0.45rem', flexWrap: 'wrap' }}>
-                                      <button
-                                        className="adm-action-btn adm-action-btn--start"
-                                        style={{ padding: '0.35rem 0.75rem', opacity: entry.role === ROLE.ADMIN ? 0.6 : 1 }}
-                                        onClick={() => handleUserRoleUpdate(entry, ROLE.ADMIN)}
-                                        disabled={isSelf || entry.role === ROLE.ADMIN}
-                                      >
-                                        <i className="fa-solid fa-user-shield" /> Admin
-                                      </button>
-                                      <button
-                                        className="adm-action-btn adm-action-btn--stop"
-                                        style={{ padding: '0.35rem 0.75rem', opacity: entry.role === ROLE.VIEWER ? 0.6 : 1 }}
-                                        onClick={() => handleUserRoleUpdate(entry, ROLE.VIEWER)}
-                                        disabled={isSelf || entry.role === ROLE.VIEWER}
-                                      >
-                                        <i className="fa-solid fa-user-tag" /> Viewer
-                                      </button>
-                                      <button
-                                        className="adm-action-btn"
-                                        style={{ padding: '0.35rem 0.75rem', border: '1px solid rgba(239,68,68,0.35)', color: '#ffb3b3' }}
-                                        onClick={() => handleDeleteUser(entry)}
-                                        disabled={isSelf}
-                                      >
-                                        <i className="fa-solid fa-trash" /> Delete
-                                      </button>
-                                    </div>
-                                  </td>
-                                </tr>
-                              );
-                            })}
-                          </tbody>
-                        </table>
+                  {/* Identity Statistics */}
+                  <div className="adm-dashboard-grid" style={{ marginBottom: '1.5rem', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))' }}>
+                    <div className="adm-glass-box adm-mini-widget">
+                      <div className="adm-mini-icon" style={{ background: 'rgba(34, 211, 238, 0.1)', color: '#22d3ee' }}>
+                        <i className="fa-solid fa-users-viewfinder" />
                       </div>
-                    )}
+                      <div className="adm-mini-info">
+                        <span className="adm-mini-label">Total Registry</span>
+                        <span className="adm-mini-value">{users.length}</span>
+                      </div>
+                    </div>
+                    <div className="adm-glass-box adm-mini-widget">
+                      <div className="adm-mini-icon" style={{ background: 'rgba(34, 197, 94, 0.1)', color: '#22c55e' }}>
+                        <i className="fa-solid fa-user-check" />
+                      </div>
+                      <div className="adm-mini-info">
+                        <span className="adm-mini-label">Active Profiles</span>
+                        <span className="adm-mini-value">{users.filter(u => u.accountStatus === 'active').length}</span>
+                      </div>
+                    </div>
+                    <div className="adm-glass-box adm-mini-widget">
+                      <div className="adm-mini-icon" style={{ background: 'rgba(245, 158, 11, 0.1)', color: '#f59e0b' }}>
+                        <i className="fa-solid fa-user-clock" />
+                      </div>
+                      <div className="adm-mini-info">
+                        <span className="adm-mini-label">Pending Verification</span>
+                        <span className="adm-mini-value">{users.filter(u => u.accountStatus === 'pending_verification').length}</span>
+                      </div>
+                    </div>
                   </div>
+
+                  {/* Provisioning Form */}
+                  <div className="adm-glass-box" style={{ marginBottom: '1.5rem' }}>
+                    <h3 style={{ borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: '0.75rem', marginBottom: '1.25rem' }}>
+                      <i className="fa-solid fa-user-plus" style={{ color: '#22d3ee' }} /> Identity Provisioning
+                    </h3>
+                    <div className="adm-form-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '1.25rem' }}>
+                      <div className="adm-form-group">
+                        <label>Full Identity Name</label>
+                        <input className="adm-input" type="text" placeholder="e.g. John Doe" value={userForm.fullName} onChange={(e) => handleUserFormChange('fullName', e.target.value)} />
+                      </div>
+                      <div className="adm-form-group">
+                        <label>Security Email</label>
+                        <input className="adm-input" type="email" placeholder="user@sproutsense.io" value={userForm.email} onChange={(e) => handleUserFormChange('email', e.target.value)} />
+                      </div>
+                      <div className="adm-form-group">
+                        <label>Initial Passkey</label>
+                        <input className="adm-input" type="password" placeholder="••••••••••••" value={userForm.password} onChange={(e) => handleUserFormChange('password', e.target.value)} />
+                      </div>
+                      <div className="adm-form-group">
+                        <label>Assigned Role</label>
+                        <select className="adm-input" value={userForm.roleKey} onChange={(e) => handleUserFormChange('roleKey', e.target.value)}>
+                          <option value={ROLE.ADMIN}>Administrator</option>
+                          <option value={ROLE.USER}>Standard User</option>
+                          <option value={ROLE.VIEWER}>Guest Viewer</option>
+                        </select>
+                      </div>
+                    </div>
+                    
+                    <div style={{ display: 'flex', gap: '1.5rem', marginTop: '1.25rem', padding: '1rem', background: 'rgba(255,255,255,0.02)', borderRadius: '0.6rem' }}>
+                      <label className="adm-toggle-label">
+                        <input type="checkbox" checked={Boolean(userForm.emailVerified)} onChange={(e) => handleUserFormChange('emailVerified', e.target.checked)} />
+                        <span>Pre-Verify Email</span>
+                      </label>
+                      <label className="adm-toggle-label">
+                        <input type="checkbox" checked={Boolean(userForm.sensorDataVisible)} onChange={(e) => handleUserFormChange('sensorDataVisible', e.target.checked)} />
+                        <span>Allow Sensor Data</span>
+                      </label>
+                    </div>
+
+                    <div className="adm-btn-row" style={{ marginTop: '1.5rem', justifyContent: 'flex-start' }}>
+                      <button className="adm-action-btn adm-action-btn--start" style={{ padding: '0.75rem 1.5rem' }} onClick={handleCreateUser} disabled={creatingUser}>
+                        <i className="fa-solid fa-plus-circle" /> {creatingUser ? 'Provisioning...' : 'Provision New Identity'}
+                      </button>
+                      <button className="adm-action-btn adm-action-btn--ghost" onClick={resetUserForm}>Reset Form</button>
+                    </div>
+                  </div>
+
+                  {/* Toolbar & Search */}
+                  <div className="adm-toolbar">
+                    <div className="adm-search-container" style={{ flex: 1, maxWidth: '400px' }}>
+                      <i className="fa-solid fa-magnifying-glass" />
+                      <input 
+                        type="text" 
+                        placeholder="Search by name, email or role..." 
+                        value={usersQuery} 
+                        onChange={(e) => setUsersQuery(e.target.value)} 
+                      />
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                      <span style={{ fontSize: '0.8rem', color: '#64748b', fontWeight: '600' }}>Select All</span>
+                      <label className="adm-toggle-sm">
+                        <input 
+                          type="checkbox" 
+                          checked={selectedUserIds.length === filteredUsers.length && filteredUsers.length > 0} 
+                          onChange={() => handleSelectAllUsers(filteredUsers)} 
+                        />
+                        <span className="slider-sm" />
+                      </label>
+                    </div>
+                  </div>
+
+                  {/* User Card Grid */}
+                  {usersLoading ? (
+                    <div className="adm-loading-block">
+                      <i className="fa-solid fa-circle-notch fa-spin" />
+                      <span>Syncing Identity Registry...</span>
+                    </div>
+                  ) : filteredUsers.length === 0 ? (
+                    <div className="adm-empty-state">
+                      <i className="fa-solid fa-users-slash" />
+                      <p>No identities found matching the search parameters.</p>
+                    </div>
+                  ) : (
+                    <div className="adm-user-grid">
+                      {filteredUsers.map((u) => {
+                        const isSelf = u.email === user?.email;
+                        const isSelected = selectedUserIds.includes(u.id);
+                        return (
+                          <div key={u.id} className={`adm-user-card ${isSelected ? 'adm-user-card--selected' : ''}`}>
+                            <div className="adm-user-card-select">
+                              <input type="checkbox" checked={isSelected} onChange={() => handleToggleUserSelection(u.id)} />
+                            </div>
+                            
+                            <div className="adm-user-card-header">
+                              <div className={`adm-user-avatar adm-user-avatar--${u.role}`}>
+                                {u.fullName?.charAt(0).toUpperCase() || '?'}
+                                {u.accountStatus === 'active' && <span className="adm-user-online-dot" title="Active Account" />}
+                              </div>
+                              <div className="adm-user-card-info">
+                                <h4 className="adm-user-card-name">
+                                  {u.fullName} {isSelf && <span className="adm-self-pill">YOU</span>}
+                                </h4>
+                                <span className="adm-user-card-email">{u.email}</span>
+                              </div>
+                            </div>
+
+                            <div className="adm-user-card-badges">
+                              <span className={`adm-role-tag adm-role-tag--${u.role}`}>{u.role?.toUpperCase()}</span>
+                              <span className={`adm-status-badge adm-status-badge--${u.accountStatus}`}>{u.accountStatus?.replace('_',' ')}</span>
+                            </div>
+
+                            <div className="adm-user-card-details">
+                              <div className="adm-card-detail-item">
+                                <i className="fa-solid fa-leaf" />
+                                <span>{u.preferredPlant || 'Default Garden'}</span>
+                              </div>
+                              <div className="adm-card-detail-item">
+                                <i className="fa-solid fa-clock-rotate-left" />
+                                <span>{u.lastLoginAt ? `Seen ${new Date(u.lastLoginAt).toLocaleDateString()}` : 'Never Seen'}</span>
+                              </div>
+                            </div>
+
+                            <div className="adm-user-card-actions">
+                              <button className="adm-card-btn" onClick={() => handleViewUserDashboard(u)} title="View Dashboard">
+                                <i className="fa-solid fa-desktop" />
+                              </button>
+                              <div className="adm-card-dropdown">
+                                <select 
+                                  value={u.accountStatus} 
+                                  onChange={(e) => handleUserStatusUpdate(u, e.target.value)}
+                                  disabled={isSelf && u.role === 'admin'}
+                                >
+                                  <option value="active">Active</option>
+                                  <option value="suspended">Suspend</option>
+                                  <option value="disabled">Disable</option>
+                                </select>
+                              </div>
+                              <button 
+                                className="adm-card-btn adm-card-btn--danger" 
+                                onClick={() => handleOpenDeleteModal(u)}
+                                disabled={isSelf}
+                                title="Purge Identity"
+                              >
+                                <i className="fa-solid fa-trash-can" />
+                              </button>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+
+                  {/* Bulk Action Bar */}
+                  <div className={`adm-bulk-bar ${selectedUserIds.length > 0 ? 'adm-bulk-bar--visible' : ''}`}>
+                    <div className="adm-bulk-info">
+                      <span className="adm-bulk-count">{selectedUserIds.length}</span> identities selected
+                    </div>
+                    <div className="adm-bulk-actions">
+                      <button className="adm-bulk-action" onClick={() => handleBulkAction('status', 'suspended')} disabled={isBulkActionLoading}>
+                        <i className="fa-solid fa-user-slash" /> Suspend
+                      </button>
+                      <button className="adm-bulk-action" onClick={() => handleBulkAction('status', 'active')} disabled={isBulkActionLoading}>
+                        <i className="fa-solid fa-user-check" /> Activate
+                      </button>
+                      <div className="adm-bulk-divider" />
+                      <button className="adm-bulk-action adm-bulk-action--danger" onClick={() => handleBulkAction('delete')} disabled={isBulkActionLoading}>
+                        <i className="fa-solid fa-trash" /> Purge Selection
+                      </button>
+                      <button className="adm-bulk-close" onClick={() => setSelectedUserIds([])}>
+                        <i className="fa-solid fa-times" />
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Delete Confirmation Modal */}
+                  {isDeleteModalOpen && (
+                    <div className="adm-modal-overlay" onClick={() => setIsDeleteModalOpen(false)}>
+                      <div className="adm-modal-content adm-glass-box" onClick={e => e.stopPropagation()}>
+                        <div className="adm-modal-header" style={{ color: '#ef4444' }}>
+                          <i className="fa-solid fa-triangle-exclamation" /> 
+                          <h3 style={{ margin: 0 }}>Confirm Identity Purge</h3>
+                        </div>
+                        <div className="adm-modal-body">
+                          <p>You are about to permanently delete <strong>{userToDelete?.fullName}</strong> ({userToDelete?.email}).</p>
+                          <p style={{ color: '#94a3b8', fontSize: '0.85rem' }}>This action is irreversible and will remove all associated telemetry history.</p>
+                        </div>
+                        <div className="adm-modal-footer">
+                          <button className="adm-action-btn adm-action-btn--ghost" onClick={() => setIsDeleteModalOpen(false)}>Cancel</button>
+                          <button className="adm-action-btn adm-action-btn--stop" onClick={handleConfirmDeleteUser}>
+                            Confirm Deletion
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
 

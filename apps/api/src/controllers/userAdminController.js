@@ -216,3 +216,46 @@ export async function deleteUser(req, res, next) {
     return next(error);
   }
 }
+
+export async function bulkUserAction(req, res, next) {
+  try {
+    const { userIds, action, value } = req.body || {};
+
+    if (!Array.isArray(userIds) || userIds.length === 0) {
+      return res.status(400).json({ success: false, message: 'userIds must be a non-empty array.' });
+    }
+
+    if (!['status', 'role', 'delete'].includes(action)) {
+      return res.status(400).json({ success: false, message: 'Invalid action.' });
+    }
+
+    const selfId = String(req.auth?.userId || '');
+    const filteredIds = userIds.filter(id => id !== selfId);
+
+    if (action === 'delete') {
+      await User.deleteMany({ _id: { $in: filteredIds } });
+      return res.json({ success: true, message: `Successfully deleted ${filteredIds.length} users.` });
+    }
+
+    if (action === 'status') {
+      if (!Object.values(ACCOUNT_STATUS).includes(value)) {
+        return res.status(400).json({ success: false, message: 'Invalid accountStatus value.' });
+      }
+      await User.updateMany({ _id: { $in: filteredIds } }, { $set: { accountStatus: value } });
+      return res.json({ success: true, message: `Successfully updated status for ${filteredIds.length} users.` });
+    }
+
+    if (action === 'role') {
+      const role = await Role.findOne({ key: String(value).toLowerCase() });
+      if (!role) {
+        return res.status(404).json({ success: false, message: 'Target role not found.' });
+      }
+      await User.updateMany({ _id: { $in: filteredIds } }, { $set: { roleId: role._id } });
+      return res.json({ success: true, message: `Successfully updated roles for ${filteredIds.length} users.` });
+    }
+
+    return res.status(400).json({ success: false, message: 'Action failed.' });
+  } catch (error) {
+    return next(error);
+  }
+}
