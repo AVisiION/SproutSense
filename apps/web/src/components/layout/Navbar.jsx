@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useMemo, useState, useRef, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { GlassIcon } from '../bits/GlassIcon';
 import './styles/Navbar.css';
@@ -16,8 +16,24 @@ export function Navbar({
   isPublicView = false,
 }) {
   const isDark = theme === 'dark';
-  const [accountOpen, setAccountOpen] = useState(false);
-  const accountWrapRef = useRef(null);
+  const [accountPanelOpen, setAccountPanelOpen] = useState(false);
+  const accountBtnRef = useRef(null);
+  const panelRef = useRef(null);
+
+  // Close panel on outside click
+  useEffect(() => {
+    if (!accountPanelOpen) return;
+    function handleClick(e) {
+      if (
+        panelRef.current && !panelRef.current.contains(e.target) &&
+        accountBtnRef.current && !accountBtnRef.current.contains(e.target)
+      ) {
+        setAccountPanelOpen(false);
+      }
+    }
+    document.addEventListener('mousedown', handleClick);
+    return () => document.removeEventListener('mousedown', handleClick);
+  }, [accountPanelOpen]);
 
   const initials = useMemo(() => {
     const text = auth?.user?.fullName || 'Account';
@@ -35,31 +51,6 @@ export function Navbar({
     if (hour < 17) return 'Good Afternoon';
     return 'Good Evening';
   };
-
-  useEffect(() => {
-    const handlePointerDown = (event) => {
-      if (!accountWrapRef.current) return;
-      if (!accountWrapRef.current.contains(event.target)) {
-        setAccountOpen(false);
-      }
-    };
-
-    const handleKeyDown = (event) => {
-      if (event.key === 'Escape') {
-        setAccountOpen(false);
-      }
-    };
-
-    document.addEventListener('mousedown', handlePointerDown);
-    document.addEventListener('touchstart', handlePointerDown);
-    document.addEventListener('keydown', handleKeyDown);
-
-    return () => {
-      document.removeEventListener('mousedown', handlePointerDown);
-      document.removeEventListener('touchstart', handlePointerDown);
-      document.removeEventListener('keydown', handleKeyDown);
-    };
-  }, []);
 
   return (
     <header className="top-navbar" role="banner">
@@ -113,14 +104,18 @@ export function Navbar({
           </>
         )}
 
-        <div className="navbar-account-wrap" ref={accountWrapRef}>
-          <button
-            type="button"
-            className="navbar-account-btn"
-            onClick={() => setAccountOpen((prev) => !prev)}
-            aria-label="Open account menu"
-          >
-            {auth?.isAuthenticated ? (
+
+        <div className="navbar-account-wrap">
+          {auth?.isAuthenticated && !isPublicView ? (
+            <button
+              className="navbar-account-btn"
+              ref={accountBtnRef}
+              aria-label="Account menu"
+              aria-haspopup="true"
+              aria-expanded={accountPanelOpen}
+              onClick={() => setAccountPanelOpen((v) => !v)}
+              type="button"
+            >
               <div className="navbar-account-button-content">
                 <span className="navbar-account-avatar">{initials || 'U'}</span>
                 <div className="navbar-account-info">
@@ -133,83 +128,52 @@ export function Navbar({
                   </span>
                 )}
               </div>
-            ) : (
-              <>
-                <i className="fa-solid fa-user" />
-                <span>Account</span>
-              </>
-            )}
-          </button>
+            </button>
+          ) : (
+            <Link
+              to="/login"
+              className="navbar-account-btn"
+              aria-label="Go to login"
+            >
+              <i className="fa-solid fa-user" />
+              <span>Account</span>
+            </Link>
+          )}
 
-          {accountOpen && (
-            <div className="navbar-account-panel">
-              {!auth?.isAuthenticated ? (
-                <div className="navbar-account-auth-actions">
-                  <Link to="/login" className="navbar-account-link navbar-account-link--primary" onClick={() => setAccountOpen(false)}>
-                    <i className="fa-solid fa-right-to-bracket" /> Login
-                  </Link>
-                  <Link to="/register" className="navbar-account-link navbar-account-link--secondary" onClick={() => setAccountOpen(false)}>
-                    <i className="fa-solid fa-user-plus" /> Register
-                  </Link>
-                </div>
-              ) : (
+          {/* Account Panel Dropdown */}
+          {auth?.isAuthenticated && accountPanelOpen && !isPublicView && (
+            <div className="navbar-account-panel" ref={panelRef} tabIndex={-1}>
+              <div className="navbar-account-meta">
+                <strong>{auth.user?.fullName || 'User'}</strong>
+                <span>{auth.user?.email || ''}</span>
+                {auth.role === 'admin' && <span style={{color:'#43a047',fontWeight:600}}>Admin</span>}
+              </div>
+              <Link to="/settings" className="navbar-account-link" onClick={() => setAccountPanelOpen(false)}>
+                <i className="fa-solid fa-user-gear" />
+                Settings
+              </Link>
+              <Link to="/sensors" className="navbar-account-link" onClick={() => setAccountPanelOpen(false)}>
+                <i className="fa-solid fa-gauge" />
+                Dashboard
+              </Link>
+              {auth.role === 'admin' && (
                 <>
-                  <div className="navbar-account-meta">
-                    <strong>{auth.user?.fullName}</strong>
-                    <span>{auth.user?.email}</span>
-                  </div>
-                  {auth.role === 'viewer' ? (
-                    <>
-                      <Link to="/viewer/dashboard" className="navbar-account-link" onClick={() => setAccountOpen(false)}>
-                        <i className="fa-solid fa-gauge-high" /> Viewer Dashboard
-                      </Link>
-                      <Link to="/viewer/analytics" className="navbar-account-link" onClick={() => setAccountOpen(false)}>
-                        <i className="fa-solid fa-chart-line" /> Read-only Analytics
-                      </Link>
-                      <Link to="/viewer/reports" className="navbar-account-link" onClick={() => setAccountOpen(false)}>
-                        <i className="fa-solid fa-file-lines" /> Read-only Reports
-                      </Link>
-                    </>
-                  ) : (
-                    <>
-                      <Link to="/home" className="navbar-account-link" onClick={() => setAccountOpen(false)}>
-                        <i className="fa-solid fa-gauge-high" /> Dashboard
-                      </Link>
-                      <Link to="/analytics" className="navbar-account-link" onClick={() => setAccountOpen(false)}>
-                        <i className="fa-solid fa-chart-line" /> Analytics
-                      </Link>
-                      {auth.role === 'user' && (
-                        <Link to="/controls" className="navbar-account-link" onClick={() => setAccountOpen(false)}>
-                          <i className="fa-solid fa-sliders" /> Product Controls
-                        </Link>
-                      )}
-                    </>
-                  )}
-                  {auth.role === 'admin' && (
-                    <>
-                      <Link to="/admin/panel" className="navbar-account-link" onClick={() => setAccountOpen(false)}>
-                        <i className="fa-solid fa-user-shield" /> Admin Panel
-                      </Link>
-                      <Link to="/admin/panel" className="navbar-account-link" onClick={() => setAccountOpen(false)}>
-                        <i className="fa-solid fa-users-gear" /> User Management
-                      </Link>
-                      <Link to="/settings" className="navbar-account-link" onClick={() => setAccountOpen(false)}>
-                        <i className="fa-solid fa-screwdriver-wrench" /> System Configuration
-                      </Link>
-                    </>
-                  )}
-                  <button
-                    type="button"
-                    className="navbar-account-link navbar-account-logout"
-                    onClick={async () => {
-                      setAccountOpen(false);
-                      await auth.logout();
-                    }}
-                  >
-                    <i className="fa-solid fa-right-from-bracket" /> Logout
-                  </button>
+                  <Link to="/admin" className="navbar-account-link" onClick={() => setAccountPanelOpen(false)}>
+                    <i className="fa-solid fa-crown" />
+                    Admin Panel
+                  </Link>
+                  <Link to="/admin/users" className="navbar-account-link" onClick={() => setAccountPanelOpen(false)}>
+                    <i className="fa-solid fa-users" />
+                    User Management
+                  </Link>
                 </>
               )}
+              <div className="navbar-account-auth-actions">
+                <button className="navbar-account-link navbar-account-logout" onClick={() => { if (auth.logout) auth.logout(); setAccountPanelOpen(false); }}>
+                  <i className="fa-solid fa-arrow-right-from-bracket" />
+                  Logout
+                </button>
+              </div>
             </div>
           )}
         </div>

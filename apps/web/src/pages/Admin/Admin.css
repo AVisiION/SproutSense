@@ -715,6 +715,7 @@
   color: #0b1416;
 }
 .adm-input {
+  
   width: min(100%, 220px);
   border-radius: 10px;
   border: 1px solid rgba(255,255,255,0.15);
@@ -724,6 +725,25 @@
   font-size: 0.82rem;
   font-weight: 600;
 }
+
+/* Proper placeholder styling for all browsers */
+.adm-input::placeholder {
+  color: #b6c2c9;
+  opacity: 1;
+  font-weight: 500;
+}
+.adm-root[data-theme='light'] .adm-input::placeholder {
+  color: #6b7280;
+  opacity: 1;
+}
+/* For better cross-browser support */
+.adm-input::-webkit-input-placeholder { color: #b6c2c9; opacity: 1; font-weight: 500; }
+.adm-root[data-theme='light'] .adm-input::-webkit-input-placeholder { color: #6b7280; opacity: 1; }
+.adm-input:-ms-input-placeholder { color: #b6c2c9; opacity: 1; font-weight: 500; }
+.adm-root[data-theme='light'] .adm-input:-ms-input-placeholder { color: #6b7280; opacity: 1; }
+.adm-input::-ms-input-placeholder { color: #b6c2c9; opacity: 1; font-weight: 500; }
+.adm-root[data-theme='light'] .adm-input::-ms-input-placeholder { color: #6b7280; opacity: 1; }
+
 .adm-root[data-theme='light'] .adm-input {
   border-color: rgba(15, 23, 42, 0.18);
   background: rgba(15, 23, 42, 0.06);
@@ -1252,9 +1272,14 @@
     gap: 0.35rem;
   }
 
+
   .adm-form-group label {
     font-size: 0.75rem;
     font-weight: 600;
+    color: #fff;
+  }
+  .adm-root[data-theme='light'] .adm-form-group label {
+    color: #000;
   }
 
   .adm-form-group input,

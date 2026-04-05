@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import './AuthPages.css';
@@ -15,6 +15,16 @@ export default function LoginPage() {
   const [info, setInfo] = useState('');
   const [resending, setResending] = useState(false);
   const [pendingVerification, setPendingVerification] = useState(false);
+
+  const filledLoginFields = useMemo(() => {
+    let filled = 0;
+    if (String(email).trim()) filled += 1;
+    if (String(password).trim()) filled += 1;
+    return filled;
+  }, [email, password]);
+
+  const loginFillProgress = `${Math.round((filledLoginFields / 2) * 100)}%`;
+  const isLoginComplete = filledLoginFields === 2;
 
   const onSubmit = async (event) => {
     event.preventDefault();
@@ -65,10 +75,10 @@ export default function LoginPage() {
         <aside className="auth-hero-panel">
           <div className="auth-hero-overlay" />
           <div className="auth-hero-content">
-            <div className="auth-brand auth-brand--hero">
+            <Link className="auth-brand auth-brand--hero" to="/">
               <img src="/assets/icon.svg" alt="SproutSense logo" className="auth-brand-icon" />
               <span className="auth-brand-text">SproutSense</span>
-            </div>
+            </Link>
             <h2 className="auth-hero-title">Grow Smarter With Live Plant Intelligence</h2>
             <p className="auth-hero-subtitle">
               Monitor moisture, temperature, and disease risk in one place with real-time insights from your ESP32 network.
@@ -83,7 +93,10 @@ export default function LoginPage() {
 
         <div className="auth-card auth-card--login">
           <div className="auth-header">
-            <h1 className="auth-title"><i className="fa-solid fa-user" /> Sign In</h1>
+            <div className="auth-switch" role="tablist" aria-label="Authentication mode">
+              <Link className="auth-switch__item auth-switch__item--active" to="/login" aria-current="page">Login</Link>
+              <Link className="auth-switch__item" to="/register">Register</Link>
+            </div>
             <p className="auth-subtitle">Welcome back. Step into your live plant command center in seconds.</p>
           </div>
 
@@ -106,10 +119,16 @@ export default function LoginPage() {
                 <label className="auth-label">Password</label>
                 <input className="auth-input" value={password} onChange={(e) => setPassword(e.target.value)} type="password" required />
               </div>
-              <button className="auth-button" type="submit" disabled={loading}>{loading ? 'Signing in...' : 'Login'}</button>
+              <button
+                className={`auth-button ${isLoginComplete ? 'auth-button--ready' : ''}`}
+                type="submit"
+                disabled={loading || !isLoginComplete}
+                style={{ '--auth-fill-progress': loginFillProgress }}
+              >
+                {loading ? 'Signing in...' : 'Login'}
+              </button>
             </form>
             <div className="auth-footer">
-              <Link className="auth-link" to="/register">Create account</Link>
               <Link className="auth-link" to="/forgot-password">Forgot password?</Link>
             </div>
           </div>

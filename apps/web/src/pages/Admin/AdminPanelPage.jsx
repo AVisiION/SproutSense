@@ -1239,13 +1239,14 @@ export default function AdminPanelPage() {
                           style={{
                             background: 'rgba(148, 163, 184, 0.15)',
                             color: '#cbd5e1',
-                            padding: '0.55rem 0.9rem',
+                            padding: '1.55rem 1rem',
                             border: '1px solid rgba(148, 163, 184, 0.3)',
                             borderRadius: '0.5rem',
                             fontSize: '0.82rem',
                             fontWeight: '600',
                             cursor: creatingDeviceKey ? 'not-allowed' : 'pointer',
                             opacity: creatingDeviceKey ? 0.6 : 1,
+                            marginRight: preset.deviceId === 'ESP32-SENSOR' ? '1rem' : undefined,
                           }}
                         >
                           <i className="fa-solid fa-wand-magic-sparkles" /> Quick Create {preset.deviceId}
@@ -1774,14 +1775,15 @@ export default function AdminPanelPage() {
                     <h3><i className="fa-solid fa-droplet" /> Moisture & Watering</h3>
                     <div className="adm-config-row">
                       <span className="adm-config-key">Soil Moisture Threshold (%)</span>
-                      <input
-                        className="adm-input"
-                        type="number"
-                        min="0"
-                        max="100"
-                        value={plantWateringConfig?.[selectedPlantKey]?.moistureThreshold ?? 30}
-                        onChange={(e) => handlePlantWateringChange('moistureThreshold', e.target.value)}
-                      />
+                        <input
+                          className="adm-input"
+                          type="number"
+                          min="0"
+                          max="100"
+                          placeholder="Moisture (%)"
+                          value={plantWateringConfig?.[selectedPlantKey]?.moistureThreshold ?? 30}
+                          onChange={(e) => handlePlantWateringChange('moistureThreshold', e.target.value)}
+                        />
                     </div>
                     <div className="adm-config-row">
                       <span className="adm-config-key">Max Watering Cycles / Day</span>
@@ -1790,6 +1792,7 @@ export default function AdminPanelPage() {
                         type="number"
                         min="1"
                         max="20"
+                        placeholder="Cycles/Day"
                         value={plantWateringConfig?.[selectedPlantKey]?.maxWateringCyclesPerDay ?? 3}
                         onChange={(e) => handlePlantWateringChange('maxWateringCyclesPerDay', e.target.value)}
                       />
@@ -1801,6 +1804,7 @@ export default function AdminPanelPage() {
                         type="number"
                         min="1"
                         max="24"
+                        placeholder="Cycles/Hour"
                         value={plantWateringConfig?.[selectedPlantKey]?.maxCyclesPerHour ?? 4}
                         onChange={(e) => handlePlantWateringChange('maxCyclesPerHour', e.target.value)}
                       />
@@ -1812,6 +1816,7 @@ export default function AdminPanelPage() {
                         type="number"
                         min="1"
                         max="50"
+                        placeholder="Cycles/Day"
                         value={plantWateringConfig?.[selectedPlantKey]?.maxCyclesPerDay ?? 6}
                         onChange={(e) => handlePlantWateringChange('maxCyclesPerDay', e.target.value)}
                       />
@@ -1845,16 +1850,16 @@ export default function AdminPanelPage() {
                                   <td>{sensor.name}</td>
                                   <td>{sensor.key}</td>
                                   <td>
-                                    <input className="adm-input" type="number" value={sensorThresholds.minThreshold} onChange={(e) => handlePlantThresholdChange(sensor.key, 'minThreshold', e.target.value)} />
+                                    <input className="adm-input" type="number" placeholder="Min" value={sensorThresholds.minThreshold} onChange={(e) => handlePlantThresholdChange(sensor.key, 'minThreshold', e.target.value)} />
                                   </td>
                                   <td>
-                                    <input className="adm-input" type="number" value={sensorThresholds.maxThreshold} onChange={(e) => handlePlantThresholdChange(sensor.key, 'maxThreshold', e.target.value)} />
+                                    <input className="adm-input" type="number" placeholder="Max" value={sensorThresholds.maxThreshold} onChange={(e) => handlePlantThresholdChange(sensor.key, 'maxThreshold', e.target.value)} />
                                   </td>
                                   <td>
-                                    <input className="adm-input" type="number" value={sensorThresholds.warningThreshold} onChange={(e) => handlePlantThresholdChange(sensor.key, 'warningThreshold', e.target.value)} />
+                                    <input className="adm-input" type="number" placeholder="Warning" value={sensorThresholds.warningThreshold} onChange={(e) => handlePlantThresholdChange(sensor.key, 'warningThreshold', e.target.value)} />
                                   </td>
                                   <td>
-                                    <input className="adm-input" type="number" value={sensorThresholds.criticalThreshold} onChange={(e) => handlePlantThresholdChange(sensor.key, 'criticalThreshold', e.target.value)} />
+                                    <input className="adm-input" type="number" placeholder="Critical" value={sensorThresholds.criticalThreshold} onChange={(e) => handlePlantThresholdChange(sensor.key, 'criticalThreshold', e.target.value)} />
                                   </td>
                                 </tr>
                               );

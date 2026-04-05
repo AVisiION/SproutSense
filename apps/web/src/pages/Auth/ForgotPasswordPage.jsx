@@ -31,10 +31,10 @@ export default function ForgotPasswordPage() {
         <aside className="auth-hero-panel">
           <div className="auth-hero-overlay" />
           <div className="auth-hero-content">
-            <div className="auth-brand auth-brand--hero">
+            <Link className="auth-brand auth-brand--hero" to="/">
               <img src="/assets/icon.svg" alt="SproutSense logo" className="auth-brand-icon" />
               <span className="auth-brand-text">SproutSense</span>
-            </div>
+            </Link>
             <h2 className="auth-hero-title">Recover Your Access</h2>
             <p className="auth-hero-subtitle">
               We'll send you a secure link to reset your password. Your plants are waiting!

@@ -54,10 +54,10 @@ export default function VerifyEmailPage() {
         <aside className="auth-hero-panel">
           <div className="auth-hero-overlay" />
           <div className="auth-hero-content">
-            <div className="auth-brand auth-brand--hero">
+            <Link className="auth-brand auth-brand--hero" to="/">
               <img src="/assets/icon.svg" alt="SproutSense logo" className="auth-brand-icon" />
               <span className="auth-brand-text">SproutSense</span>
-            </div>
+            </Link>
             <h2 className="auth-hero-title">Welcome to SproutSense</h2>
             <p className="auth-hero-subtitle">
               Verify your email to unlock real-time monitoring, AI insights, and full control of your plant care system.
@@ -79,7 +79,7 @@ export default function VerifyEmailPage() {
             {status === 'error' ? <div className="auth-error">{message}</div> : <div className="auth-info">{message}</div>}
             <div className="auth-footer">
               <Link className="auth-link" to="/login">Go to login</Link>
-              {status === 'error' && <button type="button" className="auth-link" onClick={onResend}>Resend verification</button>}
+              {status === 'error' && <button type="button" className="auth-link auth-link-button" onClick={onResend}>Resend verification</button>}
             </div>
           </div>
         </div>

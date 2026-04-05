@@ -57,6 +57,18 @@ export default function RegisterPage() {
     [confirmPassword, password]
   );
 
+  const filledRegisterFields = useMemo(() => {
+    let filled = 0;
+    if (String(fullName).trim()) filled += 1;
+    if (String(email).trim()) filled += 1;
+    if (String(password).trim()) filled += 1;
+    if (String(confirmPassword).trim() && !confirmMismatch) filled += 1;
+    return filled;
+  }, [fullName, email, password, confirmPassword, confirmMismatch]);
+
+  const registerFillProgress = `${Math.round((filledRegisterFields / 4) * 100)}%`;
+  const isRegisterComplete = filledRegisterFields === 4 && Boolean(preferredPlant);
+
   const onSubmit = async (event) => {
     event.preventDefault();
     setError('');
@@ -85,10 +97,10 @@ export default function RegisterPage() {
         <aside className="auth-hero-panel">
           <div className="auth-hero-overlay" />
           <div className="auth-hero-content">
-            <div className="auth-brand auth-brand--hero">
+            <Link className="auth-brand auth-brand--hero" to="/">
               <img src="/assets/icon.svg" alt="SproutSense logo" className="auth-brand-icon" />
               <span className="auth-brand-text">SproutSense</span>
-            </div>
+            </Link>
             <h2 className="auth-hero-title">Begin Your Smart Garden Journey</h2>
             <p className="auth-hero-subtitle">
               Join thousands of plant enthusiasts using real-time sensors and AI insights to grow healthier plants.
@@ -103,7 +115,10 @@ export default function RegisterPage() {
 
         <div className="auth-card auth-card--login">
           <div className="auth-header">
-            <h1 className="auth-title"><i className="fa-solid fa-user-plus" /> Create Account</h1>
+            <div className="auth-switch" role="tablist" aria-label="Authentication mode">
+              <Link className="auth-switch__item" to="/login">Login</Link>
+              <Link className="auth-switch__item auth-switch__item--active" to="/register" aria-current="page">Register</Link>
+            </div>
             <p className="auth-subtitle">Create your account and start smart, sensor-driven plant care today.</p>
           </div>
           <div className="auth-body">
@@ -150,11 +165,15 @@ export default function RegisterPage() {
                   ))}
                 </select>
               </div>
-              <button className="auth-button" type="submit" disabled={loading}>{loading ? 'Creating account...' : 'Register'}</button>
+              <button
+                className={`auth-button ${isRegisterComplete ? 'auth-button--ready' : ''}`}
+                type="submit"
+                disabled={loading || !isRegisterComplete}
+                style={{ '--auth-fill-progress': registerFillProgress }}
+              >
+                {loading ? 'Creating account...' : 'Register'}
+              </button>
             </form>
-            <div className="auth-footer">
-              <Link className="auth-link" to="/login">Already have an account? Login</Link>
-            </div>
           </div>
         </div>
       </div>
