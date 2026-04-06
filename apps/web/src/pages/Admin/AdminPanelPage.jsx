@@ -2112,6 +2112,17 @@ export default function AdminPanelPage() {
                               </button>
                               <div className="adm-card-dropdown">
                                 <select 
+                                  value={u.role} 
+                                  onChange={(e) => handleUserRoleUpdate(u, e.target.value)}
+                                  disabled={isSelf}
+                                >
+                                  <option value="admin">Admin</option>
+                                  <option value="user">User</option>
+                                  <option value="viewer">Viewer</option>
+                                </select>
+                              </div>
+                              <div className="adm-card-dropdown">
+                                <select 
                                   value={u.accountStatus} 
                                   onChange={(e) => handleUserStatusUpdate(u, e.target.value)}
                                   disabled={isSelf && u.role === 'admin'}

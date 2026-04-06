@@ -1,6 +1,6 @@
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { authAPI } from '../utils/api';
-import { ACCOUNT_STATUS, homeForRole } from '../auth/permissions';
+import { ACCOUNT_STATUS, homeForRole, PERMISSION, ROLE } from '../auth/permissions';
 
 const AuthContext = createContext(null);
 
@@ -21,6 +21,20 @@ export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [permissions, setPermissions] = useState([]);
   const [loading, setLoading] = useState(true);
+
+  // Parse preview user if present
+  let previewRole = null;
+  if (typeof window !== 'undefined') {
+    const searchParams = new URLSearchParams(window.location.search);
+    if (searchParams.has('previewUser')) {
+      const raw = searchParams.get('previewUser') || '';
+      if (raw.includes('role=')) {
+        previewRole = new URLSearchParams(raw).get('role');
+      } else {
+        previewRole = searchParams.get('role');
+      }
+    }
+  }
 
   const hydrate = useCallback(async () => {
     const accessToken = localStorage.getItem(ACCESS_TOKEN_KEY);
@@ -107,11 +121,21 @@ export function AuthProvider({ children }) {
     }
   }, []);
 
-  const hasPermission = useCallback((permission) => permissions.includes(permission), [permissions]);
+  const hasPermission = useCallback((permission) => {
+    if (previewRole === ROLE.VIEWER) {
+      const viewerPerms = [PERMISSION.DASHBOARD_READ, PERMISSION.SENSORS_READ, PERMISSION.ANALYTICS_READ, PERMISSION.AI_DISEASE_READ, PERMISSION.PROFILE_READ];
+      return viewerPerms.includes(permission);
+    }
+    if (previewRole === ROLE.USER) {
+      const userPerms = [PERMISSION.DASHBOARD_READ, PERMISSION.SENSORS_READ, PERMISSION.SENSORS_CONTROL, PERMISSION.WATERING_START, PERMISSION.WATERING_STOP, PERMISSION.WATERING_READ, PERMISSION.ANALYTICS_READ, PERMISSION.AI_CHAT, PERMISSION.AI_INSIGHTS_READ, PERMISSION.AI_DISEASE_READ, PERMISSION.PROFILE_READ, PERMISSION.PROFILE_UPDATE];
+      return userPerms.includes(permission);
+    }
+    return permissions.includes(permission);
+  }, [permissions, previewRole]);
 
   const isAuthenticated = Boolean(user);
   const accountStatus = user?.accountStatus || null;
-  const role = user?.role || null;
+  const role = previewRole || user?.role || null;
 
   const value = useMemo(
     () => ({

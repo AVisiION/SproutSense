@@ -117,6 +117,8 @@ function normalizeSensor(sensor) {
     enabled: sensor.enabled !== false,
     showInDashboard: Boolean(sensor.showInDashboard),
     showInAnalytics: sensor.showInAnalytics !== false,
+    faIcon: sensor.faIcon || '',
+    color: sensor.color || ''
   };
 }
 

@@ -161,7 +161,7 @@ const routePermissions = {
   '/controls': [PERMISSION.WATERING_START],
   '/ai': [PERMISSION.AI_CHAT],
   '/insights': [PERMISSION.AI_INSIGHTS_READ],
-  '/esp32': [],
+  '/esp32': [PERMISSION.CONFIG_READ],
   '/settings': [PERMISSION.CONFIG_READ],
   '/viewer/dashboard': [PERMISSION.DASHBOARD_READ],
   '/viewer/analytics': [PERMISSION.ANALYTICS_READ],
