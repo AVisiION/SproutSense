@@ -6,6 +6,9 @@
 
 /* ============================================================
    DARK MODE (default)
+   - Deep obsidian backgrounds with green/teal accents
+   - High contrast for dark theme readability
+   - Vibrant, saturated colors for visual hierarchy
 ============================================================ */
 :root {
 
@@ -99,6 +102,110 @@
   --surface-hover      : rgba(58, 143, 62, 0.07);
   --surface-active     : rgba(58, 143, 62, 0.12);
 
+  /* ── SEMANTIC SENSOR COLORS (Dark Mode - Vibrant) */
+  --sensor-moisture    : #22c55e;    /* Success Green */
+  --sensor-temperature : #f59e0b;    /* Warm Amber */
+  --sensor-humidity    : #22d3ee;    /* Bright Cyan */
+  --sensor-ph          : #a78bfa;    /* Vibrant Purple */
+  --sensor-light       : #fbbf24;    /* Golden Yellow */
+
+  /* ── CONTROL ACCENT COLORS (Dark Mode) */
+  --control-manual     : #22d3ee;    /* Cyan */
+  --control-timed      : #a78bfa;    /* Purple */
+  --control-auto       : #22c55e;    /* Green */
+  --control-schedule   : #f59e0b;    /* Amber */
+  --control-growth     : #34d399;    /* Emerald */
+
+  /* ── HEALTH STATUS COLORS */
+  --health-healthy     : #22c55e;    /* Vibrant Green */
+  --health-disease     : #ef4444;    /* Bright Red */
+  --health-neutral     : #14b8a6;    /* Teal */
+
+  /* ── RECOMMENDATION SEVERITY */
+  --rec-critical       : #ef4444;    /* Red */
+  --rec-high           : #f59e0b;    /* Amber */
+  --rec-medium         : #22d3ee;    /* Cyan */
+  --rec-normal         : #22c55e;    /* Green */
+
+  /* ── GAUGE COLORS */
+  --gauge-danger       : #ff0000;    /* Pure Red */
+  --gauge-warning      : #ffff00;    /* Pure Yellow */
+  --gauge-safe         : #00ff00;    /* Pure Green */
+
+  /* ── AURORA ANIMATION COLORS */
+  --aurora-primary     : #06b6d4;    /* Cyan */
+  --aurora-secondary   : #14b8a6;    /* Teal */
+  --aurora-tertiary    : #22c55e;    /* Green */
+  --aurora-bg          : #06131a;    /* Dark background */
+
+  /* ── HERO SECTION COLORS (Dark Mode) */
+  --hero-blob-primary  : #4EA852;    /* Green blob */
+  --hero-blob-secondary: #00B4A6;    /* Teal blob */
+  --hero-blob-tertiary : #66BB6A;    /* Light green blob */
+  --hero-badge-text    : #7EC880;    /* Light green text */
+  --hero-status-on     : #7EC880;    /* Status on text */
+  --hero-status-off    : #F59E0B;    /* Status off text */
+  --hero-status-dot-on : #4EA852;    /* Green pulse dot */
+  --hero-status-dot-off: #F59E0B;    /* Amber pulse dot */
+
+  /* ── ADMIN & BADGE COLORS */
+  --admin-badge        : #43a047;    /* Admin green badge */
+
+  /* ── MOCK MODE BANNER COLORS (Dark) */
+  --mock-banner-bg-sim : linear-gradient(90deg, #dbeafe, #d1fae5);
+  --mock-banner-bg-normal: #fef3c7;
+  --mock-banner-border-sim: 1px solid #60a5fa;
+  --mock-banner-border-normal: 1px solid #fbbf24;
+  --mock-banner-text-sim  : #164e63;
+  --mock-banner-text-normal: #92400e;
+  --mock-banner-icon-bg : #06b6d4;
+  --mock-banner-panel-bg: rgba(30, 41, 59, 0.95);
+  --mock-banner-panel-border: 1px solid rgba(148, 163, 184, 0.2);
+  --mock-banner-panel-text: #cbd5e1;
+  --mock-banner-accent : #22d3ee;
+  --mock-banner-button-bg: rgba(34, 211, 238, 0.1);
+  --mock-banner-button-border: 1px solid rgba(34, 211, 238, 0.3);
+
+  /* ── ANALYTICS CHART COLORS (Dark) */
+  --chart-moisture  : #00f2fe;
+  --chart-temp      : #f59e0b;
+  --chart-humidity  : #22d3ee;
+  --chart-light     : #facc15;
+  --chart-flow      : #3b82f6;
+  --chart-disease   : #ef4444;
+  --chart-ph        : #a855f7;
+  --chart-healthy   : #22c55e;
+  --chart-neutral   : #14b8a6;
+  --chart-text-muted: #94a3b8;
+
+  /* ── AICHAT STATUS COLORS (Dark) */
+  --aichat-healthy  : #22c55e;
+  --aichat-caution  : #f59e0b;
+  --aichat-critical : #ef4444;
+
+  /* ── ADMIN PANEL GRADIENT COLORS (Dark) */
+  --admin-gradient-cyan-sky : linear-gradient(135deg, #22d3ee, #0ea5e9);
+  --admin-gradient-sky-blue : linear-gradient(135deg, #0ea5e9, #3b82f6);
+  --admin-gradient-teal-cyan: linear-gradient(135deg, #14b8a6, #0ea5e9);
+  --admin-gradient-indigo-blue: linear-gradient(135deg, #818cf8, #3b82f6);
+  --admin-avatar-text: #fff;
+
+  /* ── ALERT STATUS COLORS (Dark) */
+  --alert-error  : #ef4444;
+  --alert-warning: #f59e0b;
+  --alert-info   : #3b82f6;
+  --alert-error-bg  : rgba(239,68,68,0.12);
+  --alert-warning-bg: rgba(245,158,11,0.12);
+  --alert-info-bg   : rgba(59,130,246,0.12);
+  --alert-error-border  : rgba(239,68,68,0.3);
+  --alert-warning-border: rgba(245,158,11,0.3);
+  --alert-info-border   : rgba(59,130,246,0.3);
+
+  /* ── SENSOR CARD COLORS (Dark) */
+  --sensor-card-fallback: #475569;
+  --sensor-flow         : #38bdf8;
+  --sensor-ec           : #34d399;
+
   /* ── GRADIENTS */
   --grad-primary       : linear-gradient(135deg, #1F5C23, #3A8F3E);
   --grad-cyan          : linear-gradient(135deg, #0A9E94, #18BCAF);
@@ -130,6 +237,11 @@
    Cards:      rgba(255,255,255, 0.62) + blur(20px) + saturate(180%)
    Borders:    semi-transparent green
    Highlights: strong white inner top edge
+   
+   Professional color adjustments for readability:
+   - Darker, more saturated colors for contrast
+   - Reduced brightness to avoid glare
+   - Complementary hues for professional appearance
 ============================================================ */
 [data-theme="light"] {
 
@@ -222,26 +334,133 @@
   --surface-hover      : rgba(46, 125, 50, 0.08);
   --surface-active     : rgba(46, 125, 50, 0.14);
 
-  /* ── GRADIENTS */
-  --grad-primary       : linear-gradient(135deg, #1B5E20, #388E3C);
-  --grad-cyan          : linear-gradient(135deg, #00695C, #00ACC1);
-  --grad-forest        : linear-gradient(135deg, #DCF0DF, #C8E6C9, #00ACC1);
-  --grad-glow          : radial-gradient(ellipse at top, rgba(46,125,50,0.08) 0%, transparent 55%);
+   /* ── SIDEBAR (Light, Uncollapsed) */
+   --sidebar-light-unc-bg: linear-gradient(155deg, rgba(255, 255, 255, 0.86) 0%, rgba(255, 255, 255, 0.62) 36%, rgba(232, 246, 236, 0.84) 100%);
+   --sidebar-light-unc-border: rgba(46, 125, 50, 0.18);
+   --sidebar-light-unc-shadow: 0 12px 32px rgba(10, 40, 15, 0.14), inset 0 1px 0 rgba(255, 255, 255, 0.95);
+   --sidebar-light-link-bg: rgba(255, 255, 255, 0.55);
+   --sidebar-light-link-border: rgba(46, 125, 50, 0.12);
+   --sidebar-light-link-hover-bg: rgba(255, 255, 255, 0.82);
+   --sidebar-light-link-hover-border: rgba(46, 125, 50, 0.24);
+   --sidebar-light-link-hover-text: #123617;
+   --sidebar-light-link-active-bg: rgba(58, 143, 62, 0.14);
+   --sidebar-light-link-active-border: rgba(46, 125, 50, 0.32);
+   --sidebar-light-link-active-text: #236b2a;
 
-  /* ── TOGGLES */
-  --toggle-bg          : rgba(46, 125, 50, 0.12);
-  --toggle-on-bg       : linear-gradient(135deg, #2E7D32, #00897B);
-  --toggle-shadow      : 0 2px 10px rgba(46, 125, 50, 0.20);
-  --toggle-width       : 44px;
-  --toggle-height      : 24px;
-  --toggle-knob-size   : 18px;
-  --toggle-knob-offset : 3px;
+  /* ── SEMANTIC SENSOR COLORS (Light Mode - Darker, Professional) */
+  --sensor-moisture    : #1B5E20;    /* Deep Green */
+  --sensor-temperature : #A86D00;    /* Deep Amber */
+  --sensor-humidity    : #0277BD;    /* Deep Blue */
+  --sensor-ph          : #6A1B9A;    /* Deep Purple */
+  --sensor-light       : #F57C00;    /* Deep Orange */
 
-  /* ── LAYOUT */
-  --sidebar-width      : 240px;
-  --navbar-height      : 64px;
-  --transition-speed   : 0.25s ease;
-  --bg-secondary-compat: var(--bg-secondary);
+  /* ── CONTROL ACCENT COLORS (Light Mode) */
+  --control-manual     : #0277BD;    /* Deep Blue */
+  --control-timed      : #6A1B9A;    /* Deep Purple */
+  --control-auto       : #1B5E20;    /* Deep Green */
+  --control-schedule   : #A86D00;    /* Deep Amber */
+  --control-growth     : #00695C;    /* Deep Teal */
+
+  /* ── HEALTH STATUS COLORS (Light Mode) */
+  --health-healthy     : #1B5E20;    /* Deep Green */
+  --health-disease     : #C62828;    /* Deep Red */
+  --health-neutral     : #00695C;    /* Deep Teal */
+
+  /* ── RECOMMENDATION SEVERITY (Light Mode) */
+  --rec-critical       : #C62828;    /* Red */
+  --rec-high           : #A86D00;    /* Amber */
+  --rec-medium         : #0277BD;    /* Blue */
+  --rec-normal         : #1B5E20;    /* Green */
+
+  /* ── GAUGE COLORS (Light Mode - Adjusted for contrast) */
+  --gauge-danger       : #D32F2F;    /* Darker Red */
+  --gauge-warning      : #F57F17;    /* Darker Yellow */
+  --gauge-safe         : #388E3C;    /* Darker Green */
+
+  /* ── AURORA ANIMATION COLORS (Light Mode - Muted) */
+  --aurora-primary     : #0288D1;    /* Muted Cyan */
+  --aurora-secondary   : #00897B;    /* Muted Teal */
+  --aurora-tertiary    : #388E3C;    /* Muted Green */
+  --aurora-bg          : #E8F5E9;    /* Light bg */
+
+  /* ── HERO SECTION COLORS (Light Mode) */
+  --hero-blob-primary  : #388E3C;    /* Dark green blob */
+  --hero-blob-secondary: #00695C;    /* Dark teal blob */
+  --hero-blob-tertiary : #43A047;    /* Dark light green blob */
+  --hero-badge-text    : #2E7D32;    /* Dark green text */
+  --hero-status-on     : #2E7D32;    /* Status on text */
+  --hero-status-off    : #B45309;    /* Status off text */
+  --hero-status-dot-on : #388E3C;    /* Dark green pulse dot */
+  --hero-status-dot-off: #F57F17;    /* Dark amber pulse dot */
+
+  /* ── ADMIN & BADGE COLORS (Light) */
+  --admin-badge        : #2E7D32;    /* Dark green badge */
+
+  /* ── MOCK MODE BANNER COLORS (Light) */
+  --mock-banner-bg-sim : linear-gradient(90deg, #b3e5fc, #c8e6c9);
+  --mock-banner-bg-normal: #fff8e1;
+  --mock-banner-border-sim: 1px solid #0277BD;
+  --mock-banner-border-normal: 1px solid #F57F17;
+  --mock-banner-text-sim  : #01579B;
+  --mock-banner-text-normal: #663C00;
+  --mock-banner-icon-bg : #0288D1;
+  --mock-banner-panel-bg: rgba(240, 250, 242, 0.95);
+  --mock-banner-panel-border: 1px solid rgba(46, 125, 50, 0.2);
+  --mock-banner-panel-text: #0D1F10;
+  --mock-banner-accent : #0277BD;
+  --mock-banner-button-bg: rgba(2, 119, 189, 0.1);
+  --mock-banner-button-border: 1px solid rgba(2, 119, 189, 0.3);
+
+  /* ── ANALYTICS CHART COLORS (Light) */
+  --chart-moisture  : #0277BD;
+  --chart-temp      : #F57C00;
+  --chart-humidity  : #0288D1;
+  --chart-light     : #F57F17;
+  --chart-flow      : #1565C0;
+  --chart-disease   : #C62828;
+  --chart-ph        : #7B1FA2;
+  --chart-healthy   : #2E7D32;
+  --chart-neutral   : #00695C;
+  --chart-text-muted: #455A64;
+
+  /* ── AICHAT STATUS COLORS (Light) */
+  --aichat-healthy  : #2E7D32;
+  --aichat-caution  : #F57C00;
+  --aichat-critical : #C62828;
+
+  /* ── ADMIN PANEL GRADIENT COLORS (Light) */
+  --admin-gradient-cyan-sky : linear-gradient(135deg, #0277BD, #01579B);
+  --admin-gradient-sky-blue : linear-gradient(135deg, #0277BD, #1565C0);
+  --admin-gradient-teal-cyan: linear-gradient(135deg, #00695C, #0277BD);
+  --admin-gradient-indigo-blue: linear-gradient(135deg, #5E35B1, #1565C0);
+  --admin-avatar-text: #fff;
+
+  /* ── ALERT STATUS COLORS (Light) */
+  --alert-error  : #C62828;
+  --alert-warning: #F57C00;
+  --alert-info   : #1565C0;
+  --alert-error-bg  : rgba(198,40,40,0.12);
+  --alert-warning-bg: rgba(245,124,0,0.12);
+  --alert-info-bg   : rgba(21,101,192,0.12);
+  --alert-error-border  : rgba(198,40,40,0.3);
+  --alert-warning-border: rgba(245,124,0,0.3);
+  --alert-info-border   : rgba(21,101,192,0.3);
+
+  /* ── SENSOR CARD COLORS (Light) */
+  --sensor-card-fallback: #64748B;
+  --sensor-flow         : #0277BD;
+  --sensor-ec           : #00695C;
+
+   /* ── SETTINGS PAGE CARD (Light) */
+   --sp-card-light-bg: rgba(255, 255, 255, 0.55);
+   --sp-card-light-border: 1px solid rgba(255, 255, 255, 0.80);
+   --sp-card-light-shadow: 0 8px 32px rgba(10, 40, 15, 0.10), inset 0 1px 0 rgba(255, 255, 255, 0.95);
+   --sp-card-light-hover-border: rgba(46, 125, 50, 0.28);
+   --sp-card-light-hover-shadow: 0 12px 40px rgba(10, 40, 15, 0.14), inset 0 1px 0 rgba(255, 255, 255, 1);
+   --sp-card-light-head-border: rgba(46, 125, 50, 0.10);
+   --sp-card-body-light-bg: transparent;
+   --sp-card-body-light-text: var(--text-color);
 
   color-scheme: light;
 }
+

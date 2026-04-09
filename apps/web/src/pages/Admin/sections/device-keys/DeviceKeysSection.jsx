@@ -9,6 +9,7 @@ export default function DeviceKeysSection({
   lastGeneratedPairingKey,
   selectedDeviceType,
   setSelectedDeviceType,
+  handleGenerateDeviceId,
   handleGeneratePairingKey,
   handleCreateDeviceKey,
   generatedDeviceToken,
@@ -44,7 +45,7 @@ export default function DeviceKeysSection({
             Device Authentication Keys
           </h2>
           <p style={{ margin: '0', color: '#94a3b8', fontSize: '0.95rem' }}>
-            Use device ID consistently for website pairing and ESP32 firmware setup.
+            Use the device ID for hardware identity and the pairing key for website registration.
           </p>
         </div>
       </div>
@@ -95,8 +96,8 @@ export default function DeviceKeysSection({
               <h3 style={{ fontSize: '1.25rem', margin: '0 0 0.5rem 0', color: '#e2e8f0', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                 <i className="fa-solid fa-microchip" style={{ color: '#22d3ee' }} /> New Device Pair
               </h3>
-              <p style={{ margin: 0, fontSize: '0.85rem', color: '#64748b' }}>
-                Generate a device ID and use the same value in the website and ESP32 .ino file.
+                <p style={{ margin: 0, fontSize: '0.85rem', color: '#64748b' }}>
+                Generate a unique device ID and a separate pairing key for the website.
               </p>
             </div>
 
@@ -137,13 +138,58 @@ export default function DeviceKeysSection({
 
               <div>
                 <label style={{ color: '#cbd5e1', fontSize: '0.85rem', fontWeight: '600', marginBottom: '0.5rem', display: 'block' }}>
-                  Pairing Key
+                  Device ID
                 </label>
                 <div style={{ display: 'flex', gap: '0.75rem' }}>
                   <input
                     type="text"
                     value={deviceKeyForm.deviceId}
                     onChange={(e) => setDeviceKeyForm({ ...deviceKeyForm, deviceId: e.target.value.toUpperCase().replace(/\s+/g, '-') })}
+                    placeholder="Generate or type a device ID"
+                    maxLength={50}
+                    style={{
+                      flex: 1,
+                      padding: '0.9rem 1rem',
+                      background: 'rgba(15, 23, 42, 0.45)',
+                      border: '1px solid rgba(148, 163, 184, 0.2)',
+                      borderRadius: '0.75rem',
+                      color: '#f8fafc',
+                      fontFamily: 'monospace',
+                      fontSize: '0.98rem',
+                      outline: 'none',
+                    }}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => handleGenerateDeviceId(selectedDeviceType)}
+                    style={{
+                      background: 'var(--admin-gradient-sky-blue)',
+                      color: '#fff',
+                      border: 'none',
+                      borderRadius: '0.75rem',
+                      padding: '0.9rem 1rem',
+                      fontWeight: '700',
+                      cursor: 'pointer',
+                      whiteSpace: 'nowrap',
+                    }}
+                  >
+                    <i className="fa-solid fa-wand-magic-sparkles" /> Generate
+                  </button>
+                </div>
+                <p style={{ fontSize: '0.75rem', color: '#94a3b8', margin: '0.5rem 0 0 0' }}>
+                  This identifier is used to track the hardware in the registry and firmware.
+                </p>
+              </div>
+
+              <div>
+                <label style={{ color: '#cbd5e1', fontSize: '0.85rem', fontWeight: '600', marginBottom: '0.5rem', display: 'block' }}>
+                  Pairing Key
+                </label>
+                <div style={{ display: 'flex', gap: '0.75rem' }}>
+                  <input
+                    type="text"
+                    value={deviceKeyForm.pairingKey}
+                    onChange={(e) => setDeviceKeyForm({ ...deviceKeyForm, pairingKey: e.target.value.toUpperCase().replace(/\s+/g, '-') })}
                     placeholder="Generate or type a pairing key"
                     maxLength={50}
                     style={{
@@ -162,7 +208,7 @@ export default function DeviceKeysSection({
                     type="button"
                     onClick={() => handleGeneratePairingKey(selectedDeviceType)}
                     style={{
-                      background: 'linear-gradient(135deg, #0ea5e9, #3b82f6)',
+                      background: 'var(--admin-gradient-teal-cyan)',
                       color: '#fff',
                       border: 'none',
                       borderRadius: '0.75rem',
@@ -208,7 +254,7 @@ export default function DeviceKeysSection({
                 disabled={creatingDeviceKey || !deviceKeyForm.deviceId}
                 style={{
                   width: '100%',
-                  background: 'linear-gradient(135deg, #14b8a6, #0ea5e9)',
+                  background: 'var(--admin-gradient-teal-cyan)',
                   color: '#fff',
                   padding: '0.95rem 1.25rem',
                   border: 'none',
@@ -223,7 +269,7 @@ export default function DeviceKeysSection({
                   gap: '0.6rem',
                 }}
               >
-                {creatingDeviceKey ? <><i className="fa-solid fa-spinner fa-spin" /> Generating ID</> : <><i className="fa-solid fa-bolt" /> Create Device ID</>}
+                {creatingDeviceKey ? <><i className="fa-solid fa-spinner fa-spin" /> Generating Pair</> : <><i className="fa-solid fa-bolt" /> Create Device Pair</>}
               </button>
 
               <div style={{ marginTop: '0.5rem', paddingTop: '1rem', borderTop: '1px dashed rgba(148, 163, 184, 0.2)' }}>
@@ -264,7 +310,7 @@ export default function DeviceKeysSection({
                 <i className="fa-solid fa-shield-halved" /> Generated Pair
               </h3>
               <p style={{ margin: 0, fontSize: '0.85rem', color: '#94a3b8' }}>
-                Use this same device ID on the website and in the ESP32 firmware.
+                Use the device ID to identify the hardware and the pairing key to register it on the website.
               </p>
             </div>
 
@@ -315,7 +361,7 @@ export default function DeviceKeysSection({
               <div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
                   <span style={{ fontSize: '0.85rem', fontWeight: '600', color: '#ef4444', textTransform: 'uppercase', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                    <i className="fa-solid fa-microchip" /> Device ID for .ino
+                    <i className="fa-solid fa-microchip" /> Device Secret for .ino
                   </span>
                   {generatedDeviceToken && (
                     <button
@@ -346,10 +392,10 @@ export default function DeviceKeysSection({
                   fontSize: '0.92rem',
                   wordBreak: 'break-all',
                 }}>
-                  {generatedDeviceToken || 'Generate a device ID to display it here'}
+                  {generatedDeviceToken || 'Generate a device secret to display it here'}
                 </div>
                 <p style={{ fontSize: '0.75rem', color: '#ef4444', margin: '0.45rem 0 0 0', display: 'flex', gap: '0.35rem', alignItems: 'center' }}>
-                  <i className="fa-solid fa-triangle-exclamation" /> Paste this into the ESP32 .ino file or the firmware secret storage.
+                  <i className="fa-solid fa-triangle-exclamation" /> Paste this into the ESP32 .ino file or firmware secret storage.
                 </p>
               </div>
 
@@ -358,9 +404,9 @@ export default function DeviceKeysSection({
                   Provisioning flow
                 </p>
                 <p style={{ margin: '0.4rem 0 0 0', color: '#94a3b8', fontSize: '0.82rem', lineHeight: 1.6 }}>
-                  1. Generate the pairing key for the website.
+                  1. Generate a unique device ID for the hardware.
                   <br />
-                  2. Use the same device ID for ESP32 sensor or camera.
+                  2. Generate a separate pairing key for the website.
                   <br />
                   3. Keep both values together for provisioning.
                 </p>
@@ -466,7 +512,7 @@ export default function DeviceKeysSection({
                       <div style={{ flex: '1 1 250px', display: 'flex', alignItems: 'center', gap: '1rem', paddingLeft: '1rem', borderLeft: '1px solid rgba(148, 163, 184, 0.1)' }}>
                         {key.isLinked ? (
                           <>
-                            <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: 'linear-gradient(135deg, #818cf8, #3b82f6)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: '0.85rem', fontWeight: 'bold' }}>
+                            <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: 'var(--admin-gradient-indigo-blue)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--admin-avatar-text)', fontSize: '0.85rem', fontWeight: 'bold' }}>
                               {key.linkedUser?.fullName?.charAt(0).toUpperCase() || '?'}
                             </div>
                             <div style={{ display: 'flex', flexDirection: 'column' }}>

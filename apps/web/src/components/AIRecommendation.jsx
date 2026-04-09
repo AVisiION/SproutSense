@@ -14,6 +14,7 @@
  *  • Full light / dark support
  */
 import React, { useEffect, useState, useRef, useCallback } from 'react';
+import { getCSSVariableValue } from '../utils/colorUtils';
 import { aiAPI } from '../utils/api';
 import '../styles/AIrecommendation.css';
 
@@ -24,17 +25,18 @@ function timestamp() {
 
 function priorityMeta(priority) {
   switch ((priority || '').toLowerCase()) {
-    case 'critical': return { color: '#ef4444', fa: 'fa-circle-exclamation', label: 'Critical' };
-    case 'high':     return { color: '#f59e0b', fa: 'fa-triangle-exclamation', label: 'High' };
-    case 'medium':   return { color: '#22d3ee', fa: 'fa-circle-info',         label: 'Medium' };
-    default:         return { color: '#22c55e', fa: 'fa-circle-check',        label: 'Normal' };
+    case 'critical': return { color: 'var(--rec-critical)', fa: 'fa-circle-exclamation', label: 'Critical' };
+    case 'high':     return { color: 'var(--rec-high)', fa: 'fa-triangle-exclamation', label: 'High' };
+    case 'medium':   return { color: 'var(--rec-medium)', fa: 'fa-circle-info',         label: 'Medium' };
+    default:         return { color: 'var(--rec-normal)', fa: 'fa-circle-check',        label: 'Normal' };
   }
 }
 
 // ── Confidence ring ───────────────────────────────────────────────────
 function ConfidenceRing({ pct = 0 }) {
   const R = 22, C = 2 * Math.PI * R;
-  const color = pct >= 80 ? '#22c55e' : pct >= 50 ? '#f59e0b' : '#ef4444';
+  const colorVar = pct >= 80 ? '--rec-normal' : pct >= 50 ? '--rec-high' : '--rec-critical';
+  const color = getCSSVariableValue(colorVar);
   return (
     <div className="ai-conf-ring">
       <svg viewBox="0 0 56 56" width="56" height="56">
@@ -121,11 +123,11 @@ function MessageBubble({ msg }) {
 
 // ── Sensor context strip ───────────────────────────────────────────────
 const SENSOR_PILLS = [
-  { key: 'soilMoisture', label: 'Soil',  unit: '%',      fa: 'fa-droplet',          color: '#22c55e' },
-  { key: 'temperature',  label: 'Temp',  unit: '\u00b0C', fa: 'fa-temperature-half', color: '#f59e0b' },
-  { key: 'humidity',     label: 'Humid', unit: '%',      fa: 'fa-cloud-rain',       color: '#22d3ee' },
-  { key: 'pH',           label: 'pH',    unit: '',       fa: 'fa-flask',            color: '#a78bfa' },
-  { key: 'light',        label: 'Light', unit: ' lx',    fa: 'fa-sun',              color: '#fbbf24' },
+  { key: 'soilMoisture', label: 'Soil',  unit: '%',      fa: 'fa-droplet',          color: 'var(--sensor-moisture)' },
+  { key: 'temperature',  label: 'Temp',  unit: '\u00b0C', fa: 'fa-temperature-half', color: 'var(--sensor-temperature)' },
+  { key: 'humidity',     label: 'Humid', unit: '%',      fa: 'fa-cloud-rain',       color: 'var(--sensor-humidity)' },
+  { key: 'pH',           label: 'pH',    unit: '',       fa: 'fa-flask',            color: 'var(--sensor-ph)' },
+  { key: 'light',        label: 'Light', unit: ' lx',    fa: 'fa-sun',              color: 'var(--sensor-light)' },
 ];
 
 function SensorStrip({ sensors }) {
@@ -208,8 +210,8 @@ function HistoryLog({ history, open, onToggle }) {
 // ── Scan overlay camera placeholder ────────────────────────────────────
 function ScanView({ scanning, lastStatus }) {
   const color =
-    lastStatus === 'healthy' ? '#22c55e' :
-    lastStatus === 'disease' ? '#ef4444' : '#14b8a6';
+    lastStatus === 'healthy' ? 'var(--health-healthy)' :
+    lastStatus === 'disease' ? 'var(--health-disease)' : 'var(--health-neutral)';
   return (
     <div className="ai-scan-view">
       {/* Corner brackets */}

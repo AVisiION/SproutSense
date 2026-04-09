@@ -36,6 +36,7 @@ export const PERMISSIONS = {
   ROLES_MANAGE: 'roles.manage',
   AUDIT_READ: 'audit.read',
   AUDIT_EXPORT: 'audit.export',
+  AUDIT_DELETE: 'audit.delete',
 };
 
 export const ROLE_PRIORITY = {

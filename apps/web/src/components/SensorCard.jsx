@@ -60,6 +60,13 @@ const SENSORS = {
     optimal: { min: 10, max: 800 },
     status: v => v < 1 ? 'warning' : v > 900 ? 'critical' : 'good',
   },
+  flowVolume: {
+    label: 'Water Volume',   unit: ' mL',     faIcon: 'fa-glass-water',
+    color: '#0ea5e9',        maxDisplay: 3000,
+    hardware: { model: 'YF-S201 + Cycle Integrator', type: 'Derived Metric', range: '0–3000 mL/cycle', voltage: 'Derived from flow pulses', output: 'Computed volume', accuracy: 'Depends on flow calibration', description: 'Estimated water delivered per watering cycle, computed by integrating flow pulses over time.' },
+    optimal: { min: 100, max: 1500 },
+    status: v => v <= 0 ? 'warning' : v > 2500 ? 'critical' : 'good',
+  },
   leafCount: {
     label: 'Leaf Count',     unit: ' leaves', faIcon: 'fa-seedling',
     color: '#34d399',        maxDisplay: 400,
@@ -127,6 +134,26 @@ function AnimatedValue({ target, unit, decimals = 1 }) {
   return <>{display}{unit}</>;
 }
 
+function formatSensorDisplayValue(info, value) {
+  const fallback = { target: value, unit: info.unit, decimals: 1 };
+
+  if (value == null || !Number.isFinite(Number(value))) return fallback;
+
+  if (info.label === 'Light Level' || info.label === 'Leaf Count') {
+    return { target: Math.round(value), unit: info.unit, decimals: 0 };
+  }
+
+  // Show water volume in liters when large enough for readability.
+  if (info.label === 'Water Volume') {
+    if (value >= 1000) {
+      return { target: Number((value / 1000).toFixed(2)), unit: ' L', decimals: 2 };
+    }
+    return { target: Math.round(value), unit: ' mL', decimals: 0 };
+  }
+
+  return fallback;
+}
+
 // ── Optimal range bar ───────────────────────────────────────────────────────
 function RangeBar({ value, min, max, maxDisplay, color }) {
   const fullPct = Math.min(100, Math.max(0, (value / maxDisplay) * 100));
@@ -190,6 +217,7 @@ function MetricCard({ info, value, isOpen, onToggle }) {
   const pct      = hasValue ? Math.min(1, Math.max(0, value / info.maxDisplay)) : 0;
   const sc       = STATUS_CFG[status];
   const open = isOpen;
+  const displayValue = hasValue ? formatSensorDisplayValue(info, value) : null;
 
   const handleKeyDown = (event) => {
     if (event.key === 'Enter' || event.key === ' ') {
@@ -222,7 +250,7 @@ function MetricCard({ info, value, isOpen, onToggle }) {
           <div className="sc-card-label">{info.label}</div>
           <div className="sc-card-value">
             {hasValue
-              ? <AnimatedValue target={value} unit={info.unit} decimals={info.unit === ' lux' || info.unit === ' leaves' ? 0 : 1} />
+              ? <AnimatedValue target={displayValue.target} unit={displayValue.unit} decimals={displayValue.decimals} />
               : <span className="sc-no-val">—</span>
             }
           </div>

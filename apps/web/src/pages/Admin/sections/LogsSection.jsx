@@ -5,7 +5,7 @@ import './SectionStyles.css';
 export default function LogsSection({
   exportLogs,
   exportAuditLogs,
-  clearLogs,
+  deleteLogs,
   logSearch,
   setLogSearch,
   logLevel,
@@ -27,8 +27,8 @@ export default function LogsSection({
           <button className="adm-icon-btn adm-icon-btn--yellow" onClick={() => exportAuditLogs('json')} title="Export filtered audit logs JSON">
             <i className="fa-solid fa-file-code" />
           </button>
-          <button className="adm-icon-btn adm-icon-btn--red" onClick={clearLogs} title="Clear logs">
-            <i className="fa-solid fa-trash" />
+          <button className="adm-icon-btn adm-icon-btn--red" onClick={deleteLogs} title="Delete logs">
+            <i className="fa-solid fa-trash-can" />
           </button>
         </div>
       </div>

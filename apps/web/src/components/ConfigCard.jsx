@@ -252,9 +252,9 @@ export function ConfigCard({ onNotification }) {
 
       {/* ══ STAT TILES ══ */}
       <div className="cc-stats">
-        <StatTile iconName="database"  color="#22d3ee" value={stats.totalReadings}  label="24h Readings" />
-        <StatTile iconName="calendar"  color="#22c55e" value={stats.todayReadings}  label="Today" />
-        <StatTile iconName="clock"     color="#a78bfa"
+        <StatTile iconName="database"  color="var(--sensor-humidity)" value={stats.totalReadings}  label="24h Readings" />
+        <StatTile iconName="calendar"  color="var(--sensor-moisture)" value={stats.todayReadings}  label="Today" />
+        <StatTile iconName="clock"     color="var(--sensor-ph)"
           value={stats.lastUpdate ? format(new Date(stats.lastUpdate), 'HH:mm') : '—'}
           label="Last Sync" />
       </div>

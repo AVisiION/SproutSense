@@ -79,10 +79,10 @@ import './components/layout/styles/Layout.css';
 // ── Aurora colour stops (matched to Home hero palette) ────────────────────
 //
 // DARK  : Deep obsidian base + teal/green hero blobs.
-// LIGHT : Mint paper base + same teal/green accents as hero.
+// LIGHT : Soft mint base + deeper teal/green accents for better visibility.
 //
 const AURORA_DARK  = ['#040E09', '#00B4A6', '#66BB6A', '#020905'];
-const AURORA_LIGHT = ['#EBF5EC', '#00B4A6', '#66BB6A', '#D4EDD8'];
+const AURORA_LIGHT = ['#F2FAF4', '#0F8F84', '#3F9D4D', '#D7EEDF'];
 const AURORA_AMPLITUDE = 1.28;
 const AURORA_SPEED = 0.28;
 
@@ -91,7 +91,7 @@ const AURORA_SPEED = 0.28;
 // ───────────────────────────────────────────────────────────────────────────
 function ProtectedAdminRoute({ children }) {
   const auth = useAuth();
-  const allowed = auth.isAuthenticated && auth.role === ROLE.ADMIN;
+  const allowed = auth.isAuthenticated && [ROLE.ADMIN, ROLE.VIEWER].includes(auth.role);
   return allowed ? children : <Navigate to="/access-denied" replace />;
 }
 
@@ -248,10 +248,16 @@ function normalizeSensorPayload(payload) {
   if (!payload || typeof payload !== 'object') return payload;
   return {
     ...payload,
+    soilMoisture: payload.soilMoisture ?? payload.moisture,
+    moisture: payload.moisture ?? payload.soilMoisture,
+    temperature: payload.temperature,
+    humidity: payload.humidity,
+    light: payload.light ?? payload.lightIntensity,
     pH: payload.pH ?? payload.ph,
     flowRate: payload.flowRate ?? payload.flowRateMlPerMin ?? payload.waterFlowRate,
     flowVolume: payload.flowVolume ?? payload.cycleVolumeML ?? payload.waterFlowVolume,
     leafCount: payload.leafCount ?? payload.leaf_count ?? payload.canopyLeafCount,
+    timestamp: payload.timestamp ?? payload.lastSeen ?? new Date().toISOString(),
   };
 }
 
@@ -509,9 +515,9 @@ function App() {
     const fetchData = async () => {
       if (isMockEnabled()) {
         const mockSensorsArr = getMockSensors();
-        const mockPrimary = mockSensorsArr.length > 0 ? mockSensorsArr[0] : null; 
-        
-        setSensors(mockPrimary);
+        const mockPrimary = mockSensorsArr.length > 0 ? mockSensorsArr[0] : null;
+
+        setSensors(normalizeSensorPayload(mockPrimary));
         setAlerts(getMockAlerts()); // Instantly update alerts from mock
         setSystemStatus({
           backend: 'online', database: 'online', esp32: 'online', esp32Cam: 'online',

@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect, lazy, Suspense } from 'react';
 import { AIRecommendation } from '../../components/AIRecommendation.jsx';
+import { getCSSVariableValue } from '../../utils/colorUtils.js';
 import './AIChat.css';
 
 // Lazy load InsightsPage to avoid circular dependencies
@@ -19,9 +20,9 @@ const PLANT_TYPES = [
 ];
 
 const HEALTH_STATES = {
-  healthy: { color: '#22c55e', icon: 'fa-heart-pulse', label: 'Healthy', threshold: null },
-  caution: { color: '#f59e0b', icon: 'fa-exclamation-triangle', label: 'Needs Attention', threshold: 0.4 },
-  critical: { color: '#ef4444', icon: 'fa-triangle-exclamation', label: 'Critical', threshold: 0.7 },
+  healthy: { color: getCSSVariableValue('--aichat-healthy'), icon: 'fa-heart-pulse', label: 'Healthy', threshold: null },
+  caution: { color: getCSSVariableValue('--aichat-caution'), icon: 'fa-exclamation-triangle', label: 'Needs Attention', threshold: 0.4 },
+  critical: { color: getCSSVariableValue('--aichat-critical'), icon: 'fa-triangle-exclamation', label: 'Critical', threshold: 0.7 },
 };
 
 function TypingIndicator() {

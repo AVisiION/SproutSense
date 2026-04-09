@@ -477,7 +477,7 @@ export default function SettingsPage({
     setPairingDevice(true);
     try {
       const res = await deviceAPI.pairDevice({
-        deviceId: pairingKey,
+        pairingKey,
         displayName: pairingForm.displayName.trim() || pairingForm.deviceModel,
       });
       onNotification?.(`Device '${res.device.displayName}' paired successfully!`, 'success');

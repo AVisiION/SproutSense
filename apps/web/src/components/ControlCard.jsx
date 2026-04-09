@@ -58,8 +58,21 @@ function Panel({ faIcon, title, accent, children }) {
 }
 
 // ── Pump status ring ───────────────────────────────────────────────
+// Helper to resolve CSS variables for SVG colors
+function getCSSVariableValue(varName) {
+  if (typeof varName !== 'string' || !varName.includes('--')) {
+    return varName; // Return as-is if not a variable
+  }
+  try {
+    const value = getComputedStyle(document.documentElement).getPropertyValue(varName).trim();
+    return value || '#475569'; // fallback
+  } catch {
+    return '#475569'; // fallback
+  }
+}
+
 function PumpRing({ active }) {
-  const color  = active ? '#22d3ee' : '#475569';
+  const color  = getCSSVariableValue(active ? 'var(--control-manual)' : '#475569');
   const R = 38;
   const C = 2 * Math.PI * R;
   return (
@@ -192,7 +205,7 @@ export function ControlCard({
       <div className="cc-grid">
 
         {/* 1. Manual Control */}
-        <Panel faIcon="fa-hand" title="Manual Control" accent="#22d3ee">
+        <Panel faIcon="fa-hand" title="Manual Control" accent="var(--control-manual)">
           <div className="cc-pump-hero">
             <PumpRing active={pumpActive} />
             <div className="cc-pump-btns">
@@ -217,7 +230,7 @@ export function ControlCard({
         </Panel>
 
         {/* 2. Timed Watering */}
-        <Panel faIcon="fa-hourglass-half" title="Timed Watering" accent="#a78bfa">
+        <Panel faIcon="fa-hourglass-half" title="Timed Watering" accent="var(--control-timed)">
           <div className="cc-field">
             <div className="cc-field-label">
               <i className="fa-solid fa-stopwatch" aria-hidden="true" />
@@ -247,7 +260,7 @@ export function ControlCard({
         </Panel>
 
         {/* 3. Auto-Watering */}
-        <Panel faIcon="fa-robot" title="Auto-Watering" accent="#22c55e">
+        <Panel faIcon="fa-robot" title="Auto-Watering" accent="var(--control-auto)">
           <Toggle
             on={autoWater}
             onToggle={handleAutoWaterToggle}
@@ -286,7 +299,7 @@ export function ControlCard({
         </Panel>
 
         {/* 4. Daily Schedule */}
-        <Panel faIcon="fa-calendar-days" title="Daily Schedule" accent="#f59e0b">
+        <Panel faIcon="fa-calendar-days" title="Daily Schedule" accent="var(--control-schedule)">
           <Toggle
             on={scheduleEnabled}
             onToggle={() => setScheduleEnabled(s => !s)}
@@ -325,7 +338,7 @@ export function ControlCard({
         </Panel>
 
         {/* 5. Plant & AI Controls */}
-        <Panel faIcon="fa-seedling" title="Plant Growth &amp; AI" accent="#34d399">
+        <Panel faIcon="fa-seedling" title="Plant Growth &amp; AI" accent="var(--control-growth)">
           <Toggle
             on={!!plantGrowthEnabled}
             onToggle={() => onPlantGrowthEnabledChange?.(!plantGrowthEnabled)}

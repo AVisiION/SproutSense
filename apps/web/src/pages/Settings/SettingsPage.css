@@ -778,8 +778,12 @@
    LIGHT THEME
 ══════════════════════════════════════════════════════ */
 [data-theme='light'] .sp-card {
-  background: rgba(255,255,255,0.90);
-  border-color: rgba(34, 197, 94,0.14);
+  background: var(--sp-card-light-bg);
+  border-color: var(--sp-card-light-hover-border);
+}
+[data-theme='light'] .sp-card-body {
+  background: var(--sp-card-body-light-bg);
+  color: var(--sp-card-body-light-text);
 }
 [data-theme='light'] .sp-input-wrap {
   background: rgba(0,0,0,0.03);

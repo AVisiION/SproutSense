@@ -15,8 +15,7 @@ function extractIp(req) {
 export async function pairDevice(req, res, next) {
   try {
     const userId = req.auth?.userId;
-    const deviceId = String(req.body?.deviceId || '').trim().toUpperCase();
-    const providedAuthValue = String(req.body?.deviceToken || req.body?.deviceSecret || '').trim();
+    const pairingKey = String(req.body?.pairingKey || '').trim().toUpperCase();
     const displayName = String(req.body?.displayName || '').trim();
     const firmwareVersion = String(req.body?.firmwareVersion || '').trim() || null;
 
@@ -24,35 +23,26 @@ export async function pairDevice(req, res, next) {
       return res.status(401).json({ success: false, message: 'Authentication required.' });
     }
 
-    if (!deviceId) {
-      return res.status(400).json({ success: false, message: 'deviceId is required.' });
+    if (!pairingKey) {
+      return res.status(400).json({ success: false, message: 'pairingKey is required.' });
     }
 
-    const authValue = providedAuthValue || deviceId;
-
-    // Validate against pre-registered device
-    const preDevice = await PreRegisteredDevice.findOne({
-      deviceId,
-      isActive: true,
-    }).select('+deviceSecret');
+    // Validate against pre-registered device using the pairing code
+    const preDevice = await PreRegisteredDevice.findOne({ pairingKey, isActive: true }).select('+deviceSecret +pairingKey');
 
     if (!preDevice) {
-      return res.status(404).json({ success: false, message: 'Device not found. Please check deviceId.' });
-    }
-
-    // Verify token matches
-    if (preDevice.deviceSecret !== authValue) {
-      return res.status(401).json({ success: false, message: 'Invalid device ID.' });
+      return res.status(404).json({ success: false, message: 'Device not found. Please check pairingKey.' });
     }
 
     // Check if device already paired to another user
+    const deviceId = preDevice.deviceId;
     const existingBinding = await UserDevice.findOne({ deviceId });
     if (existingBinding && existingBinding.isActive && String(existingBinding.userId) !== String(userId)) {
       return res.status(409).json({ success: false, message: 'This device is already paired to another user.' });
     }
 
     const now = new Date();
-    const tokenHash = hashValue(deviceId);
+    const tokenHash = hashValue(preDevice.deviceSecret);
 
     // Create or update user-device binding
     const binding = await UserDevice.findOneAndUpdate(
@@ -87,7 +77,6 @@ export async function pairDevice(req, res, next) {
       success: true,
       device: {
         deviceId,
-        deviceToken: deviceId,
         displayName: binding.displayName,
         pairedAt: now.toISOString(),
       },
@@ -148,9 +137,14 @@ export async function rotateDeviceToken(req, res, next) {
       return res.status(404).json({ success: false, message: 'Device not found for this account.' });
     }
 
+    const preDevice = await PreRegisteredDevice.findOne({ deviceId }).select('+deviceSecret');
+    if (!preDevice?.deviceSecret) {
+      return res.status(404).json({ success: false, message: 'Device secret not found for this device.' });
+    }
+
     const now = new Date();
 
-    device.tokenHash = hashValue(deviceId);
+    device.tokenHash = hashValue(preDevice.deviceSecret);
     device.tokenIssuedAt = now;
     await device.save();
 
@@ -158,7 +152,8 @@ export async function rotateDeviceToken(req, res, next) {
       success: true,
       device: {
         deviceId,
-        deviceToken: deviceId,
+        deviceToken: preDevice.deviceSecret,
+        deviceSecret: preDevice.deviceSecret,
         rotatedAt: now.toISOString(),
       },
     });
@@ -222,7 +217,7 @@ export async function forcePairDevice(req, res, next) {
     }
 
     const now = new Date();
-    const tokenHash = hashValue(normalizedDeviceId);
+    const tokenHash = hashValue(preDevice.deviceSecret);
 
     const binding = await UserDevice.findOneAndUpdate(
       { deviceId: normalizedDeviceId },
@@ -249,7 +244,8 @@ export async function forcePairDevice(req, res, next) {
       message: `Device ${normalizedDeviceId} force-paired to user ${userId}`,
       device: {
         deviceId: normalizedDeviceId,
-        deviceToken: normalizedDeviceId,
+        deviceToken: preDevice.deviceSecret,
+        deviceSecret: preDevice.deviceSecret,
         displayName: binding.displayName,
       },
     });

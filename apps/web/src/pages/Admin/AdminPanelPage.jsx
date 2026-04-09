@@ -45,8 +45,9 @@ import './Admin.css';
 import { setMockEnabled, isMockEnabled } from '../../services/mockDataService';
 
 export default function AdminPanelPage() {
-  const { logout, user, hasPermission, startImpersonation } = useAuth();
+  const { logout, user, role, hasPermission, startImpersonation } = useAuth();
   const adminUser = user?.fullName || user?.email || 'admin';
+  const isViewerReadOnly = role === ROLE.VIEWER;
   const navigate = useNavigate();
   const logEndRef = useRef(null);
 
@@ -109,7 +110,8 @@ export default function AdminPanelPage() {
   const [systemStats, setSystemStats] = useState(null);
 
   // Device Key Management state
-  const [deviceKeyForm, setDeviceKeyForm] = useState({ deviceId: '', displayName: '' });
+  const [deviceKeyForm, setDeviceKeyForm] = useState({ deviceId: '', pairingKey: '', displayName: '' });
+  const [lastProvisioningSeed, setLastProvisioningSeed] = useState(null);
   const [lastGeneratedPairingKey, setLastGeneratedPairingKey] = useState(null);
   const [deviceKeys, setDeviceKeys] = useState([]);
   const [loadingDeviceKeys, setLoadingDeviceKeys] = useState(false);
@@ -416,27 +418,61 @@ export default function AdminPanelPage() {
     }
   };
 
-  const generatePairingKey = useCallback((deviceType = 'ESP32-SENSOR') => {
+  const generateDeviceId = useCallback((deviceType = selectedDeviceType) => {
     const typePrefix = deviceType === 'ESP32-CAM' ? 'CAM' : 'SENSOR';
-    const randomPart = Math.random().toString(36).slice(2, 7).toUpperCase();
-    const timePart = Date.now().toString(36).slice(-4).toUpperCase();
-    return `PAIR-${typePrefix}-${randomPart}-${timePart}`;
+    const randomPart = Math.random().toString(36).slice(2, 8).toUpperCase();
+    return `ESP32-${typePrefix}-${randomPart}`;
+  }, [selectedDeviceType]);
+
+  const generateProvisioningSeed = useCallback(() => {
+    const bytes = new Uint8Array(16);
+    crypto.getRandomValues(bytes);
+    return Array.from(bytes, (byte) => byte.toString(16).padStart(2, '0')).join('').toUpperCase();
   }, []);
 
+  const formatPairingKey = useCallback((seed) => {
+    const normalized = String(seed || '').trim().toUpperCase().replace(/[^A-Z0-9]/g, '');
+    const suffix = normalized.slice(0, 20).padEnd(20, '0');
+    return `PAIR-${suffix.slice(0, 5)}-${suffix.slice(5, 10)}-${suffix.slice(10, 15)}-${suffix.slice(15, 20)}`;
+  }, []);
+
+  const handleGenerateDeviceId = useCallback((deviceType = selectedDeviceType) => {
+    const deviceId = generateDeviceId(deviceType);
+    setDeviceKeyForm((prev) => ({
+      ...prev,
+      deviceId,
+      displayName: prev.displayName || (deviceType === 'ESP32-CAM' ? 'ESP32 Camera' : 'ESP32 Sensor'),
+    }));
+  }, [generateDeviceId, selectedDeviceType]);
+
   const handleGeneratePairingKey = useCallback((deviceType = selectedDeviceType) => {
-    const pairingKey = generatePairingKey(deviceType);
+    const provisioningSeed = generateProvisioningSeed();
+    const pairingKey = formatPairingKey(provisioningSeed);
+    setLastProvisioningSeed(provisioningSeed);
     setLastGeneratedPairingKey(pairingKey);
     setDeviceKeyForm((prev) => ({
       ...prev,
-      deviceId: pairingKey,
+      pairingKey,
       displayName: prev.displayName || (deviceType === 'ESP32-CAM' ? 'ESP32 Camera' : 'ESP32 Sensor'),
     }));
-  }, [generatePairingKey, selectedDeviceType]);
+  }, [formatPairingKey, generateProvisioningSeed, selectedDeviceType]);
 
   const handleCreateDeviceKey = async () => {
-    const deviceId = deviceKeyForm.deviceId.trim().toUpperCase();
+    const deviceId = (deviceKeyForm.deviceId.trim() || generateDeviceId(selectedDeviceType)).toUpperCase();
+    const provisioningSeed = lastProvisioningSeed || generateProvisioningSeed();
+    const pairingKey = deviceKeyForm.pairingKey.trim() || formatPairingKey(provisioningSeed);
     if (!deviceId) {
       log('Device ID is required', LOG_TYPES.error);
+      return;
+    }
+
+    if (!pairingKey) {
+      log('Pairing key is required', LOG_TYPES.error);
+      return;
+    }
+
+    if (deviceId === pairingKey) {
+      log('Device ID and pairing key must be different', LOG_TYPES.error);
       return;
     }
 
@@ -447,13 +483,16 @@ export default function AdminPanelPage() {
 
     setCreatingDeviceKey(true);
     try {
-      setLastGeneratedPairingKey(deviceId);
+      setLastProvisioningSeed(provisioningSeed);
+      setLastGeneratedPairingKey(pairingKey);
       const res = await deviceAPI.createKey({
         deviceId,
+        pairingKey,
+        provisioningSeed,
         displayName: deviceKeyForm.displayName.trim(),
       });
-      setGeneratedDeviceToken(res?.device?.deviceToken || res?.device?.deviceSecret || null);
-      setDeviceKeyForm({ deviceId: '', displayName: '' });
+      setGeneratedDeviceToken(res?.device?.deviceSecretHex || res?.device?.deviceSecret || null);
+      setDeviceKeyForm({ deviceId: '', pairingKey: '', displayName: '' });
       await loadDeviceKeys();
       log(`Device key created for ${deviceId}`, LOG_TYPES.success, { deviceId });
     } catch (error) {
@@ -470,22 +509,28 @@ export default function AdminPanelPage() {
       return;
     }
 
-    const pairingKey = generatePairingKey(preset.deviceId);
+    const deviceId = generateDeviceId(preset.deviceId);
+    const provisioningSeed = generateProvisioningSeed();
+    const pairingKey = formatPairingKey(provisioningSeed);
     setSelectedDeviceType(preset.deviceId);
+    setLastProvisioningSeed(provisioningSeed);
     setDeviceKeyForm({
-      deviceId: pairingKey,
+      deviceId,
+      pairingKey,
       displayName: preset.displayName,
     });
     setCreatingDeviceKey(true);
     try {
       setLastGeneratedPairingKey(pairingKey);
       const res = await deviceAPI.createKey({
-        deviceId: pairingKey,
+        deviceId,
+        pairingKey,
+        provisioningSeed,
         displayName: preset.displayName,
       });
-      setGeneratedDeviceToken(res?.device?.deviceToken || res?.device?.deviceSecret || null);
+      setGeneratedDeviceToken(res?.device?.deviceSecretHex || res?.device?.deviceSecret || null);
       await loadDeviceKeys();
-      log(`Device key created for ${pairingKey}`, LOG_TYPES.success, { deviceId: pairingKey });
+      log(`Device key created for ${deviceId}`, LOG_TYPES.success, { deviceId });
     } catch (error) {
       const message = error?.response?.data?.message || error.message;
       log(`Failed to create device key: ${message}`, LOG_TYPES.error);
@@ -597,9 +642,18 @@ export default function AdminPanelPage() {
     navigate('/login', { replace: true });
   };
 
-  const clearLogs = () => {
-    setActionLog([]);
-    log('Log history cleared', LOG_TYPES.warning);
+  const deleteLogs = async () => {
+    if (typeof window !== 'undefined' && !window.confirm('Delete all admin logs? This cannot be undone.')) {
+      return;
+    }
+
+    try {
+      const result = await configAPI.deleteAdminLogs({ params: { q: logSearch, level: logLevel } });
+      setActionLog([]);
+      log(`Deleted ${result?.deletedCount || 0} admin log(s)`, LOG_TYPES.warning);
+    } catch (error) {
+      log(`Failed to delete logs: ${error.message}`, LOG_TYPES.error);
+    }
   };
 
   const downloadBlob = (blob, filename) => {
@@ -1154,7 +1208,7 @@ export default function AdminPanelPage() {
         />
 
         {/* Content */}
-        <div className="adm-content">
+        <div className={`adm-content${isViewerReadOnly ? ' adm-content--readonly' : ''}`} inert={isViewerReadOnly ? '' : undefined} aria-readonly={isViewerReadOnly || undefined}>
           {loading ? (
             <div className="adm-loading">
               <i className="fa-solid fa-circle-notch fa-spin" />
@@ -1162,6 +1216,12 @@ export default function AdminPanelPage() {
             </div>
           ) : (
             <>
+              {isViewerReadOnly && (
+                <div style={{ marginBottom: '1rem', padding: '0.9rem 1rem', borderRadius: '0.85rem', background: 'rgba(14, 165, 233, 0.12)', border: '1px solid rgba(56, 189, 248, 0.25)', color: '#c7f2ff', fontSize: '0.92rem', fontWeight: 500 }}>
+                  Viewer mode is read only. Data can be inspected, but admin controls are disabled.
+                </div>
+              )}
+
               {/* Section */}
               {activeSection === 'overview' && (
                 <OverviewSection systemStats={systemStats} systemInfo={systemInfo} />
@@ -1187,6 +1247,7 @@ export default function AdminPanelPage() {
                   lastGeneratedPairingKey={lastGeneratedPairingKey}
                   selectedDeviceType={selectedDeviceType}
                   setSelectedDeviceType={setSelectedDeviceType}
+                  handleGenerateDeviceId={handleGenerateDeviceId}
                   handleGeneratePairingKey={handleGeneratePairingKey}
                   handleCreateDeviceKey={handleCreateDeviceKey}
                   generatedDeviceToken={generatedDeviceToken}
@@ -1219,7 +1280,7 @@ export default function AdminPanelPage() {
                   handleDeleteCustomSensor={handleDeleteCustomSensor}
                   handleUiSensorIconChange={handleUiSensorIconChange}
                   handleUiSensorColorChange={handleUiSensorColorChange}
-                  handleUiSensorChartTypeChange={handleUiSensorChartTypeChange}
+                  deleteLogs={deleteLogs}
                   handleUiSensorAnalyticsToggle={handleUiSensorAnalyticsToggle}
                   handleUiSensorDashboardToggle={handleUiSensorDashboardToggle}
                   handleSaveUiPreferences={handleSaveUiPreferences}
@@ -1386,7 +1447,7 @@ export default function AdminPanelPage() {
                   onClick={handleConfirmForcePair}
                   disabled={isForcePairing || !selectedUserIdForForcePair}
                   style={{
-                    background: 'linear-gradient(135deg, #22d3ee, #0ea5e9)',
+                    background: 'var(--admin-gradient-cyan-sky)',
                     color: '#fff',
                     padding: '0.6rem 1.2rem',
                     border: 'none',

@@ -309,6 +309,20 @@ export const getAdminLogs = async (req, res, next) => {
   }
 };
 
+export const deleteAdminLogs = async (req, res, next) => {
+  try {
+    const mongoQuery = buildAdminLogQuery(req.query);
+    const result = await AdminLog.deleteMany(mongoQuery);
+
+    res.json({
+      success: true,
+      deletedCount: result.deletedCount || 0,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 export const exportAdminLogs = async (req, res, next) => {
   try {
     const format = (req.query.format || 'json').toLowerCase();

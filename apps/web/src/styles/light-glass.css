@@ -145,18 +145,18 @@
    SETTINGS PAGE — sp-card in light
 ══════════════════════════════════════════════════════ */
 [data-theme="light"] .sp-card {
-  background: rgba(255, 255, 255, 0.55) !important;
-  border: 1px solid rgba(255, 255, 255, 0.80) !important;
-  box-shadow: 0 8px 32px rgba(10,40,15,0.10), inset 0 1px 0 rgba(255,255,255,0.95) !important;
+  background: var(--sp-card-light-bg) !important;
+  border: var(--sp-card-light-border) !important;
+  box-shadow: var(--sp-card-light-shadow) !important;
   -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
   backdrop-filter: blur(20px) saturate(180%) !important;
 }
 [data-theme="light"] .sp-card:hover {
-  border-color: rgba(46, 125, 50, 0.28) !important;
-  box-shadow: 0 12px 40px rgba(10,40,15,0.14), inset 0 1px 0 rgba(255,255,255,1) !important;
+  border-color: var(--sp-card-light-hover-border) !important;
+  box-shadow: var(--sp-card-light-hover-shadow) !important;
 }
 [data-theme="light"] .sp-card-head {
-  border-bottom-color: rgba(46, 125, 50, 0.10) !important;
+  border-bottom-color: var(--sp-card-light-head-border) !important;
 }
 [data-theme="light"] .sp-row {
   border-bottom-color: rgba(46, 125, 50, 0.08) !important;

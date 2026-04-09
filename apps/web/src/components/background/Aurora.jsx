@@ -11,6 +11,7 @@
  *   speed       {number}    Animation speed multiplier (default 0.5).
  */
 import { useRef, useEffect } from 'react';
+import { getCSSVariableValue } from '../../utils/colorUtils';
 
 const VERT = `
 precision mediump float;
@@ -95,7 +96,7 @@ function compileShader(gl, type, src) {
 }
 
 export default function Aurora({
-  colorStops = ['#06b6d4', '#14b8a6', '#22c55e', '#06131a'],
+  colorStops = ['--aurora-primary', '--aurora-secondary', '--aurora-tertiary', '--aurora-bg'],
   amplitude  = 1.2,
   blend      = 0.6,
   speed      = 0.4,
@@ -107,6 +108,15 @@ export default function Aurora({
     const canvas = canvasRef.current;
     const gl = canvas.getContext('webgl', { antialias: false });
     if (!gl) return;
+
+    // Resolve CSS variable colors
+    const resolvedStops = colorStops.map(stop => {
+      // If it's a CSS variable name, resolve it
+      if (typeof stop === 'string' && stop.startsWith('--')) {
+        return getCSSVariableValue(stop);
+      }
+      return stop;
+    });
 
     const vert = compileShader(gl, gl.VERTEX_SHADER,   VERT);
     const frag = compileShader(gl, gl.FRAGMENT_SHADER, FRAG);
@@ -136,7 +146,7 @@ export default function Aurora({
     const uC2    = gl.getUniformLocation(prog, 'u_color2');
     const uC3    = gl.getUniformLocation(prog, 'u_color3');
 
-    const stops = [...colorStops];
+    const stops = [...resolvedStops];
     while (stops.length < 4) stops.push('#000000');
 
     gl.uniform1f(uAmp,   amplitude);

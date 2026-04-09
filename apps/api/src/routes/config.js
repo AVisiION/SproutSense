@@ -15,6 +15,7 @@ import {
   updateDataRetentionPolicy,
   createAdminLog,
   getAdminLogs,
+  deleteAdminLogs,
   exportAdminLogs
 } from '../controllers/configController.js';
 import { getSystemStats } from '../controllers/adminStatsController.js';
@@ -84,6 +85,7 @@ router.put('/data-retention', requirePermissions([PERMISSIONS.CONFIG_UPDATE]), u
 
 // Admin action logs
 router.get('/admin-logs', readLimiter, requirePermissions([PERMISSIONS.AUDIT_READ]), getAdminLogs);
+router.delete('/admin-logs', requirePermissions([PERMISSIONS.AUDIT_DELETE]), deleteAdminLogs);
 router.get('/admin-logs/export', readLimiter, requirePermissions([PERMISSIONS.AUDIT_EXPORT]), exportAdminLogs);
 router.post('/admin-logs', requirePermissions([PERMISSIONS.AUDIT_READ]), createAdminLog);
 

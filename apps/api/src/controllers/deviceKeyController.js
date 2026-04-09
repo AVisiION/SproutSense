@@ -1,9 +1,45 @@
+import crypto from 'crypto';
 import PreRegisteredDevice from '../models/PreRegisteredDevice.js';
+
+function generateProvisioningSeed() {
+  return crypto.randomBytes(16).toString('hex').toUpperCase();
+}
+
+function formatPairingKey(seed) {
+  const normalized = String(seed || '').trim().toUpperCase().replace(/[^A-Z0-9]/g, '');
+  const fallback = generateProvisioningSeed();
+  const source = normalized || fallback;
+  const suffix = source.slice(0, 20).padEnd(20, fallback[0]);
+  return `PAIR-${suffix.slice(0, 5)}-${suffix.slice(5, 10)}-${suffix.slice(10, 15)}-${suffix.slice(15, 20)}`;
+}
+
+function generateDeviceSecret(seed) {
+  const normalized = String(seed || '').trim().toUpperCase();
+  return crypto.createHash('sha256').update(`device-secret:${normalized}`).digest('hex').toUpperCase();
+}
+
+function normalizeSecret(value) {
+  return String(value || '').trim().toUpperCase().replace(/\s+/g, '');
+}
 
 export async function createPreRegisteredDevice(req, res, next) {
   try {
     const deviceId = String(req.body?.deviceId || '').trim().toUpperCase();
     const displayName = String(req.body?.displayName || '').trim();
+    const existingPairingKey = String(req.body?.pairingKey || '').trim().toUpperCase();
+    const existingDeviceSecret = normalizeSecret(req.body?.deviceSecret);
+    const provisioningSeed = String(req.body?.provisioningSeed || '').trim().toUpperCase() || null;
+    const seed = provisioningSeed || generateProvisioningSeed();
+    const derivedPairingKey = formatPairingKey(seed);
+    const pairingKey = existingPairingKey || derivedPairingKey;
+    const deviceSecret = existingDeviceSecret || generateDeviceSecret(seed);
+
+    if (provisioningSeed && existingPairingKey && existingPairingKey !== derivedPairingKey) {
+      return res.status(400).json({
+        success: false,
+        message: 'pairingKey does not match the provided provisioningSeed.',
+      });
+    }
 
     if (!deviceId) {
       return res.status(400).json({ success: false, message: 'deviceId is required.' });
@@ -14,10 +50,10 @@ export async function createPreRegisteredDevice(req, res, next) {
       return res.status(409).json({ success: false, message: 'Device already registered.' });
     }
 
-    const deviceToken = deviceId;
     const device = await PreRegisteredDevice.create({
       deviceId,
-      deviceSecret: deviceToken,
+      pairingKey,
+      deviceSecret,
       displayName: displayName || deviceId,
       isActive: true,
     });
@@ -27,9 +63,12 @@ export async function createPreRegisteredDevice(req, res, next) {
       device: {
         id: String(device._id),
         deviceId: device.deviceId,
-        deviceToken,
+        pairingKey: device.pairingKey,
+        deviceToken: pairingKey,
         // Backward-compatible alias for legacy clients.
-        deviceSecret: deviceToken,
+        deviceSecret,
+        pairingKey,
+        deviceSecretHex: deviceSecret,
         displayName: device.displayName,
         isActive: device.isActive,
         createdAt: device.createdAt,

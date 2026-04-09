@@ -270,33 +270,6 @@
   cursor: not-allowed;
 }
 
-.adm-navbar-logout-btn {
-  height: 34px;
-  border-radius: 10px;
-  border: 1px solid rgba(239, 68, 68, 0.3);
-  background: linear-gradient(180deg, rgba(220, 38, 38, 0.22), rgba(127, 29, 29, 0.18));
-  color: #fecaca;
-  display: inline-flex;
-  align-items: center;
-  gap: 0.45rem;
-  padding: 0 0.68rem;
-  font-size: 0.76rem;
-  font-weight: 700;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.adm-navbar-logout-btn:hover {
-  background: rgba(239, 68, 68, 0.22);
-  border-color: rgba(252, 165, 165, 0.42);
-  color: #fee2e2;
-}
-
-.adm-root[data-theme='light'] .adm-navbar-logout-btn {
-  background: rgba(239, 68, 68, 0.1);
-  border-color: rgba(220, 38, 38, 0.25);
-  color: #b91c1c;
-}
 
 .adm-refresh-btn.spinning i {
   animation: admSpin 0.8s linear infinite;
@@ -385,11 +358,6 @@
     font-size: 0.75rem;
   }
 
-  .adm-navbar-logout-btn {
-    height: 32px;
-    padding: 0 0.48rem;
-    font-size: 0.75rem;
-  }
 }
 
 @media (max-width: 480px) {
@@ -407,16 +375,6 @@
 
   .adm-badge {
     display: none;
-  }
-
-  .adm-navbar-logout-btn span {
-    display: none;
-  }
-
-  .adm-navbar-logout-btn {
-    min-width: 30px;
-    padding: 0;
-    justify-content: center;
   }
 
   .adm-header-actions {

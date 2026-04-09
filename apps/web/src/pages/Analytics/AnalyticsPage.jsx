@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import { getCSSVariableValue } from '../../utils/colorUtils';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   AreaChart, Area, LineChart, Line, BarChart, Bar,
@@ -21,18 +22,28 @@ const TIME_RANGES = [
   { label: '30d', hours: 720 },
 ];
 
-const COLORS = {
-  moisture : '#00f2fe',
-  temp     : '#f59e0b',
-  humidity : '#22d3ee',
-  light    : '#facc15',
-  flow     : '#3b82f6',
-  disease  : '#ef4444',
-  ph       : '#a855f7',
-  healthy  : '#22c55e',
-};
+// Helper function to get chart colors from CSS variables
+const getChartColors = () => ({
+  moisture : getCSSVariableValue('--chart-moisture'),
+  temp     : getCSSVariableValue('--chart-temp'),
+  humidity : getCSSVariableValue('--chart-humidity'),
+  light    : getCSSVariableValue('--chart-light'),
+  flow     : getCSSVariableValue('--chart-flow'),
+  disease  : getCSSVariableValue('--chart-disease'),
+  ph       : getCSSVariableValue('--chart-ph'),
+  healthy  : getCSSVariableValue('--chart-healthy'),
+});
 
-const CHART_COLORS = ['#00f2fe', '#f59e0b', '#22d3ee', '#facc15', '#3b82f6', '#a855f7', '#22c55e', '#ef4444'];
+const getChartColorsArray = () => [
+  getCSSVariableValue('--chart-moisture'),
+  getCSSVariableValue('--chart-temp'),
+  getCSSVariableValue('--chart-humidity'),
+  getCSSVariableValue('--chart-light'),
+  getCSSVariableValue('--chart-flow'),
+  getCSSVariableValue('--chart-ph'),
+  getCSSVariableValue('--chart-healthy'),
+  getCSSVariableValue('--chart-disease')
+];
 
 const LOCAL_UI_PREFS_KEY = 'ss_ui_visual_preferences';
 
@@ -45,14 +56,17 @@ function loadVisualPrefs() {
   }
 }
 
-function colorForSensor(sensorKey, index = 0, palette = COLORS, chartPalette = CHART_COLORS) {
-  if (sensorKey?.toLowerCase().includes('moisture')) return palette.moisture;
-  if (sensorKey?.toLowerCase().includes('temp')) return palette.temp;
-  if (sensorKey?.toLowerCase().includes('humid')) return palette.humidity;
-  if (sensorKey?.toLowerCase().includes('light')) return palette.light;
-  if (sensorKey?.toLowerCase().includes('flow')) return palette.flow;
-  if (sensorKey?.toLowerCase().includes('ph')) return palette.ph;
-  return chartPalette[index % chartPalette.length];
+function colorForSensor(sensorKey, index = 0, palette = null, chartPalette = null) {
+  const defaultPalette = palette || getChartColors();
+  const defaultChartPalette = chartPalette || getChartColorsArray();
+  
+  if (sensorKey?.toLowerCase().includes('moisture')) return defaultPalette.moisture;
+  if (sensorKey?.toLowerCase().includes('temp')) return defaultPalette.temp;
+  if (sensorKey?.toLowerCase().includes('humid')) return defaultPalette.humidity;
+  if (sensorKey?.toLowerCase().includes('light')) return defaultPalette.light;
+  if (sensorKey?.toLowerCase().includes('flow')) return defaultPalette.flow;
+  if (sensorKey?.toLowerCase().includes('ph')) return defaultPalette.ph;
+  return defaultChartPalette[index % defaultChartPalette.length];
 }
 
 
@@ -231,15 +245,16 @@ export default function AnalyticsPage() {
 
   const palette = useMemo(() => {
     const custom = visualPrefs?.colors || {};
+    const defaultColors = getChartColors();
     return {
-      moisture: custom.moisture || COLORS.moisture,
-      temp: custom.temperature || COLORS.temp,
-      humidity: custom.humidity || COLORS.humidity,
-      light: COLORS.light,
-      flow: COLORS.flow,
-      disease: COLORS.disease,
-      ph: COLORS.ph,
-      healthy: COLORS.healthy,
+      moisture: custom.moisture || defaultColors.moisture,
+      temp: custom.temperature || defaultColors.temp,
+      humidity: custom.humidity || defaultColors.humidity,
+      light: defaultColors.light,
+      flow: defaultColors.flow,
+      disease: defaultColors.disease,
+      ph: defaultColors.ph,
+      healthy: defaultColors.healthy,
     };
   }, [visualPrefs]);
 
@@ -293,15 +308,15 @@ export default function AnalyticsPage() {
       const diseases  = diseaseResp?.data?.detections || [];
       let waterLogs = wateringResp?.data || [];
 
-      // No mock data generation fallback anymore
-      setIsTestMode(false);
-
       const parsed = sensors.map(s => ({
         ...s,
+        soilMoisture: s.soilMoisture ?? s.moisture ?? 0,
+        light       : s.light ?? s.lightIntensity ?? 0,
         flowVolume  : s.flowVolume ?? s.cycleVolumeML ?? s.waterFlowVolume ?? 0,
-        flowRate    : s.flowRate   ?? s.flowRateMlPerMin ?? 0,
+        flowRate    : s.flowRate   ?? s.flowRateMlPerMin ?? s.waterFlowRate ?? 0,
         pH          : s.pH ?? s.ph ?? 7.0,
-        timestampMs : new Date(s.timestamp).getTime(),
+        timestamp   : s.timestamp ?? new Date().toISOString(),
+        timestampMs : new Date(s.timestamp ?? Date.now()).getTime(),
       })).sort((a, b) => a.timestampMs - b.timestampMs);
 
       setSensorData(parsed);

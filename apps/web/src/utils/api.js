@@ -49,6 +49,124 @@ const mockResponse = (data, delay = 300) => {
   });
 };
 
+const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
+
+function normalizeMockSensorReading(sensor, fallbackTimestamp = new Date().toISOString()) {
+  if (!sensor || typeof sensor !== 'object') return null;
+
+  const timestamp = sensor.timestamp || sensor.lastSeen || fallbackTimestamp;
+  const soilMoisture = Number(sensor.soilMoisture ?? sensor.moisture ?? 0);
+  const temperature = Number(sensor.temperature ?? 0);
+  const humidity = Number(sensor.humidity ?? 0);
+  const pH = Number(sensor.pH ?? sensor.ph ?? 6.8);
+  const flowRate = Number(sensor.flowRate ?? sensor.flowRateMlPerMin ?? sensor.waterFlowRate ?? 0);
+  const flowVolume = Number(sensor.flowVolume ?? sensor.cycleVolumeML ?? sensor.waterFlowVolume ?? 0);
+
+  return {
+    ...sensor,
+    soilMoisture,
+    moisture: soilMoisture,
+    temperature,
+    humidity,
+    pH,
+    ph: pH,
+    light: Number(sensor.light ?? sensor.lightIntensity ?? 1200),
+    flowRate,
+    flowVolume,
+    leafCount: Number(sensor.leafCount ?? sensor.leaf_count ?? sensor.canopyLeafCount ?? 28),
+    deviceId: sensor.deviceId || 'ESP32-SENSOR',
+    timestamp,
+  };
+}
+
+function pickMockSensorBaseline(mockSensors) {
+  if (!Array.isArray(mockSensors) || mockSensors.length === 0) return null;
+
+  const normalized = mockSensors
+    .map((sensor) => normalizeMockSensorReading(sensor))
+    .filter((sensor) => sensor?.sensorType !== 'flow')
+    .filter(Boolean);
+
+  if (normalized.length === 0) return null;
+
+  const avg = (key) => normalized.reduce((sum, row) => sum + Number(row[key] || 0), 0) / normalized.length;
+
+  return {
+    soilMoisture: avg('soilMoisture'),
+    temperature: avg('temperature'),
+    humidity: avg('humidity'),
+    light: avg('light'),
+    pH: avg('pH') || 6.8,
+    leafCount: avg('leafCount') || 28,
+  };
+}
+
+function generateMockSensorHistory(startDate, endDate, mockSensors) {
+  const baseline = pickMockSensorBaseline(mockSensors);
+  if (!baseline) return [];
+
+  const startMs = Number.isFinite(new Date(startDate).getTime())
+    ? new Date(startDate).getTime()
+    : Date.now() - 24 * 60 * 60 * 1000;
+  const endMs = Number.isFinite(new Date(endDate).getTime())
+    ? new Date(endDate).getTime()
+    : Date.now();
+
+  const spanMs = Math.max(60 * 60 * 1000, endMs - startMs);
+  const stepMs = 15 * 60 * 1000;
+  const points = Math.max(8, Math.floor(spanMs / stepMs));
+
+  return Array.from({ length: points }, (_, idx) => {
+    const ratio = points > 1 ? idx / (points - 1) : 1;
+    const timestampMs = Math.round(startMs + ratio * spanMs);
+    const wave = Math.sin(idx / 3.6);
+    const drift = Math.cos(idx / 5.2);
+
+    const soilMoisture = clamp(baseline.soilMoisture + wave * 4 + drift * 1.2, 5, 98);
+    const temperature = clamp(baseline.temperature + Math.sin(idx / 7.5) * 2.1, 12, 46);
+    const humidity = clamp(baseline.humidity + Math.cos(idx / 6.4) * 5.4, 20, 98);
+    const light = clamp(baseline.light + Math.sin(idx / 2.8) * 160, 40, 65000);
+    const pH = clamp(baseline.pH + Math.cos(idx / 9.3) * 0.16, 4.5, 8.5);
+
+    const flowRate = soilMoisture < 35
+      ? clamp(90 + Math.sin(idx / 2.4) * 22, 45, 180)
+      : 0;
+
+    return {
+      soilMoisture: Number(soilMoisture.toFixed(1)),
+      temperature: Number(temperature.toFixed(1)),
+      humidity: Number(humidity.toFixed(1)),
+      light: Math.round(light),
+      pH: Number(pH.toFixed(2)),
+      ph: Number(pH.toFixed(2)),
+      flowRate: Number(flowRate.toFixed(1)),
+      flowVolume: flowRate > 0 ? Math.round(flowRate * 1.5) : 0,
+      leafCount: Math.round(clamp(baseline.leafCount + Math.sin(idx / 8.8) * 1.8, 5, 450)),
+      deviceId: 'ESP32-SENSOR',
+      timestamp: new Date(timestampMs).toISOString(),
+    };
+  });
+}
+
+function generateMockWaterLogs(sensorHistory = [], limit = 10) {
+  const active = sensorHistory.filter((row) => Number(row.flowRate) > 1);
+  if (active.length === 0) return [];
+
+  return active
+    .slice(-Math.max(1, Math.min(limit, 25)))
+    .map((row, index) => ({
+      _id: `mock-water-${index + 1}`,
+      deviceId: row.deviceId || 'ESP32-SENSOR',
+      startedAt: row.timestamp,
+      endedAt: row.timestamp,
+      durationSeconds: 12,
+      volumeMl: Number(row.flowVolume || 0),
+      flowRateMlPerMin: Number(row.flowRate || 0),
+      source: 'mock',
+      status: 'completed',
+    }));
+}
+
 // ==========================================
 // SENSOR API
 // ==========================================
@@ -58,7 +176,8 @@ export const sensorAPI = {
     if (isMockEnabled()) {
       const mockSensors = getMockSensors();
       const mockPrimary = mockSensors.length > 0 ? mockSensors[0] : null;
-      const res = await mockResponse(mockPrimary);
+      const normalized = normalizeMockSensorReading(mockPrimary);
+      const res = await mockResponse(normalized);
       return res.data;
     }
     const response = await api.get('/sensors', { params: { deviceId }, ...options });
@@ -68,7 +187,17 @@ export const sensorAPI = {
   // GET /api/sensors/history?deviceId=&start=&end= OR ?hours=
   getHistory: async (startDate, endDate, deviceId = 'ESP32-SENSOR', options = {}) => {
     if (isMockEnabled()) {
-      const res = await mockResponse(getMockSensors());
+      let start = startDate;
+      let end = endDate;
+
+      if (!(typeof startDate === 'string' && typeof endDate === 'string')) {
+        const hours = Number(startDate) || 24;
+        end = new Date().toISOString();
+        start = new Date(Date.now() - hours * 3_600_000).toISOString();
+      }
+
+      const mockHistory = generateMockSensorHistory(start, end, getMockSensors());
+      const res = await mockResponse(mockHistory);
       return res.data;
     }
     let params = { deviceId };
@@ -122,7 +251,12 @@ export const wateringAPI = {
   // GET /api/water/history
   getLogs: async (limit = 10, deviceId = 'ESP32-SENSOR', options = {}) => {
     if (isMockEnabled()) {
-      const res = await mockResponse([]);
+      const mockHistory = generateMockSensorHistory(
+        new Date(Date.now() - 24 * 3_600_000).toISOString(),
+        new Date().toISOString(),
+        getMockSensors()
+      );
+      const res = await mockResponse(generateMockWaterLogs(mockHistory, limit));
       return res.data;
     }
     const response = await api.get('/water/history', {
@@ -261,6 +395,16 @@ export const configAPI = {
     const response = await api.get('/config/admin-logs', {
       params: { limit }
     });
+    return response.data;
+  },
+
+  deleteAdminLogs: async (options = {}) => {
+    if (isMockEnabled()) {
+      const res = await mockResponse({ success: true, deletedCount: 0 });
+      return res.data;
+    }
+
+    const response = await api.delete('/config/admin-logs', options);
     return response.data;
   },
 
@@ -440,8 +584,8 @@ export const deviceAPI = {
   },
 
   // Device key management (admin)
-  createKey: async ({ deviceId, displayName }, options = {}) => {
-    const response = await api.post('/device/keys/create', { deviceId, displayName }, options);
+  createKey: async ({ deviceId, pairingKey, provisioningSeed, displayName }, options = {}) => {
+    const response = await api.post('/device/keys/create', { deviceId, pairingKey, provisioningSeed, displayName }, options);
     return response.data;
   },
 
@@ -562,21 +706,53 @@ export const aiAPI = {
   } = {}, options = {}) => {
     if (isMockEnabled()) {
       const mockAlerts = getMockAlerts() || [];
-      const diseaseAlerts = mockAlerts.filter(a => a.type === 'disease' || a.source === 'ESP32-CAM');
-      
-      const detections = diseaseAlerts.map(a => ({
-        _id: a.id,
-        timestamp: a.time || new Date().toISOString(),
-        detectedDisease: a.message.replace('Plant disease detected: ', ''),
-        confidence: 0.95,
+      const diseaseAlerts = mockAlerts.filter(a => {
+        const msg = String(a.message || '').toLowerCase();
+        return a.type === 'disease' || a.source === 'ESP32-CAM' || msg.includes('disease');
+      });
+
+      let detections = diseaseAlerts.map((a, index) => ({
+        _id: a.id || `mock-disease-${index + 1}`,
+        timestamp: a.time || a.timestamp || new Date(Date.now() - index * 3_600_000).toISOString(),
+        detectedDisease: String(a.detectedDisease || a.message || 'leaf_blight')
+          .replace('Plant disease detected: ', '')
+          .replace(/\s+/g, '_')
+          .toLowerCase(),
+        confidence: Number(a.confidence ?? 0.82),
         deviceId: 'ESP32-CAM'
       }));
 
+      if (detections.length === 0) {
+        const now = Date.now();
+        detections = [
+          {
+            _id: 'mock-disease-healthy',
+            timestamp: new Date(now - 90 * 60 * 1000).toISOString(),
+            detectedDisease: 'healthy',
+            confidence: 0.93,
+            deviceId: 'ESP32-CAM'
+          },
+          {
+            _id: 'mock-disease-leaf-blight',
+            timestamp: new Date(now - 8 * 60 * 60 * 1000).toISOString(),
+            detectedDisease: 'leaf_blight',
+            confidence: 0.84,
+            deviceId: 'ESP32-CAM'
+          }
+        ];
+      }
+
+      const sorted = detections
+        .filter((item) => !startDate || new Date(item.timestamp) >= new Date(startDate))
+        .filter((item) => !endDate || new Date(item.timestamp) <= new Date(endDate))
+        .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+
+      const paged = sorted.slice(0, limit);
       const res = await mockResponse({
-        detections,
-        total: detections.length,
+        detections: paged,
+        total: sorted.length,
         page,
-        totalPages: 1
+        totalPages: Math.max(1, Math.ceil(sorted.length / Math.max(1, limit)))
       });
       return res.data;
     }

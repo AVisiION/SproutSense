@@ -14,7 +14,6 @@ const AdminNavbarSection = ({
   mockEnabled,
   refreshing,
   fetchAllData,
-  handleLogout,
 }) => {
   const activeSectionMeta = SECTIONS.find((s) => s.id === activeSection);
 
@@ -63,15 +62,6 @@ const AdminNavbarSection = ({
             type="button"
           >
             <i className="fa-solid fa-rotate" />
-          </button>
-          <button
-            className="adm-navbar-logout-btn"
-            onClick={handleLogout}
-            title="Sign out"
-            type="button"
-          >
-            <i className="fa-solid fa-right-from-bracket" />
-            <span>Logout</span>
           </button>
         </div>
       </div>

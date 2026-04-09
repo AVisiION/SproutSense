@@ -17,6 +17,14 @@ const preRegisteredDeviceSchema = new mongoose.Schema(
       select: false,
       description: 'Hardcoded token pre-loaded in ESP32 firmware',
     },
+    pairingKey: {
+      type: String,
+      required: true,
+      trim: true,
+      uppercase: true,
+      index: true,
+      unique: true,
+    },
     displayName: {
       type: String,
       default: '',

@@ -165,7 +165,7 @@ export function Navbar({
                 <strong>{displayUserName}</strong>
                 <span>{auth.user?.email || ''}</span>
                 {viewingAsText && <span>{viewingAsText}</span>}
-                {auth.role === 'admin' && <span style={{color:'#43a047',fontWeight:600}}>Admin</span>}
+                {auth.role === 'admin' && <span style={{color:'var(--admin-badge)',fontWeight:600}}>Admin</span>}
               </div>
               {auth?.isImpersonating && (
                 <button className="navbar-account-link navbar-account-logout" onClick={handleExitImpersonation}>
@@ -181,7 +181,7 @@ export function Navbar({
                 <i className="fa-solid fa-gauge" />
                 Dashboard
               </Link>
-              {auth.role === 'admin' && (
+              {(auth.role === 'admin' || auth.role === 'viewer') && (
                 <>
                   <Link to="/admin" className="navbar-account-link" onClick={() => setAccountPanelOpen(false)}>
                     <i className="fa-solid fa-crown" />

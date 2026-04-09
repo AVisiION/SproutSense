@@ -1,6 +1,15 @@
-import React from 'react';
+import React, { useMemo } from 'react';
+import { getCSSVariableValue } from '../utils/colorUtils';
 
 const SproutSenseLogo = ({ className = '', width = '185px', height = '236px' }) => {
+  // Resolve color variables for the gradient
+  const colors = useMemo(() => {
+    return {
+      primary: getCSSVariableValue('--aurora-primary'),
+      secondary: getCSSVariableValue('--aurora-secondary'),
+      humidity: getCSSVariableValue('--sensor-humidity'),
+    };
+  }, []);
   return (
     <div className={`sproutsense-logo-wrapper ${className}`} style={{ width, height, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
       <svg 
@@ -13,10 +22,10 @@ const SproutSenseLogo = ({ className = '', width = '185px', height = '236px' }) 
         <defs>
           {/* Gradient matching the SproutSense theme (Blue WiFi to Green Leaves) */}
           <linearGradient id="sproutGradient" x1="0%" y1="100%" x2="0%" y2="0%">
-            <stop offset="0%" stopColor="#22d3ee" />   {/* Dark Blue Base */}
-            <stop offset="35%" stopColor="#22c55e" />  {/* Teal Transition */}
-            <stop offset="65%" stopColor="#22d3ee" />  {/* Vibrant Green Leaves */}
-            <stop offset="100%" stopColor="#22d3ee" /> {/* Blue WiFi Top */}
+            <stop offset="0%" stopColor={colors.humidity} />   {/* Cyan Base */}
+            <stop offset="35%" stopColor={colors.secondary} />  {/* Teal Transition */}
+            <stop offset="65%" stopColor={colors.primary} />  {/* Cyan Leaves */}
+            <stop offset="100%" stopColor={colors.humidity} /> {/* Cyan WiFi Top */}
           </linearGradient>
         </defs>
         

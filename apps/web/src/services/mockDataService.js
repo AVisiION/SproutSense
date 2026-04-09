@@ -1,7 +1,61 @@
 // ─── SPROUTSENSE MOCK DATA SERVICE ───────────────────────────────────────────
 // Central in-memory store. No localStorage. Default: OFF.
+// Enhanced with logging & status tracking for development visibility.
 
 const listeners = [];
+const actionLog = [];
+const MAX_LOG_ENTRIES = 50;
+
+function createFlowSensor(overrides = {}) {
+  return {
+    id: `F${Date.now()}`,
+    name: 'Irrigation Flow Sensor',
+    sensorType: 'flow',
+    moisture: 0,
+    temperature: 0,
+    humidity: 0,
+    flowRate: 142.5,
+    flowVolume: 860,
+    status: 'active',
+    lastUpdate: 'just now',
+    activityIndex: 0,
+    ...overrides,
+  };
+}
+
+// ─── LOGGING SYSTEM ──────────────────────────────────────────────────────────
+function logAction(action, details = {}) {
+  const entry = {
+    timestamp: new Date().toISOString(),
+    action,
+    details,
+  };
+  actionLog.unshift(entry); // Add to front
+  if (actionLog.length > MAX_LOG_ENTRIES) actionLog.pop(); // Keep last 50
+  
+  // Console output with emoji prefix
+  const prefix = {
+    'MOCK_ENABLED': '🔴',
+    'MOCK_DISABLED': '⚪',
+    'DRIFT_ON': '💨',
+    'DRIFT_OFF': '⏸️',
+    'SCENARIO_APPLIED': '🎭',
+    'SENSOR_ADDED': '➕',
+    'SENSOR_DELETED': '➖',
+    'ALERT_ADDED': '🔔',
+    'SENSOR_HISTORY_REQUEST': '📊',
+  }[action] || '📝';
+
+  console.log(`%c${prefix} MockData: ${action}`, 'color: #22d3ee; font-weight: 600;', details);
+}
+
+export function getActionLog() {
+  return [...actionLog];
+}
+
+export function clearActionLog() {
+  actionLog.length = 0;
+}
 
 export function subscribeToMockUpdates(callback) {
   listeners.push(callback);
@@ -26,6 +80,7 @@ export const mockDataStore = {
     { id: 'S002', name: 'Field A - Zone 2', moisture: 45, temperature: 31.2, humidity: 65, status: 'active', lastUpdate: 'just now', activityIndex: 0 },
     { id: 'S003', name: 'Field B - Zone 1', moisture: 78, temperature: 26.8, humidity: 80, status: 'active', lastUpdate: 'just now', activityIndex: 0 },
     { id: 'S004', name: 'Field B - Zone 2', moisture: 33, temperature: 29.1, humidity: 68, status: 'warning', lastUpdate: 'just now', activityIndex: 0 },
+    createFlowSensor({ id: 'F001', name: 'Main Line Flow Sensor' }),
   ],
 
   alerts: [
@@ -82,7 +137,8 @@ const SCENARIOS = {
     _forceError: true,
   },
   highLoad: {
-    sensors: Array.from({ length: 20 }, (_, i) => ({
+    sensors: [
+      ...Array.from({ length: 20 }, (_, i) => ({
       id: `S${String(i + 1).padStart(3, '0')}`,
       name: `Field ${String.fromCharCode(65 + Math.floor(i / 4))} - Zone ${(i % 4) + 1}`,
       moisture: Math.floor(Math.random() * 80 + 20),
@@ -91,6 +147,13 @@ const SCENARIOS = {
       status: ['active', 'active', 'active', 'warning'][Math.floor(Math.random() * 4)],
       lastUpdate: `${Math.floor(Math.random() * 9) + 1} min ago`,
     })),
+      createFlowSensor({
+        id: 'F999',
+        name: 'Enterprise Flow Sensor',
+        flowRate: 165.2,
+        flowVolume: 1240,
+      }),
+    ],
     alerts: mockDataStore.alerts,
     cropHealth: mockDataStore.cropHealth,
     weather: mockDataStore.weather,
@@ -105,12 +168,36 @@ const SCENARIOS = {
 
 // ─── API ──────────────────────────────────────────────────────────────────────
 export function setMockEnabled(val) { 
-  mockDataStore.enabled = !!val; 
-  if (!mockDataStore.enabled) setSimulationActive(false);
+  mockDataStore.enabled = !!val;
+  if (mockDataStore.enabled) {
+    logAction('MOCK_ENABLED', {
+      scenario: mockDataStore.scenario,
+      sensors: mockDataStore.sensors?.length || 0,
+      alerts: mockDataStore.alerts?.length || 0,
+    });
+  } else {
+    setSimulationActive(false);
+    logAction('MOCK_DISABLED', {});
+  }
   notifyUpdate(); 
 }
 
 export function isMockEnabled() { return mockDataStore.enabled; }
+
+export function getStatus() {
+  return {
+    enabled: mockDataStore.enabled,
+    simulationActive: mockDataStore.simulationActive,
+    scenario: mockDataStore.scenario,
+    sensorCount: mockDataStore.sensors?.length || 0,
+    alertCount: mockDataStore.alerts?.length || 0,
+    cropHealth: mockDataStore.cropHealth,
+    weather: mockDataStore.weather,
+    userCount: mockDataStore.users?.length || 0,
+    actionLogLength: actionLog.length,
+    lastAction: actionLog[0] || null,
+  };
+}
 
 export function isSimulationActive() { return mockDataStore.simulationActive; }
 
@@ -119,12 +206,30 @@ export function setSimulationActive(val) {
   
   if (mockDataStore.simulationActive) {
     if (mockDataStore._timer) clearInterval(mockDataStore._timer);
+    logAction('DRIFT_ON', { sensorCount: mockDataStore.sensors?.length || 0 });
     mockDataStore._timer = setInterval(() => {
       if (!mockDataStore.sensors) return;
       
       let changed = false;
       mockDataStore.sensors = mockDataStore.sensors.map(s => {
         if (s.status !== 'active') return s;
+
+        const isFlowSensor = s.sensorType === 'flow' || /flow/i.test(s.name || '');
+        if (isFlowSensor) {
+          const baseRate = Number.isFinite(Number(s.flowRate)) ? Number(s.flowRate) : 120;
+          const rateDrift = (Math.sin((s.activityIndex || 0) / 2) * 18) + ((Math.random() - 0.5) * 10);
+          const nextRate = Math.max(0, Math.min(1800, baseRate + rateDrift));
+          const nextVolume = Number(s.flowVolume || 0) + (nextRate * 0.05);
+
+          changed = true;
+          return {
+            ...s,
+            flowRate: +nextRate.toFixed(1),
+            flowVolume: +nextVolume.toFixed(1),
+            activityIndex: (s.activityIndex || 0) + 1,
+            lastUpdate: 'pulsing',
+          };
+        }
         
         // Random drift +/- 0.5 to 1.5
         const driftM = (Math.random() - 0.5) * 2;
@@ -148,6 +253,7 @@ export function setSimulationActive(val) {
     if (mockDataStore._timer) {
       clearInterval(mockDataStore._timer);
       mockDataStore._timer = null;
+      logAction('DRIFT_OFF', {});
     }
   }
   notifyUpdate();
@@ -158,6 +264,11 @@ export function applyScenario(name) {
   if (!preset) return;
   Object.assign(mockDataStore, preset);
   mockDataStore.scenario = name;
+  logAction('SCENARIO_APPLIED', {
+    scenario: name,
+    sensors: mockDataStore.sensors?.length || 0,
+    alerts: mockDataStore.alerts?.length || 0,
+  });
   notifyUpdate();
 }
 
@@ -169,8 +280,19 @@ export function getMockUsers()        { return mockDataStore.users; }
 
 // ─── Sensor CRUD ──────────────────────────────────────────────────────────────
 export function addSensor(sensor) {
-  const newSensor = { id: `S${Date.now()}`, status: 'active', lastUpdate: 'just now', ...sensor };
+  const sensorType = String(sensor?.sensorType || '').toLowerCase();
+  const isFlowSensor = sensorType === 'flow';
+  const newSensor = {
+    id: `${isFlowSensor ? 'F' : 'S'}${Date.now()}`,
+    status: 'active',
+    lastUpdate: 'just now',
+    ...(isFlowSensor
+      ? { sensorType: 'flow', moisture: 0, temperature: 0, humidity: 0, flowRate: 120, flowVolume: 0 }
+      : {}),
+    ...sensor,
+  };
   mockDataStore.sensors = [...(mockDataStore.sensors || []), newSensor];
+  logAction('SENSOR_ADDED', { sensorId: newSensor.id, name: newSensor.name });
   notifyUpdate();
   return newSensor;
 }
@@ -180,6 +302,7 @@ export function updateSensor(id, fields) {
 }
 export function deleteSensor(id) {
   mockDataStore.sensors = (mockDataStore.sensors || []).filter(s => s.id !== id);
+  logAction('SENSOR_DELETED', { sensorId: id });
   notifyUpdate();
 }
 
@@ -187,6 +310,7 @@ export function deleteSensor(id) {
 export function addAlert(alert) {
   const newAlert = { id: `A${Date.now()}`, enabled: true, timestamp: new Date().toLocaleTimeString(), ...alert };
   mockDataStore.alerts = [...(mockDataStore.alerts || []), newAlert];
+  logAction('ALERT_ADDED', { alertId: newAlert.id, type: newAlert.type });
   notifyUpdate();
   return newAlert;
 }
@@ -232,17 +356,27 @@ export function resetToDefaults() {
   const preset = SCENARIOS['normal'];
   Object.assign(mockDataStore, preset);
   mockDataStore.scenario = 'normal';
+  logAction('SCENARIO_APPLIED', {
+    scenario: 'normal (factory reset)',
+    sensors: mockDataStore.sensors?.length || 0,
+  });
   notifyUpdate();
 }
 
 export function exportMockData() {
-  return JSON.stringify({
+  const data = {
     sensors: mockDataStore.sensors,
     alerts: mockDataStore.alerts,
     cropHealth: mockDataStore.cropHealth,
     weather: mockDataStore.weather,
     users: mockDataStore.users,
-  }, null, 2);
+  };
+  logAction('DATA_EXPORTED', {
+    sensors: data.sensors?.length || 0,
+    alerts: data.alerts?.length || 0,
+    timestamp: new Date().toISOString(),
+  });
+  return JSON.stringify(data, null, 2);
 }
 
 export function importMockData(jsonString) {
@@ -253,9 +387,15 @@ export function importMockData(jsonString) {
     if (data.cropHealth) mockDataStore.cropHealth = data.cropHealth;
     if (data.weather)    mockDataStore.weather    = data.weather;
     if (data.users)      mockDataStore.users      = data.users;
+    logAction('DATA_IMPORTED', {
+      sensors: data.sensors?.length || 0,
+      alerts: data.alerts?.length || 0,
+      timestamp: new Date().toISOString(),
+    });
     notifyUpdate();
     return { success: true };
-  } catch {
+  } catch (err) {
+    logAction('IMPORT_FAILED', { error: err.message });
     return { success: false, error: 'Invalid JSON format' };
   }
 }

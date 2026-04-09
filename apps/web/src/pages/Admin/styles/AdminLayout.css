@@ -40,6 +40,18 @@
 	min-width: 0;
 }
 
+.adm-content--readonly,
+.adm-content[inert] {
+	-webkit-user-select: none;
+	user-select: none;
+}
+
+.adm-content--readonly :is(button, input, select, textarea, [role='button']),
+.adm-content[inert] :is(button, input, select, textarea, [role='button']) {
+	pointer-events: none;
+	cursor: not-allowed;
+}
+
 @keyframes admSpin {
 	to {
 		transform: rotate(360deg);

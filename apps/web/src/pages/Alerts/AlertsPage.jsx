@@ -5,6 +5,7 @@ import {
   ResponsiveContainer, Cell, LineChart, Line
 } from 'recharts';
 import { GlassIcon } from '../../components/bits/GlassIcon';
+import { getCSSVariableValue } from '../../utils/colorUtils';
 import styles from './AlertsPage.module.css';
 import { aiAPI } from '../../utils/api';
 import { format, formatDistanceToNow } from 'date-fns';
@@ -82,11 +83,26 @@ function generateMockSystemAlerts(sensors) {
 }
 
 // ─── Severity config ──────────────────────────────────────────────────────────
-const SEVERITY = {
-  error  : { label: 'Critical', color: '#ef4444', bg: 'rgba(239,68,68,0.12)',   border: 'rgba(239,68,68,0.3)'   },
-  warning: { label: 'Warning',  color: '#f59e0b', bg: 'rgba(245,158,11,0.12)', border: 'rgba(245,158,11,0.3)' },
-  info   : { label: 'Info',     color: '#3b82f6', bg: 'rgba(59,130,246,0.12)', border: 'rgba(59,130,246,0.3)' },
-};
+const getSeverityConfig = () => ({
+  error  : { 
+    label: 'Critical', 
+    color: getCSSVariableValue('--alert-error'), 
+    bg: getCSSVariableValue('--alert-error-bg'),   
+    border: getCSSVariableValue('--alert-error-border')   
+  },
+  warning: { 
+    label: 'Warning',  
+    color: getCSSVariableValue('--alert-warning'), 
+    bg: getCSSVariableValue('--alert-warning-bg'), 
+    border: getCSSVariableValue('--alert-warning-border') 
+  },
+  info   : { 
+    label: 'Info',     
+    color: getCSSVariableValue('--alert-info'), 
+    bg: getCSSVariableValue('--alert-info-bg'), 
+    border: getCSSVariableValue('--alert-info-border') 
+  },
+});
 
 // ─── Motion variants ──────────────────────────────────────────────────────────
 const containerVariants = {
@@ -120,7 +136,8 @@ const CustomTooltip = ({ active, payload, label }) => {
 
 // ─── Single Alert Row ─────────────────────────────────────────────────────────
 function AlertRow({ alert, onClear }) {
-  const sev = SEVERITY[alert.type] || SEVERITY.info;
+  const severityConfig = getSeverityConfig();
+  const sev = severityConfig[alert.type] || severityConfig.info;
   return (
     <motion.div
       className={styles.alertRow}
@@ -279,10 +296,10 @@ export default function AlertsPage({ alerts = [], sensors, onClearAlert, onClear
       {/* ── KPI Strip ── */}
       <motion.div className={styles.kpiStrip} variants={itemVariants}>
         {[
-          { label: 'Critical',       value: kpiSummary.critical,      color: '#ef4444', icon: 'triangle-exclamation'   },
-          { label: 'Warnings',       value: kpiSummary.warnings,      color: '#f59e0b', icon: 'circle-exclamation' },
-          { label: 'Disease Events', value: kpiSummary.diseaseEvents, color: '#a855f7', icon: 'viruses' },
-          { label: 'Healthy Scans',  value: kpiSummary.healthy,       color: '#22c55e', icon: 'check-circle' },
+          { label: 'Critical',       value: kpiSummary.critical,      color: getCSSVariableValue('--alert-error'), icon: 'triangle-exclamation'   },
+          { label: 'Warnings',       value: kpiSummary.warnings,      color: getCSSVariableValue('--alert-warning'), icon: 'circle-exclamation' },
+          { label: 'Disease Events', value: kpiSummary.diseaseEvents, color: getCSSVariableValue('--chart-disease'), icon: 'viruses' },
+          { label: 'Healthy Scans',  value: kpiSummary.healthy,       color: getCSSVariableValue('--chart-healthy'), icon: 'check-circle' },
         ].map((k, i) => (
           <motion.div
             key={i}
@@ -480,12 +497,18 @@ export default function AlertsPage({ alerts = [], sensors, onClearAlert, onClear
                 <YAxis allowDecimals={false} stroke="rgba(255,255,255,0.4)" fontSize={12} tickLine={false} axisLine={false} />
                 <Tooltip content={<CustomTooltip />} cursor={{ fill: 'rgba(255,255,255,0.05)' }} />
                 <Bar dataKey="count" name="Detections" radius={[6, 6, 0, 0]}>
-                  {chartData.map((entry, i) => (
-                    <Cell
-                      key={i}
-                      fill={entry.count === 0 ? 'rgba(34,197,94,0.5)' : entry.count >= 3 ? '#ef4444' : '#f59e0b'}
-                    />
-                  ))}
+                  {chartData.map((entry, i) => {
+                    const healthyColor = getCSSVariableValue('--chart-healthy');
+                    const errorColor = getCSSVariableValue('--alert-error');
+                    const warningColor = getCSSVariableValue('--alert-warning');
+                    const barColor = entry.count === 0 ? healthyColor + '80' : entry.count >= 3 ? errorColor : warningColor;
+                    return (
+                      <Cell
+                        key={i}
+                        fill={barColor}
+                      />
+                    );
+                  })}
                 </Bar>
               </BarChart>
             </ResponsiveContainer>
