@@ -1,0 +1,914 @@
+/**
+ * AdminUtilities.css
+ * Responsive utilities, animations, dashboard components, limits, sensors, and misc styling
+ */
+
+/* ══════════════════════════════════════════════════════
+   DASHBOARD OVERVIEW (CHROME)
+══════════════════════════════════════════════════════ */
+.adm-dashboard-grid {
+  display: grid;
+  grid-template-columns: 1.5fr 1fr;
+  gap: 1.5rem;
+  margin-top: 0.5rem;
+}
+
+@media (max-width: 1100px) {
+  .adm-dashboard-grid { grid-template-columns: 1fr; }
+}
+
+.adm-role-bars {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.adm-role-bar-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.adm-role-label {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #e2e8f0;
+}
+
+.adm-progress-bg {
+  height: 6px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 99px;
+  overflow: hidden;
+}
+
+.adm-progress-fill {
+  height: 100%;
+  border-radius: 99px;
+  transition: width 1s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.adm-progress-fill--admin { background: #8b5cf6; }
+.adm-progress-fill--user  { background: #22d3ee; }
+.adm-progress-fill--viewer { background: #94a3b8; }
+
+.adm-role-online {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.7rem;
+  color: rgba(148, 163, 184, 0.6);
+  margin-top: 0.2rem;
+}
+
+.adm-pulse-dot {
+  width: 6px;
+  height: 6px;
+  background: #22c55e;
+  border-radius: 50%;
+  box-shadow: 0 0 8px rgba(34, 197, 94, 0.5);
+  animation: adm-pulse 2s infinite;
+}
+
+@keyframes adm-pulse {
+  0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.7); }
+  70% { transform: scale(1); box-shadow: 0 0 0 6px rgba(34, 197, 94, 0); }
+  100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(34, 197, 94, 0); }
+}
+
+.adm-dashboard-side {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.adm-mini-widget {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  padding: 1rem 1.5rem !important;
+}
+
+.adm-mini-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.1rem;
+}
+
+.adm-mini-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.adm-mini-label {
+  font-size: 0.75rem;
+  color: rgba(148, 163, 184, 0.6);
+  font-weight: 500;
+}
+
+.adm-mini-value {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #fff;
+}
+
+/* Device Dashboard */
+.adm-device-dashboard {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+  gap: 1.5rem;
+  margin-top: 0.5rem;
+}
+
+.adm-device-cat-card {
+  padding: 1.5rem !important;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.adm-cat-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.adm-cat-title {
+  display: flex;
+  flex-direction: column;
+}
+
+.adm-cat-title i {
+  font-size: 1.5rem;
+  color: #22d3ee;
+  margin-bottom: 0.75rem;
+}
+
+.adm-cat-title h3 {
+  margin: 0;
+  font-size: 1.2rem;
+  color: #fff;
+}
+
+.adm-cat-title p {
+  margin: 0.2rem 0 0;
+  font-size: 0.8rem;
+  color: rgba(148, 163, 184, 0.6);
+}
+
+.adm-cat-stats {
+  display: flex;
+  gap: 1.5rem;
+}
+
+.adm-cat-stat-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.adm-cat-stat-val {
+  font-size: 1.5rem;
+  font-weight: 800;
+}
+
+.adm-cat-stat-lbl {
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  opacity: 0.6;
+  margin-top: 0.25rem;
+}
+
+.adm-latency-meter {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-size: 0.8rem;
+  color: rgba(148, 163, 184, 0.8);
+  margin-bottom: 0.75rem;
+}
+
+.adm-latency-meter i {
+  color: #f59e0b;
+}
+
+.adm-latency-meter strong {
+  color: #fff;
+}
+
+.adm-cat-status-bar {
+  height: 4px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 99px;
+  overflow: hidden;
+}
+
+.adm-cat-status-fill {
+  height: 100%;
+  border-radius: 99px;
+}
+
+.adm-color-green { color: #22c55e; }
+.adm-color-red   { color: #ef4444; }
+.adm-bg-green    { background: #22c55e; }
+
+/* ══════════════════════════════════════════════════════
+   LIMITS & QUOTAS (REDESIGN)
+══════════════════════════════════════════════════════ */
+.adm-limits-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
+  gap: 1.5rem;
+}
+
+.adm-limits-card {
+  display: flex; flex-direction: column;
+  gap: 1.5rem;
+}
+
+.adm-limits-card-header {
+  display: flex; align-items: center;
+  gap: 1rem;
+}
+
+.adm-limits-card-header h3 {
+  margin: 0; border: none; padding: 0;
+}
+
+.adm-limits-card-icon {
+  width: 48px; height: 48px;
+  border-radius: 14px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.3rem; flex-shrink: 0;
+}
+
+.adm-limits-card-sub {
+  font-size: 0.75rem; color: #64748b;
+}
+
+/* Controls */
+.adm-limits-control {
+  display: flex; flex-direction: column;
+  gap: 0.6rem;
+}
+
+.adm-limits-label {
+  font-size: 0.72rem; font-weight: 700;
+  color: #64748b; text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.adm-limits-input-row {
+  display: flex; align-items: center;
+  gap: 0.75rem;
+}
+
+.adm-limits-input-row .adm-input {
+  max-width: 140px;
+}
+
+.adm-limits-unit {
+  font-size: 0.78rem; font-weight: 600;
+  color: #475569;
+}
+
+/* Usage Gauge */
+.adm-limits-usage {
+  padding: 1.25rem;
+  background: rgba(0,0,0,0.2);
+  border-radius: 14px;
+  border: 1px solid rgba(255,255,255,0.04);
+}
+
+.adm-limits-usage-header {
+  display: flex; justify-content: space-between;
+  align-items: center; margin-bottom: 0.75rem;
+  font-size: 0.82rem; color: #94a3b8;
+  font-weight: 600;
+}
+
+.adm-limits-usage-count {
+  font-weight: 800; color: #f8fafc;
+  font-size: 0.9rem;
+}
+
+.adm-limits-progress-bg {
+  height: 8px;
+  background: rgba(255,255,255,0.06);
+  border-radius: 99px; overflow: hidden;
+}
+
+.adm-limits-progress-fill {
+  height: 100%; border-radius: 99px;
+  transition: width 1s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.adm-limits-usage-footer {
+  margin-top: 0.75rem;
+  font-size: 0.78rem; color: #94a3b8;
+  display: flex; align-items: center; gap: 0.5rem;
+}
+
+.adm-limits-usage-footer strong {
+  color: #f8fafc;
+}
+
+.adm-limits-card--info .adm-limits-info-body {
+  display: flex; flex-direction: column;
+  align-items: center; text-align: center;
+  padding: 1.5rem 1rem;
+  gap: 0.75rem;
+}
+
+.adm-limits-info-icon {
+  width: 56px; height: 56px;
+  border-radius: 50%;
+  background: rgba(34, 197, 94, 0.08);
+  border: 1px dashed rgba(34, 197, 94, 0.25);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.25rem; color: #4ade80;
+}
+
+.adm-limits-info-body p {
+  margin: 0; font-size: 0.88rem;
+  color: #94a3b8; line-height: 1.6;
+  max-width: 320px;
+}
+
+/* ══════════════════════════════════════════════════════
+   PLANT SENSOR CONFIG (REDESIGN)
+══════════════════════════════════════════════════════ */
+.adm-plant-hero { margin-bottom: 1.5rem; }
+.adm-plant-hero-inner {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  margin-bottom: 1.25rem;
+}
+
+.adm-plant-hero-icon {
+  width: 56px; height: 56px;
+  border-radius: 16px;
+  background: linear-gradient(135deg, #22c55e, #0d9488);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.5rem; color: #fff;
+  box-shadow: 0 6px 20px rgba(34, 197, 94, 0.3);
+  flex-shrink: 0;
+}
+
+.adm-plant-hero-info { flex: 1; min-width: 0; }
+.adm-plant-hero-label {
+  font-size: 0.7rem; font-weight: 700;
+  color: #64748b; text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+.adm-plant-hero-name {
+  margin: 0.15rem 0 0; font-size: 1.4rem;
+  font-weight: 800; color: #f8fafc;
+}
+
+.adm-plant-select {
+  max-width: 200px !important;
+  flex-shrink: 0;
+}
+
+/* Plant Chips */
+.adm-plant-chips {
+  display: flex; flex-wrap: wrap;
+  gap: 0.5rem;
+  padding-top: 1rem;
+  border-top: 1px solid rgba(255,255,255,0.05);
+}
+
+.adm-plant-chip {
+  display: inline-flex; align-items: center; gap: 0.4rem;
+  padding: 0.4rem 0.85rem; border-radius: 99px;
+  font-size: 0.75rem; font-weight: 700;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.08);
+  color: #94a3b8; cursor: pointer;
+  transition: all 0.2s;
+}
+
+.adm-plant-chip:hover {
+  background: rgba(34, 197, 94, 0.08);
+  border-color: rgba(34, 197, 94, 0.2);
+  color: #4ade80;
+}
+
+.adm-plant-chip--active {
+  background: rgba(34, 197, 94, 0.15);
+  border-color: rgba(34, 197, 94, 0.4);
+  color: #4ade80;
+  box-shadow: 0 0 12px rgba(34, 197, 94, 0.15);
+}
+
+/* Watering Parameter Grid */
+.adm-watering-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.adm-watering-card {
+  background: rgba(8, 24, 15, 0.72);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 18px;
+  padding: 1.5rem;
+  display: flex; align-items: flex-start; gap: 1rem;
+  -webkit-backdrop-filter: blur(20px);
+  backdrop-filter: blur(20px);
+  transition: all 0.25s;
+}
+
+.adm-watering-card:hover {
+  transform: translateY(-3px);
+  border-color: rgba(255,255,white,0.15);
+  box-shadow: 0 8px 30px rgba(0,0,0,0.3);
+}
+
+.adm-watering-card-icon {
+  width: 44px; height: 44px;
+  border-radius: 12px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.1rem; flex-shrink: 0;
+}
+
+.adm-watering-card-body { flex: 1; min-width: 0; }
+
+.adm-watering-card-label {
+  font-size: 0.78rem; font-weight: 700;
+  color: #94a3b8; display: block;
+  margin-bottom: 0.75rem;
+}
+
+.adm-watering-card-input-wrap {
+  display: flex; align-items: center; gap: 0.75rem;
+}
+
+.adm-watering-card-input-wrap .adm-input {
+  max-width: 120px;
+}
+
+.adm-watering-unit {
+  font-size: 0.75rem; font-weight: 700;
+  color: #475569;
+}
+
+/* Threshold Cards */
+.adm-threshold-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+}
+
+.adm-threshold-header h3 { margin: 0; }
+
+.adm-threshold-plant-badge {
+  display: inline-flex; align-items: center; gap: 0.4rem;
+  padding: 0.35rem 0.85rem; border-radius: 99px;
+  font-size: 0.75rem; font-weight: 700;
+  background: rgba(34, 197, 94, 0.1);
+  color: #4ade80;
+  border: 1px solid rgba(34, 197, 94, 0.2);
+}
+
+.adm-threshold-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 1.25rem;
+}
+
+.adm-threshold-card {
+  background: rgba(0,0,0,0.2);
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 16px;
+  padding: 1.25rem;
+  transition: all 0.2s;
+}
+
+.adm-threshold-card:hover {
+  border-color: rgba(34, 211, 238, 0.2);
+  background: rgba(0,0,0,0.3);
+}
+
+.adm-threshold-card-head {
+  display: flex; align-items: center; gap: 0.85rem;
+  margin-bottom: 1.25rem;
+  padding-bottom: 0.85rem;
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+}
+
+.adm-threshold-sensor-icon {
+  width: 36px; height: 36px;
+  border-radius: 10px;
+  background: rgba(34, 211, 238, 0.1);
+  color: #22d3ee;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.9rem;
+}
+
+.adm-threshold-sensor-name {
+  margin: 0; font-size: 0.9rem;
+  font-weight: 700; color: #f8fafc;
+}
+
+.adm-threshold-sensor-key {
+  font-size: 0.7rem; color: #64748b;
+  font-family: 'JetBrains Mono', monospace;
+}
+
+.adm-threshold-fields {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.85rem;
+}
+
+.adm-threshold-field {
+  display: flex; flex-direction: column; gap: 0.4rem;
+  position: relative;
+}
+
+.adm-threshold-field label {
+  font-size: 0.68rem; font-weight: 700;
+  color: #64748b; text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.adm-threshold-field .adm-input {
+  max-width: 100%;
+  font-size: 0.85rem;
+  padding: 0.55rem 0.75rem;
+}
+
+.adm-threshold-bar {
+  height: 3px; border-radius: 99px;
+  width: 100%; opacity: 0.6;
+}
+
+/* Empty State */
+.adm-empty-state {
+  display: flex; flex-direction: column;
+  align-items: center; gap: 0.75rem;
+  padding: 3rem 1.5rem;
+  text-align: center;
+}
+
+.adm-empty-state i {
+  font-size: 2.5rem; color: #334155;
+}
+
+.adm-empty-state p {
+  margin: 0; font-size: 1rem;
+  font-weight: 700; color: #94a3b8;
+}
+
+.adm-empty-state span {
+  font-size: 0.82rem; color: #475569;
+}
+
+/* Loading block */
+.adm-loading-block {
+  display: flex; align-items: center; justify-content: center;
+  gap: 0.75rem; padding: 3rem; color: #64748b;
+  font-size: 0.9rem;
+}
+
+.adm-loading-block i { font-size: 1.2rem; color: #22d3ee; }
+
+/* ══════════════════════════════════════════════════════
+   UI CONTROL CENTER (REDESIGN)
+══════════════════════════════════════════════════════ */
+.adm-ui-controls-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
+  gap: 1.5rem;
+}
+
+.adm-ui-panel {
+  display: flex; flex-direction: column;
+  gap: 1.25rem;
+}
+
+.adm-ui-panel-header {
+  display: flex; align-items: center;
+  gap: 1rem;
+}
+
+.adm-ui-panel-header h3 {
+  margin: 0; padding: 0; border: none;
+}
+
+.adm-ui-panel-icon {
+  width: 44px; height: 44px;
+  border-radius: 12px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.1rem; flex-shrink: 0;
+}
+
+.adm-ui-panel-sub {
+  font-size: 0.72rem; color: #64748b;
+  display: block; margin-top: 1px;
+}
+
+.adm-ui-divider {
+  height: 1px;
+  background: rgba(255,255,white,0.05);
+  margin: 0.5rem 0;
+}
+
+.adm-ui-toggle-list {
+  display: flex; flex-direction: column;
+  gap: 0;
+}
+
+.adm-ui-toggle-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.65rem 0.85rem;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: background 0.15s;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #cbd5e1;
+}
+
+.adm-ui-toggle-item:hover {
+  background: rgba(255,255,white,0.03);
+}
+
+.adm-ui-toggle-info {
+  display: flex; align-items: center; gap: 0.65rem;
+}
+
+/* Sensor UI Grid */
+.adm-sensor-ui-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 1.25rem;
+}
+
+.adm-sensor-ui-card {
+  background: rgba(0,0,0,0.2);
+  border: 1px solid rgba(255,white,white,0.06);
+  border-radius: 16px;
+  padding: 1.25rem;
+  display: flex; flex-direction: column;
+  gap: 1rem;
+  transition: all 0.2s;
+}
+
+.adm-sensor-ui-card:hover {
+  border-color: rgba(255,white,white,0.12);
+  background: rgba(0,0,0,0.3);
+}
+
+.adm-sensor-ui-header {
+  display: flex; align-items: center; gap: 0.85rem;
+}
+
+.adm-sensor-ui-color {
+  width: 8px; height: 36px;
+  border-radius: 99px; flex-shrink: 0;
+}
+
+.adm-sensor-ui-name {
+  flex: 1; min-width: 0;
+}
+
+.adm-sensor-ui-name h4 {
+  margin: 0; font-size: 0.9rem;
+  font-weight: 700; color: #f8fafc;
+}
+
+.adm-sensor-ui-name span {
+  font-size: 0.7rem; color: #64748b;
+  font-family: 'JetBrains Mono', monospace;
+}
+
+.adm-sensor-ui-controls {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 0.75rem;
+}
+
+.adm-sensor-ui-field {
+  display: flex; flex-direction: column;
+  gap: 0.35rem;
+}
+
+.adm-sensor-ui-field label {
+  font-size: 0.65rem; font-weight: 700;
+  color: #64748b; text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.adm-sensor-ui-field .adm-input {
+  font-size: 0.8rem;
+  padding: 0.45rem 0.6rem;
+}
+
+.adm-sensor-ui-toggles {
+  display: flex; flex-direction: column;
+  gap: 0;
+  padding-top: 0.5rem;
+  border-top: 1px solid rgba(255,255,white,0.04);
+}
+
+.adm-sensor-ui-toggles .adm-ui-toggle-item {
+  padding: 0.5rem 0;
+}
+
+/* ══════════════════════════════════════════════════════
+   RESPONSIVE DESIGN
+══════════════════════════════════════════════════════ */
+
+/* Tablet - Large (1024px to 1180px) */
+@media (max-width: 1180px) {
+  .adm-cards-grid {
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 160px), 1fr));
+  }
+
+  .adm-device-grid {
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 200px), 1fr));
+  }
+
+  .adm-header-right {
+    flex-wrap: wrap;
+    justify-content: flex-end;
+  }
+
+  .adm-device-key-item {
+    grid-template-columns: 1fr auto auto;
+    gap: 0.6rem;
+  }
+}
+
+/* Tablet - Medium (900px to 1024px) */
+@media (max-width: 1024px) {
+  .adm-root { --adm-sidebar-width: 220px; }
+  .adm-sidebar { width: 200px; }
+  .adm-main { width: calc(100% - var(--adm-sidebar-width)); }
+  
+  .adm-content {
+    padding: clamp(0.875rem, 1.5vw, 1.5rem);
+  }
+
+  .adm-cards-grid {
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 150px), 1fr));
+    gap: 0.875rem;
+  }
+
+  .adm-device-grid {
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 180px), 1fr));
+  }
+
+  .adm-glass-box {
+    padding: 1.25rem;
+  }
+
+  .adm-header {
+    padding: 1rem 1.5rem;
+  }
+
+  .adm-section {
+    gap: 1rem;
+  }
+}
+
+/* Tablet - Small (768px to 900px) */
+@media (max-width: 900px) {
+  .adm-sidebar { width: 200px; }
+  .adm-main { width: calc(100% - 200px); }
+  
+  .adm-content {
+    padding: clamp(0.875rem, 1.2vw, 1.25rem);
+    gap: 0.75rem;
+  }
+
+  .adm-header {
+    padding: 0.9rem 1.25rem;
+    gap: 0.75rem;
+  }
+
+  .adm-cards-grid {
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 140px), 1fr));
+    gap: 0.75rem;
+  }
+
+  .adm-stat-card {
+    padding: 1rem;
+    gap: 0.75rem;
+  }
+
+  .adm-device-grid {
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 160px), 1fr));
+    gap: 0.75rem;
+  }
+
+  .adm-device-card {
+    padding: 1rem;
+    gap: 0.75rem;
+  }
+
+  .adm-glass-box {
+    padding: 1.125rem;
+    border-radius: 14px;
+  }
+
+  .adm-section {
+    gap: 0.875rem;
+  }
+}
+
+/* Mobile - Large (600px to 768px) */
+@media (max-width: 768px) {
+  .adm-content { padding: 0.875rem; }
+  .adm-header { padding: 0.85rem 1rem; }
+  
+  .adm-cards-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.6rem;
+  }
+
+  .adm-stat-card {
+    padding: 0.875rem;
+    gap: 0.6rem;
+  }
+
+  .adm-device-grid {
+    grid-template-columns: 1fr;
+    gap: 0.6rem;
+  }
+
+  .adm-device-card {
+    padding: 0.875rem;
+    gap: 0.6rem;
+  }
+
+  .adm-glass-box {
+    padding: 1rem;
+    border-radius: 12px;
+  }
+
+  .adm-section { gap: 0.75rem; }
+  .adm-device-key-item { padding: 0.75rem; }
+}
+
+/* Mobile - Medium (480px to 600px) */
+@media (max-width: 600px) {
+  .adm-content { padding: 0.75rem; }
+  
+  .adm-header {
+    padding: 0.75rem 0.875rem;
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .adm-cards-grid {
+    grid-template-columns: 1fr;
+    gap: 0.5rem;
+  }
+
+  .adm-stat-card { padding: 0.75rem; }
+  
+  .adm-glass-box { padding: 0.875rem; }
+}
+
+/* Mobile - Small (< 480px) */
+@media (max-width: 480px) {
+  .adm-content { padding: 0.6rem; }
+  
+  .adm-header {
+    padding: 0.6rem 0.75rem;
+  }
+
+  .adm-cards-grid {
+    grid-template-columns: 1fr;
+    gap: 0.4rem;
+  }
+
+  .adm-stat-card {
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 0.6rem;
+    gap: 0.5rem;
+  }
+
+  .adm-glass-box { padding: 0.75rem; }
+  .adm-section { gap: 0.5rem; }
+}

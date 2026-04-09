@@ -76,16 +76,15 @@ import './App.css';
 import './components/layout/styles/Sidebar.css';
 import './components/layout/styles/Layout.css';
 
-// ── Aurora colour stops ────────────────────────────────────────────────────
+// ── Aurora colour stops (matched to Home hero palette) ────────────────────
 //
-// DARK  : Obsidian-green base → muted teal wave → muted forest green → deep dark
-//         blend=0.32 keeps waves subtle and atmospheric, not dominant.
+// DARK  : Deep obsidian base + teal/green hero blobs.
+// LIGHT : Mint paper base + same teal/green accents as hero.
 //
-// LIGHT : Soft mint base → teal accent → mid-green → pale mint fade
-//         blend=0.45 keeps waves visible but soft on the light background.
-//
-const AURORA_DARK  = ['#020905', '#0A9E94', '#3A8F3E', '#071510'];
-const AURORA_LIGHT = ['#F3FBF4', '#00897B', '#388E3C', '#E4F4E7'];
+const AURORA_DARK  = ['#040E09', '#00B4A6', '#66BB6A', '#020905'];
+const AURORA_LIGHT = ['#EBF5EC', '#00B4A6', '#66BB6A', '#D4EDD8'];
+const AURORA_AMPLITUDE = 1.28;
+const AURORA_SPEED = 0.28;
 
 // ───────────────────────────────────────────────────────────────────────────
 // PROTECTED ADMIN ROUTE
@@ -655,7 +654,7 @@ function App() {
 
   // ── Aurora colour stops (react to theme) ──────────────────────────────
   const auroraStops = theme === 'dark' ? AURORA_DARK : AURORA_LIGHT;
-  const auroraBlend = theme === 'dark' ? 0.32 : 0.45;
+  const auroraBlend = theme === 'dark' ? 0.50 : 0.58;
 
   // ── Render ─────────────────────────────────────────────────────────────
 
@@ -684,17 +683,27 @@ function App() {
     }
 
     return (
-      <Suspense fallback={<RouteFallback />}>
-        <Routes>
-          <Route path="/login" element={<LoginPage />} />
-          <Route path="/register" element={<RegisterPage />} />
-          <Route path="/forgot-password" element={<ForgotPasswordPage />} />
-          <Route path="/reset-password" element={<ResetPasswordPage />} />
-          <Route path="/verify-email" element={<VerifyEmailPage />} />
-          <Route path="/verify-email-pending" element={<VerifyPendingPage />} />
-          <Route path="/access-denied" element={<AccessDeniedPage />} />
-        </Routes>
-      </Suspense>
+      <>
+        <Aurora
+          colorStops={auroraStops}
+          amplitude={AURORA_AMPLITUDE}
+          blend={auroraBlend}
+          speed={AURORA_SPEED}
+        />
+        <div style={{ position: 'relative', zIndex: 1 }}>
+          <Suspense fallback={<RouteFallback />}>
+            <Routes>
+              <Route path="/login" element={<LoginPage />} />
+              <Route path="/register" element={<RegisterPage />} />
+              <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+              <Route path="/reset-password" element={<ResetPasswordPage />} />
+              <Route path="/verify-email" element={<VerifyEmailPage />} />
+              <Route path="/verify-email-pending" element={<VerifyPendingPage />} />
+              <Route path="/access-denied" element={<AccessDeniedPage />} />
+            </Routes>
+          </Suspense>
+        </div>
+      </>
     );
   }
 
@@ -716,18 +725,28 @@ function App() {
 
   if (isAdminRoute) {
     return (
-      <Suspense fallback={<RouteFallback />}>
-        <Routes>
-          <Route path="/admin/login" element={<Navigate to="/login" replace />} />
-          <Route path="/admin/panel" element={
-            <ProtectedAdminRoute>
-              <AdminPanelPage />
-            </ProtectedAdminRoute>
-          } />
-          <Route path="/admin" element={<Navigate to="/admin/panel" replace />} />
-          <Route path="/admin/*" element={<Navigate to="/admin/panel" replace />} />
-        </Routes>
-      </Suspense>
+      <>
+        <Aurora
+          colorStops={auroraStops}
+          amplitude={AURORA_AMPLITUDE}
+          blend={auroraBlend}
+          speed={AURORA_SPEED}
+        />
+        <div style={{ position: 'relative', zIndex: 1 }}>
+          <Suspense fallback={<RouteFallback />}>
+            <Routes>
+              <Route path="/admin/login" element={<Navigate to="/login" replace />} />
+              <Route path="/admin/panel" element={
+                <ProtectedAdminRoute>
+                  <AdminPanelPage />
+                </ProtectedAdminRoute>
+              } />
+              <Route path="/admin" element={<Navigate to="/admin/panel" replace />} />
+              <Route path="/admin/*" element={<Navigate to="/admin/panel" replace />} />
+            </Routes>
+          </Suspense>
+        </div>
+      </>
     );
   }
 
@@ -736,9 +755,9 @@ function App() {
       {/* ── Aurora: fixed full-screen WebGL background layer ── */}
       <Aurora
         colorStops={auroraStops}
-        amplitude={1.2}
+        amplitude={AURORA_AMPLITUDE}
         blend={auroraBlend}
-        speed={0.4}
+        speed={AURORA_SPEED}
       />
 
       <div className={`app-shell${isSidebarCollapsed ? ' sidebar-collapsed' : ''}`} style={{ position: 'relative', zIndex: 1 }}>
@@ -750,7 +769,7 @@ function App() {
         {/* ── Fixed sidebar ── */}
         <aside className="sidebar" role="navigation" aria-label="Main navigation">
           <div className="sidebar-brand">
-            <img src="/assets/icon.svg" className="sidebar-brand-icon" alt="SproutSense logo" />
+            <img src="/assets/icon.png" className="sidebar-brand-icon" alt="SproutSense logo" />
             <span className="sidebar-brand-text">SproutSense</span>
           </div>
 

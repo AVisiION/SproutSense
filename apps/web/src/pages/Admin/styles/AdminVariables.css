@@ -1,0 +1,78 @@
+/**
+ * AdminVariables.css
+ * CSS custom properties and color scheme for admin panel
+ */
+
+:root {
+  /* Color Palette */
+  --adm-primary: #43A047;
+  --adm-primary-light: #7EC880;
+  --adm-primary-dark: #2d6a34;
+  --adm-accent: #22d3ee;
+  --adm-accent-dark: #0891b2;
+  --adm-danger: #ef4444;
+  --adm-warning: #f59e0b;
+  --adm-success: #22c55e;
+
+  /* Background & Surfaces */
+  --adm-bg-dark: #050b07;
+  --adm-bg-darker: #0a1a12;
+  --adm-bg-glass: rgba(8, 24, 15, 0.72);
+  --adm-bg-glass-light: rgba(255, 255, 255, 0.88);
+
+  /* Text Colors */
+  --adm-text-main: #E8F5E9;
+  --adm-text-main-light: #0b1416;
+  --adm-text-muted: #94a3b8;
+  --adm-text-muted-light: rgba(69, 89, 79, 0.65);
+
+  /* Borders & Dividers */
+  --adm-border: rgba(255, 255, 255, 0.08);
+  --adm-border-light: rgba(15, 23, 42, 0.12);
+  --adm-divider: rgba(255, 255, 255, 0.06);
+  --adm-divider-light: rgba(15, 23, 42, 0.08);
+
+  /* Typography */
+  --adm-font-mono: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+  --adm-font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+
+  /* Layout */
+  --adm-sidebar-width: 264px;
+  --adm-sidebar-collapsed-width: 88px;
+  --adm-header-height: 60px;
+
+  /* Shadow & Blur */
+  --adm-shadow-sm: 0 4px 12px rgba(0, 0, 0, 0.2);
+  --adm-shadow-md: 0 8px 32px rgba(0, 0, 0, 0.35);
+  --adm-shadow-lg: 0 12px 40px rgba(0, 0, 0, 0.4);
+  --adm-blur: blur(20px);
+  --adm-blur-lg: blur(22px);
+
+  /* Border Radius */
+  --adm-radius-sm: 10px;
+  --adm-radius-md: 14px;
+  --adm-radius-lg: 18px;
+  --adm-radius-xl: 20px;
+
+  /* Transitions */
+  --adm-transition-fast: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  --adm-transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  --adm-transition-slow: 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+
+  /* Spacing */
+  --adm-spacing-xs: 0.25rem;
+  --adm-spacing-sm: 0.5rem;
+  --adm-spacing-md: 1rem;
+  --adm-spacing-lg: 1.5rem;
+  --adm-spacing-xl: 2rem;
+}
+
+/* Light Theme Overrides */
+[data-theme='light'] {
+  --adm-bg-dark: #f8fafc;
+  --adm-bg-glass: rgba(255, 255, 255, 0.88);
+  --adm-text-main: #0b1416;
+  --adm-text-muted: #64748b;
+  --adm-border: rgba(15, 23, 42, 0.12);
+  --adm-divider: rgba(15, 23, 42, 0.08);
+}

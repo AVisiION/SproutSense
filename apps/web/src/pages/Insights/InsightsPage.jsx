@@ -14,7 +14,7 @@
  * No external chart libraries — pure SVG.
  * Font Awesome 6 icons throughout.
  */
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { formatDiseaseName } from '../../utils/formatters';
 import './InsightsPage.css';
 
@@ -44,6 +44,17 @@ const GRAPH_TABS = [
   { key: 'humidity',     label: 'Humidity',unit: '%',    fa: 'fa-cloud-rain',       color: '#22d3ee' },
   { key: 'lightLevel',   label: 'Light',   unit: ' lux', fa: 'fa-sun',              color: '#fbbf24' },
 ];
+
+const LOCAL_UI_PREFS_KEY = 'ss_ui_visual_preferences';
+
+function loadVisualPrefs() {
+  try {
+    const raw = localStorage.getItem(LOCAL_UI_PREFS_KEY);
+    return raw ? JSON.parse(raw) : {};
+  } catch {
+    return {};
+  }
+}
 
 // ─── Health score ring ────────────────────────────────────────────────────────
 function HealthRing({ score = 0 }) {
@@ -335,6 +346,31 @@ function InsightsPage() {
   const [activeGraph,   setActiveGraph]   = useState('soilMoisture');
   const [sevFilter,     setSevFilter]     = useState('all');
   const [lastRefreshed, setLastRefreshed] = useState(null);
+  const [visualPrefs, setVisualPrefs] = useState(() => loadVisualPrefs());
+
+  useEffect(() => {
+    const syncVisualPrefs = () => setVisualPrefs(loadVisualPrefs());
+    window.addEventListener('storage', syncVisualPrefs);
+    return () => window.removeEventListener('storage', syncVisualPrefs);
+  }, []);
+
+  const sensorColors = useMemo(() => {
+    const custom = visualPrefs?.colors || {};
+    return {
+      moisture: custom.moisture || '#22c55e',
+      temperature: custom.temperature || '#f59e0b',
+      humidity: custom.humidity || '#22d3ee',
+      light: '#fbbf24',
+    };
+  }, [visualPrefs]);
+
+  const graphTabs = useMemo(() => GRAPH_TABS.map((tab) => {
+    if (tab.key === 'soilMoisture') return { ...tab, color: sensorColors.moisture };
+    if (tab.key === 'temperature') return { ...tab, color: sensorColors.temperature };
+    if (tab.key === 'humidity') return { ...tab, color: sensorColors.humidity };
+    if (tab.key === 'lightLevel') return { ...tab, color: sensorColors.light };
+    return tab;
+  }), [sensorColors]);
 
   const fetchInsights = useCallback(async () => {
     try {
@@ -371,7 +407,7 @@ function InsightsPage() {
   const score = insights?.overallHealth?.score ?? null;
 
   // Active graph tab meta
-  const activeTab = GRAPH_TABS.find(t => t.key === activeGraph) || GRAPH_TABS[0];
+  const activeTab = graphTabs.find(t => t.key === activeGraph) || graphTabs[0];
   const activeData = insights?.graphData?.[activeGraph];
 
   // Disease max count
@@ -396,30 +432,17 @@ function InsightsPage() {
     <div className="ip-root">
 
       <div className="ip-sticky-head">
-        {/* ══ PAGE HEADER ══════════════════════════════════════════ */}
-        <div className="ip-header">
-          <div className="ip-header-left">
-            <span className="ip-header-icon-wrap" aria-hidden="true">
-              <i className="fa-solid fa-chart-line" />
-            </span>
-            <div>
-              <h1 className="ip-header-title">Plant Insights</h1>
-              <p className="ip-header-sub">AI-powered analysis &bull; Edge Impulse disease detection</p>
-            </div>
+        <div className="ip-header-right">
+          <div className="ip-time-tabs">
+            {[['1','24h'],[' 7','7d'],['30','30d']].map(([d,l]) => (
+              <button key={d} className={`ip-time-tab${days === +d.trim() ? ' active' : ''}`}
+                onClick={() => setDays(+d.trim())}>{l}</button>
+            ))}
           </div>
-          <div className="ip-header-right">
-            {/* Time range */}
-            <div className="ip-time-tabs">
-              {[['1','24h'],[' 7','7d'],['30','30d']].map(([d,l]) => (
-                <button key={d} className={`ip-time-tab${days === +d.trim() ? ' active' : ''}`}
-                  onClick={() => setDays(+d.trim())}>{l}</button>
-              ))}
-            </div>
-            <button className="ip-refresh-btn" onClick={fetchInsights} disabled={loading}>
-              <i className={`fa-solid fa-rotate${loading ? ' fa-spin' : ''}`} aria-hidden="true" />
-              Refresh
-            </button>
-          </div>
+          <button className="ip-refresh-btn" onClick={fetchInsights} disabled={loading}>
+            <i className={`fa-solid fa-rotate${loading ? ' fa-spin' : ''}`} aria-hidden="true" />
+            Refresh
+          </button>
         </div>
 
         {lastRefreshed && (
@@ -574,7 +597,7 @@ function InsightsPage() {
 
               {/* Graph tab bar */}
               <div className="ip-graph-tabs">
-                {GRAPH_TABS.map(tab => (
+                {graphTabs.map(tab => (
                   <button key={tab.key}
                     className={`ip-graph-tab${activeGraph === tab.key ? ' active' : ''}`}
                     style={{ '--gt-color': tab.color }}
@@ -609,13 +632,13 @@ function InsightsPage() {
                 <h2>Summary — {days} Day{days > 1 ? 's' : ''}</h2>
               </div>
               <div className="ip-stats-grid">
-                <StatTile fa="fa-droplet"          color="#22c55e" label="Avg Soil Moisture"
+                <StatTile fa="fa-droplet"          color={sensorColors.moisture} label="Avg Soil Moisture"
                   value={insights.stats.avgSoilMoisture?.toFixed(1)} unit="%" />
-                <StatTile fa="fa-temperature-half" color="#f59e0b" label="Avg Temperature"
+                <StatTile fa="fa-temperature-half" color={sensorColors.temperature} label="Avg Temperature"
                   value={insights.stats.avgTemperature?.toFixed(1)} unit="°C" />
                 <StatTile fa="fa-faucet-drip"       color="#a78bfa" label="Watering Events"
                   value={insights.wateringAnalysis?.totalEvents} unit="" />
-                <StatTile fa="fa-circle-check"      color="#22d3ee" label="Watering Success"
+                <StatTile fa="fa-circle-check"      color={sensorColors.humidity} label="Watering Success"
                   value={insights.wateringAnalysis?.successRate} unit="%" />
               </div>
             </div>

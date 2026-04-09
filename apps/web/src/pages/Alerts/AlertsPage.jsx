@@ -272,18 +272,6 @@ export default function AlertsPage({ alerts = [], sensors, onClearAlert, onClear
       variants={containerVariants}
     >
 
-      {/* ── Header ── */}
-      <motion.div className={styles.pageHeader} variants={itemVariants}>
-        <div>
-          <h1 className={styles.pageTitle}>Alerts &amp; Detections</h1>
-          <p className={styles.pageSubtitle}>System warnings, disease detections &amp; plant health timeline</p>
-        </div>
-        <div className={styles.liveBadge}>
-          <span className={styles.pulseDot} />
-          Live ESP32-CAM
-        </div>
-      </motion.div>
-
       {/* ── Removed Testmode Banner ── */}
       <AnimatePresence>
       </AnimatePresence>

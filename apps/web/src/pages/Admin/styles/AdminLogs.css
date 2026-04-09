@@ -1,0 +1,126 @@
+/**
+ * AdminLogs.css
+ * Log terminal, log badges, log table styling
+ */
+
+/* ══════════════════════════════════════════════════════
+   LOGS TERMINAL
+══════════════════════════════════════════════════════ */
+.adm-log-stats {
+  display: flex; flex-wrap: wrap; gap: 0.75rem;
+}
+.adm-log-badge {
+  display: flex; align-items: center; gap: 0.5rem;
+  padding: 0.45rem 1rem; border-radius: 10px;
+  font-size: 0.78rem; font-weight: 600;
+  border: 1px solid;
+}
+.adm-log-badge--success { background:rgba(67,160,71,0.10);   color:#7EC880; border-color:rgba(67,160,71,0.22);   }
+.adm-log-badge--info    { background:rgba(14,165,233,0.10);  color:#60a5fa; border-color:rgba(14,165,233,0.22);  }
+.adm-log-badge--warning { background:rgba(245,158,11,0.10);  color:#fbbf24; border-color:rgba(245,158,11,0.22);  }
+.adm-log-badge--error   { background:rgba(239,68,68,0.10);   color:#f87171; border-color:rgba(239,68,68,0.22);   }
+.adm-log-badge-count { font-size:1rem; font-weight:800; }
+.adm-log-badge-label { font-size:0.74rem; opacity:0.75; }
+
+.adm-log-terminal {
+  background: rgba(4,10,6,0.82);
+  border: 1px solid rgba(67,160,71,0.14);
+  border-radius: 14px;
+  padding: 1.25rem;
+  max-height: 440px;
+  overflow-y: auto;
+  display: flex; flex-direction: column; gap: 0.3rem;
+  font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+}
+.adm-root[data-theme='light'] .adm-log-terminal {
+  background: rgba(248, 250, 252, 0.88);
+  border-color: rgba(67,160,71,0.2);
+}
+.adm-log-terminal::-webkit-scrollbar { width:5px; }
+.adm-log-terminal::-webkit-scrollbar-thumb { background:rgba(67,160,71,0.25); border-radius:99px; }
+.adm-root[data-theme='light'] .adm-log-terminal::-webkit-scrollbar-thumb {
+  background: rgba(67,160,71,0.2);
+}
+
+.adm-log-row {
+  display: flex; align-items: baseline; gap: 0.6rem;
+  font-size: 0.78rem; line-height: 1.5;
+  padding: 0.25rem 0;
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+  flex-wrap: wrap;
+}
+.adm-root[data-theme='light'] .adm-log-row {
+  border-bottom-color: rgba(15, 23, 42, 0.08);
+}
+.adm-log-row:last-child { border-bottom: none; }
+.adm-log-time  { color: rgba(200,230,203,0.35); flex-shrink:0; }
+.adm-root[data-theme='light'] .adm-log-time {
+  color: rgba(69, 89, 79, 0.45);
+}
+.adm-log-type  { font-weight:700; flex-shrink:0; }
+.adm-log-type--success { color:#7EC880; }
+.adm-root[data-theme='light'] .adm-log-type--success {
+  color: #2d6a2f;
+}
+.adm-log-type--info    { color:#60a5fa; }
+.adm-root[data-theme='light'] .adm-log-type--info {
+  color: #1e40af;
+}
+.adm-log-type--warning { color:#fbbf24; }
+.adm-root[data-theme='light'] .adm-log-type--warning {
+  color: #b45309;
+}
+.adm-log-type--error   { color:#f87171; }
+.adm-root[data-theme='light'] .adm-log-type--error {
+  color: #dc2626;
+}
+.adm-log-msg   { color: rgba(200,230,203,0.75); word-break:break-word; }
+.adm-root[data-theme='light'] .adm-log-msg {
+  color: #334155;
+}
+
+/* Log Table */
+.adm-log-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.8rem;
+  table-layout: fixed;
+}
+.adm-log-table th,
+.adm-log-table td {
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+  padding: 0.55rem 0.5rem;
+  text-align: left;
+  color: rgba(232,245,233,0.92);
+  vertical-align: top;
+  white-space: normal;
+  word-break: break-word;
+}
+.adm-root[data-theme='light'] .adm-log-table th,
+.adm-root[data-theme='light'] .adm-log-table td {
+  border-bottom-color: rgba(15, 23, 42, 0.12);
+  color: #1e293b;
+}
+.adm-log-table th {
+  color: rgba(200,230,203,0.72);
+  font-weight: 700;
+}
+.adm-root[data-theme='light'] .adm-log-table th {
+  color: #0f172a;
+}
+.adm-log-table-empty {
+  text-align: center !important;
+  color: rgba(200,230,203,0.6) !important;
+}
+.adm-root[data-theme='light'] .adm-log-table-empty {
+  color: rgba(69, 89, 79, 0.65) !important;
+}
+
+/* ══════════════════════════════════════════════════════
+   WATER CONTROLS
+══════════════════════════════════════════════════════ */
+.adm-water-controls { margin-top: 0; }
+.adm-water-status {
+  font-size: 0.875rem; color: rgba(200,230,203,0.65);
+  margin: 0 0 1rem; display: flex; align-items: center; gap: 0.5rem;
+}

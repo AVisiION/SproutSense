@@ -16,15 +16,15 @@
   --bg-tertiary        : #071510;
 
   /* ── GLASS */
-  --glass-color        : rgba(4, 14, 9, 0.82);
-  --glass-color-strong : rgba(3, 10, 7, 0.92);
+  --glass-color        : rgb(0 0 0 / 3%);
+  --glass-color-strong : rgb(0 0 0 / 6%);
   --glass-blur         : 22px;
   --glass-saturate     : 160%;
-  --glass-border       : 1px solid rgba(255, 255, 255, 0.07);
+   --glass-border       : 1px solid rgba(255, 255, 255, 0.10);
   --glass-border-strong: 1px solid rgba(58, 143, 62, 0.18);
   --glass-radius       : 18px;
-  --glass-shadow       : 0 12px 40px rgba(0, 0, 0, 0.65);
-  --glass-highlight    : inset 0 1px 0 rgba(255, 255, 255, 0.04);
+   --glass-shadow       : 0 14px 44px rgba(0, 0, 0, 0.58);
+   --glass-highlight    : inset 0 1px 0 rgba(255, 255, 255, 0.07);
 
   /* compat */
   --card-bg     : var(--glass-color);
@@ -142,15 +142,15 @@
   /* ── GLASS — liquid glass values
      Lower opacity so background shows through (real glass effect)
      Higher saturate to enrich the mint tones behind */
-  --glass-color        : rgba(255, 255, 255, 0.55);
-  --glass-color-strong : rgba(255, 255, 255, 0.80);
+  --glass-color        : rgb(0 0 0 / 3%);
+  --glass-color-strong : rgb(0 0 0 / 6%);
   --glass-blur         : 20px;
   --glass-saturate     : 180%;
-  --glass-border       : 1px solid rgba(255, 255, 255, 0.75);
+   --glass-border       : 1px solid rgba(255, 255, 255, 0.72);
   --glass-border-strong: 1px solid rgba(46, 125, 50, 0.28);
   --glass-radius       : 18px;
-  --glass-shadow       : 0 8px 32px rgba(10, 40, 15, 0.14), 0 1px 0 rgba(255,255,255,0.90) inset;
-  --glass-highlight    : inset 0 1px 0 rgba(255, 255, 255, 0.90);
+   --glass-shadow       : 0 10px 36px rgba(10, 40, 15, 0.16), 0 1px 0 rgba(255,255,255,0.90) inset;
+   --glass-highlight    : inset 0 1px 0 rgba(255, 255, 255, 0.92);
 
   --card-bg     : var(--glass-color);
   --card-border : var(--glass-border);

@@ -8,7 +8,7 @@ export default function VerifyPendingPage() {
       <div className="auth-card">
         <div className="auth-header">
             <div className="auth-brand">
-              <img src="/assets/icon.svg" alt="SproutSense logo" className="auth-brand-icon" />
+              <img src="/assets/icon.png" alt="SproutSense logo" className="auth-brand-icon" />
               <span className="auth-brand-text">SproutSense</span>
             </div>
           <h1 className="auth-title"><i className="fa-solid fa-envelope" /> Verification Required</h1>

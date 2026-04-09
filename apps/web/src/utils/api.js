@@ -326,6 +326,11 @@ export const authAPI = {
     return response.data;
   },
 
+  impersonate: async ({ userId }, options = {}) => {
+    const response = await api.post('/auth/impersonate', { userId }, options);
+    return response.data;
+  },
+
   updateProfile: async ({ preferredPlant }, options = {}) => {
     const response = await api.patch('/auth/me', { preferredPlant }, options);
     return response.data;
@@ -405,8 +410,17 @@ export const usersAPI = {
 };
 
 export const deviceAPI = {
-  pairDevice: async ({ deviceId, deviceSecret, displayName, firmwareVersion }, options = {}) => {
-    const response = await api.post('/device/pair', { deviceId, deviceSecret, displayName, firmwareVersion }, options);
+  pairDevice: async ({ deviceId, deviceToken, deviceSecret, displayName, firmwareVersion }, options = {}) => {
+    const normalizedDeviceId = String(deviceId || '').trim().toUpperCase();
+    const resolvedToken = normalizedDeviceId || deviceToken || deviceSecret;
+    const response = await api.post('/device/pair', {
+      deviceId: normalizedDeviceId,
+      deviceToken: resolvedToken,
+      // Backward-compatible payload key for older servers.
+      deviceSecret: resolvedToken,
+      displayName,
+      firmwareVersion,
+    }, options);
     return response.data;
   },
 
@@ -499,11 +513,11 @@ export const aiAPI = {
     return response.data;
   },
 
-  // GET /api/ai/usage?deviceId=
-  getUsageStats: async (deviceId = 'ESP32-SENSOR', options = {}) => {
+  // GET /api/ai/usage?deviceModel=
+  getUsageStats: async (deviceModel = 'ESP32-SENSOR', options = {}) => {
     if (isMockEnabled()) {
       const res = await mockResponse({
-        deviceId,
+        deviceModel,
         dateKey: new Date().toISOString().slice(0, 10),
         usedCount: 0,
         dailyLimit: 2,
@@ -515,7 +529,7 @@ export const aiAPI = {
     }
 
     const response = await api.get('/ai/usage', {
-      params: { deviceId },
+      params: { deviceModel },
       ...options
     });
     return response.data;

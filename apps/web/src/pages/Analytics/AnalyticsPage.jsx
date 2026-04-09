@@ -32,18 +32,27 @@ const COLORS = {
   healthy  : '#22c55e',
 };
 
-const PIE_COLORS = ['#22c55e', '#f59e0b', '#ef4444'];
-
 const CHART_COLORS = ['#00f2fe', '#f59e0b', '#22d3ee', '#facc15', '#3b82f6', '#a855f7', '#22c55e', '#ef4444'];
 
-function colorForSensor(sensorKey, index = 0) {
-  if (sensorKey?.toLowerCase().includes('moisture')) return COLORS.moisture;
-  if (sensorKey?.toLowerCase().includes('temp')) return COLORS.temp;
-  if (sensorKey?.toLowerCase().includes('humid')) return COLORS.humidity;
-  if (sensorKey?.toLowerCase().includes('light')) return COLORS.light;
-  if (sensorKey?.toLowerCase().includes('flow')) return COLORS.flow;
-  if (sensorKey?.toLowerCase().includes('ph')) return COLORS.ph;
-  return CHART_COLORS[index % CHART_COLORS.length];
+const LOCAL_UI_PREFS_KEY = 'ss_ui_visual_preferences';
+
+function loadVisualPrefs() {
+  try {
+    const raw = localStorage.getItem(LOCAL_UI_PREFS_KEY);
+    return raw ? JSON.parse(raw) : {};
+  } catch {
+    return {};
+  }
+}
+
+function colorForSensor(sensorKey, index = 0, palette = COLORS, chartPalette = CHART_COLORS) {
+  if (sensorKey?.toLowerCase().includes('moisture')) return palette.moisture;
+  if (sensorKey?.toLowerCase().includes('temp')) return palette.temp;
+  if (sensorKey?.toLowerCase().includes('humid')) return palette.humidity;
+  if (sensorKey?.toLowerCase().includes('light')) return palette.light;
+  if (sensorKey?.toLowerCase().includes('flow')) return palette.flow;
+  if (sensorKey?.toLowerCase().includes('ph')) return palette.ph;
+  return chartPalette[index % chartPalette.length];
 }
 
 
@@ -204,6 +213,7 @@ function Sparkline({ data, dataKey, color }) {
 // ─── Main Page ────────────────────────────────────────────────────────────────
 export default function AnalyticsPage() {
   const [loading,       setLoading]       = useState(true);
+  const [visualPrefs, setVisualPrefs] = useState(() => loadVisualPrefs());
   
   const [selectedRange, setSelectedRange] = useState(TIME_RANGES[1]);
   const [sensorData,    setSensorData]    = useState([]);
@@ -212,6 +222,43 @@ export default function AnalyticsPage() {
   const [sensorConfigs, setSensorConfigs] = useState([]);
   const [activeSensorId, setActiveSensorId] = useState('');
   const [kpi, setKpi] = useState({ waterUsed: 0, avgMoisture: 0, diseaseCount: 0, uptime: 0 });
+
+  useEffect(() => {
+    const syncVisualPrefs = () => setVisualPrefs(loadVisualPrefs());
+    window.addEventListener('storage', syncVisualPrefs);
+    return () => window.removeEventListener('storage', syncVisualPrefs);
+  }, []);
+
+  const palette = useMemo(() => {
+    const custom = visualPrefs?.colors || {};
+    return {
+      moisture: custom.moisture || COLORS.moisture,
+      temp: custom.temperature || COLORS.temp,
+      humidity: custom.humidity || COLORS.humidity,
+      light: COLORS.light,
+      flow: COLORS.flow,
+      disease: COLORS.disease,
+      ph: COLORS.ph,
+      healthy: COLORS.healthy,
+    };
+  }, [visualPrefs]);
+
+  const chartPalette = useMemo(() => [
+    palette.moisture,
+    palette.temp,
+    palette.humidity,
+    palette.light,
+    palette.flow,
+    palette.ph,
+    palette.healthy,
+    palette.disease,
+  ], [palette]);
+
+  const chartPrefs = useMemo(() => ({
+    showGrid: visualPrefs?.charts?.showGrid ?? true,
+    animate: visualPrefs?.charts?.animate ?? true,
+    lineType: visualPrefs?.charts?.chartStyle === 'straight' ? 'linear' : 'monotone',
+  }), [visualPrefs]);
 
   useEffect(() => {
     const loadSensors = () => {
@@ -312,16 +359,16 @@ export default function AnalyticsPage() {
 
   const selectedSeries = useMemo(() => {
     if (!selectedSensor) {
-      return { key: 'soilMoisture', label: 'Sensor', unit: '', color: COLORS.moisture, chartType: 'line' };
+      return { key: 'soilMoisture', label: 'Sensor', unit: '', color: palette.moisture, chartType: 'line' };
     }
     return {
       key: selectedSensor.key,
       label: selectedSensor.name,
       unit: selectedSensor.unit || '',
-      color: colorForSensor(selectedSensor.key, sensorConfigs.findIndex(s => s.id === selectedSensor.id)),
+      color: colorForSensor(selectedSensor.key, sensorConfigs.findIndex(s => s.id === selectedSensor.id), palette, chartPalette),
       chartType: selectedSensor.chartType || 'line',
     };
-  }, [selectedSensor, sensorConfigs]);
+  }, [selectedSensor, sensorConfigs, palette, chartPalette]);
 
   const trendStats = useMemo(() => {
     const values = chartData
@@ -393,21 +440,21 @@ export default function AnalyticsPage() {
       icon : 'pump',
       label: 'Water Used',
       value: `${(kpi.waterUsed / 1000).toFixed(2)} L`,
-      color: COLORS.flow,
+      color: palette.flow,
       spark: { data: sparkTail, key: 'flowVolume' },
     },
     {
       icon : 'humidity',
       label: 'Avg Moisture',
       value: `${Math.round(kpi.avgMoisture)}%`,
-      color: COLORS.moisture,
+      color: palette.moisture,
       spark: { data: sparkTail, key: 'soilMoisture' },
     },
     {
       icon  : 'warning',
       label : 'Disease Events',
       value : kpi.diseaseCount,
-      color : kpi.diseaseCount > 0 ? COLORS.disease : COLORS.healthy,
+      color : kpi.diseaseCount > 0 ? palette.disease : palette.healthy,
       danger: kpi.diseaseCount > 0,
       spark : null,
     },
@@ -453,11 +500,11 @@ export default function AnalyticsPage() {
       return (
         <ResponsiveContainer width="100%" height="100%">
           <BarChart data={selectedSeriesData}>
-            <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
+            {chartPrefs.showGrid && <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />}
             <XAxis dataKey="timeLabel" stroke="rgba(255,255,255,0.35)" fontSize={11} tickLine={false} axisLine={false} />
             <YAxis stroke="rgba(255,255,255,0.35)" fontSize={11} tickLine={false} axisLine={false} />
             <Tooltip content={<CustomTooltip />} />
-            <Bar dataKey="metricValue" name={selectedSeries.label} fill={selectedSeries.color} radius={[6, 6, 0, 0]} unit={unitSuffix} />
+            <Bar dataKey="metricValue" name={selectedSeries.label} fill={selectedSeries.color} radius={[6, 6, 0, 0]} unit={unitSuffix} isAnimationActive={chartPrefs.animate} />
           </BarChart>
         </ResponsiveContainer>
       );
@@ -514,11 +561,11 @@ export default function AnalyticsPage() {
       return (
         <ResponsiveContainer width="100%" height="100%">
           <LineChart data={selectedSeriesData}>
-            <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
+            {chartPrefs.showGrid && <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />}
             <XAxis dataKey="timeLabel" stroke="rgba(255,255,255,0.35)" fontSize={11} tickLine={false} axisLine={false} />
             <YAxis stroke="rgba(255,255,255,0.35)" fontSize={11} tickLine={false} axisLine={false} />
             <Tooltip content={<CustomTooltip />} />
-            <Line type="monotone" dataKey="metricValue" name={selectedSeries.label} stroke={selectedSeries.color} strokeWidth={2.7} dot={false} unit={unitSuffix} />
+            <Line type={chartPrefs.lineType} dataKey="metricValue" name={selectedSeries.label} stroke={selectedSeries.color} strokeWidth={2.7} dot={false} unit={unitSuffix} isAnimationActive={chartPrefs.animate} />
           </LineChart>
         </ResponsiveContainer>
       );
@@ -533,11 +580,11 @@ export default function AnalyticsPage() {
               <stop offset="95%" stopColor={selectedSeries.color} stopOpacity={0} />
             </linearGradient>
           </defs>
-          <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
+          {chartPrefs.showGrid && <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />}
           <XAxis dataKey="timeLabel" stroke="rgba(255,255,255,0.35)" fontSize={11} tickLine={false} axisLine={false} />
           <YAxis stroke="rgba(255,255,255,0.35)" fontSize={11} tickLine={false} axisLine={false} />
           <Tooltip content={<CustomTooltip />} />
-          <Area type="monotone" dataKey="metricValue" name={selectedSeries.label} stroke={selectedSeries.color} strokeWidth={2.7} fill="url(#gradActiveSensor)" dot={false} unit={unitSuffix} />
+          <Area type={chartPrefs.lineType} dataKey="metricValue" name={selectedSeries.label} stroke={selectedSeries.color} strokeWidth={2.7} fill="url(#gradActiveSensor)" dot={false} unit={unitSuffix} isAnimationActive={chartPrefs.animate} />
         </AreaChart>
       </ResponsiveContainer>
     );
@@ -595,7 +642,7 @@ export default function AnalyticsPage() {
             </div>
             <div className={styles.sensorSwitcher}>
               {sensorConfigs.map((sensor, index) => {
-                const color = colorForSensor(sensor.key, index);
+                const color = colorForSensor(sensor.key, index, palette, chartPalette);
                 return (
                   <button
                     key={sensor.id}
@@ -656,7 +703,17 @@ export default function AnalyticsPage() {
                       const level = getStatusForValue(sensor, value).level;
                       const existing = acc.find((item) => item.name === level);
                       if (existing) existing.value += 1;
-                      else acc.push({ name: level, value: 1, color: level === 'critical' ? '#ef4444' : level === 'warning' ? '#f59e0b' : level === 'normal' ? '#22c55e' : '#94a3b8' });
+                      else acc.push({
+                        name: level,
+                        value: 1,
+                        color: level === 'critical'
+                          ? palette.disease
+                          : level === 'warning'
+                            ? palette.temp
+                            : level === 'normal'
+                              ? palette.healthy
+                              : '#94a3b8',
+                      });
                       return acc;
                     }, [])}
                     cx="50%"
@@ -667,7 +724,26 @@ export default function AnalyticsPage() {
                     label={({ name, value }) => `${name} ${value}`}
                     labelLine={false}
                   >
-                    {sensorConfigs.map((_, i) => <Cell key={i} fill={PIE_COLORS[i % PIE_COLORS.length]} />)}
+                    {sensorConfigs
+                      .reduce((acc, sensor) => {
+                        const value = sensorData.length ? getSensorValue(sensorData[sensorData.length - 1], sensor) : null;
+                        const level = getStatusForValue(sensor, value).level;
+                        const existing = acc.find((item) => item.name === level);
+                        if (existing) existing.value += 1;
+                        else acc.push({
+                          name: level,
+                          value: 1,
+                          color: level === 'critical'
+                            ? palette.disease
+                            : level === 'warning'
+                              ? palette.temp
+                              : level === 'normal'
+                                ? palette.healthy
+                                : '#94a3b8',
+                        });
+                        return acc;
+                      }, [])
+                      .map((entry, i) => <Cell key={`${entry.name}-${i}`} fill={entry.color} />)}
                   </Pie>
                   <Tooltip content={<CustomTooltip />} />
                 </PieChart>

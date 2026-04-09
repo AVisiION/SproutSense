@@ -98,7 +98,7 @@ export default function RegisterPage() {
           <div className="auth-hero-overlay" />
           <div className="auth-hero-content">
             <Link className="auth-brand auth-brand--hero" to="/">
-              <img src="/assets/icon.svg" alt="SproutSense logo" className="auth-brand-icon" />
+              <img src="/assets/icon.png" alt="SproutSense logo" className="auth-brand-icon" />
               <span className="auth-brand-text">SproutSense</span>
             </Link>
             <h2 className="auth-hero-title">Begin Your Smart Garden Journey</h2>

@@ -12,14 +12,14 @@ import aiProviderService from '../utils/aiProviderService.js';
 import weatherService from '../utils/weatherService.js';
 import { SENSOR_THRESHOLDS } from '../config/sensorThresholds.js';
 
-function resolveAIQuotaDeviceId(req, fallback = 'ESP32-SENSOR') {
-  return req.query?.deviceId || req.body?.deviceId || fallback;
+function resolveAIQuotaDeviceModel(req, fallback = 'ESP32-SENSOR') {
+  return req.query?.deviceModel || req.body?.deviceModel || req.query?.deviceId || req.body?.deviceId || fallback;
 }
 
-async function enforceDailyAIQuota(req, res, deviceId) {
-  const systemConfig = await SystemConfig.getConfig(deviceId);
+async function enforceDailyAIQuota(req, res, deviceModel) {
+  const systemConfig = await SystemConfig.getConfig(deviceModel);
   const dailyLimit = systemConfig?.aiConfig?.dailyAnalysisLimit || 2;
-  const quota = await AIUsageQuota.consumeTodayQuota(deviceId, dailyLimit);
+  const quota = await AIUsageQuota.consumeTodayQuota(deviceModel, dailyLimit);
 
   if (quota.consumed) {
     return null;
@@ -29,6 +29,7 @@ async function enforceDailyAIQuota(req, res, deviceId) {
     success: false,
     message: `Daily AI analysis limit reached (${quota.usedCount}/${quota.dailyLimit}). Try again after reset.`,
     data: {
+      deviceModel: quota.deviceId,
       deviceId: quota.deviceId,
       dateKey: quota.dateKey,
       usedCount: quota.usedCount,
@@ -43,26 +44,26 @@ async function enforceDailyAIQuota(req, res, deviceId) {
 // Get AI recommendation
 export const getAIRecommendation = async (req, res, next) => {
   try {
-    const { deviceId = 'ESP32-SENSOR' } = req.query;
+    const deviceModel = resolveAIQuotaDeviceModel(req);
 
     // Get latest sensor reading
-    const latestReading = await SensorReading.getLatest(deviceId);
+    const latestReading = await SensorReading.getLatest(deviceModel);
     
     if (!latestReading) {
       return errorResponse(res, 'No sensor data available for AI analysis', HTTP_STATUS.NOT_FOUND);
     }
 
-    const quotaBlocked = await enforceDailyAIQuota(req, res, deviceId);
+    const quotaBlocked = await enforceDailyAIQuota(req, res, deviceModel);
     if (quotaBlocked) {
       return quotaBlocked;
     }
 
     // Get configuration
-    const config = await SystemConfig.getConfig(deviceId);
+    const config = await SystemConfig.getConfig(deviceModel);
 
     // Get today's watering stats
-    const todayCount = await WateringLog.getTodayCount(deviceId);
-    const volumeData = await WateringLog.getTodayVolume(deviceId);
+    const todayCount = await WateringLog.getTodayCount(deviceModel);
+    const volumeData = await WateringLog.getTodayVolume(deviceModel);
     const todayVolume = volumeData.length > 0 ? volumeData[0].totalVolume : 0;
 
     // Simple AI logic (can be replaced with actual AI model)
@@ -173,9 +174,10 @@ function generateRecommendation(reading, config, todayCount, todayVolume) {
 // Get historical AI insights with Edge Impulse disease detection, graphs, and predictions
 export const getAIInsights = async (req, res, next) => {
   try {
-    const { deviceId = 'ESP32-SENSOR', days = 7 } = req.query;
+    const { days = 7 } = req.query;
+    const deviceModel = resolveAIQuotaDeviceModel(req);
 
-    const quotaBlocked = await enforceDailyAIQuota(req, res, deviceId);
+    const quotaBlocked = await enforceDailyAIQuota(req, res, deviceModel);
     if (quotaBlocked) {
       return quotaBlocked;
     }
@@ -188,14 +190,14 @@ export const getAIInsights = async (req, res, next) => {
     
     // Get detailed sensor readings for graphs
     const sensorReadings = await SensorReading.find({
-      deviceId,
+      deviceId: deviceModel,
       timestamp: { $gte: startDate }
     }).sort({ timestamp: 1 }).select('soilMoisture temperature humidity light timestamp');
 
     // Get sensor statistics
     const sensorStats = await SensorReading.aggregate([
       {
-        $match: { deviceId, timestamp: { $gte: startDate } }
+        $match: { deviceId: deviceModel, timestamp: { $gte: startDate } }
       },
       {
         $group: {
@@ -291,7 +293,7 @@ export const getAIInsights = async (req, res, next) => {
     // ===== 2. WATERING PATTERN ANALYSIS =====
     
     const wateringHistory = await WateringLog.find({
-      deviceId,
+      deviceId: deviceModel,
       startTime: { $gte: startDate }
     }).sort({ startTime: 1 });
 
@@ -345,7 +347,7 @@ export const getAIInsights = async (req, res, next) => {
 
     // ===== 3. EDGE IMPULSE DISEASE DETECTION ANALYSIS =====
     
-    const diseaseDeviceId = deviceId.replace('ESP32-SENSOR', 'ESP32-CAM');
+    const diseaseDeviceId = deviceModel.replace('ESP32-SENSOR', 'ESP32-CAM');
     
     // Get recent disease detections
     const diseaseHistory = await DiseaseDetection.find({
@@ -758,16 +760,19 @@ export const chatWithAI = async (req, res, next) => {
 
 /**
  * GET /api/ai/usage
- * Return daily AI usage for admin visibility
+ * Return daily AI usage for admin visibility, keyed by device model
  */
 export const getAIUsageStats = async (req, res, next) => {
   try {
-    const deviceId = resolveAIQuotaDeviceId(req);
-    const systemConfig = await SystemConfig.getConfig(deviceId);
+    const deviceModel = resolveAIQuotaDeviceModel(req);
+    const systemConfig = await SystemConfig.getConfig(deviceModel);
     const dailyLimit = systemConfig?.aiConfig?.dailyAnalysisLimit || 2;
-    const usage = await AIUsageQuota.getTodayUsageWithLimit(deviceId, dailyLimit);
+    const usage = await AIUsageQuota.getTodayUsageWithLimit(deviceModel, dailyLimit);
 
-    successResponse(res, usage);
+    successResponse(res, {
+      ...usage,
+      deviceModel,
+    });
   } catch (error) {
     next(error);
   }

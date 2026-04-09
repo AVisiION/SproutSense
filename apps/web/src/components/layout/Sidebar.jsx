@@ -24,7 +24,7 @@ export function Sidebar({
 
       {/* ── Brand logo (Hides when collapsed via CSS) ── */}
       <div className="sidebar-brand">
-        <img src="/assets/icon.svg" className="sidebar-brand-icon" alt="" />
+        <img src="/assets/icon.png" className="sidebar-brand-icon" alt="" />
         <span className="sidebar-brand-text">SproutSense</span>
       </div>
 

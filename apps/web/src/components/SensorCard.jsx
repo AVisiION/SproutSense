@@ -313,18 +313,6 @@ export function SensorCard({ sensors, isConnected }) {
   return (
     <section className="sc-root">
 
-      {/* ── Header ── */}
-      <div className="sc-header">
-        <div className="sc-header-left">
-          <i className="fa-solid fa-gauge-high sc-header-icon" aria-hidden="true" />
-          <div>
-            <h2 className="sc-header-title">Live Sensor Data</h2>
-            <p className="sc-header-sub">{liveCount} of {entries.length} sensors reporting</p>
-          </div>
-        </div>
-        <ConnDot live={isConnected} />
-      </div>
-
       {/* ── Sensor grid ── */}
       {entries.some(e => e.value !== undefined) || !sensors ? (
         <div className="sc-grid">

@@ -673,13 +673,13 @@
 }
 
 .sp-btn--ghost {
-  background: transparent;
+  background: rgb(0 0 0 / 3%);
   color: var(--text-secondary);
   border: 1px solid rgba(148,163,184,0.28);
 }
 
 .sp-btn--ghost:hover:not(:disabled) {
-  background: rgba(148,163,184,0.08);
+  background: rgb(0 0 0 / 6%);
   color: var(--text-color);
 }
 
@@ -796,6 +796,11 @@
 [data-theme='light'] .sp-about-tile {
   background: rgba(0,0,0,0.02);
   border-color: rgba(0,0,0,0.07);
+}
+
+/* Universal subtle tint for Settings section surfaces */
+.sp-page :is(.sp-card, .sp-input-wrap, .sp-input--surface, .sp-device-item, .sp-about-tile) {
+  background-image: linear-gradient(rgb(0 0 0 / 3%), rgb(0 0 0 / 3%));
 }
 
 /* ══════════════════════════════════════════════════════

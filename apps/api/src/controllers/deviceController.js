@@ -7,10 +7,6 @@ function hashValue(value = '') {
   return crypto.createHash('sha256').update(String(value)).digest('hex');
 }
 
-function generateDeviceToken() {
-  return crypto.randomBytes(32).toString('hex');
-}
-
 function extractIp(req) {
   const forwarded = String(req.headers['x-forwarded-for'] || '').split(',')[0].trim();
   return forwarded || req.ip || req.socket?.remoteAddress || null;
@@ -20,7 +16,7 @@ export async function pairDevice(req, res, next) {
   try {
     const userId = req.auth?.userId;
     const deviceId = String(req.body?.deviceId || '').trim().toUpperCase();
-    const deviceSecret = String(req.body?.deviceSecret || '').trim();
+    const providedAuthValue = String(req.body?.deviceToken || req.body?.deviceSecret || '').trim();
     const displayName = String(req.body?.displayName || '').trim();
     const firmwareVersion = String(req.body?.firmwareVersion || '').trim() || null;
 
@@ -28,9 +24,11 @@ export async function pairDevice(req, res, next) {
       return res.status(401).json({ success: false, message: 'Authentication required.' });
     }
 
-    if (!deviceId || !deviceSecret) {
-      return res.status(400).json({ success: false, message: 'deviceId and deviceSecret are required.' });
+    if (!deviceId) {
+      return res.status(400).json({ success: false, message: 'deviceId is required.' });
     }
+
+    const authValue = providedAuthValue || deviceId;
 
     // Validate against pre-registered device
     const preDevice = await PreRegisteredDevice.findOne({
@@ -42,9 +40,9 @@ export async function pairDevice(req, res, next) {
       return res.status(404).json({ success: false, message: 'Device not found. Please check deviceId.' });
     }
 
-    // Verify secret matches
-    if (preDevice.deviceSecret !== deviceSecret) {
-      return res.status(401).json({ success: false, message: 'Invalid device secret.' });
+    // Verify token matches
+    if (preDevice.deviceSecret !== authValue) {
+      return res.status(401).json({ success: false, message: 'Invalid device ID.' });
     }
 
     // Check if device already paired to another user
@@ -54,8 +52,7 @@ export async function pairDevice(req, res, next) {
     }
 
     const now = new Date();
-    const deviceToken = generateDeviceToken();
-    const tokenHash = hashValue(deviceToken);
+    const tokenHash = hashValue(deviceId);
 
     // Create or update user-device binding
     const binding = await UserDevice.findOneAndUpdate(
@@ -90,7 +87,7 @@ export async function pairDevice(req, res, next) {
       success: true,
       device: {
         deviceId,
-        deviceToken,
+        deviceToken: deviceId,
         displayName: binding.displayName,
         pairedAt: now.toISOString(),
       },
@@ -152,9 +149,8 @@ export async function rotateDeviceToken(req, res, next) {
     }
 
     const now = new Date();
-    const deviceToken = generateDeviceToken();
 
-    device.tokenHash = hashValue(deviceToken);
+    device.tokenHash = hashValue(deviceId);
     device.tokenIssuedAt = now;
     await device.save();
 
@@ -162,7 +158,7 @@ export async function rotateDeviceToken(req, res, next) {
       success: true,
       device: {
         deviceId,
-        deviceToken,
+        deviceToken: deviceId,
         rotatedAt: now.toISOString(),
       },
     });
@@ -226,8 +222,7 @@ export async function forcePairDevice(req, res, next) {
     }
 
     const now = new Date();
-    const deviceToken = generateDeviceToken();
-    const tokenHash = hashValue(deviceToken);
+    const tokenHash = hashValue(normalizedDeviceId);
 
     const binding = await UserDevice.findOneAndUpdate(
       { deviceId: normalizedDeviceId },
@@ -254,7 +249,7 @@ export async function forcePairDevice(req, res, next) {
       message: `Device ${normalizedDeviceId} force-paired to user ${userId}`,
       device: {
         deviceId: normalizedDeviceId,
-        deviceToken,
+        deviceToken: normalizedDeviceId,
         displayName: binding.displayName,
       },
     });

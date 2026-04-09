@@ -1,0 +1,371 @@
+/**
+ * AdminCards.css
+ * Stat cards, device cards, user cards, and card-related styling
+ */
+
+/* ══════════════════════════════════════════════════════
+   STAT CARDS GRID
+══════════════════════════════════════════════════════ */
+.adm-cards-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 180px), 1fr));
+  gap: 1rem;
+}
+.adm-stat-card {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1.25rem;
+  border-radius: 16px;
+  background: rgba(8,24,15,0.70);
+  border: 1px solid rgba(255,255,255,0.08);
+  box-shadow: 0 4px 18px rgba(0,0,0,0.28), inset 0 1px 0 rgba(255,255,255,0.05);
+  -webkit-backdrop-filter: blur(18px) saturate(150%);
+  backdrop-filter: blur(18px) saturate(150%);
+  transition: transform 0.22s ease, border-color 0.22s ease;
+  overflow: hidden;
+  position: relative;
+}
+.adm-stat-card::after {
+  content:''; position:absolute; top:0; left:0; right:0; height:2px;
+  border-radius: 99px 99px 0 0;
+}
+.adm-stat-card:hover { transform:translateY(-3px); }
+.adm-stat-card--blue   { border-top:2px solid rgba(14,165,233,0.50);  }
+.adm-stat-card--green  { border-top:2px solid rgba(67,160,71,0.55);   }
+.adm-stat-card--orange { border-top:2px solid rgba(251,146,60,0.55);  }
+.adm-stat-card--cyan   { border-top:2px solid rgba(0,180,166,0.55);   }
+.adm-stat-card--lime   { border-top:2px solid rgba(132,204,22,0.55);  }
+.adm-stat-card--purple { border-top:2px solid rgba(167,139,250,0.55); }
+.adm-stat-card--yellow { border-top:2px solid rgba(245,158,11,0.55);  }
+.adm-stat-card--red    { border-top:2px solid rgba(239,68,68,0.50);   }
+
+.adm-stat-icon-wrap {
+  width: 44px; height: 44px; border-radius: 12px;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0; font-size: 1rem;
+  background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.09);
+  color: rgba(200,230,203,0.80);
+}
+.adm-stat-card--blue   .adm-stat-icon-wrap { background:rgba(14,165,233,0.10);  color:#60a5fa; border-color:rgba(14,165,233,0.20);  }
+.adm-stat-card--green  .adm-stat-icon-wrap { background:rgba(67,160,71,0.12);   color:#7EC880; border-color:rgba(67,160,71,0.25);   }
+.adm-stat-card--orange .adm-stat-icon-wrap { background:rgba(251,146,60,0.10);  color:#fb923c; border-color:rgba(251,146,60,0.22);  }
+.adm-stat-card--cyan   .adm-stat-icon-wrap { background:rgba(0,180,166,0.12);   color:#2dd4bf; border-color:rgba(0,180,166,0.25);   }
+.adm-stat-card--lime   .adm-stat-icon-wrap { background:rgba(132,204,22,0.10);  color:#a3e635; border-color:rgba(132,204,22,0.22);  }
+.adm-stat-card--purple .adm-stat-icon-wrap { background:rgba(167,139,250,0.12); color:#a78bfa; border-color:rgba(167,139,250,0.25); }
+.adm-stat-card--yellow .adm-stat-icon-wrap { background:rgba(245,158,11,0.10);  color:#fbbf24; border-color:rgba(245,158,11,0.22);  }
+.adm-stat-card--red    .adm-stat-icon-wrap { background:rgba(239,68,68,0.10);   color:#f87171; border-color:rgba(239,68,68,0.22);   }
+
+.adm-stat-body { display:flex; flex-direction:column; gap:2px; min-width:0; }
+.adm-stat-value { font-size:1.2rem; font-weight:700; color:#E8F5E9; line-height:1.1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.adm-stat-label { font-size:0.74rem; color:rgba(200,230,203,0.50); font-weight:500; }
+
+/* ══════════════════════════════════════════════════════
+   DEVICE CARDS
+══════════════════════════════════════════════════════ */
+.adm-device-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr));
+  gap: 1rem;
+}
+.adm-device-card {
+  display: flex; align-items: flex-start; gap: 1rem;
+  padding: 1.35rem;
+  border-radius: 16px;
+  background: rgba(8,24,15,0.70);
+  border: 1px solid rgba(255,255,255,0.08);
+  box-shadow: 0 6px 24px rgba(0,0,0,0.28), inset 0 1px 0 rgba(255,255,255,0.05);
+  -webkit-backdrop-filter: blur(18px) saturate(150%);
+  backdrop-filter: blur(18px) saturate(150%);
+  transition: transform 0.22s ease, border-color 0.22s ease;
+}
+.adm-device-card:hover { transform:translateY(-3px); }
+.adm-root[data-theme='light'] .adm-device-card {
+  background: rgba(248, 250, 252, 0.8);
+  border-color: rgba(15, 23, 42, 0.12);
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.8);
+}
+.adm-device-card--green  { border-left:3px solid rgba(67,160,71,0.55);  }
+.adm-device-card--blue   { border-left:3px solid rgba(14,165,233,0.50); }
+.adm-device-card--yellow { border-left:3px solid rgba(245,158,11,0.55); }
+.adm-device-card--purple { border-left:3px solid rgba(167,139,250,0.55); }
+
+.adm-device-icon {
+  width:44px; height:44px; border-radius:12px; flex-shrink:0;
+  display:flex; align-items:center; justify-content:center; font-size:1.1rem;
+  background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.09);
+  color:rgba(200,230,203,0.75);
+}
+.adm-root[data-theme='light'] .adm-device-icon {
+  background: rgba(15, 23, 42, 0.08);
+  border-color: rgba(15, 23, 42, 0.15);
+  color: rgba(69, 89, 79, 0.75);
+}
+.adm-device-card--green  .adm-device-icon { background:rgba(67,160,71,0.12);   color:#7EC880; border-color:rgba(67,160,71,0.25);   }
+.adm-device-card--blue   .adm-device-icon { background:rgba(14,165,233,0.10);  color:#60a5fa; border-color:rgba(14,165,233,0.20);  }
+.adm-device-card--yellow .adm-device-icon { background:rgba(245,158,11,0.10);  color:#fbbf24; border-color:rgba(245,158,11,0.22);  }
+.adm-device-card--purple .adm-device-icon { background:rgba(167,139,250,0.12); color:#a78bfa; border-color:rgba(167,139,250,0.25); }
+.adm-root[data-theme='light'] .adm-device-card--green .adm-device-icon { background: rgba(45, 106, 52, 0.12); color: #2d6a2f; border-color: rgba(45, 106, 52, 0.25); }
+.adm-root[data-theme='light'] .adm-device-card--blue .adm-device-icon { background: rgba(30, 64, 175, 0.12); color: #1e40af; border-color: rgba(30, 64, 175, 0.25); }
+.adm-root[data-theme='light'] .adm-device-card--yellow .adm-device-icon { background: rgba(180, 83, 9, 0.12); color: #b45309; border-color: rgba(180, 83, 9, 0.25); }
+.adm-root[data-theme='light'] .adm-device-card--purple .adm-device-icon { background: rgba(109, 40, 217, 0.12); color: #6d28d9; border-color: rgba(109, 40, 217, 0.25); }
+
+.adm-device-info { display:flex; flex-direction:column; gap:4px; min-width:0; }
+.adm-device-name   { font-size:0.9rem; font-weight:700; color:#E8F5E9; }
+.adm-root[data-theme='light'] .adm-device-name {
+  color: #0b1416;
+}
+.adm-device-detail { font-size:0.75rem; color:rgba(200,230,203,0.50); line-height:1.4; }
+.adm-root[data-theme='light'] .adm-device-detail {
+  color: rgba(69, 89, 79, 0.55);
+}
+.adm-device-status { display:flex; align-items:center; gap:6px; font-size:0.78rem; color:rgba(200,230,203,0.65); margin-top:4px; }
+.adm-root[data-theme='light'] .adm-device-status {
+  color: rgba(69, 89, 79, 0.65);
+}
+.adm-status-dot { width:8px; height:8px; border-radius:50%; flex-shrink:0; }
+.adm-status-dot--green { background:#4EA852; box-shadow:0 0 7px rgba(78,168,82,0.65); animation:admDotPulse 2s ease infinite; }
+.adm-status-dot--red   { background:#f87171; }
+@keyframes admDotPulse { 0%,100%{opacity:1} 50%{opacity:0.35} }
+
+/* ══════════════════════════════════════════════════════
+   USER MANAGEMENT HUB (REDESIGN)
+   ══════════════════════════════════════════════════════ */
+.adm-user-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 1.5rem;
+  margin-top: 1rem;
+}
+
+.adm-user-card {
+  background: rgba(10, 26, 18, 0.65);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 20px;
+  padding: 1.5rem;
+  position: relative;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  -webkit-backdrop-filter: blur(20px);
+  backdrop-filter: blur(20px);
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  overflow: hidden;
+}
+
+.adm-user-card:hover {
+  transform: translateY(-5px);
+  border-color: rgba(34, 211, 238, 0.3);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
+}
+
+.adm-user-card--selected {
+  border-color: #22d3ee;
+  background: rgba(34, 211, 238, 0.05);
+  box-shadow: 0 0 20px rgba(34, 211, 238, 0.15);
+}
+
+.adm-user-card-select {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  z-index: 2;
+}
+
+.adm-user-card-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.adm-user-avatar {
+  width: 54px;
+  height: 54px;
+  border-radius: 16px;
+  background: linear-gradient(135deg, #1e293b, #0f172a);
+  border: 2px solid rgba(255, 255, 255, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: #fff;
+  position: relative;
+  flex-shrink: 0;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+}
+
+.adm-user-avatar--admin  { background: linear-gradient(135deg, #ef4444, #991b1b); border-color: rgba(239, 68, 68, 0.3); }
+.adm-user-avatar--user   { background: linear-gradient(135deg, #3b82f6, #1e40af); border-color: rgba(59, 130, 246, 0.3); }
+.adm-user-avatar--viewer { background: linear-gradient(135deg, #64748b, #334155); border-color: rgba(100, 116, 139, 0.3); }
+
+.adm-user-online-dot {
+  position: absolute;
+  bottom: -2px;
+  right: -2px;
+  width: 14px;
+  height: 14px;
+  background: #22c55e;
+  border: 3px solid #0a1a12;
+  border-radius: 50%;
+  box-shadow: 0 0 10px rgba(34, 197, 94, 0.6);
+}
+
+.adm-user-card-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.adm-user-card-name {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #f8fafc;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.adm-self-pill {
+  font-size: 0.6rem;
+  background: #22d3ee;
+  color: #0891b2;
+  padding: 1px 6px;
+  border-radius: 4px;
+  font-weight: 900;
+}
+
+.adm-user-card-email {
+  font-size: 0.8rem;
+  color: #64748b;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.adm-user-card-badges {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.adm-role-tag {
+  font-size: 0.65rem;
+  font-weight: 800;
+  padding: 2px 10px;
+  border-radius: 6px;
+  letter-spacing: 0.05em;
+}
+
+.adm-role-tag--admin  { background: rgba(239, 68, 68, 0.1); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.2); }
+.adm-role-tag--user   { background: rgba(59, 130, 246, 0.1); color: #60a5fa; border: 1px solid rgba(59, 130, 246, 0.2); }
+.adm-role-tag--viewer { background: rgba(148, 163, 184, 0.1); color: #94a3b8; border: 1px solid rgba(148, 163, 184, 0.2); }
+
+.adm-status-badge {
+  font-size: 0.65rem;
+  font-weight: 700;
+  padding: 2px 10px;
+  border-radius: 6px;
+}
+
+.adm-status-badge--active   { background: rgba(34, 197, 94, 0.1); color: #4ade80; border: 1px solid rgba(34, 197, 94, 0.2); }
+.adm-status-badge--suspended { background: rgba(245, 158, 11, 0.1); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.2); }
+.adm-status-badge--disabled  { background: rgba(239, 68, 68, 0.1); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.2); }
+
+.adm-user-card-details {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  padding: 0.85rem;
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 12px;
+}
+
+.adm-card-detail-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: 0.75rem;
+  color: #94a3b8;
+}
+
+.adm-card-detail-item i {
+  width: 14px;
+  color: #43A047;
+}
+
+.adm-user-card-actions {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 0.75rem;
+  align-items: center;
+  margin-top: auto;
+}
+
+.adm-card-dropdown {
+  width: 100%;
+}
+
+.adm-card-dropdown select {
+  width: 100%;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #cbd5e1;
+  padding: 0.5rem;
+  border-radius: 10px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+/* Stat Widget (Dashboard) */
+.adm-stat-widget {
+  display: flex;
+  flex-direction: column;
+  padding: 1.5rem !important;
+}
+
+.adm-widget-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.adm-widget-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.25rem;
+}
+
+.adm-widget-title {
+  flex: 1;
+}
+
+.adm-widget-title h3 {
+  margin: 0;
+  font-size: 1.1rem;
+  color: #f8fafc;
+}
+
+.adm-widget-title p {
+  margin: 0.2rem 0 0;
+  font-size: 0.8rem;
+  color: rgba(148, 163, 184, 0.7);
+}
+
+.adm-widget-value {
+  font-size: 2.25rem;
+  font-weight: 800;
+  color: #fff;
+  letter-spacing: -0.02em;
+}

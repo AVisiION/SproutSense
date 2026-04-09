@@ -36,7 +36,7 @@ export function Navbar({
   }, [accountPanelOpen]);
 
   const initials = useMemo(() => {
-    const text = auth?.user?.fullName || 'Account';
+    const text = auth?.previewUserName || auth?.user?.fullName || 'Account';
     return text
       .split(' ')
       .filter(Boolean)
@@ -50,6 +50,23 @@ export function Navbar({
     if (hour < 12) return 'Good Morning';
     if (hour < 17) return 'Good Afternoon';
     return 'Good Evening';
+  };
+
+  const displayUserName = auth?.previewUserName || auth?.user?.fullName || 'User';
+  const viewingAsText = auth?.isImpersonating
+    ? `Viewing as ${auth?.impersonationState?.targetName || displayUserName}`
+    : (auth?.previewUserName ? `Viewing as ${auth.previewUserName}` : null);
+
+  const handleExitImpersonation = async () => {
+    if (!auth?.exitImpersonation) return;
+    try {
+      await auth.exitImpersonation();
+      window.location.assign('/admin/users');
+    } catch (error) {
+      // Keep interaction resilient even if session restore fails.
+      if (auth?.logout) auth.logout();
+      window.location.assign('/login');
+    }
   };
 
   return (
@@ -66,7 +83,7 @@ export function Navbar({
 
         {isSidebarCollapsed && !isMobile && (
           <Link to="/home" className="navbar-brand" aria-label="SproutSense home">
-            <img src="/assets/icon.svg" className="navbar-brand-icon" alt="" />
+            <img src="/assets/icon.png" className="navbar-brand-icon" alt="" />
             <span className="navbar-brand-text">SproutSense</span>
           </Link>
         )}
@@ -120,7 +137,8 @@ export function Navbar({
                 <span className="navbar-account-avatar">{initials || 'U'}</span>
                 <div className="navbar-account-info">
                   <span className="navbar-welcome">{getWelcomeMessage()}</span>
-                  <span className="navbar-username">{auth.user?.fullName || 'User'}</span>
+                  <span className="navbar-username">{displayUserName}</span>
+                  {viewingAsText && <span className="navbar-preview-user">{viewingAsText}</span>}
                 </div>
                 {auth.role === 'admin' && (
                   <span className="navbar-admin-badge" title="Administrator">
@@ -144,10 +162,17 @@ export function Navbar({
           {auth?.isAuthenticated && accountPanelOpen && !isPublicView && (
             <div className="navbar-account-panel" ref={panelRef} tabIndex={-1}>
               <div className="navbar-account-meta">
-                <strong>{auth.user?.fullName || 'User'}</strong>
+                <strong>{displayUserName}</strong>
                 <span>{auth.user?.email || ''}</span>
+                {viewingAsText && <span>{viewingAsText}</span>}
                 {auth.role === 'admin' && <span style={{color:'#43a047',fontWeight:600}}>Admin</span>}
               </div>
+              {auth?.isImpersonating && (
+                <button className="navbar-account-link navbar-account-logout" onClick={handleExitImpersonation}>
+                  <i className="fa-solid fa-user-shield" />
+                  Exit impersonation
+                </button>
+              )}
               <Link to="/settings" className="navbar-account-link" onClick={() => setAccountPanelOpen(false)}>
                 <i className="fa-solid fa-user-gear" />
                 Settings

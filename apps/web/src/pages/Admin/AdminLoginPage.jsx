@@ -69,7 +69,7 @@ export default function AdminLoginPage() {
         {/* Brand */}
         <div className="aln-brand">
           <div className="aln-logo-ring">
-            <img src="/assets/icon.svg" alt="SproutSense" className="aln-logo" />
+            <img src="/assets/icon.png" alt="SproutSense" className="aln-logo" />
           </div>
           <div className="aln-brand-text">
             <h1 className="aln-title">Admin Access</h1>

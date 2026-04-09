@@ -72,7 +72,7 @@
    BASE CARD COMPONENT
    ───────────────────────────────────────────────── */
 .card {
-  background: var(--glass-color);
+  background: linear-gradient(rgb(0 0 0 / 3%), rgb(0 0 0 / 3%)), var(--glass-color);
   border: var(--glass-border);
   -webkit-backdrop-filter: blur(var(--glass-blur));
   backdrop-filter: blur(var(--glass-blur));

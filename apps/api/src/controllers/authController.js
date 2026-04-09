@@ -1,7 +1,9 @@
 import bcrypt from 'bcryptjs';
+import mongoose from 'mongoose';
 import config from '../config/config.js';
 import { sanitizePreferredPlant } from '../config/plants.js';
 import { ACCOUNT_STATUS, ROLE_KEYS, PERMISSIONS } from '../config/rbac.js';
+import AdminLog from '../models/AdminLog.js';
 import AuthToken from '../models/AuthToken.js';
 import Role from '../models/Role.js';
 import User from '../models/User.js';
@@ -395,6 +397,72 @@ export async function me(req, res, next) {
       success: true,
       user: toSafeUser(user, role),
       permissions: effectivePermissions,
+    });
+  } catch (error) {
+    return next(error);
+  }
+}
+
+export async function impersonateUser(req, res, next) {
+  try {
+    const actorId = req.auth?.userId;
+    const { userId } = req.body || {};
+
+    if (!actorId) {
+      return res.status(401).json({ success: false, message: 'Authentication required.' });
+    }
+
+    if (!userId || !mongoose.Types.ObjectId.isValid(String(userId))) {
+      return res.status(400).json({ success: false, message: 'Valid target userId is required.' });
+    }
+
+    const actor = await User.findById(actorId).lean();
+    if (!actor) {
+      return res.status(401).json({ success: false, message: 'Authenticated admin not found.' });
+    }
+
+    if (String(actor._id) === String(userId)) {
+      return res.status(400).json({ success: false, message: 'Cannot impersonate your own account.' });
+    }
+
+    const targetUser = await User.findById(userId);
+    if (!targetUser) {
+      return res.status(404).json({ success: false, message: 'Target user not found.' });
+    }
+
+    if (targetUser.accountStatus !== ACCOUNT_STATUS.ACTIVE) {
+      return res.status(403).json({
+        success: false,
+        message: `Cannot impersonate a ${targetUser.accountStatus} account.`,
+      });
+    }
+
+    const session = await issueSessionForUser(targetUser, req);
+
+    await AdminLog.create({
+      actor: actor.email || actor.fullName || 'admin',
+      action: 'Impersonation started',
+      level: 'warning',
+      section: 'auth',
+      details: {
+        actorUserId: String(actor._id),
+        targetUserId: String(targetUser._id),
+        targetEmail: targetUser.email,
+        targetRoleId: String(targetUser.roleId),
+      },
+    });
+
+    return res.json({
+      success: true,
+      message: `Now impersonating ${targetUser.fullName || targetUser.email}`,
+      impersonation: {
+        actorUserId: String(actor._id),
+        actorName: actor.fullName || actor.email || 'Admin',
+        targetUserId: String(targetUser._id),
+        targetName: targetUser.fullName || targetUser.email || 'User',
+        startedAt: new Date().toISOString(),
+      },
+      ...session,
     });
   } catch (error) {
     return next(error);

@@ -69,6 +69,7 @@ function CardIcon({ name, accent }) {
 const TABS = [
   { id: 'profile',    icon: 'user', label: 'Profile' },
   { id: 'appearance', icon: 'palette', label: 'Appearance' },
+  { id: 'irrigation', icon: 'droplet', label: 'Irrigation' },
   { id: 'plants',     icon: 'seedling', label: 'Plant Type' },
   { id: 'devices',    icon: 'chip', label: 'Devices' },
   { id: 'data',       icon: 'database',label: 'Data Tools' },
@@ -88,9 +89,47 @@ const PLANT_OPTIONS = [
 ];
 
 const QUICK_DEVICES = [
-  { deviceId: 'ESP32-SENSOR', displayName: 'Environmental Sensor Node' },
-  { deviceId: 'ESP32-CAM', displayName: 'Disease Detection Camera' },
+  { model: 'ESP32-SENSOR', displayName: 'Environmental Sensor Node' },
+  { model: 'ESP32-CAM', displayName: 'Disease Detection Camera' },
 ];
+
+const LOCAL_UI_PREFS_KEY = 'ss_ui_visual_preferences';
+const DEFAULT_NOTIFICATIONS = {
+  lowMoisture: true,
+  highTemp: true,
+  phAlert: true,
+  systemAlerts: true,
+};
+
+const DEFAULT_ADVANCED_SETTINGS = {
+  irrigation: {
+    autoMode: false,
+    moistureThreshold: 30,
+    maxCyclesPerHour: 4,
+    maxCyclesPerDay: 6,
+    wateringDurationSec: 10,
+  },
+  charts: {
+    chartStyle: 'smooth',
+    showGrid: true,
+    animate: true,
+  },
+  colors: {
+    accent: '#22d3ee',
+    moisture: '#22c55e',
+    temperature: '#f59e0b',
+    humidity: '#22d3ee',
+  },
+  dashboard: {
+    sensors: true,
+    analytics: true,
+    controls: true,
+    alerts: true,
+    showAlertBadge: true,
+    showStatusDots: true,
+    showSystemStatusPanel: true,
+  },
+};
 
 export default function SettingsPage({
   theme,
@@ -101,17 +140,15 @@ export default function SettingsPage({
   const [activeTab,       setActiveTab]       = useState('profile');
   const [preferredPlant, setPreferredPlant] = useState(user?.preferredPlant || 'tomato');
   const [savingPlant, setSavingPlant] = useState(false);
-  const [notifications,   setNotifications]   = useState({
-    lowMoisture: true, highTemp: true, phAlert: true, systemAlerts: true,
-  });
+  const [notifications,   setNotifications]   = useState(DEFAULT_NOTIFICATIONS);
   const [stats, setStats] = useState({
     totalReadings: 0,
     todayReadings: 0,
     lastUpdate: null,
   });
   const [pairingForm, setPairingForm] = useState({
-    deviceId: '',
-    deviceSecret: '',
+    pairingKey: '',
+    deviceModel: 'ESP32-SENSOR',
     displayName: '',
   });
   const [devices, setDevices] = useState([]);
@@ -122,10 +159,13 @@ export default function SettingsPage({
   const [rotatedTokens, setRotatedTokens] = useState({});
   const [exporting, setExporting] = useState(false);
   const [clearing, setClearing] = useState(false);
+  const [advancedSettings, setAdvancedSettings] = useState(DEFAULT_ADVANCED_SETTINGS);
+  const [savingAdvanced, setSavingAdvanced] = useState(false);
 
   const sectionRefs = {
     profile:   useRef(null),
     appearance: useRef(null),
+    irrigation: useRef(null),
     plants:     useRef(null),
     devices:    useRef(null),
     data:       useRef(null),
@@ -177,6 +217,176 @@ export default function SettingsPage({
   useEffect(() => {
     loadDevices();
   }, []);
+
+  const applyAdvancedColors = (colors) => {
+    if (typeof document === 'undefined') return;
+    const root = document.documentElement;
+    root.style.setProperty('--plant-cyan', colors.accent || DEFAULT_ADVANCED_SETTINGS.colors.accent);
+    root.style.setProperty('--sensor-moisture-color', colors.moisture || DEFAULT_ADVANCED_SETTINGS.colors.moisture);
+    root.style.setProperty('--sensor-temperature-color', colors.temperature || DEFAULT_ADVANCED_SETTINGS.colors.temperature);
+    root.style.setProperty('--sensor-humidity-color', colors.humidity || DEFAULT_ADVANCED_SETTINGS.colors.humidity);
+  };
+
+  useEffect(() => {
+    const loadAdvancedSettings = async () => {
+      try {
+        let localPrefs = {};
+        try {
+          localPrefs = JSON.parse(localStorage.getItem(LOCAL_UI_PREFS_KEY) || '{}');
+        } catch {
+          localPrefs = {};
+        }
+
+        const configRes = await configAPI.get('ESP32-SENSOR');
+        const configPayload = configRes?.config || configRes?.data?.config || configRes?.data || configRes;
+
+        const nextSettings = {
+          irrigation: {
+            autoMode: Boolean(configPayload?.autoMode ?? DEFAULT_ADVANCED_SETTINGS.irrigation.autoMode),
+            moistureThreshold: Number(configPayload?.moistureThreshold ?? DEFAULT_ADVANCED_SETTINGS.irrigation.moistureThreshold),
+            maxCyclesPerHour: Number(configPayload?.wateringSystem?.maxCyclesPerHour ?? DEFAULT_ADVANCED_SETTINGS.irrigation.maxCyclesPerHour),
+            maxCyclesPerDay: Number(configPayload?.wateringSystem?.maxCyclesPerDay ?? DEFAULT_ADVANCED_SETTINGS.irrigation.maxCyclesPerDay),
+            wateringDurationSec: Math.max(5, Math.round(Number(configPayload?.wateringDurationMs ?? 10000) / 1000)),
+          },
+          charts: {
+            chartStyle: localPrefs?.charts?.chartStyle || DEFAULT_ADVANCED_SETTINGS.charts.chartStyle,
+            showGrid: localPrefs?.charts?.showGrid ?? DEFAULT_ADVANCED_SETTINGS.charts.showGrid,
+            animate: localPrefs?.charts?.animate ?? DEFAULT_ADVANCED_SETTINGS.charts.animate,
+          },
+          colors: {
+            accent: localPrefs?.colors?.accent || DEFAULT_ADVANCED_SETTINGS.colors.accent,
+            moisture: localPrefs?.colors?.moisture || DEFAULT_ADVANCED_SETTINGS.colors.moisture,
+            temperature: localPrefs?.colors?.temperature || DEFAULT_ADVANCED_SETTINGS.colors.temperature,
+            humidity: localPrefs?.colors?.humidity || DEFAULT_ADVANCED_SETTINGS.colors.humidity,
+          },
+          dashboard: {
+            sensors: configPayload?.uiPreferences?.dashboardSections?.sensors ?? DEFAULT_ADVANCED_SETTINGS.dashboard.sensors,
+            analytics: configPayload?.uiPreferences?.dashboardSections?.analytics ?? DEFAULT_ADVANCED_SETTINGS.dashboard.analytics,
+            controls: configPayload?.uiPreferences?.dashboardSections?.controls ?? DEFAULT_ADVANCED_SETTINGS.dashboard.controls,
+            alerts: configPayload?.uiPreferences?.dashboardSections?.alerts ?? DEFAULT_ADVANCED_SETTINGS.dashboard.alerts,
+            showAlertBadge: configPayload?.uiPreferences?.widgets?.showAlertBadge ?? DEFAULT_ADVANCED_SETTINGS.dashboard.showAlertBadge,
+            showStatusDots: configPayload?.uiPreferences?.widgets?.showStatusDots ?? DEFAULT_ADVANCED_SETTINGS.dashboard.showStatusDots,
+            showSystemStatusPanel: configPayload?.uiPreferences?.widgets?.showSystemStatusPanel ?? DEFAULT_ADVANCED_SETTINGS.dashboard.showSystemStatusPanel,
+          },
+        };
+
+        setAdvancedSettings(nextSettings);
+        applyAdvancedColors(nextSettings.colors);
+      } catch {
+        applyAdvancedColors(DEFAULT_ADVANCED_SETTINGS.colors);
+      }
+    };
+
+    loadAdvancedSettings();
+  }, []);
+
+  const updateAdvancedSettings = (section, key, value) => {
+    setAdvancedSettings((prev) => ({
+      ...prev,
+      [section]: {
+        ...prev[section],
+        [key]: value,
+      },
+    }));
+  };
+
+  const buildConfigPayloadFromAdvanced = (settings) => ({
+    autoMode: Boolean(settings.irrigation.autoMode),
+    moistureThreshold: Math.min(100, Math.max(0, Number(settings.irrigation.moistureThreshold) || 30)),
+    wateringDurationMs: Math.max(5000, (Number(settings.irrigation.wateringDurationSec) || 10) * 1000),
+    wateringSystem: {
+      maxCyclesPerHour: Math.min(24, Math.max(1, Number(settings.irrigation.maxCyclesPerHour) || 4)),
+      maxCyclesPerDay: Math.min(50, Math.max(1, Number(settings.irrigation.maxCyclesPerDay) || 6)),
+    },
+    uiPreferences: {
+      dashboardSections: {
+        sensors: Boolean(settings.dashboard.sensors),
+        analytics: Boolean(settings.dashboard.analytics),
+        controls: Boolean(settings.dashboard.controls),
+        alerts: Boolean(settings.dashboard.alerts),
+      },
+      widgets: {
+        showAlertBadge: Boolean(settings.dashboard.showAlertBadge),
+        showStatusDots: Boolean(settings.dashboard.showStatusDots),
+        showSystemStatusPanel: Boolean(settings.dashboard.showSystemStatusPanel),
+      },
+    },
+  });
+
+  const handleSaveAdvancedSettings = async () => {
+    setSavingAdvanced(true);
+    const localPrefs = {
+      charts: {
+        chartStyle: advancedSettings.charts.chartStyle,
+        showGrid: Boolean(advancedSettings.charts.showGrid),
+        animate: Boolean(advancedSettings.charts.animate),
+      },
+      colors: {
+        accent: advancedSettings.colors.accent,
+        moisture: advancedSettings.colors.moisture,
+        temperature: advancedSettings.colors.temperature,
+        humidity: advancedSettings.colors.humidity,
+      },
+    };
+
+    localStorage.setItem(LOCAL_UI_PREFS_KEY, JSON.stringify(localPrefs));
+    applyAdvancedColors(localPrefs.colors);
+
+    try {
+      const payload = buildConfigPayloadFromAdvanced(advancedSettings);
+
+      await configAPI.update('ESP32-SENSOR', payload);
+      onNotification?.('Irrigation, chart, and sensor color settings saved', 'success');
+    } catch (err) {
+      if (err?.response?.status === 403) {
+        onNotification?.('Display settings were saved locally. Irrigation system settings require admin permissions.', 'info');
+      } else {
+        const message = err?.response?.data?.message || 'Failed to save advanced settings';
+        onNotification?.(message, 'error');
+      }
+    } finally {
+      setSavingAdvanced(false);
+    }
+  };
+
+  const handleResetAllSettings = async () => {
+    const confirmReset = window.confirm('Reset all user settings to defaults? This will overwrite saved preferences.');
+    if (!confirmReset) return;
+
+    setSavingAdvanced(true);
+    const defaultPlant = 'tomato';
+
+    setPreferredPlant(defaultPlant);
+    setNotifications(DEFAULT_NOTIFICATIONS);
+    setAdvancedSettings(DEFAULT_ADVANCED_SETTINGS);
+
+    localStorage.removeItem(LOCAL_UI_PREFS_KEY);
+    applyAdvancedColors(DEFAULT_ADVANCED_SETTINGS.colors);
+
+    if (theme !== 'dark') {
+      toggleTheme?.();
+    }
+
+    const resetPayload = buildConfigPayloadFromAdvanced(DEFAULT_ADVANCED_SETTINGS);
+
+    const [profileResult, configResult] = await Promise.allSettled([
+      updateProfile({ preferredPlant: defaultPlant }),
+      configAPI.update('ESP32-SENSOR', resetPayload),
+    ]);
+
+    const profileOk = profileResult.status === 'fulfilled';
+    const configOk = configResult.status === 'fulfilled';
+
+    if (profileOk && configOk) {
+      onNotification?.('All settings reset to defaults', 'success');
+    } else if (profileOk || configOk) {
+      onNotification?.('Defaults applied partially. Some server settings could not be reset.', 'info');
+    } else {
+      onNotification?.('Defaults applied locally, but server reset failed.', 'error');
+    }
+
+    setSavingAdvanced(false);
+  };
 
   const showSection = (id) => {
     setActiveTab(id);
@@ -251,28 +461,27 @@ export default function SettingsPage({
   };
 
   const handlePairDevice = async () => {
-    const normalizedDeviceId = pairingForm.deviceId.trim().toUpperCase();
-    const secret = pairingForm.deviceSecret.trim();
+    const pairingKey = pairingForm.pairingKey.trim().toUpperCase();
 
-    if (!normalizedDeviceId) {
-      onNotification?.('Device ID is required', 'error');
+    if (!pairingKey) {
+      onNotification?.('Pairing key is required', 'error');
       return;
     }
 
-    if (!secret) {
-      onNotification?.('Device secret is required', 'error');
+    const expectedMarker = pairingForm.deviceModel === 'ESP32-CAM' ? 'CAM' : 'SENSOR';
+    if (!pairingKey.includes(expectedMarker)) {
+      onNotification?.(`Pairing key does not match selected model (${pairingForm.deviceModel})`, 'error');
       return;
     }
 
     setPairingDevice(true);
     try {
       const res = await deviceAPI.pairDevice({
-        deviceId: normalizedDeviceId,
-        deviceSecret: secret,
-        displayName: pairingForm.displayName.trim(),
+        deviceId: pairingKey,
+        displayName: pairingForm.displayName.trim() || pairingForm.deviceModel,
       });
       onNotification?.(`Device '${res.device.displayName}' paired successfully!`, 'success');
-      setPairingForm({ deviceId: '', deviceSecret: '', displayName: '' });
+      setPairingForm({ pairingKey: '', deviceModel: pairingForm.deviceModel, displayName: '' });
       await loadDevices();
     } catch (err) {
       const message = err?.response?.data?.message || 'Failed to pair device';
@@ -285,26 +494,26 @@ export default function SettingsPage({
   const handleQuickDeviceSelect = (preset) => {
     setPairingForm((prev) => ({
       ...prev,
-      deviceId: preset.deviceId,
+      deviceModel: preset.model,
       displayName: preset.displayName,
     }));
   };
 
   const handleRotateToken = async (deviceId) => {
-    const confirmRotate = window.confirm(`Rotate token for ${deviceId}? The old token will stop working immediately.`);
+    const confirmRotate = window.confirm(`Sync device ID for ${deviceId}?`);
     if (!confirmRotate) return;
 
     setRotatingDeviceId(deviceId);
     try {
       const res = await deviceAPI.rotateToken(deviceId);
-      const newToken = res?.device?.deviceToken;
+      const newToken = res?.device?.deviceId || res?.device?.deviceToken || deviceId;
       if (newToken) {
         setRotatedTokens((prev) => ({ ...prev, [deviceId]: newToken }));
       }
-      onNotification?.('Token rotated. Update your ESP32 with the new token.', 'success');
+      onNotification?.('Device ID synced. Use this same ID in your ESP32.', 'success');
       await loadDevices();
     } catch (err) {
-      const message = err?.response?.data?.message || 'Failed to rotate device token';
+      const message = err?.response?.data?.message || 'Failed to sync device ID';
       onNotification?.(message, 'error');
     } finally {
       setRotatingDeviceId('');
@@ -316,9 +525,9 @@ export default function SettingsPage({
     if (!token) return;
     try {
       await navigator.clipboard.writeText(token);
-      onNotification?.('Device token copied', 'success');
+      onNotification?.('Device ID copied', 'success');
     } catch {
-      onNotification?.('Could not copy device token', 'error');
+      onNotification?.('Could not copy device ID', 'error');
     }
   };
 
@@ -368,17 +577,6 @@ export default function SettingsPage({
   return (
     <div className="sp-page">
 
-      {/* PAGE HEADER */}
-      <header className="sp-page-header">
-        <div className="sp-page-header-icon">
-          <Icon name="gear" size={22} />
-        </div>
-        <div>
-          <h1 className="sp-page-title">Settings &amp; Configuration</h1>
-          <p className="sp-page-subtitle">Client-ready controls for appearance, data management, and alerts</p>
-        </div>
-      </header>
-
       {/* SECTION TABS */}
       <nav className="sp-section-tabs" aria-label="Settings sections">
         {TABS.map(t => (
@@ -393,6 +591,13 @@ export default function SettingsPage({
           </button>
         ))}
       </nav>
+
+      <div className="sp-action-row" style={{ justifyContent: 'flex-end' }}>
+        <button className="sp-btn sp-btn--danger" onClick={handleResetAllSettings} disabled={savingAdvanced || savingPlant}>
+          <Icon name={savingAdvanced ? 'spinner' : 'trash'} size={14} />
+          {savingAdvanced ? 'Resetting...' : 'Reset All Settings'}
+        </button>
+      </div>
 
       {/* GRID */}
       <div className="sp-grid">
@@ -467,6 +672,240 @@ export default function SettingsPage({
                 <span>{theme === 'dark' ? 'Dark Mode' : 'Light Mode'}</span>
               </button>
             </div>
+
+            <div className="sp-field-grid">
+              <div className="sp-field">
+                <label className="sp-label">Primary Accent Color</label>
+                <input
+                  className="sp-input sp-input--surface"
+                  type="color"
+                  value={advancedSettings.colors.accent}
+                  onChange={(e) => {
+                    updateAdvancedSettings('colors', 'accent', e.target.value);
+                    applyAdvancedColors({ ...advancedSettings.colors, accent: e.target.value });
+                  }}
+                />
+              </div>
+              <div className="sp-field">
+                <label className="sp-label">Chart Style</label>
+                <select
+                  className="sp-select"
+                  value={advancedSettings.charts.chartStyle}
+                  onChange={(e) => updateAdvancedSettings('charts', 'chartStyle', e.target.value)}
+                >
+                  <option value="smooth">Smooth Lines</option>
+                  <option value="straight">Straight Lines</option>
+                  <option value="minimal">Minimal</option>
+                </select>
+              </div>
+            </div>
+
+            <div className="sp-row">
+              <div className="sp-row-info">
+                <span className="sp-row-label">Chart Animations</span>
+                <span className="sp-row-desc">Animate chart transitions while data updates</span>
+              </div>
+              <button
+                className={`sp-toggle ${advancedSettings.charts.animate ? 'on' : 'off'}`}
+                onClick={() => updateAdvancedSettings('charts', 'animate', !advancedSettings.charts.animate)}
+                aria-label="Toggle chart animations"
+              >
+                <span className="sp-toggle-knob" />
+              </button>
+            </div>
+
+            <div className="sp-row">
+              <div className="sp-row-info">
+                <span className="sp-row-label">Chart Grid</span>
+                <span className="sp-row-desc">Show background grid in analytics charts</span>
+              </div>
+              <button
+                className={`sp-toggle ${advancedSettings.charts.showGrid ? 'on' : 'off'}`}
+                onClick={() => updateAdvancedSettings('charts', 'showGrid', !advancedSettings.charts.showGrid)}
+                aria-label="Toggle chart grid"
+              >
+                <span className="sp-toggle-knob" />
+              </button>
+            </div>
+
+            <div className="sp-action-row">
+              <button className="sp-btn sp-btn--secondary" onClick={handleSaveAdvancedSettings} disabled={savingAdvanced}>
+                <Icon name={savingAdvanced ? 'spinner' : 'save'} size={14} />
+                {savingAdvanced ? 'Saving...' : 'Save Appearance Preferences'}
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* ── IRRIGATION + CHART + SENSOR SETTINGS ── */}
+        <div className={getSectionClass('irrigation')} ref={sectionRefs.irrigation}>
+          <div className="sp-card-head">
+            <CardIcon name="droplet" accent="accent-blue" />
+            <h2>Irrigation & Sensor Display</h2>
+          </div>
+          <div className="sp-card-body">
+            <div className="sp-row">
+              <div className="sp-row-info">
+                <span className="sp-row-label">Auto Irrigation</span>
+                <span className="sp-row-desc">Enable automatic watering based on moisture threshold</span>
+              </div>
+              <button
+                className={`sp-toggle ${advancedSettings.irrigation.autoMode ? 'on' : 'off'}`}
+                onClick={() => updateAdvancedSettings('irrigation', 'autoMode', !advancedSettings.irrigation.autoMode)}
+                aria-label="Toggle auto irrigation"
+              >
+                <span className="sp-toggle-knob" />
+              </button>
+            </div>
+
+            <div className="sp-field-grid">
+              <div className="sp-field">
+                <label className="sp-label">Moisture Threshold (%)</label>
+                <input
+                  className="sp-input sp-input--surface"
+                  type="number"
+                  min="0"
+                  max="100"
+                  value={advancedSettings.irrigation.moistureThreshold}
+                  onChange={(e) => updateAdvancedSettings('irrigation', 'moistureThreshold', e.target.value)}
+                />
+              </div>
+              <div className="sp-field">
+                <label className="sp-label">Watering Duration (sec)</label>
+                <input
+                  className="sp-input sp-input--surface"
+                  type="number"
+                  min="5"
+                  max="300"
+                  value={advancedSettings.irrigation.wateringDurationSec}
+                  onChange={(e) => updateAdvancedSettings('irrigation', 'wateringDurationSec', e.target.value)}
+                />
+              </div>
+              <div className="sp-field">
+                <label className="sp-label">Max Cycles / Hour</label>
+                <input
+                  className="sp-input sp-input--surface"
+                  type="number"
+                  min="1"
+                  max="24"
+                  value={advancedSettings.irrigation.maxCyclesPerHour}
+                  onChange={(e) => updateAdvancedSettings('irrigation', 'maxCyclesPerHour', e.target.value)}
+                />
+              </div>
+              <div className="sp-field">
+                <label className="sp-label">Max Cycles / Day</label>
+                <input
+                  className="sp-input sp-input--surface"
+                  type="number"
+                  min="1"
+                  max="50"
+                  value={advancedSettings.irrigation.maxCyclesPerDay}
+                  onChange={(e) => updateAdvancedSettings('irrigation', 'maxCyclesPerDay', e.target.value)}
+                />
+              </div>
+            </div>
+
+            <div className="sp-field-grid">
+              <div className="sp-field">
+                <label className="sp-label">Moisture Sensor Color</label>
+                <input
+                  className="sp-input sp-input--surface"
+                  type="color"
+                  value={advancedSettings.colors.moisture}
+                  onChange={(e) => {
+                    updateAdvancedSettings('colors', 'moisture', e.target.value);
+                    applyAdvancedColors({ ...advancedSettings.colors, moisture: e.target.value });
+                  }}
+                />
+              </div>
+              <div className="sp-field">
+                <label className="sp-label">Temperature Sensor Color</label>
+                <input
+                  className="sp-input sp-input--surface"
+                  type="color"
+                  value={advancedSettings.colors.temperature}
+                  onChange={(e) => {
+                    updateAdvancedSettings('colors', 'temperature', e.target.value);
+                    applyAdvancedColors({ ...advancedSettings.colors, temperature: e.target.value });
+                  }}
+                />
+              </div>
+              <div className="sp-field">
+                <label className="sp-label">Humidity Sensor Color</label>
+                <input
+                  className="sp-input sp-input--surface"
+                  type="color"
+                  value={advancedSettings.colors.humidity}
+                  onChange={(e) => {
+                    updateAdvancedSettings('colors', 'humidity', e.target.value);
+                    applyAdvancedColors({ ...advancedSettings.colors, humidity: e.target.value });
+                  }}
+                />
+              </div>
+            </div>
+
+            <div className="sp-row">
+              <div className="sp-row-info">
+                <span className="sp-row-label">Show Sensors Section</span>
+                <span className="sp-row-desc">Display sensors on your dashboard</span>
+              </div>
+              <button
+                className={`sp-toggle ${advancedSettings.dashboard.sensors ? 'on' : 'off'}`}
+                onClick={() => updateAdvancedSettings('dashboard', 'sensors', !advancedSettings.dashboard.sensors)}
+                aria-label="Toggle sensors section"
+              >
+                <span className="sp-toggle-knob" />
+              </button>
+            </div>
+
+            <div className="sp-row">
+              <div className="sp-row-info">
+                <span className="sp-row-label">Show Analytics Section</span>
+                <span className="sp-row-desc">Display analytics and charts on your dashboard</span>
+              </div>
+              <button
+                className={`sp-toggle ${advancedSettings.dashboard.analytics ? 'on' : 'off'}`}
+                onClick={() => updateAdvancedSettings('dashboard', 'analytics', !advancedSettings.dashboard.analytics)}
+                aria-label="Toggle analytics section"
+              >
+                <span className="sp-toggle-knob" />
+              </button>
+            </div>
+
+            <div className="sp-row">
+              <div className="sp-row-info">
+                <span className="sp-row-label">Show Watering Controls</span>
+                <span className="sp-row-desc">Display irrigation controls in dashboard cards</span>
+              </div>
+              <button
+                className={`sp-toggle ${advancedSettings.dashboard.controls ? 'on' : 'off'}`}
+                onClick={() => updateAdvancedSettings('dashboard', 'controls', !advancedSettings.dashboard.controls)}
+                aria-label="Toggle controls section"
+              >
+                <span className="sp-toggle-knob" />
+              </button>
+            </div>
+
+            <div className="sp-row">
+              <div className="sp-row-info">
+                <span className="sp-row-label">Show Alert Badge</span>
+                <span className="sp-row-desc">Display alert count in top navbar</span>
+              </div>
+              <button
+                className={`sp-toggle ${advancedSettings.dashboard.showAlertBadge ? 'on' : 'off'}`}
+                onClick={() => updateAdvancedSettings('dashboard', 'showAlertBadge', !advancedSettings.dashboard.showAlertBadge)}
+                aria-label="Toggle alert badge"
+              >
+                <span className="sp-toggle-knob" />
+              </button>
+            </div>
+
+            <div className="sp-action-row">
+              <button className="sp-btn sp-btn--secondary" onClick={handleSaveAdvancedSettings} disabled={savingAdvanced}>
+                <Icon name={savingAdvanced ? 'spinner' : 'save'} size={14} />
+                {savingAdvanced ? 'Saving...' : 'Save Irrigation & Chart Settings'}
+              </button>
+            </div>
           </div>
         </div>
 
@@ -511,37 +950,40 @@ export default function SettingsPage({
 
             <div className="sp-device-fields">
               <div className="sp-field">
-                <label className="sp-label">Device ID</label>
+                <label className="sp-label">Pairing Key</label>
                 <input
                   className="sp-input sp-input--surface"
                   type="text"
-                  placeholder="ESP32-SENSOR or ESP32-CAM"
-                  value={pairingForm.deviceId}
-                  onChange={(e) => setPairingForm((prev) => ({ ...prev, deviceId: e.target.value.toUpperCase() }))}
+                  placeholder="Enter pairing key from Admin Panel"
+                  value={pairingForm.pairingKey}
+                  onChange={(e) => setPairingForm((prev) => ({ ...prev, pairingKey: e.target.value.toUpperCase() }))}
                 />
+                <p className="sp-row-desc">Use the pairing key generated by Admin Device Keys.</p>
                 <div className="sp-action-row" style={{ marginTop: '0.4rem' }}>
                   {QUICK_DEVICES.map((preset) => (
                     <button
-                      key={preset.deviceId}
+                      key={preset.model}
                       type="button"
                       className="sp-btn sp-btn--ghost"
                       onClick={() => handleQuickDeviceSelect(preset)}
                     >
                       <Icon name="chip" size={14} />
-                      {preset.deviceId}
+                      {preset.model}
                     </button>
                   ))}
                 </div>
               </div>
               <div className="sp-field">
-                <label className="sp-label">Device Secret</label>
-                <input
-                  className="sp-input sp-input--surface"
-                  type="password"
-                  placeholder="Enter pre-shared secret"
-                  value={pairingForm.deviceSecret}
-                  onChange={(e) => setPairingForm((prev) => ({ ...prev, deviceSecret: e.target.value }))}
-                />
+                <label className="sp-label">Device Model</label>
+                <select
+                  className="sp-select"
+                  value={pairingForm.deviceModel}
+                  onChange={(e) => setPairingForm((prev) => ({ ...prev, deviceModel: e.target.value }))}
+                >
+                  <option value="ESP32-SENSOR">ESP32-SENSOR</option>
+                  <option value="ESP32-CAM">ESP32-CAM</option>
+                </select>
+                <p className="sp-row-desc">Model must match the pairing key generated from admin panel.</p>
               </div>
               <div className="sp-field">
                 <label className="sp-label">Display Name (Optional)</label>
@@ -601,7 +1043,7 @@ export default function SettingsPage({
                         disabled={rotatingDeviceId === device.deviceId || unpairingDeviceId === device.deviceId}
                       >
                         <Icon name={rotatingDeviceId === device.deviceId ? 'spinner' : 'key'} size={14} />
-                        {rotatingDeviceId === device.deviceId ? 'Rotating...' : 'Rotate Token'}
+                        {rotatingDeviceId === device.deviceId ? 'Syncing...' : 'Sync Device ID'}
                       </button>
                       <button
                         className="sp-btn sp-btn--danger"
@@ -615,12 +1057,12 @@ export default function SettingsPage({
                     {rotatedTokens[device.deviceId] && (
                       <div className="sp-pair-code-box" role="status" aria-live="polite">
                         <div>
-                          <p className="sp-row-label">New Device Token (Shown Once)</p>
+                          <p className="sp-row-label">Device ID</p>
                           <p className="sp-pair-code">{rotatedTokens[device.deviceId]}</p>
                         </div>
                         <button className="sp-btn sp-btn--secondary" onClick={() => handleCopyRotatedToken(device.deviceId)}>
                           <Icon name="hash" size={14} />
-                          Copy Token
+                          Copy ID
                         </button>
                       </div>
                     )}

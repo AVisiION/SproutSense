@@ -1,9 +1,4 @@
-import crypto from 'crypto';
 import PreRegisteredDevice from '../models/PreRegisteredDevice.js';
-
-function generateDeviceSecret() {
-  return crypto.randomBytes(24).toString('hex');
-}
 
 export async function createPreRegisteredDevice(req, res, next) {
   try {
@@ -19,10 +14,10 @@ export async function createPreRegisteredDevice(req, res, next) {
       return res.status(409).json({ success: false, message: 'Device already registered.' });
     }
 
-    const deviceSecret = generateDeviceSecret();
+    const deviceToken = deviceId;
     const device = await PreRegisteredDevice.create({
       deviceId,
-      deviceSecret,
+      deviceSecret: deviceToken,
       displayName: displayName || deviceId,
       isActive: true,
     });
@@ -32,7 +27,9 @@ export async function createPreRegisteredDevice(req, res, next) {
       device: {
         id: String(device._id),
         deviceId: device.deviceId,
-        deviceSecret,
+        deviceToken,
+        // Backward-compatible alias for legacy clients.
+        deviceSecret: deviceToken,
         displayName: device.displayName,
         isActive: device.isActive,
         createdAt: device.createdAt,

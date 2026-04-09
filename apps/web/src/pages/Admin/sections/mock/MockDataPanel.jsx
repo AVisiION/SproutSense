@@ -8,7 +8,7 @@ import {
   applyScenario, resetToDefaults,
   exportMockData, importMockData,
   isSimulationActive, setSimulationActive, subscribeToMockUpdates
-} from '../../services/mockDataService';
+} from '../../../../services/mockDataService';
 import './MockDataPanel.css';
 
 const TABS = [

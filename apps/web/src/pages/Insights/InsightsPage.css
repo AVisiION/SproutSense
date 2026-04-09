@@ -128,7 +128,7 @@
 .ip-time-tabs {
   display: flex;
   gap: 4px;
-  background: rgba(255,255,255,0.05);
+  background: rgb(0 0 0 / 3%);
   border: 1px solid rgba(255,255,255,0.08);
   border-radius: 10px;
   padding: 3px;
@@ -189,7 +189,7 @@
 .ip-skel-block {
   height: 80px;
   border-radius: 14px;
-  background: rgba(255,255,255,0.05);
+  background: rgb(0 0 0 / 3%);
   animation: ip-shimmer 1.6s ease-in-out infinite alternate;
 }
 .ip-skel-block:nth-child(2) { height: 160px; }
@@ -215,7 +215,7 @@
   gap: 12px;
   padding: 14px 16px;
   border-radius: 14px;
-  background: rgba(255,255,255,0.04);
+  background: rgb(0 0 0 / 3%);
   border: 1px solid rgba(255,255,255,0.07);
   transition: border-color 0.2s, transform 0.2s;
 }
@@ -250,7 +250,7 @@
   gap: 28px;
   padding: 24px;
   border-radius: 18px;
-  background: rgba(255,255,255,0.04);
+  background: rgb(0 0 0 / 3%);
   border: 1px solid rgba(255,255,255,0.08);
   margin-bottom: 22px;
   flex-wrap: wrap;
@@ -339,7 +339,7 @@
   padding: 14px;
   border-radius: 16px;
   border: 1px solid rgba(255,255,255,0.07);
-  background: rgba(255,255,255,0.02);
+  background: rgb(0 0 0 / 3%);
 }
 
 .ip-section-header {
@@ -391,13 +391,13 @@
   font-size: 12px;
   font-weight: 600;
   border: 1px solid rgba(255,255,255,0.10);
-  background: rgba(255,255,255,0.05);
+  background: rgb(0 0 0 / 3%);
   color: var(--text-secondary, #94a3b8);
   cursor: pointer;
   transition: background 0.18s, border-color 0.18s, color 0.18s;
 }
 .ip-sev-tab.active,
-.ip-sev-tab:hover { background: rgba(255,255,255,0.10); color: var(--text-color, #f0fdf4); }
+.ip-sev-tab:hover { background: rgb(0 0 0 / 6%); color: var(--text-color, #f0fdf4); }
 .ip-sev-tab--critical.active { background: rgba(239,68,68,0.14);  border-color: rgba(239,68,68,0.35);  color: #ef4444; }
 .ip-sev-tab--high.active     { background: rgba(249,115,22,0.14); border-color: rgba(249,115,22,0.35); color: #f97316; }
 .ip-sev-tab--medium.active   { background: rgba(245,158,11,0.14); border-color: rgba(245,158,11,0.35); color: #f59e0b; }
@@ -405,7 +405,7 @@
 .ip-sev-tab--none.active     { background: rgba(34,197,94,0.10);  border-color: rgba(34,197,94,0.25);  color: #22c55e; }
 .ip-sev-num {
   font-size: 10px;
-  background: rgba(255,255,255,0.10);
+  background: rgb(0 0 0 / 6%);
   padding: 0 5px;
   border-radius: 99px;
   font-weight: 700;
@@ -447,7 +447,7 @@
   width: 26px;
   height: 26px;
   border-radius: 7px;
-  background: rgba(255,255,255,0.07);
+  background: rgb(0 0 0 / 3%);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -555,7 +555,7 @@
 .ip-pred {
   padding: 16px;
   border-radius: 14px;
-  background: rgba(255,255,255,0.04);
+  background: rgb(0 0 0 / 3%);
   border: 1px solid rgba(255,255,255,0.08);
   display: flex;
   flex-direction: column;
@@ -604,7 +604,7 @@
   flex: 1;
   height: 5px;
   border-radius: 99px;
-  background: rgba(255,255,255,0.07);
+  background: rgb(0 0 0 / 3%);
   overflow: hidden;
 }
 .ip-conf-bar {
@@ -637,7 +637,7 @@
   min-width: 120px;
   padding: 16px;
   border-radius: 14px;
-  background: rgba(255,255,255,0.04);
+  background: rgb(0 0 0 / 3%);
   border: 1px solid rgba(255,255,255,0.07);
   display: flex;
   flex-direction: column;
@@ -673,7 +673,7 @@
 .ip-disease-row {
   padding: 12px 14px;
   border-radius: 12px;
-  background: rgba(255,255,255,0.03);
+  background: rgb(0 0 0 / 3%);
   border: 1px solid rgba(255,255,255,0.06);
   display: flex;
   flex-direction: column;
@@ -722,7 +722,7 @@
   padding: 8px 16px;
   border-radius: 10px;
   border: 1px solid rgba(255,255,255,0.08);
-  background: rgba(255,255,255,0.04);
+  background: rgb(0 0 0 / 3%);
   color: var(--text-secondary, #94a3b8);
   font-size: 13px;
   font-weight: 600;
@@ -735,14 +735,14 @@
   border-color: color-mix(in srgb, var(--gt-color) 32%, transparent);
   color: var(--gt-color);
 }
-.ip-graph-tab:hover:not(.active) { background: rgba(255,255,255,0.07); color: var(--text-color,#f0fdf4); }
+.ip-graph-tab:hover:not(.active) { background: rgb(0 0 0 / 6%); color: var(--text-color,#f0fdf4); }
 
 .ip-sparkline { display: block; margin-left: 2px; opacity: 0.75; }
 
 /* ─── Chart card ───────────────────────────────────────────── */
 .ip-chart-card {
   border-radius: 16px;
-  background: rgba(255,255,255,0.035);
+  background: rgb(0 0 0 / 3%);
   border: 1px solid rgba(255,255,255,0.07);
   padding: 16px;
   overflow: hidden;
@@ -789,7 +789,7 @@
 .ip-stat-tile {
   padding: 20px 18px;
   border-radius: 16px;
-  background: rgba(255,255,255,0.04);
+  background: rgb(0 0 0 / 3%);
   border: 1px solid rgba(255,255,255,0.07);
   display: flex;
   flex-direction: column;
@@ -883,7 +883,7 @@
 [data-theme='light'] .ip-chart-card,
 [data-theme='light'] .ip-stat-tile,
 [data-theme='light'] .ip-skel-block {
-  background: rgba(0,0,0,0.03);
+  background: rgb(0 0 0 / 3%);
   border-color: rgba(0,0,0,0.07);
 }
 [data-theme='light'] .ip-header-title,
@@ -901,7 +901,7 @@
 [data-theme='light'] .ip-stat-label,
 [data-theme='light'] .ip-dsstat-label,
 [data-theme='light'] .ip-last-refresh   { color: #4b7060; }
-[data-theme='light'] .ip-time-tabs      { background: rgba(0,0,0,0.04); border-color: rgba(0,0,0,0.09); }
+[data-theme='light'] .ip-time-tabs      { background: rgb(0 0 0 / 3%); border-color: rgba(0,0,0,0.09); }
 [data-theme='light'] .ip-time-tab       { color: #4b7060; }
 [data-theme='light'] .ip-chart-stats    { color: #4b7060; }
 [data-theme='light'] .ip-chart-stats strong { color: #1a3a2a; }

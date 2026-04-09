@@ -1,0 +1,348 @@
+/**
+ * AdminForms.css
+ * Form elements, inputs, toggles, checkboxes, and form-related styling
+ */
+
+/* ══════════════════════════════════════════════════════
+   FORM IDENTITY & PREMIUM INPUTS
+══════════════════════════════════════════════════════ */
+.adm-form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 1.5rem;
+}
+
+.adm-form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.adm-form-group label {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-left: 0.25rem;
+}
+
+.adm-input {
+  background: rgba(0, 0, 0, 0.25);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  color: #f8fafc;
+  padding: 0.75rem 1rem;
+  font-size: 0.9rem;
+  font-weight: 500;
+  width: 100%;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.adm-input:focus {
+  outline: none;
+  border-color: #22d3ee;
+  background: rgba(0, 0, 0, 0.4);
+  box-shadow: 0 0 0 4px rgba(34, 211, 238, 0.1), inset 0 2px 4px rgba(0,0,0,0.2);
+}
+
+.adm-input::placeholder {
+  color: rgba(148, 163, 184, 0.4);
+}
+
+/* Custom Select Styling */
+select.adm-input {
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2364748b'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 1rem center;
+  background-size: 1.25rem;
+  padding-right: 2.5rem;
+}
+
+/* Config Row Inputs */
+.adm-config-input {
+  width: min(100%, 220px);
+  border-radius: 10px;
+  border: 1px solid rgba(255,255,255,0.15);
+  background: rgba(255,255,255,0.05);
+  color: #E8F5E9;
+  padding: 0.42rem 0.6rem;
+  font-size: 0.82rem;
+  font-weight: 600;
+}
+
+/* Proper placeholder styling for all browsers */
+.adm-config-input::placeholder {
+  color: #b6c2c9;
+  opacity: 1;
+  font-weight: 500;
+}
+.adm-root[data-theme='light'] .adm-config-input::placeholder {
+  color: #6b7280;
+  opacity: 1;
+}
+
+.adm-config-input::-webkit-input-placeholder { color: #b6c2c9; opacity: 1; font-weight: 500; }
+.adm-root[data-theme='light'] .adm-config-input::-webkit-input-placeholder { color: #6b7280; opacity: 1; }
+.adm-config-input:-ms-input-placeholder { color: #b6c2c9; opacity: 1; font-weight: 500; }
+.adm-root[data-theme='light'] .adm-config-input:-ms-input-placeholder { color: #6b7280; opacity: 1; }
+.adm-config-input::-ms-input-placeholder { color: #b6c2c9; opacity: 1; font-weight: 500; }
+.adm-root[data-theme='light'] .adm-config-input::-ms-input-placeholder { color: #6b7280; opacity: 1; }
+
+.adm-root[data-theme='light'] .adm-config-input {
+  border-color: rgba(15, 23, 42, 0.18);
+  background: rgba(15, 23, 42, 0.06);
+  color: #0b1416;
+}
+
+.adm-config-input:focus {
+  outline: none;
+  border-color: rgba(67,160,71,0.65);
+  box-shadow: 0 0 0 2px rgba(67,160,71,0.2);
+}
+
+.adm-root[data-theme='light'] .adm-config-input:focus {
+  border-color: rgba(67,160,71,0.6);
+  box-shadow: 0 0 0 2px rgba(67,160,71,0.15);
+}
+
+.adm-input-error {
+  margin-top: 0.35rem;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: #fca5a5;
+}
+
+.adm-root[data-theme='light'] .adm-input-error {
+  color: #dc2626;
+}
+
+/* Premium Toggles & Checkboxes */
+.adm-toggle-group {
+  display: flex;
+  gap: 1.5rem;
+  margin-top: 1.5rem;
+  padding: 1.25rem;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 14px;
+}
+
+.adm-toggle-label {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  cursor: pointer;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #e2e8f0;
+  -webkit-user-select: none;
+  user-select: none;
+  transition: opacity 0.2s;
+}
+
+.adm-toggle-label:hover {
+  opacity: 0.8;
+}
+
+.adm-toggle-label input[type="checkbox"] {
+  appearance: none;
+  width: 20px;
+  height: 20px;
+  background: rgba(0,0,0,0.3);
+  border: 2px solid rgba(255,255,255,0.15);
+  border-radius: 6px;
+  position: relative;
+  transition: all 0.2s;
+  cursor: pointer;
+}
+
+.adm-toggle-label input[type="checkbox"]:checked {
+  background: #43A047;
+  border-color: #43A047;
+  box-shadow: 0 0 10px rgba(67, 160, 71, 0.4);
+}
+
+.adm-toggle-label input[type="checkbox"]:checked::after {
+  content: " \2713";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -55%);
+  color: #fff;
+  font-size: 0.85rem;
+  font-weight: 900;
+}
+
+/* Search Container */
+.adm-search-container {
+  position: relative;
+  flex: 1;
+}
+
+.adm-search-container i {
+  position: absolute;
+  left: 1rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: rgba(200, 230, 203, 0.4);
+  pointer-events: none;
+}
+
+.adm-search-input {
+  width: 100%;
+  padding: 0.7rem 1rem 0.7rem 2.6rem;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  color: #fff;
+  font-size: 0.9rem;
+  outline: none;
+  transition: all 0.2s;
+}
+
+.adm-search-input:focus {
+  background: rgba(255, 255, 255, 0.07);
+  border-color: rgba(34, 211, 238, 0.4);
+  box-shadow: 0 0 0 3px rgba(34, 211, 238, 0.1);
+}
+
+/* Toolbar */
+.adm-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 2rem;
+  margin-bottom: 1.5rem;
+  background: rgba(255,255,255,0.02);
+  padding: 0.75rem 1.25rem;
+  border-radius: 16px;
+  border: 1px solid rgba(255,255,255,0.05);
+}
+
+.adm-search-row {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+}
+
+/* Toggle SM */
+.adm-toggle-sm {
+  position: relative;
+  display: inline-block;
+  width: 36px; height: 20px;
+}
+
+.adm-toggle-sm input {
+  opacity: 0; width: 0; height: 0;
+}
+
+.slider-sm {
+  position: absolute; cursor: pointer;
+  inset: 0; background: rgba(255,255,255,0.1);
+  border-radius: 99px; transition: 0.3s;
+}
+
+.slider-sm::before {
+  content: "";
+  position: absolute;
+  height: 16px; width: 16px;
+  left: 2px; bottom: 2px;
+  background: #94a3b8;
+  border-radius: 50%;
+  transition: 0.3s;
+}
+
+.adm-toggle-sm input:checked + .slider-sm {
+  background: rgba(34, 211, 238, 0.3);
+}
+
+.adm-toggle-sm input:checked + .slider-sm::before {
+  transform: translateX(16px);
+  background: #22d3ee;
+}
+
+/* UI Switch */
+.adm-ui-switch {
+  position: relative;
+  width: 40px; height: 22px;
+  flex-shrink: 0;
+}
+
+.adm-ui-switch input {
+  opacity: 0; width: 0; height: 0;
+  position: absolute;
+}
+
+.adm-ui-switch-slider {
+  position: absolute; cursor: pointer;
+  inset: 0;
+  background: rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 99px;
+  transition: all 0.25s;
+}
+
+.adm-ui-switch-slider::before {
+  content: "";
+  position: absolute;
+  height: 16px; width: 16px;
+  left: 2px; bottom: 2px;
+  background: #475569;
+  border-radius: 50%;
+  transition: all 0.25s;
+}
+
+.adm-ui-switch input:checked + .adm-ui-switch-slider {
+  background: rgba(34, 197, 94, 0.2);
+  border-color: rgba(34, 197, 94, 0.4);
+}
+
+.adm-ui-switch input:checked + .adm-ui-switch-slider::before {
+  transform: translateX(18px);
+  background: #4ade80;
+  box-shadow: 0 0 8px rgba(74, 222, 128, 0.4);
+}
+
+/* Color Picker */
+.adm-color-picker-wrap {
+  display: flex; align-items: center;
+  gap: 0.5rem;
+  background: rgba(0,0,0,0.2);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 10px;
+  padding: 0.35rem 0.6rem;
+}
+
+.adm-color-picker-wrap input[type="color"] {
+  width: 24px; height: 24px;
+  border: none; background: none;
+  padding: 0; cursor: pointer;
+  border-radius: 6px;
+}
+
+.adm-color-hex {
+  font-size: 0.72rem;
+  font-family: 'JetBrains Mono', monospace;
+  color: #94a3b8;
+}
+
+/* Responsive Grid Overrides */
+@media (max-width: 1180px) {
+  .adm-form-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .adm-form-grid {
+    grid-template-columns: 1fr;
+  }
+  .adm-toggle-group {
+    flex-direction: column;
+    gap: 1rem;
+  }
+}

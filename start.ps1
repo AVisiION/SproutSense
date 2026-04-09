@@ -97,3 +97,4 @@ Write-Host ""
 Write-Host "Test Mode: ENABLED (auto-generates sensor data)" -ForegroundColor Yellow
 Write-Host ""
 Write-Host "Press Ctrl+C in each window to stop" -ForegroundColor Yellow
+

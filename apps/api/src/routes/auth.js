@@ -1,6 +1,7 @@
 import express from 'express';
 import {
   forgotPassword,
+  impersonateUser,
   login,
   logout,
   me,
@@ -13,6 +14,8 @@ import {
   verifyEmail,
 } from '../controllers/authController.js';
 import authenticate from '../middleware/authenticate.js';
+import requirePermissions from '../middleware/requirePermissions.js';
+import { PERMISSIONS } from '../config/rbac.js';
 import {
   authForgotPasswordLimiter,
   authLoginLimiter,
@@ -35,5 +38,6 @@ router.post('/password-strength', passwordStrength);
 
 router.get('/me', authenticate, me);
 router.patch('/me', authenticate, updateProfile);
+router.post('/impersonate', authenticate, requirePermissions([PERMISSIONS.USERS_UPDATE]), impersonateUser);
 
 export default router;

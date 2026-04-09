@@ -44,7 +44,7 @@
 .controls {
   display: flex;
   gap: 0.25rem;
-  background: rgba(0,0,0,0.2);
+  background: rgb(0 0 0 / 3%);
   padding: 0.25rem;
   border-radius: 10px;
   border: 1px solid rgba(255,255,255,0.06);
@@ -63,7 +63,7 @@
   transition: all 0.18s ease;
 }
 
-.timeRangeBtn:hover { color: var(--text-primary); background: rgba(255,255,255,0.06); }
+.timeRangeBtn:hover { color: var(--text-primary); background: rgb(0 0 0 / 6%); }
 .timeRangeBtn.active { background: var(--accent-primary); color: #000; font-weight: 700; }
 
 /* ── Weather Card ───────────────────────────────────── */
@@ -280,7 +280,7 @@
 }
 
 .sensorSwitchBtn {
-  background: rgba(255,255,255,0.03);
+  background: rgb(0 0 0 / 3%);
   border: 1px solid rgba(255,255,255,0.12);
   color: var(--text-secondary);
   padding: 0.36rem 0.72rem;
@@ -293,12 +293,12 @@
 
 .sensorSwitchBtn:hover {
   color: var(--text-primary);
-  background: rgba(255,255,255,0.08);
+  background: rgb(0 0 0 / 6%);
   transform: translateY(-1px);
 }
 
 .activeSensorBtn {
-  background: rgba(255,255,255,0.08);
+  background: rgb(0 0 0 / 6%);
   box-shadow: inset 0 0 0 1px currentColor;
 }
 
@@ -317,7 +317,7 @@
 
 .sensorStatTile {
   border: 1px solid rgba(255,255,255,0.09);
-  background: rgba(255,255,255,0.03);
+  background: rgb(0 0 0 / 3%);
   border-radius: 10px;
   padding: 0.62rem 0.72rem;
   display: flex;
@@ -354,7 +354,7 @@
 
 .insightCard {
   border: 1px solid rgba(255,255,255,0.1);
-  background: rgba(255,255,255,0.03);
+  background: rgb(0 0 0 / 3%);
   border-radius: 10px;
   padding: 0.72rem 0.84rem;
 }
@@ -388,7 +388,7 @@
 .statusBarTrack {
   height: 12px;
   border-radius: 999px;
-  background: rgba(255,255,255,0.1);
+  background: rgb(0 0 0 / 6%);
   overflow: hidden;
 }
 
@@ -466,7 +466,7 @@
 
 /* ── Custom Tooltip ─────────────────────────────────── */
 .chartTooltip {
-  background: rgba(15, 23, 42, 0.92);
+  background: rgb(0 0 0 / 3%);
   border: 1px solid rgba(255,255,255,0.1);
   -webkit-backdrop-filter: blur(10px);
   backdrop-filter: blur(10px);
@@ -489,6 +489,20 @@
   display: flex;
   align-items: center;
   gap: 0;
+}
+
+/* Universal subtle tint for frosted-glass micro-surfaces */
+.controls,
+.sensorSwitchBtn,
+.activeSensorBtn,
+.sensorStatTile,
+.insightCard {
+  background: rgb(0 0 0 / 3%);
+}
+
+.timeRangeBtn:hover,
+.sensorSwitchBtn:hover {
+  background: rgb(0 0 0 / 6%);
 }
 
 .tooltipDot {

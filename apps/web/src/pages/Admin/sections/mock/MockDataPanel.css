@@ -7,6 +7,7 @@
   border-radius: 1rem;
   overflow: hidden;
   height: min(80vh, 800px);
+  -webkit-backdrop-filter: blur(12px);
   backdrop-filter: blur(12px);
 }
 

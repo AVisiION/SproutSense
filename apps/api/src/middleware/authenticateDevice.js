@@ -14,12 +14,12 @@ export default async function authenticateDevice(req, res, next) {
 
     const headerToken = String(req.headers['x-device-token'] || '').trim();
     const bodyToken = String(req.body?.deviceToken || '').trim();
-    const deviceToken = headerToken || bodyToken;
+    const deviceToken = headerToken || bodyToken || deviceId;
 
-    if (!deviceId || !deviceToken) {
+    if (!deviceId) {
       return res.status(401).json({
         success: false,
-        message: 'Device authentication required (x-device-id and x-device-token).',
+        message: 'Device authentication required (x-device-id).',
       });
     }
 
@@ -30,7 +30,7 @@ export default async function authenticateDevice(req, res, next) {
 
     const tokenHash = hashToken(deviceToken);
     if (tokenHash !== device.tokenHash) {
-      return res.status(401).json({ success: false, message: 'Invalid device token.' });
+      return res.status(401).json({ success: false, message: 'Invalid device authentication value.' });
     }
 
     req.deviceAuth = {

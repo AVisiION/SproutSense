@@ -72,7 +72,7 @@
   --text-muted     : #1e4a4b;
 
   /* ── Glass morphism */
-  --glass-color   : rgba(6, 24, 35, 0.72);
+  --glass-color   : rgb(0 0 0 / 3%);
   --glass-border  : 1px solid rgba(6, 182, 212, 0.14);
   --glass-blur    : 18px;
   --glass-shadow  : 0 8px 32px rgba(0, 0, 0, 0.28);
@@ -92,7 +92,7 @@
   --card-bg       : rgba(255, 255, 255, 0.88);
   --card-border   : rgba(6, 182, 212, 0.18);
   --border-color  : rgba(6, 182, 212, 0.14);
-  --glass-color   : rgba(255, 255, 255, 0.78);
+  --glass-color   : rgb(0 0 0 / 3%);
   --glass-border  : 1px solid rgba(6, 182, 212, 0.20);
   --glass-blur    : 14px;
   --glass-shadow  : 0 6px 24px rgba(6, 182, 212, 0.10);

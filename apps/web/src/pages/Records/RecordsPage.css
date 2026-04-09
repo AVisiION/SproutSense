@@ -413,7 +413,7 @@
   text-transform: uppercase;
   letter-spacing: 0.05em;
   color: var(--text-secondary);
-  background: rgba(255,255,255,0.02);
+  background: rgb(0 0 0 / 3%);
   border-bottom: var(--glass-border);
   white-space: nowrap;
 }
@@ -430,7 +430,7 @@
 }
 
 .records-table tr:hover td {
-  background: rgba(255,255,255,0.02);
+  background: rgb(0 0 0 / 3%);
 }
 
 .records-ts {

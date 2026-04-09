@@ -1,0 +1,276 @@
+/**
+ * AdminComponents.css
+ * Glass boxes, buttons, badges, and shared component styling
+ */
+
+/* ══════════════════════════════════════════════════════
+   GLASS BOX (shared container)
+══════════════════════════════════════════════════════ */
+.adm-glass-box {
+  background: rgba(8,24,15,0.72);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 18px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.06);
+  -webkit-backdrop-filter: blur(20px) saturate(155%);
+  backdrop-filter: blur(20px) saturate(155%);
+  padding: 1.5rem;
+  min-width: 0;
+}
+.adm-root[data-theme='light'] .adm-glass-box {
+  background: rgba(255, 255, 255, 0.88);
+  border-color: rgba(15, 23, 42, 0.12);
+  box-shadow: 0 8px 32px rgba(15, 23, 42, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.8);
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
+}
+.adm-glass-box h3 {
+  font-size: 0.95rem; font-weight: 700; color: #E8F5E9;
+  margin: 0 0 1rem;
+  display: flex; align-items: center; gap: 0.5rem;
+}
+.adm-root[data-theme='light'] .adm-glass-box h3 {
+  color: #0b1416;
+}
+
+/* ══════════════════════════════════════════════════════
+   BADGES
+══════════════════════════════════════════════════════ */
+.adm-badge {
+  display: inline-flex; align-items: center; gap: 0.4rem;
+  font-size: 0.72rem; font-weight: 700;
+  padding: 4px 10px; border-radius: 99px;
+  white-space: nowrap;
+}
+.adm-badge--green  { background:rgba(67,160,71,0.14);  color:#7EC880; border:1px solid rgba(67,160,71,0.28); }
+.adm-badge--blue   { background:rgba(14,165,233,0.14);  color:#60a5fa; border:1px solid rgba(14,165,233,0.25); }
+.adm-badge--gray   { background:rgba(148,163,184,0.10); color:#94a3b8; border:1px solid rgba(148,163,184,0.18); }
+.adm-badge--yellow { background:rgba(245,158,11,0.12);  color:#fbbf24; border:1px solid rgba(245,158,11,0.22); }
+.adm-badge--red    { background:rgba(239,68,68,0.12);   color:#f87171; border:1px solid rgba(239,68,68,0.22); }
+
+/* ══════════════════════════════════════════════════════
+   SECTION
+══════════════════════════════════════════════════════ */
+.adm-section { display:flex; flex-direction:column; gap:1.25rem; }
+.adm-section-header {
+  display: flex; align-items: center; gap: 0.75rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+}
+.adm-root[data-theme='light'] .adm-section-header {
+  border-bottom-color: rgba(15, 23, 42, 0.12);
+}
+.adm-section-header h2 {
+  flex: 1; font-size: 1.1rem; font-weight: 700; color: #E8F5E9; margin: 0;
+  display: flex; align-items: center; gap: 0.55rem;
+}
+.adm-root[data-theme='light'] .adm-section-header h2 {
+  color: #0b1416;
+}
+.adm-section-badge {
+  font-size: 0.65rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em;
+  padding: 3px 9px; border-radius: 99px;
+  background: rgba(67,160,71,0.14); color: #7EC880; border: 1px solid rgba(67,160,71,0.25);
+  animation: admSectionBlink 2.5s ease infinite;
+}
+.adm-root[data-theme='light'] .adm-section-badge {
+  background: rgba(67,160,71,0.16);
+  color: #2d6a2f;
+  border-color: rgba(67,160,71,0.3);
+}
+@keyframes admSectionBlink { 0%,100%{opacity:1} 50%{opacity:0.55} }
+
+/* ══════════════════════════════════════════════════════
+   BUTTONS
+══════════════════════════════════════════════════════ */
+.adm-refresh-btn {
+  width: 36px; height: 36px; border-radius: 10px;
+  border: 1px solid rgba(255,255,255,0.09);
+  background: rgba(255,255,255,0.05);
+  color: rgba(200,230,203,0.65);
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; transition: all 0.2s;
+}
+.adm-refresh-btn:hover { background:rgba(67,160,71,0.12); color:#7EC880; }
+.adm-refresh-btn.spinning i { animation: admSpin 0.8s linear infinite; }
+
+.adm-action-btn {
+  display: inline-flex; align-items: center; gap: 0.55rem;
+  padding: 0.65rem 1.4rem; border-radius: 12px;
+  font-size: 0.88rem; font-weight: 700; cursor: pointer;
+  border: none; font-family: inherit; transition: all 0.2s;
+}
+.adm-action-btn--start {
+  background: linear-gradient(90deg,#43A047,#00B4A6);
+  color:#fff; box-shadow:0 4px 16px rgba(67,160,71,0.30);
+}
+.adm-action-btn--start:hover { filter:brightness(1.1); transform:translateY(-1px); box-shadow:0 7px 22px rgba(67,160,71,0.40); }
+.adm-root[data-theme='light'] .adm-action-btn--start {
+  background: linear-gradient(90deg, #2d6a34, #0d9488);
+  color: #ffffff;
+  box-shadow: 0 4px 16px rgba(45, 106, 52, 0.35);
+}
+.adm-root[data-theme='light'] .adm-action-btn--start:hover {
+  filter: brightness(1.15);
+  box-shadow: 0 7px 22px rgba(45, 106, 52, 0.45);
+}
+.adm-action-btn--stop {
+  background: rgba(239,68,68,0.12);
+  color:#f87171; border:1px solid rgba(239,68,68,0.25);
+}
+.adm-action-btn--stop:hover { background:rgba(239,68,68,0.20); }
+.adm-root[data-theme='light'] .adm-action-btn--stop {
+  background: rgba(220, 38, 38, 0.12);
+  color: #dc2626;
+  border: 1px solid rgba(220, 38, 38, 0.28);
+}
+.adm-root[data-theme='light'] .adm-action-btn--stop:hover {
+  background: rgba(220, 38, 38, 0.18);
+}
+
+.adm-action-btn--ghost {
+  background: rgba(255,255,255,0.05);
+  color: #94a3b8;
+  border: 1px solid rgba(255,255,255,0.1);
+}
+.adm-action-btn--ghost:hover {
+  background: rgba(255,255,255,0.1);
+  color: #f8fafc;
+}
+
+.adm-btn-row { display:flex; flex-wrap:wrap; gap:0.75rem; }
+
+.adm-icon-btn {
+  width:34px; height:34px; border-radius:9px; flex-shrink:0;
+  display:flex; align-items:center; justify-content:center;
+  border:1px solid rgba(255,255,255,0.09);
+  background:rgba(255,255,255,0.05);
+  color:rgba(200,230,203,0.65);
+  cursor:pointer; font-size:0.85rem; transition:all 0.2s;
+}
+.adm-root[data-theme='light'] .adm-icon-btn {
+  border-color: rgba(15, 23, 42, 0.15);
+  background: rgba(15, 23, 42, 0.08);
+  color: rgba(69, 89, 79, 0.65);
+}
+.adm-icon-btn:hover { background:rgba(255,255,255,0.10); color:#E8F5E9; }
+.adm-root[data-theme='light'] .adm-icon-btn:hover {
+  background: rgba(15, 23, 42, 0.12);
+  color: #0b1416;
+}
+.adm-icon-btn--yellow:hover { background:rgba(245,158,11,0.12); color:#fbbf24; border-color:rgba(245,158,11,0.25); }
+.adm-root[data-theme='light'] .adm-icon-btn--yellow:hover {
+  background: rgba(245,158,11,0.15);
+  color: #b45309;
+  border-color: rgba(245,158,11,0.3);
+}
+.adm-icon-btn--red:hover    { background:rgba(239,68,68,0.12);  color:#f87171; border-color:rgba(239,68,68,0.25); }
+.adm-root[data-theme='light'] .adm-icon-btn--red:hover {
+  background: rgba(220, 38, 38, 0.15);
+  color: #dc2626;
+  border-color: rgba(220, 38, 38, 0.3);
+}
+
+.adm-card-btn {
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #f8fafc;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.adm-card-btn:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.12);
+  transform: translateY(-2px);
+}
+
+.adm-card-btn--danger:hover:not(:disabled) {
+  background: rgba(239, 68, 68, 0.15);
+  color: #f87171;
+  border-color: rgba(239, 68, 68, 0.3);
+}
+
+/* ══════════════════════════════════════════════════════
+   MODAL OVERLAY
+══════════════════════════════════════════════════════ */
+.adm-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.75);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+  z-index: 2000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+}
+
+.adm-modal-content { max-width: 500px; width: 100%; }
+.adm-modal-header { display: flex; align-items: center; gap: 1rem; margin-bottom: 1.5rem; font-size: 1.2rem; }
+.adm-modal-body { margin-bottom: 2rem; color: #cbd5e1; line-height: 1.6; }
+.adm-modal-footer { display: flex; justify-content: flex-end; gap: 1rem; }
+
+/* Empty State */
+.adm-empty {
+  font-size:0.88rem; color:rgba(200,230,203,0.45); padding:1.25rem 0;
+  display:flex; align-items:center; gap:0.5rem;
+}
+.adm-root[data-theme='light'] .adm-empty {
+  color: rgba(69, 89, 79, 0.55);
+}
+
+/* Loading overlay */
+.adm-loading {
+  display:flex; align-items:center; justify-content:center;
+  gap:0.75rem; flex:1; font-size:0.95rem;
+  color:rgba(200,230,203,0.55); padding:4rem 0;
+}
+.adm-root[data-theme='light'] .adm-loading {
+  color: rgba(69, 89, 79, 0.65);
+}
+.adm-loading i { font-size:1.4rem; color:#43A047; }
+
+/* Close Button (Mobile) */
+.adm-sidebar-close-btn {
+  display: none;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.6rem 1rem;
+  border-radius: 10px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  background: rgba(148, 163, 184, 0.08);
+  color: #94a3b8;
+  transition: all 0.2s;
+  width: 100%;
+}
+
+.adm-sidebar-close-btn:hover {
+  background: rgba(148, 163, 184, 0.15);
+  border-color: rgba(148, 163, 184, 0.3);
+}
+
+.adm-root[data-theme='light'] .adm-sidebar-close-btn {
+  border-color: rgba(15, 23, 42, 0.15);
+  background: rgba(15, 23, 42, 0.08);
+  color: rgba(69, 89, 79, 0.65);
+}
+
+.adm-root[data-theme='light'] .adm-sidebar-close-btn:hover {
+  background: rgba(15, 23, 42, 0.12);
+  border-color: rgba(15, 23, 42, 0.25);
+}
+
+@media (max-width: 768px) {
+  .adm-sidebar-close-btn {
+    display: flex;
+  }
+}
