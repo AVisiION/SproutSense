@@ -17,7 +17,7 @@ import UISection from './sections/ui/UISection';
 import LimitsSection from './sections/limits/LimitsSection';
 import ConfigSection from './sections/config/ConfigSection';
 import RawDataSection from './sections/raw-data/RawDataSection';
-import LogsSection from './sections/logs/LogsSection';
+import LogsSection from './sections/LogsSection';
 import UsersSection from './sections/users/UsersSection';
 import SensorsSection from './sections/sensors/SensorsSection';
 import MockSection from './sections/mock/MockSection';
@@ -1374,7 +1374,7 @@ export default function AdminPanelPage() {
                   setLogLevel={setLogLevel}
                   exportLogs={exportLogs}
                   exportAuditLogs={exportAuditLogs}
-                  clearLogs={clearLogs}
+                  deleteLogs={deleteLogs}
                   logEndRef={logEndRef}
                 />
               )}
