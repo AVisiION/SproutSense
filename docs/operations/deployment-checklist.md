@@ -25,7 +25,7 @@ Use this before demo or production deploy.
 - [ ] backend POST to /api/sensors works
 - [ ] auto-watering logic tested
 - [ ] relay and pump tested safely
-- [ ] TFT display rotates pages and shows live values
+- [ ] optional buzzer behavior verified (if wired)
 
 ## D) ESP32-CAM AI Module
 
@@ -42,10 +42,9 @@ Use this before demo or production deploy.
 
 ## F) Wiring and Safety
 
-- [ ] common ground across ESP32, relay PSU, sensors, TFT
+- [ ] common ground across ESP32, relay PSU, sensors
 - [ ] pump powered by external 5V source
-- [ ] TFT powered with 3.3V logic
-- [ ] ADC sensors on GPIO 34/35/39
+- [ ] ADC sensors on GPIO 35/39
 
 ## G) Current Scope Validation
 

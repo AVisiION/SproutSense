@@ -96,8 +96,7 @@ AIChat.css (1000+ lines)
     soilMoisture: 65,
     temperature: 22,
     humidity: 55,
-    light: 800,
-    pH: 6.8
+    light: 800
   }}
 />
 ```

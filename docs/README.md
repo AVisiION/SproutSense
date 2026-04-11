@@ -13,9 +13,12 @@ Table of contents and quick links to all guides.
 - [Analytics System](frontend/analytics-system.md)
 - [Sensor Management](firmware/sensor-management.md)
 - [Admin Panel](frontend/admin-panel.md)
+- [Mock Mode Guide](MOCK_MODE_GUIDE.md)
+- [Mock Mode Implementation](MOCK_MODE_IMPLEMENTATION.md)
 - [Public Website](frontend/public-pages.md)
 - [AI Features](backend/ai-features.md)
 - [Contributor Guide](onboarding/contributor-guide.md)
+- [Project Report Dossier Scaffold](details.md)
 
 ## Recommended Reading Order
 
@@ -33,3 +36,9 @@ Table of contents and quick links to all guides.
 - Root overview: [../README.md](../README.md)
 - Deployment docs: [operations/deployment-checklist.md](operations/deployment-checklist.md)
 - Render deployment: [operations/render-deployment.md](operations/render-deployment.md)
+
+## Firmware Config Sync Highlights
+
+- Wi-Fi credentials are managed from the web settings flow and written for both ESP32-SENSOR and ESP32-CAM.
+- Current firmware expects config payload values under nested config fields from API responses.
+- ESP32-CAM disease classes are normalized to backend-compatible labels before storage.

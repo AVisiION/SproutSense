@@ -66,7 +66,7 @@ const historyManager = {
 ### 4. Sensor Health Calculation
 - **Intelligent health assessment** based on sensor thresholds
 - **Real-time status updates** showing plant condition
-- **Threshold validation** for moisture, temperature, and pH
+- **Threshold validation** for moisture, temperature, and humidity
 - **Multi-factor analysis** (2+ threshold violations = critical)
 
 ---

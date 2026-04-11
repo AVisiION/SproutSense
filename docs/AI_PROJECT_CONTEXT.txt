@@ -8,7 +8,7 @@ Core Idea:
 
 Hard Invariants:
 - Always keep two physical devices:
-  - ESP32-SENSOR: sensors + pump + flow + TFT.
+  - ESP32-SENSOR: sensors + pump + flow (+ optional buzzer).
   - ESP32-CAM: camera + disease detection.
 - Use ADC1 pins (GPIO 32–39) only for analog sensors. Never move sensors to ADC2 because Wi-Fi becomes unstable.
 - Pump and valve power must come from an external PSU. The ESP32 pin only drives the relay input.
@@ -19,10 +19,9 @@ Hard Invariants:
 High-Level Architecture:
 - Edge:
   - ESP32-SENSOR:
-    - Reads soil moisture, pH, temperature, humidity, light (ADC1).
+    - Reads soil moisture, temperature, humidity, light (ADC1).
     - YF-S401 flow sensor with interrupt counts, converts to mL.
     - Relay pump control with target volume + max runtime safety.
-    - ST7735R TFT pages: soil/env, climate, watering, network.
     - HTTP POST to backend: /api/sensors, /api/water/start, /api/water/stop, /api/config/status.
   - ESP32-CAM:
     - Captures leaf images.
@@ -74,7 +73,7 @@ Database:
 - MongoDB Atlas DB: sproutsense.
 - Collections:
   - sensorreadings:
-    - deviceId, timestamp, soilMoisture, temperature, humidity, pH, light, raw payload.
+    - deviceId, timestamp, soilMoisture, temperature, humidity, light, raw payload.
   - wateringlogs:
     - deviceId, startedAt, endedAt, volumeMl, durationSec, triggerType (schedule/threshold/manual), status.
   - diseasedetections:

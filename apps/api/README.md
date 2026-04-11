@@ -16,6 +16,18 @@ Node.js and Express backend for SproutSense.
 - src/models: mongoose models
 - src/controllers: business logic
 
+## Device Config and Status Routes
+
+- Device-auth config fetch: GET /api/config/device or GET /api/config/device/:deviceId
+- Device-auth status update: POST /api/config/status/device
+- Config responses are returned as success and config.
+- Firmware should parse nested config fields, including config.wifiConfiguration.ssid and config.wifiConfiguration.password.
+
+## Device Authentication Requirement
+
+- Device routes require x-device-id and x-device-token or x-device-secret headers.
+- Requests without device credentials are rejected by device-auth middleware.
+
 ## Environment
 
 Create apps/api/.env with at least:

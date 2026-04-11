@@ -34,7 +34,6 @@ Examples:
 - temperature
 - humidity
 - light
-- pH
 - flowRate and flowVolume
 
 When schema changes occur, update both API contracts and chart adapters.
@@ -56,7 +55,7 @@ Return actionable recommendations rather than only descriptive summaries.
 
 ## Quick Reference
 
-- [Sensors](sensors.md)
-- [AI Features](ai-features.md)
-- [Frontend Guide](frontend.md)
-- [Backend Guide](backend.md)
+- [Sensors](../firmware/sensor-management.md)
+- [AI Features](../backend/ai-features.md)
+- [Frontend Guide](frontend-guide.md)
+- [Backend Guide](../backend/backend-guide.md)

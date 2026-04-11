@@ -28,6 +28,7 @@ The project combines edge devices, web application workflows, and role-aware adm
 ## Key Features
 
 - Dual ESP32 architecture for sensing and camera-based disease workflows
+- Website-driven Wi-Fi provisioning for both ESP32-SENSOR and ESP32-CAM
 - React frontend with public pages and protected dashboard views
 - Node.js and Express backend with modular routes and controllers
 - Authentication and RBAC for admin, user, and viewer capabilities
@@ -57,8 +58,8 @@ apps
 - web: frontend application source
 
 firmware
-- esp32-sensor: telemetry and irrigation control module
-- esp32-cam: camera and disease event module
+- ESP32-SENSOR: telemetry and irrigation control module
+- ESP32_CAM_AI: camera and disease event module
 
 docs
 - setup, architecture, module guides, and contributor docs
@@ -166,6 +167,14 @@ powershell
 - [Admin Panel](docs/frontend/admin-panel.md)
 - [Public Website](docs/frontend/public-pages.md)
 - [AI Features](docs/backend/ai-features.md)
+- [Project Dossier Scaffold](docs/details.md)
+
+## Firmware and Device Config Notes
+
+- The web settings page provisions Wi-Fi credentials for both ESP32-SENSOR and ESP32-CAM through the configuration API.
+- Device configuration responses are wrapped as success and config. Firmware must parse nested config values.
+- ESP32-CAM disease labels are normalized before upload to match backend enum values.
+- Device-authenticated endpoints require valid device credentials through headers. Ensure each firmware has a valid device token.
 
 ## Contribution Guide
 

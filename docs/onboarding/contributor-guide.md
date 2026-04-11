@@ -52,6 +52,6 @@ Good examples:
 ## Quick Reference
 
 - [Setup Guide](setup.md)
-- [Backend Guide](backend.md)
-- [Frontend Guide](frontend.md)
+- [Backend Guide](../backend/backend-guide.md)
+- [Frontend Guide](../frontend/frontend-guide.md)
 - [Root Contributing](../CONTRIBUTING.md)

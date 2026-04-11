@@ -75,7 +75,7 @@ powershell
 
 ## Quick Reference
 
-- [Architecture Overview](architecture.md)
-- [Backend Guide](backend.md)
-- [Frontend Guide](frontend.md)
+- [Architecture Overview](../architecture/overview.md)
+- [Backend Guide](../backend/backend-guide.md)
+- [Frontend Guide](../frontend/frontend-guide.md)
 - [Contributor Guide](contributor-guide.md)

@@ -25,11 +25,14 @@ Primary route groups:
 - /api/auth
 - /api/users
 - /api/roles
+- /api/device
 - /api/public
 - /api/sensors
 - /api/water
 - /api/config
 - /api/ai
+
+The config area also exposes operational subroutes for status, health, retention policies, admin logs, and test mode.
 
 Use controller-level validation and consistent success and error responses.
 
@@ -42,7 +45,7 @@ Core middleware responsibilities:
 - request validation
 - centralized error mapping
 
-RBAC behavior is documented in [authentication.md](authentication.md).
+RBAC behavior is documented in [authentication-rbac.md](authentication-rbac.md).
 
 ## Database Model
 

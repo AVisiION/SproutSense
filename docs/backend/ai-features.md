@@ -52,7 +52,7 @@ Frontend integration points:
 
 ## Quick Reference
 
-- [Backend Guide](backend.md)
-- [Frontend Guide](frontend.md)
-- [Analytics System](analytics.md)
-- [Authentication and RBAC](authentication.md)
+- [Backend Guide](backend-guide.md)
+- [Frontend Guide](../frontend/frontend-guide.md)
+- [Analytics System](../frontend/analytics-system.md)
+- [Authentication and RBAC](authentication-rbac.md)

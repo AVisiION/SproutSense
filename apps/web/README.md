@@ -15,6 +15,12 @@ React and Vite frontend for SproutSense.
 - src/pages: route-level screens
 - src/hooks: reusable hooks including websocket behavior
 
+## Device Provisioning Notes
+
+- Wi-Fi provisioning UI writes credentials for both ESP32-SENSOR and ESP32-CAM.
+- Settings and provisioning flows call configuration endpoints that persist nested wifiConfiguration values.
+- Firmware consumes those values through device-authenticated config routes.
+
 ## Environment
 
 Create apps/web/.env with:

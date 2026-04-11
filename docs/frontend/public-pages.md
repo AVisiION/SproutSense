@@ -52,7 +52,7 @@ A high-quality homepage should include:
 
 ## Quick Reference
 
-- [Frontend Guide](frontend.md)
-- [Architecture Overview](architecture.md)
-- [Setup Guide](setup.md)
-- [Contributor Guide](contributor-guide.md)
+- [Frontend Guide](frontend-guide.md)
+- [Architecture Overview](../architecture/overview.md)
+- [Setup Guide](../onboarding/setup.md)
+- [Contributor Guide](../onboarding/contributor-guide.md)

@@ -8,7 +8,6 @@ Purpose:
 - Read environmental sensors
 - Run watering logic
 - Control relay/pump
-- Display live data on TFT ST7735R
 - Push data to backend
 
 Main firmware:

@@ -1,13 +1,13 @@
 ﻿# Frontend Docs
 
-Use this category for frontend architecture and UX behavior.
+Use this category for frontend architecture, UX behavior, and route-level guides.
 
 Suggested content:
 
 - route and layout design
-- state management guidelines
-- data-fetch and websocket patterns
+- state management and websocket patterns
 - accessibility and responsiveness conventions
+- public, dashboard, and admin experience guides
 
 Primary source code references:
 

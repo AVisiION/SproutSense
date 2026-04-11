@@ -64,7 +64,7 @@ Update frontend route guards when backend permission semantics change.
 
 ## Quick Reference
 
-- [Backend Guide](backend.md)
-- [Admin Panel](admin-panel.md)
-- [Contributor Guide](contributor-guide.md)
-- [Setup Guide](setup.md)
+- [Backend Guide](backend-guide.md)
+- [Admin Panel](../frontend/admin-panel.md)
+- [Contributor Guide](../onboarding/contributor-guide.md)
+- [Setup Guide](../onboarding/setup.md)

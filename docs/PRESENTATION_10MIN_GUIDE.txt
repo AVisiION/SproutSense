@@ -25,7 +25,7 @@ Speaker notes:
 SLIDE 3 (1:20-2:20) - "Architecture at a Glance: Dual ESP32 + MERN"
 -----------------------------------------------------------------------
 Core message:
-- ESP32-SENSOR board handles sensing, pumping, and local TFT output.
+- ESP32-SENSOR board handles sensing, pumping, and local safety controls.
 - ESP32-CAM handles image capture and disease classification.
 - Node/Express + MongoDB + React dashboard complete the pipeline.
 
@@ -37,7 +37,7 @@ SLIDE 4 (2:20-3:20) - "Hardware Stack Built for Reliability"
 Show:
 - ESP32 Dev Board
 - ESP32-CAM
-- DHT22, soil moisture sensor, pH sensor, LDR, flow sensor
+- DHT22, soil moisture sensor, LDR, flow sensor
 - Relay module + external pump power
 
 Speaker notes:
@@ -63,23 +63,15 @@ Core message:
 Speaker notes:
 - "Automation is only useful when it is safe, measurable, and easy to audit."
 
-SLIDE 7 (5:20-6:30) - "On-Device Intelligence: TFT Live Control Panel"
-----------------------------------------------------------------------
-Show TFT pages:
-- Overview page
-- Soil + water page
-- Climate page
-- Alerts + watering history page
-
-Wiring reference (ST7735R):
-- CS GPIO5
-- RST GPIO4
-- DC GPIO27
-- MOSI GPIO23
-- SCLK GPIO18
+SLIDE 7 (5:20-6:30) - "On-Device Reliability and Safety"
+-----------------------------------------------------------
+Show:
+- Serial diagnostics output from ESP32-SENSOR
+- Moisture threshold trigger behavior
+- Pump safety guards (target volume and max runtime)
 
 Speaker notes:
-- "The TFT gives a local, no-internet fallback view for field operation and quick diagnostics."
+- "The device logic prioritizes reliability: threshold-based watering, runtime limits, and continuous telemetry updates to the backend."
 
 SLIDE 8 (6:30-7:30) - "AI Vision Pipeline: Detect Before Damage"
 ------------------------------------------------------------------
@@ -95,7 +87,7 @@ SLIDE 9 (7:30-8:40) - "Live Demo: 60-Second System Walkthrough"
 -----------------------------------------------------------------
 Demo script:
 1. Show live sensor updates on dashboard.
-2. Show TFT page transitions and status.
+2. Show serial telemetry/status from ESP32-SENSOR.
 3. Trigger a watering action.
 4. Show resulting log/history update.
 
@@ -116,5 +108,5 @@ Closing line:
 Q&A BACKUP POINTS
 -----------------
 - Why dual ESP32 design? Separation of workloads improves stability and maintainability.
-- Why include TFT locally? It enables immediate visibility without needing phone/web access.
+- Why no on-device display module in current build? Current workflow prioritizes cloud dashboard and serial diagnostics.
 - Why this matters? Faster response, fewer avoidable losses, and a path to smart farming scale.

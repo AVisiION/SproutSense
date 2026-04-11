@@ -46,11 +46,11 @@ Firmware boundary:
 - Frontend hosted on Netlify
 - MongoDB hosted in Atlas
 
-For deployment procedures, see [setup.md](setup.md), [backend.md](backend.md), and [frontend.md](frontend.md).
+For deployment procedures, see the [setup guide](../onboarding/setup.md), the [backend guide](../backend/backend-guide.md), and the [frontend guide](../frontend/frontend-guide.md).
 
 ## Quick Reference
 
-- [Setup Guide](setup.md)
-- [Backend Guide](backend.md)
-- [Frontend Guide](frontend.md)
-- [ESP32 Firmware Guide](firmware.md)
+- [Setup Guide](../onboarding/setup.md)
+- [Backend Guide](../backend/backend-guide.md)
+- [Frontend Guide](../frontend/frontend-guide.md)
+- [ESP32 Firmware Guide](../firmware/firmware-guide.md)
