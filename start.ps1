@@ -29,6 +29,46 @@ function Wait-ForTcpPort {
     return $false
 }
 
+function Test-PortInUse {
+    param(
+        [Parameter(Mandatory = $true)][int]$Port
+    )
+
+    $listener = Get-NetTCPConnection -State Listen -ErrorAction SilentlyContinue |
+        Where-Object { $_.LocalPort -eq $Port } |
+        Select-Object -First 1
+
+    return ($null -ne $listener)
+}
+
+function Get-FreePort {
+    param(
+        [Parameter(Mandatory = $true)][int[]]$Candidates
+    )
+
+    foreach ($candidate in $Candidates) {
+        if (-not (Test-PortInUse -Port $candidate)) {
+            return $candidate
+        }
+    }
+
+    return $null
+}
+
+function Test-ViteServer {
+    param(
+        [Parameter(Mandatory = $true)][int]$Port
+    )
+
+    try {
+        $res = Invoke-WebRequest -Uri "http://localhost:$Port/@vite/client" -UseBasicParsing -TimeoutSec 5
+        return ($res.StatusCode -eq 200 -and $res.Content -match '@vite/client')
+    }
+    catch {
+        return $false
+    }
+}
+
 function Test-HttpUrl {
     param(
         [Parameter(Mandatory = $true)][string]$Url,
@@ -80,19 +120,37 @@ Wait-ForTcpPort -Port 5000 -TimeoutSeconds 40 -Label "Backend API" | Out-Null
 Test-HttpUrl -Url "http://localhost:5000" -Label "Backend API" | Out-Null
 
 # Start Frontend
+$preferredFrontendPort = 3000
+$frontendPort = Get-FreePort -Candidates @($preferredFrontendPort, 5173, 5174, 5175)
+
+if ($null -eq $frontendPort) {
+    Write-Host "No free frontend port found in the candidate list (3000, 5173-5175)." -ForegroundColor Red
+    Write-Host "Please stop the occupying process and run start.ps1 again." -ForegroundColor Yellow
+    exit 1
+}
+
+if ($frontendPort -ne $preferredFrontendPort) {
+    Write-Host "Port 3000 is already in use. Starting frontend on port $frontendPort instead." -ForegroundColor Yellow
+}
+
 Write-Host "Starting Frontend Dashboard..." -ForegroundColor Cyan
-Start-Process powershell -ArgumentList "-NoExit", "-Command", "cd apps/web; Write-Host 'Frontend Dashboard (DEV - Polling Watch)' -ForegroundColor Blue; `$env:CHOKIDAR_USEPOLLING='true'; `$env:CHOKIDAR_INTERVAL='300'; npm run dev"
-Wait-ForTcpPort -Port 3000 -TimeoutSeconds 40 -Label "Frontend Dashboard" | Out-Null
-Test-HttpUrl -Url "http://localhost:3000" -Label "Frontend Dashboard" | Out-Null
+Start-Process powershell -ArgumentList "-NoExit", "-Command", "cd apps/web; Write-Host 'Frontend Dashboard (DEV - Polling Watch)' -ForegroundColor Blue; `$env:CHOKIDAR_USEPOLLING='true'; `$env:CHOKIDAR_INTERVAL='300'; npm run dev -- --port $frontendPort"
+Wait-ForTcpPort -Port $frontendPort -TimeoutSeconds 40 -Label "Frontend Dashboard" | Out-Null
+Test-HttpUrl -Url "http://localhost:$frontendPort" -Label "Frontend Dashboard" | Out-Null
+
+if (-not (Test-ViteServer -Port $frontendPort)) {
+    Write-Host "Warning: frontend port $frontendPort is reachable but does not look like a Vite dev server." -ForegroundColor Yellow
+    Write-Host "Open the terminal window started by start.ps1 and check for npm/vite errors." -ForegroundColor Yellow
+}
 
 Write-Host "Opening dashboard in browser..." -ForegroundColor Cyan
-Start-Process "http://localhost:3000"
+Start-Process "http://localhost:$frontendPort"
 
 Write-Host ""
 Write-Host "Development System Started!" -ForegroundColor Green
 Write-Host ""
 Write-Host "Backend API: http://localhost:5000/api" -ForegroundColor Cyan
-Write-Host "Frontend Dashboard: http://localhost:3000" -ForegroundColor Cyan
+Write-Host "Frontend Dashboard: http://localhost:$frontendPort" -ForegroundColor Cyan
 Write-Host ""
 Write-Host "Test Mode: ENABLED (auto-generates sensor data)" -ForegroundColor Yellow
 Write-Host ""

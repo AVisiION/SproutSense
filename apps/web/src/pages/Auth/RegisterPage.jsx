@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import './AuthPages.css';
 
@@ -31,6 +31,12 @@ const PLANT_OPTIONS = [
 export default function RegisterPage() {
   const { register, checkPasswordStrength } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
+  const transitionClass = location.state?.authTransition === 'to-login'
+    ? 'auth-shell--transition-to-login'
+    : location.state?.authTransition === 'to-register'
+      ? 'auth-shell--transition-to-register'
+      : '';
 
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
@@ -92,7 +98,7 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="auth-shell auth-shell--login">
+    <div className={`auth-shell auth-shell--login ${transitionClass}`.trim()}>
       <div className="auth-layout auth-layout--login">
         <aside className="auth-hero-panel">
           <div className="auth-hero-overlay" />
@@ -116,7 +122,7 @@ export default function RegisterPage() {
         <div className="auth-card auth-card--login">
           <div className="auth-header">
             <div className="auth-switch" role="tablist" aria-label="Authentication mode">
-              <Link className="auth-switch__item" to="/login">Login</Link>
+              <Link className="auth-switch__item" to="/login" state={{ authTransition: 'to-login' }}>Login</Link>
               <Link className="auth-switch__item auth-switch__item--active" to="/register" aria-current="page">Register</Link>
             </div>
             <p className="auth-subtitle">Create your account and start smart, sensor-driven plant care today.</p>
