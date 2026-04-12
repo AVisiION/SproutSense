@@ -12,6 +12,7 @@ import app from './app.js';
 import config from './config/config.js';
 import { WS_EVENT } from './config/constants.js';
 import SensorReading from './models/SensorReading.js';
+import mqttService from './utils/mqttService.js';
 import wsService from './utils/websocketService.js';
 import { initTestMode } from './utils/testModeManager.js';
 
@@ -90,9 +91,13 @@ wss.on('connection', (ws) => {
 // Initialize WebSocket service
 wsService.init(wss);
 
+// Initialize MQTT service (feature flagged)
+mqttService.init();
+
 // Make WebSocket server available to routes (backward compatibility)
 app.locals.wss = wss;
 app.locals.wsService = wsService;
+app.locals.mqttService = mqttService;
 
 // Scheduled 5x/day sensor snapshots
 cron.schedule('0 6,10,14,18,22 * * *', async () => {
@@ -160,5 +165,16 @@ startServer(PORT);
 // Handle unhandled promise rejections
 process.on('unhandledRejection', (err) => {
   console.error('[ERROR] Unhandled Rejection:', err);
+  mqttService.shutdown();
   server.close(() => process.exit(1));
+});
+
+process.on('SIGINT', () => {
+  mqttService.shutdown();
+  process.exit(0);
+});
+
+process.on('SIGTERM', () => {
+  mqttService.shutdown();
+  process.exit(0);
 });

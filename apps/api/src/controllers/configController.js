@@ -135,7 +135,15 @@ export const updateStatus = async (req, res, next) => {
 
     const status = await DeviceStatus.findOneAndUpdate(
       { deviceId: effectiveDeviceId },
-      { online: isOnline !== undefined ? isOnline : true, currentState: state, ipAddress: resolvedIpAddress, wifiSignal: wifiRSSI, firmwareVersion, uptime, lastSeen: new Date() },
+      {
+        online: isOnline !== undefined ? isOnline : true,
+        currentState: state,
+        ipAddress: resolvedIpAddress,
+        wifiSignal: wifiRSSI,
+        firmwareVersion,
+        uptime,
+        lastSeen: new Date()
+      },
       { new: true, upsert: true }
     );
 
@@ -172,6 +180,12 @@ export const getHealth = async (req, res, next) => {
       counts = { sensorReadings: sensors, wateringLogs: watering, diseaseDetections: disease };
     }
 
+    const mqttHealth = req.app?.locals?.mqttService?.getHealth?.() || {
+      enabled: false,
+      configured: false,
+      connected: false
+    };
+
     res.json({
       success:    true,
       status:     dbConnected ? 'ok' : 'degraded',
@@ -179,6 +193,7 @@ export const getHealth = async (req, res, next) => {
       dbName,                             // ← shows 'sproutsense' if URI is correct
       dbCorrect:  isCorrectDb,            // ← true if using right database
       dbWarning:  !isCorrectDb ? 'Database is not sproutsense! Update MONGODB_URI on Render to include /sproutsense' : null,
+      mqtt: mqttHealth,
       counts,
       uptime:     process.uptime(),
       memory:     process.memoryUsage(),

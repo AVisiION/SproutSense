@@ -59,6 +59,22 @@ export default {
     PATH: '/ws',
     PING_INTERVAL: 30000 // 30 seconds
   },
+
+  // MQTT Configuration (disabled by default)
+  MQTT: {
+    ENABLED: process.env.MQTT_ENABLED === 'true',
+    BROKER_URL: process.env.MQTT_BROKER_URL || '',
+    PORT: Number(process.env.MQTT_PORT || 1883),
+    USERNAME: process.env.MQTT_USERNAME || '',
+    PASSWORD: process.env.MQTT_PASSWORD || '',
+    USE_TLS: process.env.MQTT_USE_TLS === 'true',
+    CLIENT_ID_PREFIX: process.env.MQTT_CLIENT_ID_PREFIX || 'sproutsense-api',
+    COMMAND_TOPIC_PREFIX: process.env.MQTT_COMMAND_TOPIC_PREFIX || 'sproutsense/cmd',
+    ACK_TOPIC_PREFIX: process.env.MQTT_ACK_TOPIC_PREFIX || 'sproutsense/ack',
+    TELEMETRY_TOPIC_PREFIX: process.env.MQTT_TELEMETRY_TOPIC_PREFIX || 'sproutsense/telemetry',
+    RECONNECT_PERIOD_MS: Number(process.env.MQTT_RECONNECT_PERIOD_MS || 5000),
+    CONNECT_TIMEOUT_MS: Number(process.env.MQTT_CONNECT_TIMEOUT_MS || 10000)
+  },
   
   // Pagination
   PAGINATION: {

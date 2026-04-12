@@ -72,4 +72,5 @@ Detailed deployment and verification:
 - [Architecture Overview](../architecture/overview.md)
 - [Setup Guide](../onboarding/setup.md)
 - [Authentication and RBAC](authentication-rbac.md)
+- [MQTT Command Contract (Canary)](mqtt-command-contract.md)
 - [Analytics System](../frontend/analytics-system.md)

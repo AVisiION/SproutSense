@@ -37,6 +37,17 @@ Create apps/api/.env with at least:
 - NODE_ENV
 - CORS_ORIGIN
 
+Optional MQTT (future scope, disabled for current release):
+
+- MQTT_ENABLED=false
+- MQTT_BROKER_URL=
+- MQTT_PORT=1883
+- MQTT_USE_TLS=false
+- MQTT_USERNAME=
+- MQTT_PASSWORD=
+- MQTT_COMMAND_TOPIC_PREFIX=sproutsense/cmd
+- MQTT_ACK_TOPIC_PREFIX=sproutsense/ack
+
 For email delivery, also set:
 
 - FRONTEND_URL
@@ -46,5 +57,13 @@ For email delivery, also set:
 - SMTP_USER
 - SMTP_PASS
 - EMAIL_FROM
+
+## MQTT Rollout Notes
+
+- Current release remains HTTP-first for device communication.
+- MQTT setup in this repo is for future rollout and canary testing only.
+- Existing HTTP device polling remains active and backward compatible.
+- MQTT command publish is only attempted when MQTT_ENABLED=true and broker connection is healthy.
+- Health endpoint includes mqtt status block under GET /api/config/health.
 
 Use apps/api/.env.example as a baseline.

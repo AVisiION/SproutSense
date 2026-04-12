@@ -2,11 +2,38 @@ import WateringLog from '../models/WateringLog.js';
 import SensorReading from '../models/SensorReading.js';
 import DeviceStatus from '../models/DeviceStatus.js';
 import SystemConfig from '../models/SystemConfig.js';
-import axios from 'axios';
+import { randomUUID } from 'crypto';
 import config from '../config/config.js';
 import { successResponse, errorResponse } from '../utils/helpers.js';
 import { HTTP_STATUS } from '../config/constants.js';
 import wsService from '../utils/websocketService.js';
+
+function getCommandTopic(req, deviceId) {
+  const ownerId = req.auth?.userId || req.deviceAuth?.userId || 'unknown';
+  const normalizedDeviceId = String(deviceId || '').toUpperCase();
+  return `${config.MQTT.COMMAND_TOPIC_PREFIX}/${ownerId}/${normalizedDeviceId}/water`;
+}
+
+function publishWaterCommand(req, deviceId, action) {
+  const mqttService = req.app?.locals?.mqttService;
+  const health = mqttService?.getHealth?.();
+  if (!mqttService || !health?.enabled || !health.connected) {
+    return { published: false };
+  }
+
+  const correlationId = randomUUID();
+  const topic = getCommandTopic(req, deviceId);
+  const payload = {
+    deviceId: String(deviceId || '').toUpperCase(),
+    action,
+    correlationId,
+    requestedAt: new Date().toISOString(),
+    actor: req.auth?.userId ? 'user' : 'device'
+  };
+
+  const published = mqttService.publish(topic, payload, { qos: 1 });
+  return { published, correlationId, topic };
+}
 
 // Start watering
 export const startWatering = async (req, res, next) => {
@@ -25,13 +52,20 @@ export const startWatering = async (req, res, next) => {
       startTime: new Date()
     });
 
-    // We no longer push via axios.post to the ESP32 because it polls the backend 
-    // every 8 seconds via GET /api/water/status. This eliminates the 5s API latency!
+    // Keep existing polling compatibility and optionally publish a push command when MQTT is available.
+    const commandDispatch = publishWaterCommand(req, deviceId, 'start');
 
     // Update device status
     const status = await DeviceStatus.getStatus(deviceId);
     status.pumpActive = true;
     status.currentState = 'WATERING';
+    status.lastCommandTransport = commandDispatch.published ? 'MQTT' : 'HTTP';
+    if (commandDispatch.published) {
+      status.transportMode = status.transportMode === 'HTTP' ? 'DUAL' : status.transportMode;
+      status.lastMqttCommandAt = new Date();
+      status.lastMqttCommandTopic = commandDispatch.topic;
+      status.lastMqttCorrelationId = commandDispatch.correlationId;
+    }
     await status.save();
 
     // Emit to WebSocket clients
@@ -63,13 +97,20 @@ export const stopWatering = async (req, res, next) => {
       await activeLog.save();
     }
 
-    // We no longer push via axios.post to the ESP32 because it polls the backend 
-    // every 8 seconds via GET /api/water/status. This eliminates the 5s API latency!
+    // Keep existing polling compatibility and optionally publish a push command when MQTT is available.
+    const commandDispatch = publishWaterCommand(req, deviceId, 'stop');
 
     // Update device status
     const status = await DeviceStatus.getStatus(deviceId);
     status.pumpActive = false;
     status.currentState = 'IDLE';
+    status.lastCommandTransport = commandDispatch.published ? 'MQTT' : 'HTTP';
+    if (commandDispatch.published) {
+      status.transportMode = status.transportMode === 'HTTP' ? 'DUAL' : status.transportMode;
+      status.lastMqttCommandAt = new Date();
+      status.lastMqttCommandTopic = commandDispatch.topic;
+      status.lastMqttCorrelationId = commandDispatch.correlationId;
+    }
     await status.save();
 
     // Emit to WebSocket clients
@@ -124,7 +165,10 @@ export const getWateringStatus = async (req, res, next) => {
       pumpActive: status.pumpActive,
       currentState: status.currentState,
       online: status.online,
-      lastSeen: status.lastSeen
+      lastSeen: status.lastSeen,
+      transportMode: status.transportMode,
+      lastCommandTransport: status.lastCommandTransport,
+      lastMqttCommandAt: status.lastMqttCommandAt
     });
   } catch (error) {
     next(error);

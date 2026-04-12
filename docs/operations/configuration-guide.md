@@ -39,7 +39,22 @@ Backend .env minimum:
 - CORS_ORIGIN
 - NODE_ENV
 
+Optional MQTT command transport (future scope, not required for current deployment):
+- MQTT_ENABLED (set true to enable)
+- MQTT_BROKER_URL
+- MQTT_PORT (1883 or 8883)
+- MQTT_USE_TLS (true for 8883)
+- MQTT_USERNAME
+- MQTT_PASSWORD
+- MQTT_COMMAND_TOPIC_PREFIX (default: sproutsense/cmd)
+- MQTT_ACK_TOPIC_PREFIX (default: sproutsense/ack)
+- MQTT_RECONNECT_PERIOD_MS
+
 Optional AI/weather keys can be set if used by backend.
+
+Verification:
+- GET /api/config/health includes a mqtt object with enabled/configured/connected fields.
+- For current production update, keep MQTT disabled unless explicitly running a canary.
 
 ## 5) Frontend Environment
 

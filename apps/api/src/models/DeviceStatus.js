@@ -24,6 +24,48 @@ const deviceStatusSchema = new mongoose.Schema({
     enum: ['IDLE', 'WATERING', 'COOLDOWN', 'ERROR'],
     default: 'IDLE'
   },
+  transportMode: {
+    type: String,
+    enum: ['HTTP', 'MQTT', 'DUAL'],
+    default: 'HTTP'
+  },
+  lastCommandTransport: {
+    type: String,
+    enum: ['HTTP', 'MQTT'],
+    default: 'HTTP'
+  },
+  lastMqttCommandAt: {
+    type: Date,
+    default: null
+  },
+  lastMqttCommandTopic: {
+    type: String,
+    default: null
+  },
+  lastMqttCorrelationId: {
+    type: String,
+    default: null
+  },
+  lastMqttAckAt: {
+    type: Date,
+    default: null
+  },
+  lastMqttAckStatus: {
+    type: String,
+    default: null
+  },
+  lastMqttAckAction: {
+    type: String,
+    default: null
+  },
+  lastMqttAckDetail: {
+    type: String,
+    default: null
+  },
+  lastMqttAckTopic: {
+    type: String,
+    default: null
+  },
   ipAddress: {
     type: String
   },
