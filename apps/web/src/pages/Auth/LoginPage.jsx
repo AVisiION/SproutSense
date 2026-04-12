@@ -7,6 +7,11 @@ export default function LoginPage() {
   const { login, homeForRole, resendVerification } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
+  const transitionClass = location.state?.authTransition === 'to-login'
+    ? 'auth-shell--transition-to-login'
+    : location.state?.authTransition === 'to-register'
+      ? 'auth-shell--transition-to-register'
+      : '';
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -70,7 +75,7 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="auth-shell auth-shell--login">
+    <div className={`auth-shell auth-shell--login ${transitionClass}`.trim()}>
       <div className="auth-layout auth-layout--login">
         <aside className="auth-hero-panel">
           <div className="auth-hero-overlay" />
@@ -95,7 +100,7 @@ export default function LoginPage() {
           <div className="auth-header">
             <div className="auth-switch" role="tablist" aria-label="Authentication mode">
               <Link className="auth-switch__item auth-switch__item--active" to="/login" aria-current="page">Login</Link>
-              <Link className="auth-switch__item" to="/register">Register</Link>
+              <Link className="auth-switch__item" to="/register" state={{ authTransition: 'to-register' }}>Register</Link>
             </div>
             <p className="auth-subtitle">Welcome back. Step into your live plant command center in seconds.</p>
           </div>
