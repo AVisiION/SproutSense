@@ -834,7 +834,11 @@ void printSavedWiFi() {
   String savedSsid = wifiSSID;
   String savedPass = wifiPassword;
 
-  String maskedPass = savedPass.length() > 0 ? String('*', savedPass.length()) : "(empty)";
+  String maskedPass = "(empty)";
+  if (savedPass.length() > 0) {
+    maskedPass = "";
+    for (size_t i = 0; i < savedPass.length(); i++) maskedPass += '*';
+  }
 
   Serial.println();
   Serial.println("╔══════════════════════════════════════════════╗");
