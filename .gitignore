@@ -31,10 +31,5 @@ build/
 
 # ESP32-SENSOR secrets and build artifacts
 firmware/esp32-sensor/.h/
-firmware/esp32-sensor/config.h
+firmware/esp32-sensor/.ins/
 
-.ino
-firmware/esp32-sensor/ESP32-SENSOR.ino
-
-# Firmware
-firmware/
