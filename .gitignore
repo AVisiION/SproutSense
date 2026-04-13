@@ -1,5 +1,4 @@
-# ESP32 Arduino Files
-*.ino
+
 
 # Dependencies
 node_modules/
