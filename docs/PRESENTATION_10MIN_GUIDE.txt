@@ -35,9 +35,9 @@ Speaker notes:
 SLIDE 4 (2:20-3:20) - "Hardware Stack Built for Reliability"
 --------------------------------------------------------------
 Show:
-- ESP32 Dev Board
-- ESP32-CAM
-- DHT22, soil moisture sensor, LDR, flow sensor
+- ESP32-WROOM-32 DevKit (sensor board)
+- ESP32-CAM (OV3660)
+- DHT22, capacitive soil sensor, LDR, YFS401 flow sensor, and manual button
 - Relay module + external pump power
 
 Speaker notes:

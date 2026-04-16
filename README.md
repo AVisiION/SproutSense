@@ -38,6 +38,14 @@ The project combines edge devices, web application workflows, and role-aware adm
 - Admin tooling for configuration, roles, and operational visibility
 - Deployment-ready layout for Render and Netlify
 
+## Current Hardware Profile
+
+- Sensor controller: ESP32-WROOM-32 DevKit (ESP32-SENSOR)
+- Camera controller: ESP32-CAM (AI Thinker) with OV3660 sensor
+- Active sensors: DHT22, capacitive soil moisture sensor, LDR, YFS401 (YF-S401) flow sensor
+- Active controls: physical button, relay, and water pump motor
+- Not used in current build: pH sensor modules and on-device display modules
+
 ## Tech Stack
 
 | Layer | Technology |

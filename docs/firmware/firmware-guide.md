@@ -17,6 +17,12 @@ SproutSense uses two firmware modules:
 Sensor module handles telemetry and irrigation control.
 Camera module handles disease detection events.
 
+Current hardware baseline:
+- ESP32-SENSOR runs on ESP32-WROOM-32 DevKit.
+- ESP32-CAM runs with OV3660 camera module.
+- Active sensing and controls: DHT22, capacitive soil sensor, LDR, YFS401 (YF-S401), push button, relay + motor/pump.
+- Not used: pH sensor and local display module.
+
 ## Sensor Wiring
 
 Core mapping is maintained in project wiring documentation:

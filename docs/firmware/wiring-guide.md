@@ -6,19 +6,21 @@ This is the only wiring you need for your current project.
 Important:
 - Blynk is not used in the current firmware
 - Google Assistant is removed
-- Sensor board is standard ESP32 Dev Module (not ESP32-CAM)
+- Sensor board is ESP32-WROOM-32 DevKit (not ESP32-CAM)
 - ESP32-CAM is used only for camera/AI module (no sensors connected)
 - Data is sent to backend API (no direct cloud dashboard wiring)
+- pH sensor and on-device display are not used in the current hardware build
 
 ---
 
-## 1) Sensor Controller Board (ESP32 Dev Module)
+## 1) Sensor Controller Board (ESP32-WROOM-32 DevKit)
 
 Use this board for:
 - soil moisture
 - DHT22
 - light (LDR module AO)
 - flow sensor
+- button
 - relay + pump
 - buzzer (optional audible alert)
 
@@ -37,7 +39,8 @@ Use this board for:
 - **GPIO 35** (`PIN_SOIL_MOISTURE`): Soil Moisture AO
 - **GPIO 39** (`PIN_LDR`): LDR AO
 - **GPIO 13** (`PIN_DHT`): DHT22 DATA
-- **GPIO 26** (`PIN_FLOW`): Flow sensor pulse (YF-S401 yellow)
+- **GPIO 26** (`PIN_FLOW`): Flow sensor pulse (YFS401/YF-S401 yellow)
+- **GPIO 33** (`PIN_BUTTON`): Manual button input (active LOW)
 
 ### Relay + Pump
 - **GPIO 14** (`PIN_RELAY`): Relay IN1 (pump control)
@@ -75,7 +78,7 @@ Why NO contact:
 
 ---
 
-## 5) Flow Sensor YF-S401
+## 5) Flow Sensor YFS401 (YF-S401)
 
 - Red -> 5V
 - Black -> GND
@@ -85,10 +88,20 @@ Mount direction as arrow on sensor body.
 
 ---
 
-## 6) ESP32-CAM (AI Module) Wiring
+## 6) Button Wiring (Manual Pump Toggle)
+
+- One side -> GPIO 33
+- Other side -> GND
+- Configure GPIO33 as `INPUT_PULLUP` (already used in firmware)
+- Logic: press = LOW, release = HIGH
+
+---
+
+## 7) ESP32-CAM (AI Module) Wiring
 
 Use ESP32-CAM only for image capture / disease inference.
 Do not connect sensor controller analog sensors to ESP32-CAM.
+This build uses the OV3660 camera module variant.
 
 Typical:
 - 5V -> ESP32-CAM 5V
@@ -97,17 +110,18 @@ Typical:
 
 ---
 
-## 7) Quick Pre-Power Checklist
+## 8) Quick Pre-Power Checklist
 
 - Common GND connected across ESP32, relay PSU, sensors
 - Pump powered from external 5V (not directly from ESP32 3.3V)
 - Sensor AO lines are on ADC1 pins (35,39)
 - No Blynk pins or Blynk dependencies in wiring
+- Button on GPIO33 pulls to GND when pressed
 
 ---
 
 
-## 8) Software Match Check
+## 9) Software Match Check
 
 Firmware file:
 - `firmware/esp32-sensor/ESP32-SENSOR.ino`
@@ -119,6 +133,7 @@ Pin defines in firmware:
 - `PIN_FLOW` = 26
 - `PIN_RELAY` = 14
 - `PIN_BUZZER` = 27
+- `PIN_BUTTON` = 33
 
 Other notes:
 - Legacy extra analog chemistry input is disabled in the current firmware build

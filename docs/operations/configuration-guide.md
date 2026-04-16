@@ -19,7 +19,8 @@ Sensors:
 - Moisture AO -> GPIO 35
 - LDR AO -> GPIO 39
 - DHT22 DATA -> GPIO 13
-- Flow pulse -> GPIO 26
+- Flow pulse (YFS401 / YF-S401) -> GPIO 26
+- Button input (active LOW, INPUT_PULLUP) -> GPIO 33
 
 Relay:
 - IN1 -> GPIO 14
@@ -54,6 +55,8 @@ apps/web .env minimum:
 
 
 - Google Assistant is not used
+- pH sensor is not used in the current build
+- on-device display module is not used in the current build
 
 If something does not work, verify docs/firmware/wiring-guide.md first.
 

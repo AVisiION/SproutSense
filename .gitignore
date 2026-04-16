@@ -29,6 +29,6 @@ dist/
 build/
 
 # ESP32-SENSOR secrets and build artifacts
-firmware/esp32-sensor/.h/
+
 firmware/esp32-sensor/.ins/
 

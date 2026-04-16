@@ -616,6 +616,7 @@ The sensor controller reads the physical environment and decides when irrigation
 - humidity
 - light
 - flow rate
+- manual button input
 - relay and pump control
 - optional buzzer alert
 
@@ -630,12 +631,13 @@ The current wiring and configuration notes reference these inputs:
 - soil moisture sensor
 - DHT22 temperature and humidity sensor
 - LDR light sensor
-- YF-S401 flow sensor
+- YFS401 (YF-S401) flow sensor
 
 ### 13.5 Control Outputs
 
 The sensor board also manages:
 
+- push button input for local pump toggling
 - relay output for pump control
 - optional buzzer output for audible alerts
 
@@ -693,7 +695,7 @@ These values should be described in the report as current project thresholds rat
 
 ### 14.1 ESP32 Sensor Controller Board
 
-The sensor controller uses the ESP32 Dev Module as the hardware base. It connects the analog sensors, relay, pump, and optional buzzer. The board must be powered correctly and must share ground with the external pump circuit.
+The sensor controller uses an ESP32-WROOM-32 DevKit as the hardware base. It connects the analog sensors, relay, pump, manual button, and optional buzzer. The board must be powered correctly and must share ground with the external pump circuit.
 
 ### 14.2 Relay and Pump Wiring
 
@@ -715,13 +717,17 @@ The DHT22 sensor should be powered at 3.3V, connected to GPIO 13 for data, and t
 
 ### 14.4 Flow Sensor Wiring
 
-The YF-S401 flow sensor uses power, ground, and a pulse output to GPIO 26. The arrow on the sensor body should match the direction of water flow.
+The YFS401 (YF-S401) flow sensor uses power, ground, and a pulse output to GPIO 26. The arrow on the sensor body should match the direction of water flow.
 
-### 14.5 ESP32-CAM Notes
+### 14.5 Button Wiring
 
-The camera module is reserved for image capture and AI workflows. It should not be used as the sensor controller board because the sensor controller needs the dedicated analog inputs and timing behavior of the ESP32 Dev Module.
+The manual button uses GPIO 33 with INPUT_PULLUP. Pressing the button pulls the pin LOW and toggles pump state in firmware.
 
-### 14.6 Power Rules
+### 14.6 ESP32-CAM Notes
+
+The camera module (OV3660 variant) is reserved for image capture and AI workflows. It should not be used as the sensor controller board because the sensor controller needs the dedicated analog inputs and timing behavior of the ESP32-WROOM-32 DevKit.
+
+### 14.7 Power Rules
 
 The report should clearly state the power rules because they are important for both safety and reliability:
 
@@ -1443,12 +1449,13 @@ For SproutSense, explain that HTTP plus WebSocket is the current design choice i
 
 Review each component family and why it was selected:
 
-- ESP32 Dev Module (sensor controller)
+- ESP32-WROOM-32 DevKit (sensor controller)
 - ESP32-CAM (image workflow)
 - DHT22 (temperature/humidity)
 - soil moisture sensor
 - LDR module
-- YF-S401 flow sensor
+- YFS401 (YF-S401) flow sensor
+- push button (manual pump control)
 - relay and pump assembly
 - optional buzzer output
 
@@ -1624,11 +1631,12 @@ Do not include full source files. Include only critical snippets:
 
 Attach or reference datasheets for:
 
-- ESP32 Dev Module
+- ESP32-WROOM-32 DevKit
 - ESP32-CAM
 - DHT22
 - soil moisture sensor
-- YF-S401 flow sensor
+- YFS401 (YF-S401) flow sensor
+- push button
 - relay module
 - optional buzzer module
 
@@ -1657,7 +1665,8 @@ Use this page as the single source of truth for viva, demo day, and report consi
 ### 42.1 What Is Active in Current Build
 
 - ESP32-SENSOR + ESP32-CAM dual-board architecture
-- Active sensors: soil moisture, DHT22 (temperature and humidity), LDR (light), YF-S401 (flow)
+- Active sensors: soil moisture, DHT22 (temperature and humidity), LDR (light), YFS401 (YF-S401) flow
+- Active manual input: push button on GPIO33
 - Active control output: relay-driven pump on GPIO14
 - Optional output: buzzer on GPIO27
 - Data path: device HTTP posts to backend API, then dashboard via REST/WebSocket
@@ -1675,7 +1684,8 @@ Use this page as the single source of truth for viva, demo day, and report consi
 | Soil moisture AO | GPIO35 | Active |
 | LDR AO | GPIO39 | Active |
 | DHT22 DATA | GPIO13 | Active |
-| Flow pulse (YF-S401) | GPIO26 | Active |
+| Flow pulse (YFS401/YF-S401) | GPIO26 | Active |
+| Manual button | GPIO33 | Active |
 | Relay (pump control) | GPIO14 | Active |
 | Buzzer | GPIO27 | Optional |
 

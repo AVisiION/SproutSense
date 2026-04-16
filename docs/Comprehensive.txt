@@ -69,7 +69,7 @@ Agriculture in developing countries faces multifaceted challenges impacting both
 The platform rests on a modern hybrid edge-cloud architecture:
 1.  **Sensor/Field Layer:** 
     *   *Telemetry End:* Capacitive moisture probe, DHT22 (temp/humidity), and distinct LDR photoresistor taking continuous physical measurements.
-    *   *Vision End:* An OV2640 camera module observing canopy geometry and leaf health.
+    *   *Vision End:* An OV3660 camera module observing canopy geometry and leaf health.
 2.  **Communication Layer:** Local 2.4GHz Wi-Fi interfacing with standard TCP/IP. Uses HTTP REST protocols for bulk data blocks and Websockets for sub-second real-time gauge updates.
 3.  **Edge/Controller Layer:** Dual microcontrollers:
     *   *ESP32-SENSOR:* Processes continuous analog-to-digital conversions and packages JSON arrays.
@@ -79,9 +79,11 @@ The platform rests on a modern hybrid edge-cloud architecture:
 
 ### 3.2 Detailed Components
 *   **Hardware:**
-    *   `NodeMCU ESP32S WROOM-32`: Main telemetry logic controller.
-    *   `ESP32-CAM (AI-Thinker)`: Specialized vision processing edge device.
-    *   `Sensors`: DHT22 (Digital Temp/Hum), Capacitive Soil Moisture v1.2, basic LDR module.
+    *   `ESP32-WROOM-32 DevKit`: Main telemetry logic controller.
+    *   `ESP32-CAM (AI-Thinker, OV3660)`: Specialized vision processing edge device.
+    *   `Sensors`: DHT22 (Digital Temp/Hum), Capacitive Soil Moisture v1.2, basic LDR module, YFS401 (YF-S401) flow sensor.
+    *   `Control IO`: Push button for manual pump toggle, relay-driven water pump motor.
+    *   `Not Used`: pH sensor module and on-device display module.
 *   **Backend Software (apps/api):**
     *   `Express.js`: Routing and middleware controller.
     *   `Mongoose`: Strict schema modeling for MongoDB.
@@ -104,7 +106,7 @@ The platform rests on a modern hybrid edge-cloud architecture:
 
 ### 3.4 Connections and Interfaces (Reference for Humans and AI)
 *   **Hardware → Sensor:** `ESP32_PIN_34` (ADC) ↔ `Analog_Out_Moisture`. 
-*   **Hardware → Camera:** Native FPC ribbon connection holding the `OV2640` lens to the ESP32-CAM board.
+*   **Hardware → Camera:** Native FPC ribbon connection holding the `OV3660` lens to the ESP32-CAM board.
 *   **Edge → Cloud API:** 
     *   **Protocol:** HTTP POST / GET, WebSocket `ws://` or `wss://`.
     *   **Auth:** Bearer Token via Header `Authorization: Bearer <token>`.
@@ -125,6 +127,9 @@ The platform rests on a modern hybrid edge-cloud architecture:
 | `SENS_MOIST` | Capacitive Soil Moisture v1.2 | Corrosion-resistant dielectric soil measurement. |
 | `SENS_ATMOS` | DHT22 Module | Highly accurate environmental Temp/Hum metrics. |
 | `SENS_LDR` | Light Dependent Resistor | Detects photo-cycles and excessive light exposure. |
+| `SENS_FLOW` | YFS401 (YF-S401) | Measures pumped water volume via pulse counts. |
+| `CTRL_BUTTON` | Push Button | Local manual trigger/stop control for watering. |
+| `ACT_RELAY` | 1-Channel Relay + Pump Motor | Switches pump using isolated external supply. |
 | `PWR_SUPPLY` | 5V 10000mAh Power Bank | Ensures high-uptime off-grid performance for demonstrations. |
 
 ### 4.2 Justification for Choices

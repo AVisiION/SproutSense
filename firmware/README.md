@@ -14,3 +14,9 @@ Operational notes:
 - Wi-Fi credentials can be provisioned from the web app and synced to both device types.
 - Both modules use device-authenticated API calls and require valid device tokens.
 - ESP32-CAM applies disease-label normalization before submitting detection payloads.
+- Current hardware profile:
+	- ESP32-SENSOR runs on ESP32-WROOM-32 DevKit.
+	- ESP32-CAM uses OV3660 camera sensor.
+	- Active sensors: DHT22, capacitive soil sensor, LDR, YFS401 (YF-S401).
+	- Active controls: push button, relay, and pump motor.
+	- Not used: pH sensor and on-device display.

@@ -2,7 +2,7 @@
  * SPROUTSENSE — ESP32-CAM AI VISION MODULE v2.1
  * Tomato Disease Detection via Edge Impulse
  *
- * Board  : AI Thinker ESP32-CAM  (select in Arduino IDE)
+ * Board  : AI Thinker ESP32-CAM with OV3660 sensor (select in Arduino IDE)
  * Flash  : 4MB, Huge APP (3MB No OTA / 1MB SPIFFS)
  *
  * MODE A — SIMULATION (default, no EI library needed)
@@ -105,7 +105,7 @@ const char* URL_CONFIG_ALT = "https://sproutsense.onrender.com/api/config/device
 #define DEEP_SLEEP_US       300000000ULL   // 5 minutes in microseconds
 
 /* ============================================================
-   AI THINKER ESP32-CAM — CAMERA PIN MAP
+    AI THINKER ESP32-CAM (OV3660) — CAMERA PIN MAP
    ============================================================ */
 #define PWDN_GPIO_NUM   32
 #define RESET_GPIO_NUM  -1
@@ -380,6 +380,7 @@ void initCamera() {
 
   sensor_t* s = esp_camera_sensor_get();
   if (s) {
+    logLine("CAMERA", "Sensor PID: 0x" + String((uint32_t)s->id.PID, HEX) + " (expected OV3660)");
     s->set_brightness(s,   1);
     s->set_contrast(s,     0);
     s->set_saturation(s,  -2);

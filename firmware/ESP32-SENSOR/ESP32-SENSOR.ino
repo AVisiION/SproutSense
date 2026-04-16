@@ -2,12 +2,14 @@
  * SPROUTSENSE — ESP32-SENSOR v3.2 (No Blynk)
  * Tomato Plant Monitoring & Auto Watering
  *
- * Board   : ESP32 Dev Module (38-pin)
+ * Board   : ESP32-WROOM-32 DevKit (38-pin)
  * Sensors : Soil Moisture (ADC), LDR (ADC), DHT22 (Digital), Flow Meter (pulse)
  * Outputs : Relay → Water Pump (GPIO 14)
  *           Buzzer → Audible alert when pump is ON (GPIO 27)
- * Input   : YF-S401 Flow Meter (GPIO 12, interrupt)
+ * Inputs  : YFS401 (YF-S401) Flow Meter (GPIO 26, interrupt)
+ *           Manual button (GPIO 33, active LOW, INPUT_PULLUP)
  * Cloud   : Custom backend REST API only
+ * Notes   : pH sensor and on-device display are not used in this build
  ******************************************************************************/
 
 /* ============================================================
@@ -99,6 +101,7 @@ void configureSecureClient(WiFiClientSecure& client) {
 #define PIN_RELAY   14
 #define PIN_FLOW    26
 #define PIN_BUZZER  27
+#define PIN_BUTTON  33
 
 /* ============================================================
    SENSOR CALIBRATION
@@ -120,6 +123,7 @@ void configureSecureClient(WiFiClientSecure& client) {
 #define IV_HEARTBEAT  30000
 #define IV_CMD_POLL   8000
 #define IV_CONFIG     60000
+#define BUTTON_DEBOUNCE_MS 40
 
 /* ============================================================
    OBJECTS
@@ -174,6 +178,10 @@ unsigned long g_tHeartbeat = 0;
 unsigned long g_tCmdPoll   = 0;
 unsigned long g_tConfig    = 0;
 
+bool          g_btnStable      = HIGH;
+bool          g_btnLastReading = HIGH;
+unsigned long g_btnChangeMs    = 0;
+
 /* ============================================================
    BACKEND HEALTH COUNTERS
    ============================================================ */
@@ -188,6 +196,7 @@ void startPump(const char* trigger = "manual");
 void stopPump();
 void pollRemoteCommand();
 void buzzerBeep(uint16_t onMs, uint8_t times = 1, uint16_t gapMs = 100);
+void handleButton(unsigned long now);
 
 /* ============================================================
    BUZZER HELPER
@@ -394,6 +403,7 @@ void printSensors() {
   }
   logLine("SENSORS", "Flow vol : %6.1f mL  pulses=%lu", flowMl(), flowPulsesSnapshot());
   logLine("SENSORS", "Pump     : %s  Buzzer: GPIO%d", g_pumpRunning ? "ON" : "OFF", PIN_BUZZER);
+  logLine("SENSORS", "Button   : GPIO%d  state=%s", PIN_BUTTON, digitalRead(PIN_BUTTON) == LOW ? "PRESSED" : "RELEASED");
   logEnd();
 }
 
@@ -406,6 +416,34 @@ void checkAutoWatering() {
     logWARN("AUTO", "Moisture %.1f%% < %.0f%% — triggering auto-water",
             g_moisture, MOISTURE_THRESHOLD);
     startPump("auto");
+  }
+}
+
+/* ============================================================
+   LOCAL BUTTON (active LOW, debounced)
+   ============================================================ */
+void handleButton(unsigned long now) {
+  bool reading = digitalRead(PIN_BUTTON);
+
+  if (reading != g_btnLastReading) {
+    g_btnLastReading = reading;
+    g_btnChangeMs = now;
+  }
+
+  if ((now - g_btnChangeMs) < BUTTON_DEBOUNCE_MS) return;
+  if (reading == g_btnStable) return;
+
+  g_btnStable = reading;
+  if (g_btnStable == LOW) {
+    if (g_pumpRunning) {
+      logLine("BUTTON", "Pressed: pump OFF");
+      g_manualPump = false;
+      stopPump();
+    } else {
+      logLine("BUTTON", "Pressed: pump ON");
+      g_manualPump = true;
+      startPump("button");
+    }
   }
 }
 
@@ -561,6 +599,7 @@ void printHelp() {
   Serial.println("║  b      — Force backend sensor POST now          ║");
   Serial.println("║  c      — Force heartbeat POST now               ║");
   Serial.println("║  z      — Buzzer test beep                       ║");
+  Serial.println("║  Hardware button on GPIO33 toggles pump          ║");
   Serial.println("╚══════════════════════════════════════════════════╝");
 }
 
@@ -638,9 +677,10 @@ void setup() {
   pinMode(PIN_RELAY,  OUTPUT); digitalWrite(PIN_RELAY,  LOW);
   pinMode(PIN_BUZZER, OUTPUT); digitalWrite(PIN_BUZZER, LOW);
   pinMode(PIN_FLOW,   INPUT_PULLUP);
+  pinMode(PIN_BUTTON, INPUT_PULLUP);
   attachInterrupt(digitalPinToInterrupt(PIN_FLOW), flowISR, FALLING);
-  logOK("INIT", "GPIO: relay=GPIO%d  flow=GPIO%d  buzzer=GPIO%d",
-        PIN_RELAY, PIN_FLOW, PIN_BUZZER);
+  logOK("INIT", "GPIO: relay=GPIO%d  flow=GPIO%d  buzzer=GPIO%d  button=GPIO%d",
+        PIN_RELAY, PIN_FLOW, PIN_BUZZER, PIN_BUTTON);
 
   /* ADC */
   analogSetWidth(12);
@@ -730,6 +770,7 @@ void loop() {
   if (now - g_tConfig >= IV_CONFIG)      { g_tConfig     = now; pollRemoteConfig();  }
 
   updatePumpSafety();
+  handleButton(now);
 
   if (Serial.available()) handleSerial((char)Serial.read());
 

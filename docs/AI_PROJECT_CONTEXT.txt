@@ -8,8 +8,10 @@ Core Idea:
 
 Hard Invariants:
 - Always keep two physical devices:
-  - ESP32-SENSOR: sensors + pump + flow (+ optional buzzer).
-  - ESP32-CAM: camera + disease detection.
+  - ESP32-SENSOR (ESP32-WROOM-32 DevKit): sensors + pump + flow + button (+ optional buzzer).
+  - ESP32-CAM (OV3660): camera + disease detection.
+- Active sensor set is DHT22 + capacitive soil + LDR + YFS401 (YF-S401); do not add pH sensor fields in this build.
+- On-device display modules are not part of the active build.
 - Use ADC1 pins (GPIO 32–39) only for analog sensors. Never move sensors to ADC2 because Wi-Fi becomes unstable.
 - Pump and valve power must come from an external PSU. The ESP32 pin only drives the relay input.
 - Any new fields stored must be added to MongoDB schemas first, not “just used” in firmware or UI.
@@ -20,7 +22,8 @@ High-Level Architecture:
 - Edge:
   - ESP32-SENSOR:
     - Reads soil moisture, temperature, humidity, light (ADC1).
-    - YF-S401 flow sensor with interrupt counts, converts to mL.
+    - YFS401 (YF-S401) flow sensor with interrupt counts, converts to mL.
+    - Physical button for local manual pump toggle.
     - Relay pump control with target volume + max runtime safety.
     - HTTP POST to backend: /api/sensors, /api/water/start, /api/water/stop, /api/config/status.
   - ESP32-CAM:
