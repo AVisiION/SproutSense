@@ -30,9 +30,17 @@ export default async function authenticateDevice(req, res, next) {
       });
     }
 
-    const device = await UserDevice.findOne({ deviceId, isActive: true }).select('+tokenHash').lean();
-    if (!device?.tokenHash) {
+    const device = await UserDevice.findOne({ deviceId }).select('+tokenHash isActive').lean();
+    if (!device) {
       return res.status(401).json({ success: false, message: 'Unknown or inactive device.' });
+    }
+
+    if (!device.isActive) {
+      return res.status(401).json({ success: false, message: 'Device is paired but inactive.' });
+    }
+
+    if (!device.tokenHash) {
+      return res.status(401).json({ success: false, message: 'Device token is not configured.' });
     }
 
     const tokenHash = hashToken(deviceSecret);
