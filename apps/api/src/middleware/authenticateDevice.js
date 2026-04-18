@@ -1,5 +1,6 @@
 import crypto from 'crypto';
 import UserDevice from '../models/UserDevice.js';
+import PreRegisteredDevice from '../models/PreRegisteredDevice.js';
 
 function hashToken(value = '') {
   return crypto.createHash('sha256').update(String(value)).digest('hex');
@@ -30,28 +31,45 @@ export default async function authenticateDevice(req, res, next) {
       });
     }
 
-    const device = await UserDevice.findOne({ deviceId }).select('+tokenHash isActive').lean();
-    if (!device) {
-      return res.status(401).json({ success: false, message: 'Unknown or inactive device.' });
+    let isUserDevice = false;
+    let expectedTokenHash = null;
+    let userId = null;
+    let userDeviceId = null;
+
+    const device = await UserDevice.findOne({ deviceId, isActive: true }).select('+tokenHash').lean();
+
+    if (device) {
+      isUserDevice = true;
+      expectedTokenHash = device.tokenHash;
+      userId = String(device.userId);
+      userDeviceId = String(device._id);
+    } else {
+      const preDevice = await PreRegisteredDevice.findOne({ deviceId, isActive: true }).select('+deviceSecret').lean();
+      
+      if (!preDevice) {
+        return res.status(401).json({ success: false, message: 'Unknown or inactive device.' });
+      }
+      if (!preDevice.deviceSecret) {
+        return res.status(401).json({ success: false, message: 'Device token is not configured.' });
+      }
+      
+      expectedTokenHash = hashToken(preDevice.deviceSecret);
     }
 
-    if (!device.isActive) {
-      return res.status(401).json({ success: false, message: 'Device is paired but inactive.' });
-    }
-
-    if (!device.tokenHash) {
+    if (!expectedTokenHash) {
       return res.status(401).json({ success: false, message: 'Device token is not configured.' });
     }
 
-    const tokenHash = hashToken(deviceSecret);
-    if (tokenHash !== device.tokenHash) {
+    const providedTokenHash = hashToken(deviceSecret);
+    if (providedTokenHash !== expectedTokenHash) {
       return res.status(401).json({ success: false, message: 'Invalid device authentication value.' });
     }
 
     req.deviceAuth = {
-      userId: String(device.userId),
+      userId: userId,
       deviceId,
-      userDeviceId: String(device._id),
+      userDeviceId: userDeviceId,
+      isPreRegisteredOnly: !isUserDevice
     };
 
     return next();
