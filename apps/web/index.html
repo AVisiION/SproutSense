@@ -4,6 +4,10 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;700;800&family=Outfit:wght@500;700&display=swap" rel="stylesheet">
+
   <!-- Theme Colors -->
   <meta name="theme-color" content="#050d14" media="(prefers-color-scheme: dark)">
   <meta name="theme-color" content="#f0f8ff" media="(prefers-color-scheme: light)">
@@ -37,7 +41,7 @@
   <meta name="mobile-web-app-capable"                content="yes">
 
   <!-- Favicon -->
-  <link rel="icon"             type="image/jpeg" href="/assets/logo.jpg">
+  <link rel="icon"             type="image/png" href="/assets/icon.png">
   <link rel="apple-touch-icon" sizes="180x180"   href="/assets/logo.jpg">
   <link rel="mask-icon"        href="/safari-pinned-tab.svg" color="#14b8a6">
 
@@ -53,201 +57,93 @@
   <!-- TestSprite 2.1 Integration -->
   <script src="https://testsprite.com/agent.js"></script>
 
-  <style>
-    /* ============================================================
-       SPROUTSENSE — PROFESSIONAL LOADING SCREEN
-    ============================================================ */
-
-    :root {
-      --ss-bg-light        : #f0f8f2;
-      --ss-bg-dark         : #050d14;
-      --ss-accent          : #14b8a6;
-      --ss-accent2         : #22c55e;
-      --ss-text-light      : #1a3a2a;
-      --ss-text-dark       : #d1fae5;
-      --ss-particle-light  : rgba(34, 197, 94, 0.55);
-      --ss-particle-dark   : rgba(20, 184, 166, 0.55);
-    }
-
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-
-    /* ── Fix: dark background on root prevents white flash ── */
-    body {
-      background: #050d14;
-      margin: 0;
-    }
-
-    #root {
-      background: #0a0e1a;
-      min-height: 100vh;
-    }
-
-    #ss-loader {
-      position : fixed;
-      inset     : 0;
-      z-index   : 99999;
-      display   : flex;
-      flex-direction  : column;
-      align-items     : center;
-      justify-content : center;
-      background : var(--ss-bg-light);
-      transition : opacity 0.65s cubic-bezier(0.4,0,0.2,1),
-                   visibility 0.65s cubic-bezier(0.4,0,0.2,1);
-      overflow: hidden;
-    }
-    @media (prefers-color-scheme: dark) {
-      #ss-loader { background: var(--ss-bg-dark); }
-    }
-    #ss-loader.ss-hidden {
-      opacity        : 0;
-      visibility     : hidden;
-      pointer-events : none;
-    }
-
-    /* Ambient glow */
-    #ss-loader::before {
-      content       : '';
-      position      : absolute;
-      width         : 520px;
-      height        : 520px;
-      border-radius : 50%;
-      background    : radial-gradient(circle, rgba(20,184,166,0.13) 0%, transparent 70%);
-      animation     : ss-pulse-glow 3.2s ease-in-out infinite;
-      pointer-events: none;
-    }
-    @keyframes ss-pulse-glow {
-      0%,100% { transform:scale(0.85); opacity:0.6; }
-      50%     { transform:scale(1.15); opacity:1; }
-    }
-
-    /* Rings */
-    .ss-ring-outer {
-      position:absolute; width:200px; height:200px; border-radius:50%;
-      border:2px solid transparent;
-      border-top-color:var(--ss-accent); border-right-color:var(--ss-accent2);
-      animation:ss-spin 2.4s cubic-bezier(0.68,-0.55,0.27,1.55) infinite;
-      filter:drop-shadow(0 0 8px var(--ss-accent));
-    }
-    .ss-ring-mid {
-      position:absolute; width:162px; height:162px; border-radius:50%;
-      border:1.5px dashed rgba(20,184,166,0.35);
-      animation:ss-spin-reverse 5s linear infinite;
-    }
-    @media (prefers-color-scheme: dark) {
-      .ss-ring-outer { filter:drop-shadow(0 0 12px var(--ss-accent)); }
-      .ss-ring-mid   { border-color:rgba(20,184,166,0.25); }
-    }
-    @keyframes ss-spin         { to { transform:rotate(360deg); } }
-    @keyframes ss-spin-reverse { to { transform:rotate(-360deg); } }
-
-    /* Icon */
-    .ss-icon-wrap {
-      position:relative; width:110px; height:110px;
-      display:flex; align-items:center; justify-content:center;
-      animation:ss-icon-float 3s ease-in-out infinite;
-    }
-    .ss-icon-wrap img {
-      width:80px; height:80px; object-fit:contain;
-      filter:drop-shadow(0 4px 18px rgba(20,184,166,0.45));
-      animation:ss-icon-breathe 3s ease-in-out infinite;
-      border-radius:18px;
-    }
-    @media (prefers-color-scheme:dark) {
-      .ss-icon-wrap img { filter:drop-shadow(0 4px 22px rgba(20,184,166,0.7)) brightness(1.08); }
-    }
-    @keyframes ss-icon-float   { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-7px)} }
-    @keyframes ss-icon-breathe { 0%,100%{transform:scale(1)} 50%{transform:scale(1.06)} }
-
-    /* Particles */
-    .ss-particles { position:absolute; inset:0; pointer-events:none; overflow:hidden; }
-    .ss-particle  { position:absolute; border-radius:50%; background:var(--ss-particle-light); animation:ss-rise linear infinite; opacity:0; }
-    @media (prefers-color-scheme:dark) { .ss-particle { background:var(--ss-particle-dark); } }
-    .ss-particle:nth-child(1){width:5px;height:5px;left:12%;animation-duration:4.2s;animation-delay:0s}
-    .ss-particle:nth-child(2){width:3px;height:3px;left:25%;animation-duration:5.1s;animation-delay:.8s}
-    .ss-particle:nth-child(3){width:6px;height:6px;left:38%;animation-duration:3.8s;animation-delay:1.5s}
-    .ss-particle:nth-child(4){width:4px;height:4px;left:55%;animation-duration:4.6s;animation-delay:.3s}
-    .ss-particle:nth-child(5){width:5px;height:5px;left:68%;animation-duration:5.4s;animation-delay:1.1s}
-    .ss-particle:nth-child(6){width:3px;height:3px;left:80%;animation-duration:4.0s;animation-delay:2.0s}
-    .ss-particle:nth-child(7){width:4px;height:4px;left:90%;animation-duration:3.5s;animation-delay:.6s}
-    .ss-particle:nth-child(8){width:6px;height:6px;left:5%; animation-duration:4.8s;animation-delay:1.8s}
-    @keyframes ss-rise {
-      0%  {transform:translateY(110vh) scale(0.4);opacity:0}
-      20% {opacity:.9} 80%{opacity:.7}
-      100%{transform:translateY(-10vh) scale(1.1);opacity:0}
-    }
-
-    /* Progress */
-    .ss-progress-track {
-      position:absolute; bottom:72px;
-      width:min(280px,70vw); height:3px;
-      background:rgba(20,184,166,0.15); border-radius:99px; overflow:hidden;
-    }
-    .ss-progress-fill {
-      height:100%; width:0%; border-radius:99px;
-      background:linear-gradient(90deg,var(--ss-accent2),var(--ss-accent));
-      box-shadow:0 0 10px var(--ss-accent);
-      animation:ss-progress 2.4s cubic-bezier(0.4,0,0.2,1) forwards;
-    }
-    @keyframes ss-progress {
-      0%{width:0%} 40%{width:55%} 70%{width:78%} 90%{width:92%} 100%{width:100%}
-    }
-
-    /* Brand */
-    .ss-brand {
-      position:absolute; bottom:90px;
-      display:flex; flex-direction:column; align-items:center; gap:4px;
-    }
-    .ss-brand-name {
-      font-family:system-ui,-apple-system,'Segoe UI',sans-serif;
-      font-size:22px; font-weight:700; letter-spacing:.06em;
-      color:var(--ss-text-light); animation:ss-fade-up .9s ease both;
-    }
-    .ss-brand-tagline {
-      font-family:system-ui,-apple-system,'Segoe UI',sans-serif;
-      font-size:11.5px; font-weight:400; letter-spacing:.18em; text-transform:uppercase;
-      color:var(--ss-accent); animation:ss-fade-up .9s .2s ease both;
-    }
-    @media (prefers-color-scheme:dark) {
-      .ss-brand-name    { color:var(--ss-text-dark); }
-      .ss-brand-tagline { color:var(--ss-accent2); }
-    }
-    @keyframes ss-fade-up { from{opacity:0;transform:translateY(14px)} to{opacity:1;transform:translateY(0)} }
-
-    /* Dots */
-    .ss-dots { position:absolute; bottom:52px; display:flex; gap:7px; }
-    .ss-dot  { width:7px; height:7px; border-radius:50%; background:var(--ss-accent); animation:ss-dot-bounce 1.3s ease-in-out infinite; }
-    .ss-dot:nth-child(2){ animation-delay:.18s; }
-    .ss-dot:nth-child(3){ animation-delay:.36s; }
-    @media (prefers-color-scheme:dark) { .ss-dot { background:var(--ss-accent2); } }
-    @keyframes ss-dot-bounce {
-      0%,80%,100%{transform:scale(0.7);opacity:.5} 40%{transform:scale(1.2);opacity:1}
-    }
-  </style>
+  <link rel="stylesheet" href="/src/styles/preloader.css">
 </head>
 <body>
 
   <div id="ss-loader" role="status" aria-label="Loading SproutSense...">
-    <div class="ss-particles" aria-hidden="true">
-      <span class="ss-particle"></span><span class="ss-particle"></span>
-      <span class="ss-particle"></span><span class="ss-particle"></span>
-      <span class="ss-particle"></span><span class="ss-particle"></span>
-      <span class="ss-particle"></span><span class="ss-particle"></span>
+    <div class="ss-atmosphere" aria-hidden="true">
+      <span class="ss-aura ss-aura-one"></span>
+      <span class="ss-aura ss-aura-two"></span>
+      <span class="ss-aura ss-aura-three"></span>
+      <span class="ss-particle"></span>
+      <span class="ss-particle"></span>
+      <span class="ss-particle"></span>
+      <span class="ss-particle"></span>
+      <span class="ss-particle"></span>
     </div>
-    <div class="ss-ring-outer" aria-hidden="true"></div>
-    <div class="ss-ring-mid"   aria-hidden="true"></div>
-    <div class="ss-icon-wrap">
-      <img src="/assets/icon.png" alt="SproutSense Icon" draggable="false" />
+
+    <div class="ss-stage" aria-hidden="true">
+      <div class="ss-stage-floor"></div>
+      <div class="ss-logo-rig">
+        <div class="ss-logo-cube">
+          <div class="ss-cube-face ss-cube-front">
+            <img src="/assets/icon.png" alt="SproutSense Icon" draggable="false" />
+          </div>
+          <div class="ss-cube-face ss-cube-back">
+            <div class="ss-user-face" aria-hidden="true">
+              <i class="fa-solid fa-user ss-user-glyph"></i>
+              <span class="ss-user-label">Welcome</span>
+            </div>
+          </div>
+          <div class="ss-data-stream" aria-hidden="true">
+            <span class="ss-stream-dot ss-stream-forward ss-stream-1 ss-lane-a"></span>
+            <span class="ss-stream-dot ss-stream-forward ss-stream-2 ss-lane-a"></span>
+            <span class="ss-stream-dot ss-stream-forward ss-stream-3 ss-lane-a"></span>
+            <span class="ss-stream-dot ss-stream-forward ss-stream-4 ss-lane-a"></span>
+
+            <span class="ss-stream-dot ss-stream-forward ss-stream-1 ss-lane-b"></span>
+            <span class="ss-stream-dot ss-stream-forward ss-stream-2 ss-lane-b"></span>
+            <span class="ss-stream-dot ss-stream-forward ss-stream-3 ss-lane-b"></span>
+            <span class="ss-stream-dot ss-stream-forward ss-stream-4 ss-lane-b"></span>
+
+            <span class="ss-stream-dot ss-stream-forward ss-stream-1 ss-lane-c"></span>
+            <span class="ss-stream-dot ss-stream-forward ss-stream-2 ss-lane-c"></span>
+            <span class="ss-stream-dot ss-stream-forward ss-stream-3 ss-lane-c"></span>
+            <span class="ss-stream-dot ss-stream-forward ss-stream-4 ss-lane-c"></span>
+
+            <span class="ss-stream-dot ss-stream-forward ss-stream-1 ss-lane-d"></span>
+            <span class="ss-stream-dot ss-stream-forward ss-stream-2 ss-lane-d"></span>
+            <span class="ss-stream-dot ss-stream-forward ss-stream-3 ss-lane-d"></span>
+            <span class="ss-stream-dot ss-stream-forward ss-stream-4 ss-lane-d"></span>
+
+            <span class="ss-stream-dot ss-stream-forward ss-stream-1 ss-lane-e"></span>
+            <span class="ss-stream-dot ss-stream-forward ss-stream-2 ss-lane-e"></span>
+            <span class="ss-stream-dot ss-stream-forward ss-stream-3 ss-lane-e"></span>
+            <span class="ss-stream-dot ss-stream-forward ss-stream-4 ss-lane-e"></span>
+
+            <span class="ss-random-dot ss-rand-1"></span>
+            <span class="ss-random-dot ss-rand-2"></span>
+            <span class="ss-random-dot ss-rand-3"></span>
+            <span class="ss-random-dot ss-rand-4"></span>
+            <span class="ss-random-dot ss-rand-5"></span>
+            <span class="ss-random-dot ss-rand-6"></span>
+            <span class="ss-random-dot ss-rand-7"></span>
+            <span class="ss-random-dot ss-rand-8"></span>
+            <span class="ss-random-dot ss-rand-9"></span>
+            <span class="ss-random-dot ss-rand-10"></span>
+            <span class="ss-random-dot ss-rand-11"></span>
+            <span class="ss-random-dot ss-rand-12"></span>
+          </div>
+          <div class="ss-cube-edge ss-cube-left" aria-hidden="true"></div>
+          <div class="ss-cube-edge ss-cube-right" aria-hidden="true"></div>
+          <div class="ss-cube-edge ss-cube-top" aria-hidden="true"></div>
+          <div class="ss-cube-edge ss-cube-bottom" aria-hidden="true"></div>
+        </div>
+      </div>
     </div>
+
     <div class="ss-brand">
       <span class="ss-brand-name">SproutSense</span>
-      <span class="ss-brand-tagline">Smart Plant Care &middot; IoT &middot; AI</span>
+      <span class="ss-brand-tagline">Cultivating Intelligence For Every Leaf</span>
+      <span class="ss-brand-status">Calibrating sensors and syncing live data</span>
     </div>
-    <div class="ss-dots" aria-hidden="true">
-      <span class="ss-dot"></span><span class="ss-dot"></span><span class="ss-dot"></span>
-    </div>
+
     <div class="ss-progress-track" aria-hidden="true">
       <div class="ss-progress-fill"></div>
     </div>
+
+    <div class="ss-progress-label" aria-hidden="true">Loading modules...</div>
   </div>
 
   <div id="root"></div>
@@ -255,16 +151,72 @@
 
   <script>
     (function(){
+      var loader = document.getElementById('ss-loader');
+      var progressFill = loader ? loader.querySelector('.ss-progress-fill') : null;
+      var progressLabel = loader ? loader.querySelector('.ss-progress-label') : null;
+      var progress = 0;
+      var readyFired = false;
+      var tickTimer = null;
+
+      function setProgress(value, labelText) {
+        progress = Math.max(progress, Math.min(100, value));
+        if (progressFill) progressFill.style.width = progress + '%';
+        if (progressLabel && labelText) progressLabel.textContent = labelText;
+      }
+
+      function runIdleProgress() {
+        clearInterval(tickTimer);
+        tickTimer = setInterval(function(){
+          if (readyFired || progress >= 92) {
+            clearInterval(tickTimer);
+            return;
+          }
+          setProgress(progress + 1, 'Loading modules... ' + Math.round(progress) + '%');
+        }, 140);
+      }
+
       function dismissLoader(){
+        clearInterval(tickTimer);
         var l=document.getElementById('ss-loader');
         if(!l) return;
         l.classList.add('ss-hidden');
         l.addEventListener('transitionend',function(){l.remove();},{once:true});
       }
-      window.addEventListener('sproutsense:ready',dismissLoader,{once:true});
-      // Increased fallback from 3500ms to 5000ms to avoid dismissing
-      // the loader before React finishes painting on slow connections.
-      var fb=setTimeout(dismissLoader,5000);
+
+      function onAppReady() {
+        if (readyFired) return;
+        readyFired = true;
+        setProgress(100, 'Ready');
+        setTimeout(dismissLoader, 220);
+      }
+
+      setProgress(10, 'Booting engine... 10%');
+
+      if (document.readyState !== 'loading') {
+        setProgress(35, 'DOM initialized... 35%');
+      } else {
+        document.addEventListener('DOMContentLoaded', function(){
+          setProgress(35, 'DOM initialized... 35%');
+        }, { once: true });
+      }
+
+      if (document.readyState === 'complete') {
+        setProgress(65, 'Assets loaded... 65%');
+      } else {
+        window.addEventListener('load', function(){
+          setProgress(65, 'Assets loaded... 65%');
+        }, { once: true });
+      }
+
+      runIdleProgress();
+
+      window.addEventListener('sproutsense:ready', onAppReady, { once: true });
+
+      // Fallback: keep UX responsive if app-ready event never fires.
+      var fb = setTimeout(function(){
+        setProgress(100, 'Ready');
+        dismissLoader();
+      }, 9000);
       window.addEventListener('sproutsense:ready',function(){clearTimeout(fb);},{once:true});
     })();
   </script>
