@@ -49,6 +49,10 @@ const mockResponse = (data, delay = 300) => {
   });
 };
 
+function shouldUseMock(options = {}) {
+  return isMockEnabled() && !options?.forceLive;
+}
+
 const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
 
 function normalizeMockSensorReading(sensor, fallbackTimestamp = new Date().toISOString()) {
@@ -173,7 +177,7 @@ function generateMockWaterLogs(sensorHistory = [], limit = 10) {
 export const sensorAPI = {
   // GET /api/sensors - latest reading (backend uses query.deviceId)
   getLatest: async (deviceId = 'ESP32-SENSOR', options = {}) => {
-    if (isMockEnabled()) {
+    if (shouldUseMock(options)) {
       const mockSensors = getMockSensors();
       const mockPrimary = mockSensors.length > 0 ? mockSensors[0] : null;
       const normalized = normalizeMockSensorReading(mockPrimary);
@@ -186,7 +190,7 @@ export const sensorAPI = {
 
   // GET /api/sensors/history?deviceId=&start=&end= OR ?hours=
   getHistory: async (startDate, endDate, deviceId = 'ESP32-SENSOR', options = {}) => {
-    if (isMockEnabled()) {
+    if (shouldUseMock(options)) {
       let start = startDate;
       let end = endDate;
 
@@ -250,7 +254,7 @@ export const wateringAPI = {
 
   // GET /api/water/history
   getLogs: async (limit = 10, deviceId = 'ESP32-SENSOR', options = {}) => {
-    if (isMockEnabled()) {
+    if (shouldUseMock(options)) {
       const mockHistory = generateMockSensorHistory(
         new Date(Date.now() - 24 * 3_600_000).toISOString(),
         new Date().toISOString(),
@@ -288,12 +292,12 @@ export const configAPI = {
   },
 
   // GET /api/config/status?deviceId=
-  getStatus: async (deviceId = 'ESP32-SENSOR') => {
-    if (isMockEnabled()) {
+  getStatus: async (deviceId = 'ESP32-SENSOR', options = {}) => {
+    if (shouldUseMock(options)) {
       const res = await mockResponse({ deviceId, online: true, lastSeen: new Date().toISOString() });
       return res.data;
     }
-    const response = await api.get('/config/status', { params: { deviceId } });
+    const response = await api.get('/config/status', { params: { deviceId }, ...options });
     return response.data;
   },
 
@@ -704,7 +708,7 @@ export const aiAPI = {
     startDate,
     endDate,
   } = {}, options = {}) => {
-    if (isMockEnabled()) {
+    if (shouldUseMock(options)) {
       const mockAlerts = getMockAlerts() || [];
       const diseaseAlerts = mockAlerts.filter(a => {
         const msg = String(a.message || '').toLowerCase();

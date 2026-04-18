@@ -7,7 +7,7 @@ import {
   PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip,
   ResponsiveContainer, Legend, ComposedChart
 } from 'recharts';
-import { aiAPI, sensorAPI, wateringAPI } from '../../utils/api';
+import { aiAPI, sensorAPI, wateringAPI, configAPI } from '../../utils/api';
 import { getAnalyticsSensors, getSensorValue, getStatusForValue } from '../../utils/sensorRegistry';
 import { GlassIcon } from '../../components/bits/GlassIcon';
 import styles from './AnalyticsPage.module.css';
@@ -298,10 +298,23 @@ export default function AnalyticsPage() {
       const end   = new Date();
       const start = new Date(end.getTime() - selectedRange.hours * 3_600_000);
 
+      // When the physical device is online, force live API calls so analytics reads DB-backed data.
+      const statusResponse = await configAPI.getStatus('ESP32-SENSOR', {
+        signal: controller.signal,
+        forceLive: true,
+      });
+      const statusPayload = statusResponse?.data || statusResponse;
+      const lastSeenMs = statusPayload?.lastSeen ? new Date(statusPayload.lastSeen).getTime() : 0;
+      const isDeviceOnline = Boolean(statusPayload?.online) && Number.isFinite(lastSeenMs) && (Date.now() - lastSeenMs < 5 * 60 * 1000);
+      const requestOptions = {
+        signal: controller.signal,
+        forceLive: isDeviceOnline,
+      };
+
       const [sensorResp, diseaseResp, wateringResp] = await Promise.all([
-        sensorAPI.getHistory(start.toISOString(), end.toISOString(), 'ESP32-SENSOR', { signal: controller.signal }),
-        aiAPI.getDiseaseDetections({ startDate: start.toISOString(), endDate: end.toISOString() }, { signal: controller.signal }),
-        wateringAPI.getLogs(500, 'ESP32-SENSOR', { signal: controller.signal }),
+        sensorAPI.getHistory(start.toISOString(), end.toISOString(), 'ESP32-SENSOR', requestOptions),
+        aiAPI.getDiseaseDetections({ startDate: start.toISOString(), endDate: end.toISOString() }, requestOptions),
+        wateringAPI.getLogs(500, 'ESP32-SENSOR', requestOptions),
       ]);
 
       let sensors   = Array.isArray(sensorResp?.data) ? sensorResp.data : (sensorResp || []);

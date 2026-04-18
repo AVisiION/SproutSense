@@ -2,7 +2,7 @@
 
 :root {
   --ss-loader-bg-dark:
-    radial-gradient(circle at 20% 12%, #17382d 0%, #0a1c16 42%, #050b09 100%);
+    radial-gradient(circle at 20% 12%, #0b1f18 0%, #050f0b 42%, #020504 100%);
   --ss-loader-bg-light:
     radial-gradient(circle at 18% 15%, #f6fdf8 0%, #dcf3e8 46%, #cde9dd 100%);
   --ss-loader-tint-1: #29d786;
@@ -12,6 +12,52 @@
   --ss-loader-text-light: #11392a;
   --ss-loader-track-dark: rgba(220, 255, 236, 0.2);
   --ss-loader-track-light: rgba(17, 57, 42, 0.2);
+
+  --ss-cube-face-border: rgba(156, 232, 198, 0.2);
+  --ss-cube-face-bg: linear-gradient(148deg, rgba(177, 245, 214, 0.08), rgba(6, 26, 20, 0.52));
+  --ss-cube-face-shadow:
+    0 26px 58px rgba(3, 14, 11, 0.76),
+    inset 0 1px 0 rgba(235, 255, 246, 0.13),
+    inset 0 -16px 24px rgba(14, 114, 85, 0.16);
+
+  --ss-cube-edge-gradient: linear-gradient(180deg, rgba(86, 204, 158, 0.3), rgba(9, 60, 43, 0.74));
+  --ss-cube-edge-border: rgba(178, 241, 212, 0.16);
+
+  --ss-cube-user-color: rgba(207, 245, 226, 0.9);
+  --ss-stage-floor-highlight: rgba(142, 246, 200, 0.25);
+
+  --ss-stream-dot-bg: radial-gradient(circle, rgba(245, 255, 250, 1) 0%, rgba(125, 255, 209, 0.95) 38%, rgba(55, 232, 171, 0.18) 72%, rgba(55, 232, 171, 0) 100%);
+  --ss-stream-dot-shadow: 0 0 9px rgba(110, 250, 196, 0.4), -4px 0 7px rgba(110, 250, 196, 0.17);
+  --ss-stream-dot-filter: saturate(1.05) brightness(0.9);
+  --ss-stream-dot-mix: screen;
+
+  --ss-stream-reverse-dot-bg: radial-gradient(circle, rgba(245, 255, 255, 1) 0%, rgba(154, 238, 255, 0.98) 36%, rgba(99, 196, 255, 0.26) 72%, rgba(99, 196, 255, 0) 100%);
+  --ss-stream-reverse-dot-shadow: 0 0 16px rgba(122, 222, 255, 0.76), 7px 0 12px rgba(122, 222, 255, 0.28);
+
+  --ss-loader-body-bg: #050d14;
+  --ss-loader-root-bg: #0a0e1a;
+
+  --ss-loader-overlay-bg:
+    radial-gradient(circle at 50% 62%, rgba(23, 203, 136, 0.06) 0%, rgba(23, 203, 136, 0) 56%),
+    linear-gradient(160deg, rgba(172, 255, 221, 0.02), rgba(17, 43, 34, 0));
+
+  --ss-aura-one-bg: linear-gradient(110deg, rgba(41, 215, 134, 0.3), rgba(22, 185, 165, 0.1));
+  --ss-aura-two-bg: linear-gradient(128deg, rgba(22, 185, 165, 0.3), rgba(41, 215, 134, 0.08));
+  --ss-aura-three-bg: linear-gradient(122deg, rgba(24, 95, 67, 0.46), rgba(142, 246, 200, 0.12));
+
+  --ss-particle-bg: radial-gradient(circle, rgba(172, 236, 207, 0.72), rgba(28, 211, 148, 0));
+  --ss-stage-floor-core: radial-gradient(circle at 50% 50%, rgba(5, 15, 11, 0.95), rgba(5, 15, 11, 0) 76%);
+
+  --ss-cube-logo-shadow: drop-shadow(0 8px 16px rgba(18, 129, 94, 0.34));
+  --ss-user-glyph-shadow: drop-shadow(0 7px 13px rgba(16, 114, 83, 0.28));
+
+  --ss-halo-border: rgba(187, 255, 226, 0.3);
+  --ss-halo-small-border: rgba(41, 215, 134, 0.36);
+
+  --ss-brand-tagline-color: rgba(214, 248, 230, 0.84);
+  --ss-brand-status-color: rgba(182, 236, 210, 0.82);
+  --ss-progress-label-color: rgba(209, 244, 225, 0.72);
+  --ss-progress-fill-shadow: 0 0 20px rgba(41, 215, 134, 0.36);
 }
 
 * {
@@ -20,12 +66,12 @@
 
 body {
   margin: 0;
-  background: #050d14;
+  background: var(--ss-loader-body-bg);
 }
 
 #root {
   min-height: 100vh;
-  background: #0a0e1a;
+  background: var(--ss-loader-root-bg);
 }
 
 #ss-loader {
@@ -44,22 +90,17 @@ body {
   content: "";
   position: absolute;
   inset: 0;
-  background:
-    radial-gradient(circle at 50% 62%, rgba(23, 203, 136, 0.2) 0%, rgba(23, 203, 136, 0) 56%),
-    linear-gradient(160deg, rgba(172, 255, 221, 0.08), rgba(17, 43, 34, 0));
+  background: var(--ss-loader-overlay-bg);
   pointer-events: none;
 }
 
-@media (prefers-color-scheme: light) {
-  #ss-loader {
+html[data-theme='light'] #ss-loader {
     background: var(--ss-loader-bg-light);
-  }
 
-  #ss-loader::after {
-    background:
-      radial-gradient(circle at 50% 62%, rgba(23, 203, 136, 0.15) 0%, rgba(23, 203, 136, 0) 56%),
-      linear-gradient(160deg, rgba(255, 255, 255, 0.36), rgba(17, 43, 34, 0));
-  }
+}
+
+html[data-theme='light'] #ss-loader::after {
+  background: var(--ss-loader-overlay-bg);
 }
 
 #ss-loader.ss-hidden {
@@ -78,7 +119,7 @@ body {
   position: absolute;
   border-radius: 999px;
   filter: blur(22px);
-  opacity: 0.55;
+  opacity: 0.24;
   animation: ssAuraDrift 16s ease-in-out infinite;
 }
 
@@ -87,7 +128,7 @@ body {
   height: 18vmax;
   left: -5vmax;
   top: 14vmax;
-  background: linear-gradient(110deg, rgba(41, 215, 134, 0.3), rgba(22, 185, 165, 0.1));
+  background: var(--ss-aura-one-bg);
 }
 
 .ss-aura-two {
@@ -95,7 +136,7 @@ body {
   height: 18vmax;
   right: -7vmax;
   top: 20vmax;
-  background: linear-gradient(128deg, rgba(22, 185, 165, 0.3), rgba(41, 215, 134, 0.08));
+  background: var(--ss-aura-two-bg);
   animation-delay: -3s;
 }
 
@@ -104,7 +145,7 @@ body {
   height: 20vmax;
   left: 7vmax;
   bottom: -5vmax;
-  background: linear-gradient(122deg, rgba(24, 95, 67, 0.46), rgba(142, 246, 200, 0.12));
+  background: var(--ss-aura-three-bg);
   animation-delay: -5.5s;
 }
 
@@ -113,7 +154,7 @@ body {
   width: 9px;
   height: 9px;
   border-radius: 50%;
-  background: radial-gradient(circle, rgba(222, 255, 239, 0.95), rgba(28, 211, 148, 0));
+  background: var(--ss-particle-bg);
   opacity: 0;
   animation: ssParticleLift 10.5s linear infinite;
 }
@@ -164,8 +205,8 @@ body {
   aspect-ratio: 1;
   border-radius: 50%;
   background:
-    radial-gradient(circle at 50% 46%, rgba(142, 246, 200, 0.4) 0%, rgba(142, 246, 200, 0) 62%),
-    radial-gradient(circle at 50% 50%, rgba(5, 15, 11, 0.95), rgba(5, 15, 11, 0) 76%);
+    radial-gradient(circle at 50% 46%, var(--ss-stage-floor-highlight) 0%, rgba(142, 246, 200, 0) 62%),
+    var(--ss-stage-floor-core);
   transform: translateY(112px) rotateX(75deg);
   filter: blur(3px);
 }
@@ -195,22 +236,18 @@ body {
   overflow: hidden;
   display: grid;
   place-items: center;
-  border: 1px solid rgba(203, 255, 230, 0.36);
-  background:
-    linear-gradient(145deg, rgba(232, 255, 244, 0.28), rgba(9, 35, 27, 0.2));
+  border: 1px solid var(--ss-cube-face-border);
+  background: var(--ss-cube-face-bg);
   -webkit-backdrop-filter: blur(8px);
   backdrop-filter: blur(8px);
-  box-shadow:
-    0 30px 65px rgba(4, 22, 16, 0.55),
-    inset 0 1px 0 rgba(255, 255, 255, 0.5),
-    inset 0 -18px 26px rgba(17, 185, 138, 0.14);
+  box-shadow: var(--ss-cube-face-shadow);
 }
 
 .ss-cube-face img {
   width: 74%;
   height: 74%;
   object-fit: contain;
-  filter: drop-shadow(0 10px 20px rgba(28, 211, 148, 0.45));
+  filter: var(--ss-cube-logo-shadow);
 }
 
 .ss-cube-front {
@@ -226,13 +263,13 @@ body {
   place-items: center;
   gap: 10px;
   text-transform: uppercase;
-  color: rgba(225, 255, 242, 0.94);
+  color: var(--ss-cube-user-color);
 }
 
 .ss-user-glyph {
   font-size: clamp(1.5rem, 2.8vw, 2rem);
   line-height: 1;
-  filter: drop-shadow(0 8px 16px rgba(21, 201, 140, 0.35));
+  filter: var(--ss-user-glyph-shadow);
 }
 
 .ss-user-label {
@@ -267,10 +304,10 @@ body {
   margin-left: -4px;
   margin-top: -4px;
   border-radius: 50%;
-  background: radial-gradient(circle, rgba(245, 255, 250, 1) 0%, rgba(125, 255, 209, 0.95) 38%, rgba(55, 232, 171, 0.18) 72%, rgba(55, 232, 171, 0) 100%);
-  box-shadow: 0 0 18px rgba(110, 250, 196, 0.78), -7px 0 14px rgba(110, 250, 196, 0.28);
-  filter: saturate(1.2) brightness(1.15);
-  mix-blend-mode: screen;
+  background: var(--ss-stream-dot-bg);
+  box-shadow: var(--ss-stream-dot-shadow);
+  filter: var(--ss-stream-dot-filter);
+  mix-blend-mode: var(--ss-stream-dot-mix);
   transform-style: preserve-3d;
 }
 
@@ -308,38 +345,10 @@ body {
 }
 
 .ss-stream-dot.ss-stream-reverse {
-  background: radial-gradient(circle, rgba(245, 255, 255, 1) 0%, rgba(154, 238, 255, 0.98) 36%, rgba(99, 196, 255, 0.26) 72%, rgba(99, 196, 255, 0) 100%);
-  box-shadow: 0 0 20px rgba(122, 222, 255, 0.9), 7px 0 14px rgba(122, 222, 255, 0.32);
+  background: var(--ss-stream-reverse-dot-bg);
+  box-shadow: var(--ss-stream-reverse-dot-shadow);
   filter: saturate(1.35) brightness(1.25);
 }
-
-.ss-random-dot {
-  position: absolute;
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  left: 50%;
-  top: 50%;
-  margin-left: -3.5px;
-  margin-top: -3.5px;
-  background: radial-gradient(circle, rgba(235, 255, 246, 0.95) 0%, rgba(118, 244, 206, 0.88) 55%, rgba(118, 244, 206, 0) 100%);
-  box-shadow: 0 0 12px rgba(118, 244, 206, 0.62);
-  opacity: 0;
-  animation: ssRandomPulse 2.4s linear infinite;
-}
-
-.ss-rand-1 { --ss-rx: -24px; --ss-ry: -12px; --ss-rz: -4px; animation-delay: -0.1s; }
-.ss-rand-2 { --ss-rx: -11px; --ss-ry: -6px; --ss-rz: 3px; animation-delay: -0.5s; }
-.ss-rand-3 { --ss-rx: 2px; --ss-ry: -14px; --ss-rz: -2px; animation-delay: -0.9s; }
-.ss-rand-4 { --ss-rx: 13px; --ss-ry: -2px; --ss-rz: 5px; animation-delay: -1.3s; }
-.ss-rand-5 { --ss-rx: 23px; --ss-ry: -10px; --ss-rz: -3px; animation-delay: -1.7s; }
-.ss-rand-6 { --ss-rx: -19px; --ss-ry: 10px; --ss-rz: 4px; animation-delay: -0.3s; }
-.ss-rand-7 { --ss-rx: -6px; --ss-ry: 13px; --ss-rz: -1px; animation-delay: -0.8s; }
-.ss-rand-8 { --ss-rx: 6px; --ss-ry: 8px; --ss-rz: 2px; animation-delay: -1.2s; }
-.ss-rand-9 { --ss-rx: 17px; --ss-ry: 12px; --ss-rz: -4px; animation-delay: -1.6s; }
-.ss-rand-10 { --ss-rx: -2px; --ss-ry: 1px; --ss-rz: 6px; animation-delay: -2s; }
-.ss-rand-11 { --ss-rx: -15px; --ss-ry: 2px; --ss-rz: -5px; animation-delay: -2.2s; }
-.ss-rand-12 { --ss-rx: 21px; --ss-ry: 4px; --ss-rz: 1px; animation-delay: -2.35s; }
 
 .ss-stream-1 {
   --ss-dot-delay: 0s;
@@ -368,8 +377,8 @@ body {
 .ss-cube-edge {
   position: absolute;
   border-radius: 16px;
-  background: linear-gradient(180deg, rgba(132, 248, 198, 0.48), rgba(14, 92, 67, 0.68));
-  box-shadow: inset 0 0 0 1px rgba(214, 255, 236, 0.28);
+  background: var(--ss-cube-edge-gradient);
+  box-shadow: inset 0 0 0 1px var(--ss-cube-edge-border);
 }
 
 .ss-cube-left,
@@ -407,7 +416,7 @@ body {
 .ss-halo {
   position: absolute;
   border-radius: 50%;
-  border: 1px solid rgba(187, 255, 226, 0.4);
+  border: 1px solid var(--ss-halo-border);
   pointer-events: none;
 }
 
@@ -420,7 +429,7 @@ body {
 .ss-halo-small {
   width: min(46vw, 242px);
   aspect-ratio: 1;
-  border-color: rgba(41, 215, 134, 0.45);
+  border-color: var(--ss-halo-small-border);
   animation: ssHaloPulse 5.8s ease-out infinite 2.2s;
 }
 
@@ -454,7 +463,7 @@ body {
   font-weight: 600;
   letter-spacing: 0.21em;
   text-transform: uppercase;
-  color: rgba(220, 255, 237, 0.9);
+  color: var(--ss-brand-tagline-color);
   opacity: 0;
   animation: ssTextRise 900ms ease forwards 780ms;
 }
@@ -465,7 +474,7 @@ body {
   font-family: "Outfit", "Segoe UI", sans-serif;
   font-size: clamp(0.78rem, 1.2vw, 0.92rem);
   font-weight: 500;
-  color: rgba(190, 249, 221, 0.88);
+  color: var(--ss-brand-status-color);
   opacity: 0;
   animation: ssTextRise 900ms ease forwards 1040ms;
 }
@@ -487,7 +496,7 @@ body {
   height: 100%;
   border-radius: inherit;
   background: linear-gradient(90deg, var(--ss-loader-tint-1), var(--ss-loader-tint-2), var(--ss-loader-tint-3));
-  box-shadow: 0 0 24px rgba(41, 215, 134, 0.45);
+  box-shadow: var(--ss-progress-fill-shadow);
   transition: width 280ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
@@ -501,56 +510,43 @@ body {
   font-weight: 600;
   letter-spacing: 0.16em;
   text-transform: uppercase;
-  color: rgba(216, 255, 236, 0.78);
+  color: var(--ss-progress-label-color);
 }
 
-@media (prefers-color-scheme: light) {
-  .ss-cube-face {
-    border-color: rgba(20, 90, 66, 0.28);
-    box-shadow:
+html[data-theme='light'] #ss-loader {
+    --ss-loader-overlay-bg:
+      radial-gradient(circle at 50% 62%, rgba(23, 203, 136, 0.15) 0%, rgba(23, 203, 136, 0) 56%),
+      linear-gradient(160deg, rgba(255, 255, 255, 0.36), rgba(17, 43, 34, 0));
+
+    --ss-cube-face-border: rgba(20, 90, 66, 0.28);
+    --ss-cube-face-bg: linear-gradient(145deg, rgba(255, 255, 255, 0.68), rgba(214, 240, 225, 0.58));
+    --ss-cube-face-shadow:
       0 26px 58px rgba(20, 90, 66, 0.22),
       inset 0 1px 0 rgba(255, 255, 255, 0.8),
       inset 0 -14px 24px rgba(20, 185, 129, 0.12);
-  }
 
-  .ss-cube-edge {
-    box-shadow: inset 0 0 0 1px rgba(20, 90, 66, 0.25);
-  }
+    --ss-cube-edge-border: rgba(20, 90, 66, 0.25);
+    --ss-cube-user-color: rgba(16, 67, 50, 0.86);
+    --ss-stage-floor-highlight: rgba(122, 226, 179, 0.2);
 
-  .ss-user-face {
-    color: rgba(16, 67, 50, 0.86);
-  }
-
-  .ss-stream-dot {
-    background: radial-gradient(circle, rgba(15, 76, 57, 0.86) 0%, rgba(20, 186, 135, 0.74) 45%, rgba(20, 186, 135, 0) 100%);
-    box-shadow: 0 0 11px rgba(20, 186, 135, 0.42);
-    mix-blend-mode: normal;
-  }
-
-  .ss-stream-dot.ss-stream-reverse {
-    background: radial-gradient(circle, rgba(13, 68, 79, 0.86) 0%, rgba(35, 150, 191, 0.72) 45%, rgba(35, 150, 191, 0) 100%);
-    box-shadow: 0 0 11px rgba(35, 150, 191, 0.38);
-  }
-
-  .ss-random-dot {
-    background: radial-gradient(circle, rgba(11, 72, 54, 0.82) 0%, rgba(20, 186, 135, 0.68) 55%, rgba(20, 186, 135, 0) 100%);
-    box-shadow: 0 0 10px rgba(20, 186, 135, 0.35);
+    --ss-stream-dot-bg: radial-gradient(circle, rgba(15, 76, 57, 0.86) 0%, rgba(20, 186, 135, 0.74) 45%, rgba(20, 186, 135, 0) 100%);
+    --ss-stream-dot-shadow: 0 0 11px rgba(20, 186, 135, 0.42);
+    --ss-stream-dot-mix: normal;
+    --ss-stream-reverse-dot-bg: radial-gradient(circle, rgba(13, 68, 79, 0.86) 0%, rgba(35, 150, 191, 0.72) 45%, rgba(35, 150, 191, 0) 100%);
+    --ss-stream-reverse-dot-shadow: 0 0 11px rgba(35, 150, 191, 0.38);
+    --ss-brand-tagline-color: rgba(17, 57, 42, 0.8);
+    --ss-brand-status-color: rgba(17, 57, 42, 0.8);
+    --ss-progress-label-color: rgba(17, 57, 42, 0.8);
+    --ss-progress-fill-shadow: 0 0 22px rgba(41, 215, 134, 0.35);
   }
 
   .ss-brand-name {
     color: var(--ss-loader-text-light);
   }
 
-  .ss-brand-tagline,
-  .ss-brand-status,
-  .ss-progress-label {
-    color: rgba(17, 57, 42, 0.8);
-  }
-
   .ss-progress-track {
     background: var(--ss-loader-track-light);
   }
-}
 
 @media (max-width: 720px) {
   .ss-stage {
@@ -573,8 +569,7 @@ body {
   .ss-logo-rig,
   .ss-logo-cube,
   .ss-halo,
-  .ss-progress-fill,
-  .ss-random-dot {
+  .ss-progress-fill {
     animation: none !important;
   }
 
@@ -794,24 +789,6 @@ body {
   100% {
     opacity: 0;
     transform: translate3d(-28px, var(--ss-lane-y), var(--ss-lane-z)) scale(0.62);
-  }
-}
-
-@keyframes ssRandomPulse {
-  0%,
-  100% {
-    opacity: 0.08;
-    transform: translate3d(var(--ss-rx), var(--ss-ry), var(--ss-rz)) scale(0.82);
-  }
-
-  35% {
-    opacity: 0.9;
-    transform: translate3d(calc(var(--ss-rx) + 2px), calc(var(--ss-ry) - 1px), calc(var(--ss-rz) + 1px)) scale(1.06);
-  }
-
-  65% {
-    opacity: 0.34;
-    transform: translate3d(calc(var(--ss-rx) - 2px), calc(var(--ss-ry) + 1px), calc(var(--ss-rz) - 1px)) scale(0.9);
   }
 }
 
