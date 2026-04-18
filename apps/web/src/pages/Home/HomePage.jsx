@@ -26,7 +26,6 @@ const HomePage = ({ theme, sensors, isConnected }) => {
   const soilMoisture = sensors?.soilMoisture ?? 0;
   const temperature  = sensors?.temperature  ?? 0;
   const humidity     = sensors?.humidity     ?? 0;
-  const pH           = sensors?.pH           ?? 0;
 
   const quickStats = [
     {
@@ -49,13 +48,6 @@ const HomePage = ({ theme, sensors, isConnected }) => {
       icon: 'humidity',
       status: humidity < 30 ? 'info' : 'success',
       hint: humidity < 30 ? 'Low humidity' : 'Good level',
-    },
-    {
-      label: 'Soil pH',
-      value: pH.toFixed(1),
-      icon: 'ph',
-      status: pH < 5.5 || pH > 7.5 ? 'warning' : 'success',
-      hint: pH < 5.5 || pH > 7.5 ? 'Outside safe range' : 'Balanced',
     },
   ];
 

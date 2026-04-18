@@ -1,4 +1,29 @@
 const SENSOR_REGISTRY_KEY = 'sproutsense_sensor_registry_v1';
+const ACCESS_TOKEN_KEY = 'ss_access_token';
+
+function getScopedRegistryKey() {
+  try {
+    const token = localStorage.getItem(ACCESS_TOKEN_KEY);
+    if (!token || typeof token !== 'string') {
+      return SENSOR_REGISTRY_KEY;
+    }
+
+    const segments = token.split('.');
+    if (segments.length < 2) {
+      return SENSOR_REGISTRY_KEY;
+    }
+
+    const payload = JSON.parse(atob(segments[1].replace(/-/g, '+').replace(/_/g, '/')));
+    const userId = String(payload?.sub || '').trim();
+    if (!userId) {
+      return SENSOR_REGISTRY_KEY;
+    }
+
+    return `${SENSOR_REGISTRY_KEY}:${userId}`;
+  } catch {
+    return SENSOR_REGISTRY_KEY;
+  }
+}
 
 const DEFAULT_SENSORS = [
   {
@@ -66,22 +91,6 @@ const DEFAULT_SENSORS = [
     showInAnalytics: true,
   },
   {
-    id: 'ph',
-    name: 'pH',
-    key: 'pH',
-    unit: '',
-    dataType: 'number',
-    category: 'soil',
-    minThreshold: 5.5,
-    maxThreshold: 7.5,
-    warningThreshold: 7.8,
-    criticalThreshold: 8.2,
-    chartType: 'gauge',
-    enabled: true,
-    showInDashboard: true,
-    showInAnalytics: true,
-  },
-  {
     id: 'flow-rate',
     name: 'Flow Rate',
     key: 'flowRate',
@@ -140,23 +149,28 @@ function normalizeSensor(sensor) {
 
 export function getSensorRegistry() {
   try {
-    const raw = localStorage.getItem(SENSOR_REGISTRY_KEY);
+    const scopedKey = getScopedRegistryKey();
+    const raw = localStorage.getItem(scopedKey);
+
     if (!raw) return DEFAULT_SENSORS;
     const parsed = JSON.parse(raw);
     if (!Array.isArray(parsed) || parsed.length === 0) return DEFAULT_SENSORS;
 
-    const normalizedParsed = parsed.map(normalizeSensor);
+    const normalizedParsed = parsed
+      .map(normalizeSensor)
+      .filter((sensor) => !['ph', 'pH'].includes(String(sensor.key || '').trim()));
     const existingByKey = new Set(normalizedParsed.map((sensor) => sensor.key));
     const missingCoreSensors = DEFAULT_SENSORS
       .map(normalizeSensor)
       .filter((sensor) => !existingByKey.has(sensor.key));
 
     if (missingCoreSensors.length === 0) {
+      localStorage.setItem(scopedKey, JSON.stringify(normalizedParsed));
       return normalizedParsed;
     }
 
     const merged = [...normalizedParsed, ...missingCoreSensors];
-    localStorage.setItem(SENSOR_REGISTRY_KEY, JSON.stringify(merged));
+    localStorage.setItem(scopedKey, JSON.stringify(merged));
     return merged;
   } catch {
     return DEFAULT_SENSORS;
@@ -165,7 +179,7 @@ export function getSensorRegistry() {
 
 export function saveSensorRegistry(sensors) {
   const normalized = (Array.isArray(sensors) ? sensors : []).map(normalizeSensor);
-  localStorage.setItem(SENSOR_REGISTRY_KEY, JSON.stringify(normalized));
+  localStorage.setItem(getScopedRegistryKey(), JSON.stringify(normalized));
   return normalized;
 }
 
