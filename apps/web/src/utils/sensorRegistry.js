@@ -82,6 +82,22 @@ const DEFAULT_SENSORS = [
     showInAnalytics: true,
   },
   {
+    id: 'flow-rate',
+    name: 'Flow Rate',
+    key: 'flowRate',
+    unit: 'mL/min',
+    dataType: 'number',
+    category: 'irrigation',
+    minThreshold: 0,
+    maxThreshold: 900,
+    warningThreshold: 1,
+    criticalThreshold: 900,
+    chartType: 'sparkline',
+    enabled: true,
+    showInDashboard: true,
+    showInAnalytics: true,
+  },
+  {
     id: 'flow-volume',
     name: 'Water Volume',
     key: 'flowVolume',
@@ -128,7 +144,20 @@ export function getSensorRegistry() {
     if (!raw) return DEFAULT_SENSORS;
     const parsed = JSON.parse(raw);
     if (!Array.isArray(parsed) || parsed.length === 0) return DEFAULT_SENSORS;
-    return parsed.map(normalizeSensor);
+
+    const normalizedParsed = parsed.map(normalizeSensor);
+    const existingByKey = new Set(normalizedParsed.map((sensor) => sensor.key));
+    const missingCoreSensors = DEFAULT_SENSORS
+      .map(normalizeSensor)
+      .filter((sensor) => !existingByKey.has(sensor.key));
+
+    if (missingCoreSensors.length === 0) {
+      return normalizedParsed;
+    }
+
+    const merged = [...normalizedParsed, ...missingCoreSensors];
+    localStorage.setItem(SENSOR_REGISTRY_KEY, JSON.stringify(merged));
+    return merged;
   } catch {
     return DEFAULT_SENSORS;
   }
