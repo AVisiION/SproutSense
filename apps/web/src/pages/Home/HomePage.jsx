@@ -27,6 +27,7 @@ const HomePage = ({ theme, sensors, isConnected }) => {
   const temperature  = sensors?.temperature  ?? 0;
   const humidity     = sensors?.humidity     ?? 0;
 
+  const flowVolume = sensors?.flowVolume ?? 0;
   const quickStats = [
     {
       label: 'Soil Moisture',
@@ -48,6 +49,13 @@ const HomePage = ({ theme, sensors, isConnected }) => {
       icon: 'humidity',
       status: humidity < 30 ? 'info' : 'success',
       hint: humidity < 30 ? 'Low humidity' : 'Good level',
+    },
+    {
+      label: 'Flow Volume',
+      value: `${flowVolume} L/min`,
+      icon: 'tint',
+      status: 'info',
+      hint: 'Current water flow',
     },
   ];
 
