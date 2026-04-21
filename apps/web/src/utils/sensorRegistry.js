@@ -119,7 +119,7 @@ const DEFAULT_SENSORS = [
     criticalThreshold: 1800,
     chartType: 'sparkline',
     enabled: true,
-    showInDashboard: false,
+    showInDashboard: true,
     showInAnalytics: true,
   },
 ];
