@@ -134,8 +134,6 @@ export default function AIChat({ sensors, defaultTab = 'chat' }) {
   ]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
-  const [apiKey, setApiKey] = useState(() => localStorage.getItem('gemini_api_key') || '');
-  const [showKeyPrompt, setShowKeyPrompt] = useState(false);
   const [activeTab, setActiveTab] = useState(defaultTab); // Use defaultTab prop
   const [selectedPlant, setSelectedPlant] = useState(() => localStorage.getItem('selected_plant_type') || 'Tomato');
   const [isOnline, setIsOnline] = useState(navigator.onLine);
@@ -208,10 +206,7 @@ export default function AIChat({ sensors, defaultTab = 'chat' }) {
     const text = input.trim();
     if (!text || loading) return;
 
-    if (!apiKey) {
-      setShowKeyPrompt(true);
-      return;
-    }
+    // No apiKey check; backend handles key
 
     if (!isOnline) {
       setMessages(prev => [...prev, {
@@ -228,32 +223,25 @@ export default function AIChat({ sensors, defaultTab = 'chat' }) {
     setInput('');
     setLoading(true);
 
-    try {
-      const resp = await fetch(`${import.meta.env.VITE_API_BASE_URL || '/api'}/ai/chat`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          message: text,
-          sensorContext,
-          history: messages.slice(-8).map(m => ({ role: m.role, content: m.content })),
-          apiKey,
-        }),
-      });
-
-      const data = await resp.json();
-
-      if (!resp.ok || !data.success) {
-        throw new Error(data.error || data.message || `Server error ${resp.status}`);
-      }
-
-      const aiMsg = {
-        role: 'assistant',
-        content: data.reply || 'No response received.',
-        time: new Date(),
-      };
-      setMessages(prev => [...prev, aiMsg]);
-    } catch (err) {
-      setMessages(prev => [...prev, {
+              <textarea
+                ref={inputRef}
+                id="ai-chat-input"
+                className="chat-input"
+                placeholder={'Ask about your plants...'}
+                value={input}
+                onChange={handleInputChange}
+                onKeyDown={handleKeyDown}
+                rows={1}
+                aria-label="Ask SproutSense AI"
+              />
+              <button
+                className="chat-send-btn"
+                onClick={sendMessage}
+                disabled={!input.trim() || loading}
+                aria-label="Send message"
+              >
+                <i className="fa-solid fa-paper-plane" aria-hidden="true" />
+              </button>
         role: 'assistant',
         content: `Sorry, I encountered an error: ${err.message}. Please check your API key in Settings.`,
         time: new Date(),
