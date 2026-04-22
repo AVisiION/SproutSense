@@ -183,21 +183,21 @@ export default function AIChat({ sensors, defaultTab = 'chat' }) {
   const sensorHealth = calculateSensorHealth(sensors);
   const sensorContext = sensors
     ? `Current sensor readings:
-- Soil Moisture: ${sensors.soilMoisture ?? 'N/A'}%
-- Temperature: ${sensors.temperature ?? 'N/A'}°C
-- Humidity: ${sensors.humidity ?? 'N/A'}%
-- Light: ${sensors.light ?? 'N/A'} lux
-- pH: ${sensors.pH ?? 'N/A'}
-- Plant Type: ${selectedPlant}`
+    - Soil Moisture: ${(sensors.soilMoisture !== undefined && sensors.soilMoisture !== null) ? sensors.soilMoisture : 'N/A'}%
+    - Temperature: ${(sensors.temperature !== undefined && sensors.temperature !== null) ? sensors.temperature : 'N/A'}°C
+    - Humidity: ${(sensors.humidity !== undefined && sensors.humidity !== null) ? sensors.humidity : 'N/A'}%
+    - Light: ${(sensors.light !== undefined && sensors.light !== null) ? sensors.light : 'N/A'} lux
+    - pH: ${(sensors.pH !== undefined && sensors.pH !== null) ? sensors.pH : 'N/A'}
+    - Plant Type: ${selectedPlant}`
     : 'No sensor data currently available.';
 
   const sensorChips = sensors
     ? Object.entries(SENSOR_META)
         .filter(([key]) => sensors[key] !== undefined && sensors[key] !== null)
         .map(([key, meta]) => ({
-          key,
+          key: key,
           icon: meta.icon,
-          text: `${meta.label} ${sensors[key]}${meta.unit}`,
+          text: meta.label + ' ' + (sensors[key] !== undefined && sensors[key] !== null ? sensors[key] : 'N/A') + meta.unit,
           status: key === 'soilMoisture' && (sensors[key] < 20 || sensors[key] > 90) ? 'caution' : undefined,
         }))
     : [];
@@ -207,41 +207,24 @@ export default function AIChat({ sensors, defaultTab = 'chat' }) {
     if (!text || loading) return;
 
     // No apiKey check; backend handles key
+    try {
+      if (!isOnline) {
+        setMessages(prev => [...prev, {
+          role: 'assistant',
+          content: '📡 You\'re offline. AI features require an internet connection. Your chat history is saved locally.',
+          time: new Date(),
+          isError: true,
+        }]);
+        return;
+      }
 
-    if (!isOnline) {
+      const userMsg = { role: 'user', content: text, time: new Date() };
+      setMessages(prev => [...prev, userMsg]);
+      setInput('');
+      setLoading(true);
+      // ... your async AI call logic here ...
+    } catch (err) {
       setMessages(prev => [...prev, {
-        role: 'assistant',
-        content: '📡 You\'re offline. AI features require an internet connection. Your chat history is saved locally.',
-        time: new Date(),
-        isError: true,
-      }]);
-      return;
-    }
-
-    const userMsg = { role: 'user', content: text, time: new Date() };
-    setMessages(prev => [...prev, userMsg]);
-    setInput('');
-    setLoading(true);
-
-              <textarea
-                ref={inputRef}
-                id="ai-chat-input"
-                className="chat-input"
-                placeholder={'Ask about your plants...'}
-                value={input}
-                onChange={handleInputChange}
-                onKeyDown={handleKeyDown}
-                rows={1}
-                aria-label="Ask SproutSense AI"
-              />
-              <button
-                className="chat-send-btn"
-                onClick={sendMessage}
-                disabled={input.trim() === '' || loading}
-                aria-label="Send message"
-              >
-                <i className="fa-solid fa-paper-plane" aria-hidden="true" />
-              </button>
         role: 'assistant',
         content: `Sorry, I encountered an error: ${err.message}. Please check your API key in Settings.`,
         time: new Date(),
@@ -489,7 +472,7 @@ export default function AIChat({ sensors, defaultTab = 'chat' }) {
               <button
                 className="chat-send-btn"
                 onClick={sendMessage}
-                disabled={!input.trim() || loading || !apiKey}
+                disabled={typeof input === 'string' ? !input.trim() || loading || !apiKey : true}
                 aria-label="Send message"
               >
                 <i className="fa-solid fa-paper-plane" aria-hidden="true" />
