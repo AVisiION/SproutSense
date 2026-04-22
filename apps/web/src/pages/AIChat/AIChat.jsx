@@ -237,7 +237,7 @@ export default function AIChat({ sensors, defaultTab = 'chat' }) {
               <button
                 className="chat-send-btn"
                 onClick={sendMessage}
-                disabled={!input.trim() || loading}
+                disabled={(!input.trim()) || loading}
                 aria-label="Send message"
               >
                 <i className="fa-solid fa-paper-plane" aria-hidden="true" />
