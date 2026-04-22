@@ -71,8 +71,8 @@ String wifiPassword = "";
    Get it by calling: POST /api/devices/ESP32-CAM/rotate
    with your user JWT in Authorization header
    ============================================================ */
-const char* DEVICE_ID    = "ESP32-CAM";
-const char* DEVICE_TOKEN = "PASTE_YOUR_PLAIN_TOKEN_HERE";  // FIX #1
+const char* DEVICE_ID    = "ESP32-CAM-1VJPQM";
+const char* DEVICE_TOKEN = "8E80446FD314EB99315FB4E7477D69246C6A75D8288CD6D4CD2749911BBD853D";  // FIX #1
 
 const char* EDGE_IMPULSE_PROJECT = "919040";
 
@@ -81,8 +81,8 @@ const char* EDGE_IMPULSE_PROJECT = "919040";
    ============================================================ */
 const char* URL_DISEASE    = "https://sproutsense.onrender.com/api/ai/disease/device";
 const char* URL_STATUS     = "https://sproutsense.onrender.com/api/config/status/device";
-const char* URL_CONFIG     = "https://sproutsense.onrender.com/api/config/device/ESP32-CAM";
-const char* URL_CONFIG_ALT = "https://sproutsense.onrender.com/api/config/device?deviceId=ESP32-CAM";
+const char* URL_CONFIG     = "https://sproutsense.onrender.com/api/config/device/ESP32-CAM-1VJPQM";
+const char* URL_CONFIG_ALT = "https://sproutsense.onrender.com/api/config/device?deviceId=ESP32-CAM-1VJPQM";
 
 /* ============================================================
    TIMING CONSTANTS (milliseconds)

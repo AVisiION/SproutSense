@@ -45,6 +45,8 @@ import './Admin.css';
 import { setMockEnabled, isMockEnabled } from '../../services/mockDataService';
 
 export default function AdminPanelPage() {
+  // Get selected deviceId from localStorage
+  const getSelectedDeviceId = () => localStorage.getItem('selectedDeviceId') || 'ESP32-SENSOR';
   const { logout, user, role, hasPermission, startImpersonation } = useAuth();
   const adminUser = user?.fullName || user?.email || 'admin';
   const isViewerReadOnly = role === ROLE.VIEWER;
@@ -282,6 +284,7 @@ export default function AdminPanelPage() {
     if (showLoading) setRefreshing(true);
     else setLoading(true);
     try {
+      const deviceId = getSelectedDeviceId();
       const [
         health, 
         latest, 
@@ -293,10 +296,10 @@ export default function AdminPanelPage() {
         statsRes
       ] = await Promise.all([
         configAPI.getHealth().catch(() => null),
-        sensorAPI.getLatest('ESP32-SENSOR').catch(() => null),
-        configAPI.get('ESP32-SENSOR').catch(() => null),
-        wateringAPI.getStatus('ESP32-SENSOR').catch(() => null),
-        aiAPI.getUsageStats('ESP32-SENSOR').catch(() => null),
+        sensorAPI.getLatest(deviceId).catch(() => null),
+        configAPI.get(deviceId).catch(() => null),
+        wateringAPI.getStatus(deviceId).catch(() => null),
+        aiAPI.getUsageStats(deviceId).catch(() => null),
         usersAPI.list().catch(() => null),
         deviceAPI.listKeys().catch(() => null),
         configAPI.getSystemStats().catch(() => null)
@@ -352,10 +355,17 @@ export default function AdminPanelPage() {
   }, [log]);
 
   useEffect(() => {
+    const handleStorage = () => {
+      fetchAllData();
+    };
+    window.addEventListener('storage', handleStorage);
     fetchAllData();
     loadAdminLogs();
     loadSensors();
     loadUsers();
+    return () => {
+      window.removeEventListener('storage', handleStorage);
+    };
   }, [fetchAllData, loadAdminLogs, loadSensors, loadUsers]);
 
   useEffect(() => {

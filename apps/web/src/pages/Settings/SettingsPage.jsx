@@ -152,6 +152,9 @@ export default function SettingsPage({
     displayName: '',
   });
   const [devices, setDevices] = useState([]);
+  const [selectedDeviceId, setSelectedDeviceId] = useState(() => {
+    return localStorage.getItem('selectedDeviceId') || '';
+  });
   const [loadingDevices, setLoadingDevices] = useState(false);
   const [pairingDevice, setPairingDevice] = useState(false);
   const [rotatingDeviceId, setRotatingDeviceId] = useState('');
@@ -206,6 +209,11 @@ export default function SettingsPage({
       const res = await deviceAPI.listMine();
       const list = Array.isArray(res?.devices) ? res.devices : [];
       setDevices(list);
+      // If no device selected, default to first device
+      if (!selectedDeviceId && list.length > 0) {
+        setSelectedDeviceId(list[0].deviceId);
+        localStorage.setItem('selectedDeviceId', list[0].deviceId);
+      }
     } catch {
       setDevices([]);
       onNotification?.('Unable to load your devices', 'error');
@@ -947,6 +955,27 @@ export default function SettingsPage({
           </div>
           <div className="sp-card-body">
             <BleProvisioning />
+
+            {/* Device Selection Dropdown */}
+            <div className="sp-field" style={{ marginBottom: '1rem' }}>
+              <label className="sp-label">Selected Device</label>
+              <select
+                className="sp-select"
+                value={selectedDeviceId}
+                onChange={e => {
+                  setSelectedDeviceId(e.target.value);
+                  localStorage.setItem('selectedDeviceId', e.target.value);
+                }}
+                disabled={devices.length === 0}
+              >
+                {devices.map(device => (
+                  <option key={device.deviceId} value={device.deviceId}>
+                    {device.displayName || device.deviceId}
+                  </option>
+                ))}
+              </select>
+              <p className="sp-row-desc">This device will be used for dashboard, analytics, and insights.</p>
+            </div>
 
             <div className="sp-device-fields">
               <div className="sp-field">

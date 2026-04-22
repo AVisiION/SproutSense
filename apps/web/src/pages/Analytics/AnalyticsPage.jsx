@@ -275,6 +275,9 @@ export default function AnalyticsPage() {
     lineType: visualPrefs?.charts?.chartStyle === 'straight' ? 'linear' : 'monotone',
   }), [visualPrefs]);
 
+  // Get selected deviceId from localStorage
+  const getSelectedDeviceId = () => localStorage.getItem('selectedDeviceId') || 'ESP32-SENSOR';
+
   useEffect(() => {
     const loadSensors = () => {
       const configured = getAnalyticsSensors();
@@ -297,9 +300,10 @@ export default function AnalyticsPage() {
     try {
       const end   = new Date();
       const start = new Date(end.getTime() - selectedRange.hours * 3_600_000);
+      const deviceId = getSelectedDeviceId();
 
       // When the physical device is online, force live API calls so analytics reads DB-backed data.
-      const statusResponse = await configAPI.getStatus('ESP32-SENSOR', {
+      const statusResponse = await configAPI.getStatus(deviceId, {
         signal: controller.signal,
         forceLive: true,
       });
@@ -312,9 +316,9 @@ export default function AnalyticsPage() {
       };
 
       const [sensorResp, diseaseResp, wateringResp] = await Promise.all([
-        sensorAPI.getHistory(start.toISOString(), end.toISOString(), 'ESP32-SENSOR', requestOptions),
-        aiAPI.getDiseaseDetections({ startDate: start.toISOString(), endDate: end.toISOString() }, requestOptions),
-        wateringAPI.getLogs(500, 'ESP32-SENSOR', requestOptions),
+        sensorAPI.getHistory(start.toISOString(), end.toISOString(), deviceId, requestOptions),
+        aiAPI.getDiseaseDetections({ startDate: start.toISOString(), endDate: end.toISOString(), deviceId }, requestOptions),
+        wateringAPI.getLogs(500, deviceId, requestOptions),
       ]);
 
       let sensors   = Array.isArray(sensorResp?.data) ? sensorResp.data : (sensorResp || []);
@@ -360,8 +364,15 @@ export default function AnalyticsPage() {
   }, [selectedRange]);
 
   useEffect(() => {
+    const handleStorage = () => {
+      fetchData();
+    };
+    window.addEventListener('storage', handleStorage);
     const cleanup = fetchData();
-    return () => { cleanup.then(c => c && c()); };
+    return () => {
+      window.removeEventListener('storage', handleStorage);
+      cleanup.then(c => c && c());
+    };
   }, [fetchData]);
 
   // ─── Derived / memoised data ────────────────────────────────────────────────
