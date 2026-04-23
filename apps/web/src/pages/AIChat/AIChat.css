@@ -1253,3 +1253,30 @@
     font-size: 0.9rem;
   }
 }
+
+/* ── Insights tab embedded inside AIChat ─────────────────────────────────── */
+/* Wraps <InsightsPage> so it fills the flex tab body with correct overflow   */
+
+.insights-in-aichat {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border-radius: 14px;
+  background: linear-gradient(180deg, rgba(5,15,11,0.44) 0%, rgba(4,10,9,0.66) 100%);
+}
+
+/* Inside the embed, let the ip-root fill the available space */
+.insights-in-aichat .insights-section {
+  flex: 1;
+  min-height: 0;
+}
+
+.insights-in-aichat .ip-root {
+  padding: 8px 8px 0;
+}
+
+.insights-in-aichat .ip-sticky-head {
+  background: linear-gradient(160deg, rgba(6,18,13,0.60) 0%, rgba(5,16,12,0.50) 100%);
+}

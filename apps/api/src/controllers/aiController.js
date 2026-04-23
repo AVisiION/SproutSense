@@ -1,4 +1,4 @@
-﻿import SensorReading from '../models/SensorReading.js';
+import SensorReading from '../models/SensorReading.js';
 import WateringLog from '../models/WateringLog.js';
 import SystemConfig from '../models/SystemConfig.js';
 import DiseaseDetection from '../models/DiseaseDetection.js';
@@ -683,8 +683,8 @@ function calculateOverallHealthScore(stats, diseases, wateringCount) {
 // POST /api/ai/chat - Gemini conversational AI with sensor context
 export const chatWithAI = async (req, res, next) => {
   try {
-    const { message, sensorContext = '', history = [], apiKey = '' } = req.body;
-    const deviceId = resolveAIQuotaDeviceId(req);
+    const { message, sensorContext = '', history = [] } = req.body;
+    const deviceId = resolveAIQuotaDeviceModel(req);
 
     if (!message) {
       return errorResponse(res, 'Message is required', HTTP_STATUS.BAD_REQUEST);
@@ -695,11 +695,13 @@ export const chatWithAI = async (req, res, next) => {
       return quotaBlocked;
     }
 
-    const key = apiKey || config.API_KEYS.GEMINI;
+    // Resolve key: DB-managed admin keys take priority, then env var
+    const dbKey = await SystemConfig.getActiveAIKey();
+    const key = dbKey || config.API_KEYS.GEMINI;
     if (!key) {
       return errorResponse(
         res,
-        'No Gemini API key configured. Add it in Settings > AI API Keys or set GEMINI_API_KEY in apps/api/.env',
+        'No Gemini API key configured. An administrator must add one in the Admin Panel > AI API Keys.',
         400
       );
     }
@@ -733,11 +735,18 @@ export const chatWithAI = async (req, res, next) => {
       // systemInstruction as first user turn for SDK compatibility
     });
 
-    // Prepend system persona + sensor context to the outgoing message
-    const sysPrefix = 'You are SproutSense AI, an expert IoT plant-care assistant. Interpret sensor readings and give concise, actionable plant-care guidance. ';
+    // Assemble the final Gemini prompt.
+    // Frontend sends:
+    //   message      = user's exact query (unmodified, what they typed)
+    //   sensorContext = structured agronomic analysis block built by buildSensorContext()
+    //                  (includes readings, health classification, issues, recs, agent rules)
+    //
+    // We concatenate:  [user question]  then  [sensor/agent context block]
+    // Putting the question FIRST lets Gemini lock onto the intent before reading context,
+    // which improves answer focus and reduces hallucination.
     const fullMessage = sensorContext
-      ? `${sysPrefix}Current sensor readings:\n${sensorContext}\n\nUser question: ${message}`
-      : `${sysPrefix}User question: ${message}`;
+      ? `User question: ${message}\n\n${sensorContext}`
+      : `User question: ${message}\n\nNote: No live sensor data is available. Answer based on general plant-care science and state any assumptions clearly.`;
 
     const result = await chat.sendMessage(fullMessage);
     const reply = result.response.text();
@@ -748,7 +757,7 @@ export const chatWithAI = async (req, res, next) => {
     console.error('[AI Chat] Gemini error:', msg);
 
     if (msg.includes('API_KEY_INVALID') || msg.includes('API key') || msg.includes('401')) {
-      return res.status(401).json({ success: false, error: 'Invalid Gemini API key. Regenerate it at aistudio.google.com and update in Settings.' });
+      return res.status(401).json({ success: false, error: 'Invalid Gemini API key. An admin must update the key in Admin Panel > AI API Keys.' });
     }
     if (msg.includes('quota') || msg.includes('RESOURCE_EXHAUSTED') || msg.includes('429')) {
       return res.status(429).json({ success: false, error: 'Gemini quota exceeded - try again in a moment.' });
@@ -1387,4 +1396,86 @@ function getPreventiverMeasures(disease) {
 }
 
 
+// ============================================================================
+// ADMIN: AI API KEY MANAGEMENT
+// ============================================================================
 
+/**
+ * GET /api/ai/keys
+ * Admin-only: list all AI API keys (values masked)
+ */
+export const getAdminAIKeys = async (req, res, next) => {
+  try {
+    let global = await SystemConfig.findOne({ deviceId: '__global__' });
+    if (!global) global = await SystemConfig.create({ deviceId: '__global__' });
+    const keys = (global.aiApiKeys || []).map((k, idx) => ({
+      index: idx,
+      label: k.label,
+      keyMasked: k.key ? `${k.key.slice(0, 6)}...${k.key.slice(-4)}` : '---',
+      active: k.active,
+      addedAt: k.addedAt,
+    }));
+    res.json({ success: true, keys });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * POST /api/ai/keys
+ * Admin-only: add a new AI API key
+ * Body: { label, key }
+ */
+export const addAdminAIKey = async (req, res, next) => {
+  try {
+    const { label = 'Gemini Key', key } = req.body;
+    if (!key || key.trim().length < 10) {
+      return res.status(400).json({ success: false, message: 'A valid API key is required' });
+    }
+    let global = await SystemConfig.findOne({ deviceId: '__global__' });
+    if (!global) global = await SystemConfig.create({ deviceId: '__global__' });
+    global.aiApiKeys.push({ label: label.trim(), key: key.trim(), active: true, addedAt: new Date() });
+    await global.save();
+    res.json({ success: true, message: 'AI API key added successfully', count: global.aiApiKeys.length });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * DELETE /api/ai/keys/:index
+ * Admin-only: remove a key by array index
+ */
+export const deleteAdminAIKey = async (req, res, next) => {
+  try {
+    const idx = parseInt(req.params.index, 10);
+    let global = await SystemConfig.findOne({ deviceId: '__global__' });
+    if (!global || !global.aiApiKeys[idx]) {
+      return res.status(404).json({ success: false, message: 'Key not found' });
+    }
+    global.aiApiKeys.splice(idx, 1);
+    await global.save();
+    res.json({ success: true, message: 'Key deleted' });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * PATCH /api/ai/keys/:index/toggle
+ * Admin-only: enable or disable a key
+ */
+export const toggleAdminAIKey = async (req, res, next) => {
+  try {
+    const idx = parseInt(req.params.index, 10);
+    let global = await SystemConfig.findOne({ deviceId: '__global__' });
+    if (!global || !global.aiApiKeys[idx]) {
+      return res.status(404).json({ success: false, message: 'Key not found' });
+    }
+    global.aiApiKeys[idx].active = !global.aiApiKeys[idx].active;
+    await global.save();
+    res.json({ success: true, active: global.aiApiKeys[idx].active });
+  } catch (error) {
+    next(error);
+  }
+};

@@ -25,6 +25,7 @@ import { NavLink, Navigate, Route, Routes, useLocation } from 'react-router-dom'
 import { AnimatePresence, motion } from 'framer-motion';
 import { Toaster, toast as hotToast } from 'react-hot-toast';
 import { useWebSocket } from './hooks/useWebSocket';
+import { useDevices } from './hooks/useDevices';
 
 import { configAPI, sensorAPI, wateringAPI, aiAPI } from './utils/api';
 import { isMockEnabled, getMockSensors, getMockAlerts, subscribeToMockUpdates } from './services/mockDataService';
@@ -298,6 +299,9 @@ function App() {
   const auth = useAuth();
   const canReadSensorData = auth.hasPermission(PERMISSION.SENSORS_READ);
 
+  // Resolve real admin-assigned device IDs for this user
+  const { sensorDeviceId, camDeviceId } = useDevices({ enabled: auth.isAuthenticated });
+
   const isAdminRoute = location.pathname.startsWith('/admin');
   const authPages = ['/login', '/register', '/forgot-password', '/reset-password', '/verify-email', '/verify-email-pending', '/access-denied'];
   const isAuthPage = authPages.some((path) => location.pathname === path);
@@ -387,7 +391,7 @@ function App() {
       const end = new Date();
       const start = new Date(end.getTime() - 60 * 60 * 1000);
       const aiResp = await aiAPI.getDiseaseDetections({
-        deviceId: 'ESP32-CAM',
+        deviceId: camDeviceId,
         startDate: start.toISOString(),
         endDate: end.toISOString(),
         limit: 5,
@@ -406,7 +410,7 @@ function App() {
         newAlert,
       ]);
     } catch { /* Silently ignore */ }
-  }, [isGuestPublic]);
+  }, [isGuestPublic, camDeviceId]);
 
   useEffect(() => {
     fetchDiseaseAlerts();
@@ -530,12 +534,12 @@ function App() {
       try {
         const [sensorData, wateringStatus, configResponse, esp32StatusResponse, esp32CamStatusResponse, healthResponse] =
           await Promise.all([
-            canReadSensorData ? sensorAPI.getLatest() : Promise.resolve(null),
-            wateringAPI.getStatus(),
-            configAPI.get(),
-            configAPI.getStatus('ESP32-SENSOR'),
-            configAPI.getStatus('ESP32-CAM'),
-            configAPI.getHealth('ESP32-SENSOR'),
+            canReadSensorData ? sensorAPI.getLatest(sensorDeviceId) : Promise.resolve(null),
+            wateringAPI.getStatus(sensorDeviceId),
+            configAPI.get(sensorDeviceId),
+            configAPI.getStatus(sensorDeviceId),
+            configAPI.getStatus(camDeviceId),
+            configAPI.getHealth(),
           ]);
 
         const configData         = extractData(configResponse);
@@ -625,7 +629,7 @@ function App() {
       if (esp32OfflineTimeout)    clearTimeout(esp32OfflineTimeout);
       if (esp32CamOfflineTimeout) clearTimeout(esp32CamOfflineTimeout);
     };
-  }, [isGuestPublic, isConnected, canReadSensorData]);
+  }, [isGuestPublic, isConnected, canReadSensorData, sensorDeviceId, camDeviceId]);
 
   // ── Watering & Config handlers ─────────────────────────────────────────
   const handleStartWatering = async () => {
@@ -641,14 +645,14 @@ function App() {
   const handleSaveMoistureThreshold = async () => {
     if(isMockEnabled()) { showNotification('Mock: Threshold Saved', 'success'); return; }
     setIsThresholdSaving(true);
-    try { await configAPI.update('ESP32-SENSOR', { soilMoistureThreshold: moistureThreshold }); showNotification('Moisture threshold saved', 'success'); }
+    try { await configAPI.update(sensorDeviceId, { soilMoistureThreshold: moistureThreshold }); showNotification('Moisture threshold saved', 'success'); }
     catch { showNotification('Failed to save moisture threshold', 'error'); }
     finally { setIsThresholdSaving(false); }
   };
   const handleSaveAiControls = async () => {
     if(isMockEnabled()) { showNotification('Mock: AI Settings Saved', 'success'); return; }
     setIsAiControlSaving(true);
-    try { await configAPI.update('ESP32-SENSOR', { plantGrowthEnabled, plantGrowthStage, aiInsightsMode }); showNotification('Growth and AI insight settings saved', 'success'); }
+    try { await configAPI.update(sensorDeviceId, { plantGrowthEnabled, plantGrowthStage, aiInsightsMode }); showNotification('Growth and AI insight settings saved', 'success'); }
     catch { showNotification('Failed to save growth and AI settings', 'error'); }
     finally { setIsAiControlSaving(false); }
   };
@@ -991,13 +995,13 @@ function App() {
 
               <Route path="/ai" element={
                 <ProtectedRoute requiredPermissions={[PERMISSION.AI_CHAT]} requireLinkedDevice>
-                  <PageWrapper><section className="dashboard-section dashboard-section-wide ai-chat-section"><AIChat sensors={sensors} /></section></PageWrapper>
+                  <PageWrapper><section className="dashboard-section dashboard-section-wide ai-chat-section"><AIChat sensors={sensors} sensorDeviceId={sensorDeviceId} /></section></PageWrapper>
                 </ProtectedRoute>
               } />
 
               <Route path="/insights" element={
                 <ProtectedRoute requiredPermissions={[PERMISSION.AI_CHAT]} requireLinkedDevice>
-                  <PageWrapper><section className="dashboard-section dashboard-section-wide ai-chat-section"><AIChat sensors={sensors} defaultTab="insights" /></section></PageWrapper>
+                  <PageWrapper><section className="dashboard-section dashboard-section-wide ai-chat-section"><AIChat sensors={sensors} sensorDeviceId={sensorDeviceId} defaultTab="insights" /></section></PageWrapper>
                 </ProtectedRoute>
               } />
 

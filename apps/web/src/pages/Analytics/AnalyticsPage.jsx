@@ -236,6 +236,7 @@ export default function AnalyticsPage() {
   const [sensorConfigs, setSensorConfigs] = useState([]);
   const [activeSensorId, setActiveSensorId] = useState('');
   const [kpi, setKpi] = useState({ waterUsed: 0, avgMoisture: 0, diseaseCount: 0, uptime: 0 });
+  const [activeFarmingChart, setActiveFarmingChart] = useState('water');
 
   useEffect(() => {
     const syncVisualPrefs = () => setVisualPrefs(loadVisualPrefs());
@@ -376,13 +377,31 @@ export default function AnalyticsPage() {
   }, [fetchData]);
 
   // ─── Derived / memoised data ────────────────────────────────────────────────
-  const timeFormattedData = useMemo(() => sensorData.map(d => ({
-    ...d,
-    timeLabel: format(
-      new Date(d.timestamp),
-      selectedRange.hours <= 24 ? 'HH:mm' : 'MMM d'
-    ),
-  })), [sensorData, selectedRange]);
+  const timeFormattedData = useMemo(() => sensorData.map(d => {
+    const temp = d.temperature || 25;
+    const humidity = d.humidity || 50;
+    const light = d.light || 0;
+    
+    // Derived farming metrics
+    const es = 0.6108 * Math.exp((17.27 * temp) / (temp + 237.3));
+    const ea = es * (humidity / 100);
+    const vpd = es - ea;
+    const diseaseRisk = Math.min(100, Math.max(0, (humidity > 60 ? (humidity - 60) * 1.5 : 0) + (temp > 20 && temp < 30 ? 10 : 0)));
+    const et = Math.max(0, (vpd * 0.3) + (light * 0.0005));
+    const dli = (light / 1000) * 2.5;
+
+    return {
+      ...d,
+      vpd: Number(vpd.toFixed(2)),
+      diseaseRisk: Number(diseaseRisk.toFixed(1)),
+      et: Number(et.toFixed(2)),
+      dli: Number(dli.toFixed(2)),
+      timeLabel: format(
+        new Date(d.timestamp),
+        selectedRange.hours <= 24 ? 'HH:mm' : 'MMM d'
+      ),
+    };
+  }), [sensorData, selectedRange]);
 
   // Thin-out for 30d to prevent chart clutter
   const chartData = useMemo(() => {
@@ -637,15 +656,35 @@ export default function AnalyticsPage() {
       animate="visible"
       variants={containerVariants}
     >
+      {/* ── Header ── */}
+      <div className={styles.header}>
+        <div className={styles.headerTop}>
+          <div>
+            <h1 className={styles.title}>Analytics</h1>
+            <p className={styles.subtitle}>System metrics and AI insights</p>
+          </div>
+          <WeatherCard />
+        </div>
+        <div className={styles.controls}>
+          {TIME_RANGES.map(tr => (
+            <button
+              key={tr.label}
+              className={`${styles.timeRangeBtn} ${selectedRange.label === tr.label ? styles.active : ''}`}
+              onClick={() => setSelectedRange(tr)}
+            >
+              {tr.label}
+            </button>
+          ))}
+        </div>
+      </div>
 
-      
-
-      {/* ── KPI Row ── */}
-      <div className={styles.kpiGrid}>
+      {/* ── Bento Grid ── */}
+      <div className={styles.bentoGrid}>
+        {/* KPI Row */}
         {kpiItems.map((item, idx) => (
           <motion.div
             key={idx}
-            className={`${styles.kpiCard} ${item.danger ? styles.kpiDanger : ''}`}
+            className={`${styles.kpiCard} ${styles.bentoKpi} ${item.danger ? styles.kpiDanger : ''}`}
             variants={itemVariants}
             whileHover={{ y: -4, scale: 1.015 }}
           >
@@ -669,11 +708,9 @@ export default function AnalyticsPage() {
             )}
           </motion.div>
         ))}
-      </div>
 
-      {/* ── Dynamic Sensor Analytics ── */}
-      <div className={styles.mainRow}>
-        <motion.div className={styles.chartCardWide} variants={itemVariants}>
+        {/* ── Dynamic Sensor Analytics ── */}
+        <motion.div className={`${styles.chartCardWide} ${styles.bentoChartMain}`} variants={itemVariants}>
           <div className={styles.chartHeader}>
             <div>
               <h3 className={styles.chartTitle}>Sensor Analysis</h3>
@@ -723,7 +760,7 @@ export default function AnalyticsPage() {
           )}
         </motion.div>
 
-        <motion.div className={styles.chartCardNarrow} variants={itemVariants}>
+        <motion.div className={`${styles.chartCardNarrow} ${styles.bentoChartSide}`} variants={itemVariants}>
           <div className={styles.chartHeader}>
             <div>
               <h3 className={styles.chartTitle}>Sensor Coverage</h3>
@@ -787,6 +824,123 @@ export default function AnalyticsPage() {
                   <Tooltip content={<CustomTooltip />} />
                 </PieChart>
               </ResponsiveContainer>
+            )}
+          </div>
+        </motion.div>
+        {/* ── Advanced Farming Analytics ── */}
+        <motion.div className={`${styles.chartCardWide} ${styles.bentoChartFull}`} variants={itemVariants}>
+          <div className={styles.chartHeader}>
+            <div>
+              <h3 className={styles.chartTitle}>Advanced Farming Analytics</h3>
+              <p className={styles.chartSubtitle}>Derived metrics and crop stage</p>
+            </div>
+            <div className={styles.sensorSwitcher}>
+              {[
+                { id: 'water', label: 'Water' },
+                { id: 'vpd', label: 'VPD' },
+                { id: 'disease', label: 'Disease' },
+                { id: 'dli', label: 'DLI' },
+                { id: 'et', label: 'ET Rate' },
+                { id: 'growth', label: 'Growth' }
+              ].map(tab => (
+                <button
+                  key={tab.id}
+                  className={`${styles.sensorSwitchBtn} ${activeFarmingChart === tab.id ? styles.activeSensorBtn : ''}`}
+                  onClick={() => setActiveFarmingChart(tab.id)}
+                  style={activeFarmingChart === tab.id ? { borderColor: palette.healthy, color: palette.healthy } : undefined}
+                >
+                  {tab.label}
+                </button>
+              ))}
+            </div>
+          </div>
+          <div className={styles.chartWrapper}>
+            {activeFarmingChart === 'water' && (
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={chartData}>
+                  {chartPrefs.showGrid && <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />}
+                  <XAxis dataKey="timeLabel" stroke="rgba(255,255,255,0.35)" fontSize={11} tickLine={false} axisLine={false} />
+                  <YAxis stroke="rgba(255,255,255,0.35)" fontSize={11} tickLine={false} axisLine={false} />
+                  <Tooltip content={<CustomTooltip />} />
+                  <Bar dataKey="flowVolume" name="Water Used" fill={palette.flow} radius={[4, 4, 0, 0]} unit=" L" isAnimationActive={chartPrefs.animate} />
+                </BarChart>
+              </ResponsiveContainer>
+            )}
+
+            {activeFarmingChart === 'vpd' && (
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart data={chartData}>
+                  <defs>
+                    <linearGradient id="gradVpd" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor={palette.temp} stopOpacity={0.3} />
+                      <stop offset="95%" stopColor={palette.temp} stopOpacity={0} />
+                    </linearGradient>
+                  </defs>
+                  {chartPrefs.showGrid && <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />}
+                  <XAxis dataKey="timeLabel" stroke="rgba(255,255,255,0.35)" fontSize={11} tickLine={false} axisLine={false} />
+                  <YAxis stroke="rgba(255,255,255,0.35)" fontSize={11} tickLine={false} axisLine={false} />
+                  <Tooltip content={<CustomTooltip />} />
+                  <Area type="monotone" dataKey="vpd" name="VPD" stroke={palette.temp} strokeWidth={2} fill="url(#gradVpd)" unit=" kPa" isAnimationActive={chartPrefs.animate} />
+                </AreaChart>
+              </ResponsiveContainer>
+            )}
+
+            {activeFarmingChart === 'disease' && (
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart data={chartData}>
+                  {chartPrefs.showGrid && <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />}
+                  <XAxis dataKey="timeLabel" stroke="rgba(255,255,255,0.35)" fontSize={11} tickLine={false} axisLine={false} />
+                  <YAxis stroke="rgba(255,255,255,0.35)" fontSize={11} tickLine={false} axisLine={false} />
+                  <Tooltip content={<CustomTooltip />} />
+                  <Line type="monotone" dataKey="diseaseRisk" name="Risk Level" stroke={palette.disease} strokeWidth={2} dot={false} unit="%" isAnimationActive={chartPrefs.animate} />
+                </LineChart>
+              </ResponsiveContainer>
+            )}
+
+            {activeFarmingChart === 'dli' && (
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={chartData}>
+                  {chartPrefs.showGrid && <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />}
+                  <XAxis dataKey="timeLabel" stroke="rgba(255,255,255,0.35)" fontSize={11} tickLine={false} axisLine={false} />
+                  <YAxis stroke="rgba(255,255,255,0.35)" fontSize={11} tickLine={false} axisLine={false} />
+                  <Tooltip content={<CustomTooltip />} />
+                  <Bar dataKey="dli" name="DLI" fill={palette.light} radius={[4, 4, 0, 0]} unit=" mol" isAnimationActive={chartPrefs.animate} />
+                </BarChart>
+              </ResponsiveContainer>
+            )}
+
+            {activeFarmingChart === 'et' && (
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart data={chartData}>
+                  <defs>
+                    <linearGradient id="gradEt" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor={palette.healthy} stopOpacity={0.3} />
+                      <stop offset="95%" stopColor={palette.healthy} stopOpacity={0} />
+                    </linearGradient>
+                  </defs>
+                  {chartPrefs.showGrid && <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />}
+                  <XAxis dataKey="timeLabel" stroke="rgba(255,255,255,0.35)" fontSize={11} tickLine={false} axisLine={false} />
+                  <YAxis stroke="rgba(255,255,255,0.35)" fontSize={11} tickLine={false} axisLine={false} />
+                  <Tooltip content={<CustomTooltip />} />
+                  <Area type="monotone" dataKey="et" name="ET Rate" stroke={palette.healthy} strokeWidth={2} fill="url(#gradEt)" unit=" mm" isAnimationActive={chartPrefs.animate} />
+                </AreaChart>
+              </ResponsiveContainer>
+            )}
+
+            {activeFarmingChart === 'growth' && (
+              <div className={styles.chartWrapperCenter} style={{ flexDirection: 'column', gap: '1.5rem', height: '100%', justifyContent: 'center' }}>
+                <div style={{ display: 'flex', width: '100%', justifyContent: 'space-between', fontSize: '0.9rem', color: 'var(--text-secondary)' }}>
+                  <span>Seedling</span>
+                  <span>Vegetative</span>
+                  <span style={{ color: palette.healthy, fontWeight: 'bold' }}>Flowering</span>
+                  <span>Fruiting</span>
+                  <span>Harvest</span>
+                </div>
+                <div className={styles.statusBarTrack} style={{ width: '100%', height: '24px' }}>
+                  <div className={styles.statusBarFill} style={{ width: '60%', background: `linear-gradient(90deg, ${palette.moisture}, ${palette.healthy})` }} />
+                </div>
+                <p className={styles.emptyMsg} style={{ marginTop: '0.5rem', fontSize: '1rem' }}>Current Stage: Flowering (Est. 12 days to fruiting)</p>
+              </div>
             )}
           </div>
         </motion.div>

@@ -684,10 +684,10 @@ export const aiAPI = {
   },
 
   // POST /api/ai/chat
-  chat: async ({ message, sensorContext = '', history = [], apiKey = '' }, options = {}) => {
+  chat: async ({ message, sensorContext = '', history = [] }, options = {}) => {
     if (isMockEnabled()) {
       const res = await mockResponse({ 
-        response: `Mock AI response to: "${message}". The system is currently in Mock Data mode, so real AI processing is disabled.` 
+        reply: `Mock AI response to: "${message}". The system is currently in Mock Data mode, so real AI processing is disabled.` 
       });
       return res.data;
     }
@@ -695,7 +695,6 @@ export const aiAPI = {
       message,
       sensorContext,
       history,
-      apiKey
     }, options);
     return response.data;
   },
@@ -766,7 +765,32 @@ export const aiAPI = {
     if (endDate)   params.endDate   = endDate;
     const response = await api.get('/ai/disease/all', { params, ...options });
     return response.data;
-  }
+  },
+
+  // ── Admin-only AI API Key management ──────────────────────────────
+  // GET /api/ai/keys
+  getAdminKeys: async (options = {}) => {
+    const response = await api.get('/ai/keys', options);
+    return response.data;
+  },
+
+  // POST /api/ai/keys
+  addAdminKey: async ({ label, key }, options = {}) => {
+    const response = await api.post('/ai/keys', { label, key }, options);
+    return response.data;
+  },
+
+  // DELETE /api/ai/keys/:index
+  deleteAdminKey: async (index, options = {}) => {
+    const response = await api.delete(`/ai/keys/${index}`, options);
+    return response.data;
+  },
+
+  // PATCH /api/ai/keys/:index/toggle
+  toggleAdminKey: async (index, options = {}) => {
+    const response = await api.patch(`/ai/keys/${index}/toggle`, {}, options);
+    return response.data;
+  },
 };
 
 export default api;

@@ -245,7 +245,9 @@ export default function SettingsPage({
           localPrefs = {};
         }
 
-        const configRes = await configAPI.get('ESP32-SENSOR');
+        // Use the user's currently selected device, fall back to legacy default
+        const activeSensorId = selectedDeviceId || 'ESP32-SENSOR';
+        const configRes = await configAPI.get(activeSensorId);
         const configPayload = configRes?.config || configRes?.data?.config || configRes?.data || configRes;
 
         const nextSettings = {
@@ -343,7 +345,7 @@ export default function SettingsPage({
     try {
       const payload = buildConfigPayloadFromAdvanced(advancedSettings);
 
-      await configAPI.update('ESP32-SENSOR', payload);
+      await configAPI.update(selectedDeviceId || 'ESP32-SENSOR', payload);
       onNotification?.('Irrigation, chart, and sensor color settings saved', 'success');
     } catch (err) {
       if (err?.response?.status === 403) {
@@ -379,7 +381,7 @@ export default function SettingsPage({
 
     const [profileResult, configResult] = await Promise.allSettled([
       updateProfile({ preferredPlant: defaultPlant }),
-      configAPI.update('ESP32-SENSOR', resetPayload),
+      configAPI.update(selectedDeviceId || 'ESP32-SENSOR', resetPayload),
     ]);
 
     const profileOk = profileResult.status === 'fulfilled';
@@ -444,7 +446,7 @@ export default function SettingsPage({
     if (!window.confirm('Clear sensor history older than 90 days?')) return;
     setClearing(true);
     try {
-      const res = await configAPI.clearSensorHistory('ESP32-SENSOR', 90);
+      const res = await configAPI.clearSensorHistory(selectedDeviceId || 'ESP32-SENSOR', 90);
       onNotification?.(`Cleared ${res?.recordsDeleted || 0} sensor records`, 'success');
     } catch {
       onNotification?.('Failed to clear sensor history', 'error');

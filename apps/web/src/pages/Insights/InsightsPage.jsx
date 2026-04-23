@@ -338,7 +338,7 @@ function Skeleton() {
 }
 
 // ─── Root ─────────────────────────────────────────────────────────────────────
-function InsightsPage() {
+function InsightsPage({ sensorDeviceId } = {}) {
   const [insights,      setInsights]      = useState(null);
   const [loading,       setLoading]       = useState(true);
   const [error,         setError]         = useState(null);
@@ -374,7 +374,9 @@ function InsightsPage() {
 
   const fetchInsights = useCallback(async () => {
     try {
-      const res  = await fetch(`${API_BASE}/ai/insights?days=${days}`);
+      const params = new URLSearchParams({ days });
+      if (sensorDeviceId) params.set('deviceId', sensorDeviceId);
+      const res  = await fetch(`${API_BASE}/ai/insights?${params.toString()}`);
       if (!res.ok) throw new Error('Failed to fetch insights');
       const json = await res.json();
       setInsights(json.data);
@@ -385,7 +387,7 @@ function InsightsPage() {
     } finally {
       setLoading(false);
     }
-  }, [days]);
+  }, [days, sensorDeviceId]);
 
   useEffect(() => {
     setLoading(true);

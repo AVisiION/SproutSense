@@ -31,16 +31,15 @@
 /* Uncollapsed desktop gets the full liquid-glass treatment */
 @media (min-width: 769px) {
   .app-shell:not(.sidebar-collapsed) .sidebar {
-    /* background:
-      linear-gradient(150deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.02) 34%, rgba(18, 48, 30, 0.46) 100%),
-      rgba(4, 14, 9, 0.62);
-    border: 1px solid rgba(255, 255, 255, 0.16);
+    background: linear-gradient(145deg, rgba(46, 125, 50, 0.08) 0%, rgba(4, 14, 9, 0.8) 60%);
+    border: 1px solid rgba(126, 200, 128, 0.15);
+    border-right: 1px solid rgba(126, 200, 128, 0.05);
     box-shadow:
-      0 18px 48px rgba(0, 0, 0, 0.45),
-      inset 0 1px 0 rgba(255, 255, 255, 0.22),
-      inset 0 -10px 28px rgba(0, 0, 0, 0.16); */
-    -webkit-backdrop-filter: blur(26px) saturate(170%);
-    backdrop-filter: blur(26px) saturate(170%);
+      0 20px 50px rgba(0, 0, 0, 0.5),
+      inset 1px 1px 0 rgba(255, 255, 255, 0.08),
+      inset -1px -1px 0 rgba(0, 0, 0, 0.2);
+    -webkit-backdrop-filter: blur(28px) saturate(190%);
+    backdrop-filter: blur(28px) saturate(190%);
   }
 
   .app-shell:not(.sidebar-collapsed) .sidebar-link {
@@ -338,17 +337,26 @@
 /* ─────────────────────────────────────────
    4. BADGE, OVERLAY, ANIMATIONS
    ───────────────────────────────────────── */
+.sidebar-icon-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
 .sidebar-badge {
   position: absolute;
-  top: -6px;
-  right: -8px;
-  background: #CC3333;
+  top: -4px;
+  right: -6px;
+  background: #ff3b3b;
   color: #fff;
-  font-size: 0.65rem;
-  font-weight: 700;
-  padding: 2px 6px;
-  border-radius: 10px;
-  box-shadow: 0 2px 8px rgba(204, 51, 51, 0.40);
+  font-size: 0.6rem;
+  font-weight: 800;
+  padding: 2px 5px;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(255, 59, 59, 0.45);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  line-height: 1;
 }
 
 .sidebar-overlay {

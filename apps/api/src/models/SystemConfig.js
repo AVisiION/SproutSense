@@ -1,4 +1,4 @@
-﻿import mongoose from 'mongoose';
+import mongoose from 'mongoose';
 
 const DEFAULT_DATA_RETENTION = {
   sensorReadingsDays: 90,
@@ -233,6 +233,19 @@ const systemConfigSchema = new mongoose.Schema({
   plantWateringConfig: {
     type: mongoose.Schema.Types.Mixed,
     default: {}
+  },
+
+  // Admin-managed AI API keys — stored encrypted in DB, never exposed to users
+  aiApiKeys: {
+    type: [
+      {
+        label:   { type: String, default: 'Gemini Key' },
+        key:     { type: String, required: true },
+        active:  { type: Boolean, default: true },
+        addedAt: { type: Date, default: () => new Date() },
+      }
+    ],
+    default: []
   }
 }, {
   timestamps: true
@@ -287,6 +300,15 @@ systemConfigSchema.statics.getConfig = async function(deviceId = 'ESP32-SENSOR')
   }
   
   return config;
+};
+
+// Return first active admin-managed AI key for any device (keys are global)
+systemConfigSchema.statics.getActiveAIKey = async function() {
+  // Keys are stored on the global sentinel document (deviceId = '__global__')
+  let global = await this.findOne({ deviceId: '__global__' });
+  if (!global) global = await this.create({ deviceId: '__global__' });
+  const active = (global.aiApiKeys || []).find(k => k.active && k.key);
+  return active?.key || null;
 };
 
 // Static method to clear sensor data history

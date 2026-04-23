@@ -8,7 +8,11 @@ import {
   getLatestDiseaseDetection,
   getDiseaseHistory,
   getActiveAlerts,
-  getAllDiseaseDetections
+  getAllDiseaseDetections,
+  getAdminAIKeys,
+  addAdminAIKey,
+  deleteAdminAIKey,
+  toggleAdminAIKey,
 } from '../controllers/aiController.js';
 import { validateHistoryQuery, validateDiseaseDetection } from '../validators/requestValidator.js';
 import { aiLimiter } from '../middleware/rateLimiter.js';
@@ -77,5 +81,15 @@ router.get('/disease/all', aiLimiter, requirePermissions([PERMISSIONS.AI_DISEASE
 // router is mounted at `/api`, it actually requests `/api/ai/disease/all`.
 // But if the frontend drops `/api`, we handle it gracefully here as a fallback.
 // ============================================================================
+
+// ============================================================================
+// ADMIN-ONLY: AI API KEY MANAGEMENT
+// These routes require admin auth but NOT a linked device (they're global config)
+// ============================================================================
+
+router.get('/keys',              authenticate, requireAccountState(), requirePermissions([PERMISSIONS.CONFIG_UPDATE]), getAdminAIKeys);
+router.post('/keys',             authenticate, requireAccountState(), requirePermissions([PERMISSIONS.CONFIG_UPDATE]), addAdminAIKey);
+router.delete('/keys/:index',    authenticate, requireAccountState(), requirePermissions([PERMISSIONS.CONFIG_UPDATE]), deleteAdminAIKey);
+router.patch('/keys/:index/toggle', authenticate, requireAccountState(), requirePermissions([PERMISSIONS.CONFIG_UPDATE]), toggleAdminAIKey);
 
 export default router;

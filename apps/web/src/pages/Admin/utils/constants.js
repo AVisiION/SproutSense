@@ -1,17 +1,18 @@
 import { ACCOUNT_STATUS, ROLE } from '../../../auth/permissions';
 
 export const SECTIONS = [
-  { id: 'overview', label: 'Overview',  icon: 'fa-chart-line' },
-  { id: 'devices',  label: 'Connections',   icon: 'fa-microchip' },
+  { id: 'overview',  label: 'Overview',      icon: 'fa-chart-line' },
+  { id: 'devices',   label: 'Connections',   icon: 'fa-microchip' },
   { id: 'device-keys', label: 'Device Keys', icon: 'fa-key' },
-  { id: 'users',    label: 'Users',     icon: 'fa-users' },
-  { id: 'ui',       label: 'UI',        icon: 'fa-palette' },
-  { id: 'sensors',  label: 'Plant Sensors',   icon: 'fa-seedling' },
-  { id: 'limits',   label: 'Limits',    icon: 'fa-gauge-high' },
-  { id: 'config',   label: 'Config',    icon: 'fa-sliders' },
-  { id: 'data',     label: 'Raw Data',  icon: 'fa-database' },
-  { id: 'logs',     label: 'Logs',      icon: 'fa-terminal' },
-  { id: 'mock',     label: 'Mock Data', icon: 'fa-vial' }, // New Mock Data tab
+  { id: 'ai-keys',   label: 'AI API Keys',   icon: 'fa-robot' },
+  { id: 'users',     label: 'Users',         icon: 'fa-users' },
+  { id: 'ui',        label: 'UI',            icon: 'fa-palette' },
+  { id: 'sensors',   label: 'Plant Sensors', icon: 'fa-seedling' },
+  { id: 'limits',    label: 'Limits',        icon: 'fa-gauge-high' },
+  { id: 'config',    label: 'Config',        icon: 'fa-sliders' },
+  { id: 'data',      label: 'Raw Data',      icon: 'fa-database' },
+  { id: 'logs',      label: 'Logs',          icon: 'fa-terminal' },
+  { id: 'mock',      label: 'Mock Data',     icon: 'fa-vial' },
 ];
 
 export const PLANT_OPTIONS = [

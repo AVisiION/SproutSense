@@ -241,9 +241,10 @@ export default function AlertsPage({ alerts = [], sensors, onClearAlert, onClear
 
   // System alerts: use real ones from App.jsx, or empty array if none
   const displayAlerts = useMemo(() => {
+    // Use real sensor-derived alerts passed down from App.jsx
     if (alerts.length > 0) return alerts;
     return [];
-  }, [alerts, sensors, isTestMode]);
+  }, [alerts]);
 
   // Filter system alerts
   const filteredAlerts = useMemo(() => {
@@ -410,7 +411,7 @@ export default function AlertsPage({ alerts = [], sensors, onClearAlert, onClear
                     {f === 'all' ? 'All' : f === 'error' ? '🔴 Critical' : f === 'warning' ? '🟡 Warning' : '🔵 Info'}
                   </button>
                 ))}
-                {onClearAllAlerts && displayAlerts.length > 0 && !isTestMode && (
+                {onClearAllAlerts && displayAlerts.length > 0 && (
                   <button className={styles.clearAllBtn} onClick={onClearAllAlerts}>
                     Clear All
                   </button>
@@ -430,7 +431,7 @@ export default function AlertsPage({ alerts = [], sensors, onClearAlert, onClear
                       <AlertRow
                         key={alert.id}
                         alert={alert}
-                        onClear={!isTestMode ? onClearAlert : null}
+                        onClear={onClearAlert || null}
                       />
                     ))}
                   </AnimatePresence>

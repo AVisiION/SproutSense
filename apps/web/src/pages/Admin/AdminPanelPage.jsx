@@ -23,6 +23,7 @@ import SensorsSection from './sections/sensors/SensorsSection';
 import MockSection from './sections/mock/MockSection';
 import AdminSidebarSection from './layout/AdminSidebarSection';
 import AdminNavbarSection from './layout/AdminNavbarSection';
+import AIKeysSection from './sections/ai-keys/AIKeysSection';
 import {
   SECTIONS,
   PLANT_OPTIONS,
@@ -1395,6 +1396,11 @@ export default function AdminPanelPage() {
                   mockEnabled={mockEnabled}
                   handleMockToggle={handleMockToggle}
                 />
+              )}
+
+              {/* Section */}
+              {activeSection === 'ai-keys' && (
+                <AIKeysSection log={log} />
               )}
             </>
           )}

@@ -2,7 +2,7 @@ import WateringLog from '../models/WateringLog.js';
 import SensorReading from '../models/SensorReading.js';
 import DeviceStatus from '../models/DeviceStatus.js';
 import SystemConfig from '../models/SystemConfig.js';
-import axios from 'axios';
+
 import config from '../config/config.js';
 import { successResponse, errorResponse } from '../utils/helpers.js';
 import { HTTP_STATUS } from '../config/constants.js';
