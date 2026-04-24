@@ -555,6 +555,16 @@ export const usersAPI = {
     const response = await api.post('/users/bulk-action', { userIds, action, value }, options);
     return response.data;
   },
+  
+  updatePreferences: async (userId, uiPreferences, options = {}) => {
+    const response = await api.patch(`/users/${userId}/preferences`, { uiPreferences }, options);
+    return response.data;
+  },
+
+  bulkUpdatePreferences: async ({ userIds, uiPreferences, targetAll = false }, options = {}) => {
+    const response = await api.post('/users/bulk-preferences', { userIds, uiPreferences, targetAll }, options);
+    return response.data;
+  },
 };
 
 export const deviceAPI = {
@@ -661,6 +671,14 @@ export const aiAPI = {
     return response.data;
   },
 
+  // GET /api/ai/insights?days=&deviceId=
+  getInsights: async ({ days = 7, deviceId } = {}, options = {}) => {
+    const params = { days };
+    if (deviceId) params.deviceId = deviceId;
+    const response = await api.get('/ai/insights', { params, ...options });
+    return response.data;
+  },
+
   // GET /api/ai/usage?deviceModel=
   getUsageStats: async (deviceModel = 'ESP32-SENSOR', options = {}) => {
     if (isMockEnabled()) {
@@ -680,6 +698,26 @@ export const aiAPI = {
       params: { deviceModel },
       ...options
     });
+    return response.data;
+  },
+
+  // GET /api/ai/usage/all
+  getAllUsageStats: async (options = {}) => {
+    if (isMockEnabled()) {
+      const res = await mockResponse([
+        {
+          deviceId: 'ESP32-SENSOR',
+          usedCount: 1,
+          dailyLimit: 2,
+          remaining: 1,
+          exhausted: false,
+          lastUsedAt: new Date().toISOString()
+        }
+      ]);
+      return res.data;
+    }
+
+    const response = await api.get('/ai/usage/all', options);
     return response.data;
   },
 

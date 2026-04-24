@@ -26,6 +26,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { Toaster, toast as hotToast } from 'react-hot-toast';
 import { useWebSocket } from './hooks/useWebSocket';
 import { useDevices } from './hooks/useDevices';
+import PageSkeleton from './components/PageSkeleton';
 
 import { configAPI, sensorAPI, wateringAPI, aiAPI } from './utils/api';
 import { isMockEnabled, getMockSensors, getMockAlerts, subscribeToMockUpdates } from './services/mockDataService';
@@ -239,11 +240,7 @@ const PageWrapper = ({ children }) => (
   </motion.div>
 );
 
-const RouteFallback = () => (
-  <div style={{ minHeight: '45vh', display: 'grid', placeItems: 'center', color: 'var(--text-color)' }}>
-    Loading page...
-  </div>
-);
+const RouteFallback = () => <PageSkeleton />;
 
 function normalizeSensorPayload(payload) {
   if (!payload || typeof payload !== 'object') return payload;
@@ -331,6 +328,7 @@ function App() {
   const [uiPreferences, setUiPreferences] = useState(DEFAULT_UI_PREFERENCES);
   const [isAiControlSaving, setIsAiControlSaving] = useState(false);
   const [theme, setTheme] = useState(() => localStorage.getItem('theme') || 'dark');
+  const [palette, setPalette] = useState(() => localStorage.getItem('palette') || 'emerald');
   const themeTransitionTimeoutRef = useRef(null);
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
 
@@ -340,6 +338,16 @@ function App() {
     document.documentElement.setAttribute('data-theme', theme);
     localStorage.setItem('theme', theme);
   }, [theme]);
+
+  useEffect(() => {
+    // Match theme throughout website except admin sections
+    if (isAdminRoute) {
+      document.documentElement.setAttribute('data-palette', 'emerald');
+    } else {
+      document.documentElement.setAttribute('data-palette', palette);
+    }
+    localStorage.setItem('palette', palette);
+  }, [palette, isAdminRoute]);
 
   useEffect(() => {
     const handleResize = () => {
@@ -418,11 +426,11 @@ function App() {
     return () => clearInterval(interval);
   }, [fetchDiseaseAlerts]);
 
-  // ── Theme toggle ───────────────────────────────────────────────────────
-  const toggleTheme = () => {
+  const changeTheme = (newTheme) => {
+    if (newTheme === theme) return;
     const root = document.documentElement;
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-      setTheme(prev => prev === 'dark' ? 'light' : 'dark');
+      setTheme(newTheme);
       return;
     }
     const directions = [
@@ -449,8 +457,7 @@ function App() {
     root.classList.remove('theme-transitioning');
     void root.offsetWidth;
     root.classList.add('theme-transitioning');
-    const applyTheme = () => setTheme(prev => prev === 'dark' ? 'light' : 'dark');
-    applyTheme();
+    setTheme(newTheme);
     if (themeTransitionTimeoutRef.current) clearTimeout(themeTransitionTimeoutRef.current);
     themeTransitionTimeoutRef.current = setTimeout(() => {
       root.classList.remove('theme-transitioning');
@@ -458,6 +465,8 @@ function App() {
         .forEach(p => root.style.removeProperty(p));
     }, 4000);
   };
+
+  const toggleTheme = () => changeTheme(theme === 'dark' ? 'light' : 'dark');
 
   const toggleSidebar = () => setIsSidebarCollapsed(prev => !prev);
   const closeSidebar  = () => { if (isMobile) setIsSidebarCollapsed(true); };
@@ -555,19 +564,50 @@ function App() {
         setPlantGrowthEnabled(configData?.plantGrowthEnabled ?? true);
         setPlantGrowthStage(configData?.plantGrowthStage || 'vegetative');
         setAiInsightsMode(configData?.aiInsightsMode || 'snapshots');
+        const userPrefs = auth.user?.uiPreferences || {};
+        const globalPrefs = configData?.uiPreferences || {};
+
         setUiPreferences({
           dashboardSections: {
             ...DEFAULT_UI_PREFERENCES.dashboardSections,
-            ...(configData?.uiPreferences?.dashboardSections || {}),
+            ...(globalPrefs.dashboardSections || {}),
+            ...(userPrefs.dashboardSections || {}),
           },
           sidebarVisibility: {
             ...DEFAULT_UI_PREFERENCES.sidebarVisibility,
-            ...(configData?.uiPreferences?.sidebarVisibility || {}),
+            ...(globalPrefs.sidebarVisibility || {}),
+            ...(userPrefs.sidebarVisibility || {}),
           },
           widgets: {
             ...DEFAULT_UI_PREFERENCES.widgets,
-            ...(configData?.uiPreferences?.widgets || {}),
+            ...(globalPrefs.widgets || {}),
+            ...(userPrefs.widgets || {}),
           },
+          appearance: {
+            ...DEFAULT_UI_PREFERENCES.appearance,
+            ...(globalPrefs.appearance || {}),
+            ...(userPrefs.appearance || {}),
+          },
+          notifications: {
+            ...DEFAULT_UI_PREFERENCES.notifications,
+            ...(globalPrefs.notifications || {}),
+            ...(userPrefs.notifications || {}),
+          },
+          dataDisplay: {
+            ...DEFAULT_UI_PREFERENCES.dataDisplay,
+            ...(globalPrefs.dataDisplay || {}),
+            ...(userPrefs.dataDisplay || {}),
+          },
+          accessibility: {
+            ...DEFAULT_UI_PREFERENCES.accessibility,
+            ...(globalPrefs.accessibility || {}),
+            ...(userPrefs.accessibility || {}),
+          },
+          sensorRegistry: {
+            ...DEFAULT_UI_PREFERENCES.sensorRegistry,
+            ...(globalPrefs.sensorRegistry || {}),
+            ...(userPrefs.sensorRegistry || {}),
+          }
         });
 
         const isDeviceOnline = (s) => {
@@ -663,8 +703,14 @@ function App() {
   const handleClearAllAlerts = useCallback(() => setAlerts([]), []);
 
   // ── Aurora colour stops (react to theme) ──────────────────────────────
-  const auroraStops = theme === 'dark' ? AURORA_DARK : AURORA_LIGHT;
-  const auroraBlend = theme === 'dark' ? 0.50 : 0.58;
+  const getAuroraStops = (t) => {
+    if (t === 'light') return AURORA_LIGHT;
+    if (t === 'midnight') return ['#050814', '#2b1b54', '#1f3e7a', '#050814'];
+    if (t === 'forest') return ['#020b05', '#164024', '#0d5930', '#020b05'];
+    return AURORA_DARK;
+  };
+  const auroraStops = getAuroraStops(theme);
+  const auroraBlend = theme === 'light' ? 0.58 : 0.50;
 
   // ── Render ─────────────────────────────────────────────────────────────
 
@@ -770,7 +816,7 @@ function App() {
         speed={AURORA_SPEED}
       />
 
-      <div className={`app-shell${isSidebarCollapsed ? ' sidebar-collapsed' : ''}`} style={{ position: 'relative', zIndex: 1 }}>
+      <div className={`app-shell${isSidebarCollapsed ? ' sidebar-collapsed' : ''}${isPublicPage ? ' public-shell' : ''}`} style={{ position: 'relative', zIndex: 1 }}>
 
         {!isSidebarCollapsed && isMobile && (
           <div className="sidebar-overlay" onClick={closeSidebar} />
@@ -1019,7 +1065,7 @@ function App() {
                 <ProtectedRoute requiredPermissions={[PERMISSION.CONFIG_READ]}>
                   <PageWrapper>
                     <section className="dashboard-section">
-                      <SettingsPage theme={theme} toggleTheme={toggleTheme} onNotification={showNotification} />
+                      <SettingsPage theme={theme} setTheme={changeTheme} palette={palette} setPalette={setPalette} toggleTheme={toggleTheme} onNotification={showNotification} />
                     </section>
                   </PageWrapper>
                 </ProtectedRoute>

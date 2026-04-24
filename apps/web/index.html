@@ -6,7 +6,7 @@
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;700;800&family=Outfit:wght@500;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;700;800&family=Outfit:wght@400;500;700&display=swap" rel="stylesheet">
 
   <!-- Theme Colors -->
   <meta name="theme-color" content="#050d14" media="(prefers-color-scheme: dark)">
@@ -73,75 +73,124 @@
 <body>
 
   <div id="ss-loader" role="status" aria-label="Loading SproutSense...">
-    <div class="ss-atmosphere" aria-hidden="true">
-      <span class="ss-aura ss-aura-one"></span>
-      <span class="ss-aura ss-aura-two"></span>
-      <span class="ss-aura ss-aura-three"></span>
-      <span class="ss-particle"></span>
-      <span class="ss-particle"></span>
-      <span class="ss-particle"></span>
-      <span class="ss-particle"></span>
-      <span class="ss-particle"></span>
+
+    <!-- Ambient orbs -->
+    <div class="sl-ambient" aria-hidden="true">
+      <div class="sl-orb sl-orb-1"></div>
+      <div class="sl-orb sl-orb-2"></div>
+      <div class="sl-orb sl-orb-3"></div>
     </div>
 
-    <div class="ss-stage" aria-hidden="true">
-      <div class="ss-stage-floor"></div>
-      <div class="ss-logo-rig">
-        <div class="ss-logo-cube">
-          <div class="ss-cube-face ss-cube-front">
-            <img src="/assets/icon.png" alt="SproutSense Icon" draggable="false" />
-          </div>
-          <div class="ss-cube-face ss-cube-back">
-            <div class="ss-user-face" aria-hidden="true">
-              <i class="fa-solid fa-user ss-user-glyph"></i>
-              <span class="ss-user-label">Welcome</span>
-            </div>
-          </div>
-          <div class="ss-data-stream" aria-hidden="true">
-            <span class="ss-stream-dot ss-stream-forward ss-stream-1 ss-lane-a"></span>
-            <span class="ss-stream-dot ss-stream-forward ss-stream-2 ss-lane-a"></span>
-            <span class="ss-stream-dot ss-stream-forward ss-stream-3 ss-lane-a"></span>
-            <span class="ss-stream-dot ss-stream-forward ss-stream-4 ss-lane-a"></span>
+    <!-- Grid texture -->
+    <div class="sl-grid" aria-hidden="true"></div>
 
-            <span class="ss-stream-dot ss-stream-forward ss-stream-1 ss-lane-b"></span>
-            <span class="ss-stream-dot ss-stream-forward ss-stream-2 ss-lane-b"></span>
-            <span class="ss-stream-dot ss-stream-forward ss-stream-3 ss-lane-b"></span>
-            <span class="ss-stream-dot ss-stream-forward ss-stream-4 ss-lane-b"></span>
+    <!-- Floating leaf particles -->
+    <div class="sl-ambient" aria-hidden="true">
+      <span class="sl-leaf"></span>
+      <span class="sl-leaf"></span>
+      <span class="sl-leaf"></span>
+      <span class="sl-leaf"></span>
+      <span class="sl-leaf"></span>
+      <span class="sl-leaf"></span>
+    </div>
 
-            <span class="ss-stream-dot ss-stream-forward ss-stream-1 ss-lane-c"></span>
-            <span class="ss-stream-dot ss-stream-forward ss-stream-2 ss-lane-c"></span>
-            <span class="ss-stream-dot ss-stream-forward ss-stream-3 ss-lane-c"></span>
-            <span class="ss-stream-dot ss-stream-forward ss-stream-4 ss-lane-c"></span>
+    <!-- Center content -->
+    <div class="sl-center">
 
-            <span class="ss-stream-dot ss-stream-forward ss-stream-1 ss-lane-d"></span>
-            <span class="ss-stream-dot ss-stream-forward ss-stream-2 ss-lane-d"></span>
-            <span class="ss-stream-dot ss-stream-forward ss-stream-3 ss-lane-d"></span>
-            <span class="ss-stream-dot ss-stream-forward ss-stream-4 ss-lane-d"></span>
-
-            <span class="ss-stream-dot ss-stream-forward ss-stream-1 ss-lane-e"></span>
-            <span class="ss-stream-dot ss-stream-forward ss-stream-2 ss-lane-e"></span>
-            <span class="ss-stream-dot ss-stream-forward ss-stream-3 ss-lane-e"></span>
-            <span class="ss-stream-dot ss-stream-forward ss-stream-4 ss-lane-e"></span>
-          </div>
-          <div class="ss-cube-edge ss-cube-left" aria-hidden="true"></div>
-          <div class="ss-cube-edge ss-cube-right" aria-hidden="true"></div>
-          <div class="ss-cube-edge ss-cube-top" aria-hidden="true"></div>
-          <div class="ss-cube-edge ss-cube-bottom" aria-hidden="true"></div>
+      <!-- Logo ring -->
+      <div class="sl-logo-ring" aria-hidden="true">
+        <div class="sl-logo-disc">
+          <img src="/assets/icon.png" alt="SproutSense" draggable="false" />
         </div>
       </div>
-    </div>
 
-    <div class="ss-brand">
-      <span class="ss-brand-name">SproutSense</span>
-      <span class="ss-brand-tagline">Cultivating Intelligence For Every Leaf</span>
-      <span class="ss-brand-status">Calibrating sensors and syncing live data</span>
-    </div>
+      <!-- Brand -->
+      <div class="sl-brand">
+        <span class="sl-brand-name">SproutSense</span>
+        <span class="sl-brand-sub">Cultivating Intelligence For Every Leaf</span>
+      </div>
 
-    <div class="ss-progress-track" aria-hidden="true">
-      <div class="ss-progress-fill"></div>
-    </div>
+      <!-- Skeleton dashboard preview -->
+      <div class="sl-skeleton-preview" aria-hidden="true">
 
-    <div class="ss-progress-label" aria-hidden="true">Loading modules...</div>
+        <!-- Top bar -->
+        <div class="sl-sk-topbar">
+          <div class="sl-sk-avatar sk sk-circle" style="width:32px;height:32px;"></div>
+          <div class="sl-sk-title-group">
+            <div class="sk sl-sk-line" style="height:10px;width:55%;"></div>
+            <div class="sk sl-sk-line" style="height:8px;width:35%;"></div>
+          </div>
+          <div class="sl-sk-badge sk" style="width:60px;height:22px;border-radius:999px;"></div>
+        </div>
+
+        <!-- Stat cards -->
+        <div class="sl-sk-grid">
+          <div class="sl-sk-stat">
+            <div class="sl-sk-icon sk" style="width:28px;height:28px;border-radius:8px;"></div>
+            <div class="sk" style="height:18px;width:70%;border-radius:5px;"></div>
+            <div class="sk" style="height:8px;width:50%;border-radius:4px;"></div>
+          </div>
+          <div class="sl-sk-stat">
+            <div class="sl-sk-icon sk" style="width:28px;height:28px;border-radius:8px;"></div>
+            <div class="sk" style="height:18px;width:60%;border-radius:5px;"></div>
+            <div class="sk" style="height:8px;width:45%;border-radius:4px;"></div>
+          </div>
+          <div class="sl-sk-stat">
+            <div class="sl-sk-icon sk" style="width:28px;height:28px;border-radius:8px;"></div>
+            <div class="sk" style="height:18px;width:75%;border-radius:5px;"></div>
+            <div class="sk" style="height:8px;width:55%;border-radius:4px;"></div>
+          </div>
+          <div class="sl-sk-stat">
+            <div class="sl-sk-icon sk" style="width:28px;height:28px;border-radius:8px;"></div>
+            <div class="sk" style="height:18px;width:65%;border-radius:5px;"></div>
+            <div class="sk" style="height:8px;width:40%;border-radius:4px;"></div>
+          </div>
+        </div>
+
+        <!-- Chart + mini panel -->
+        <div class="sl-sk-chart-row">
+          <div class="sl-sk-chart">
+            <div class="sk" style="height:9px;width:42%;border-radius:4px;"></div>
+            <div class="sl-sk-chart-bars">
+              <div class="sl-sk-bar sk" style="height:38%;"></div>
+              <div class="sl-sk-bar sk" style="height:62%;"></div>
+              <div class="sl-sk-bar sk" style="height:45%;"></div>
+              <div class="sl-sk-bar sk" style="height:80%;"></div>
+              <div class="sl-sk-bar sk" style="height:55%;"></div>
+              <div class="sl-sk-bar sk" style="height:70%;"></div>
+              <div class="sl-sk-bar sk" style="height:42%;"></div>
+            </div>
+          </div>
+          <div class="sl-sk-mini">
+            <div class="sk" style="height:9px;width:65%;border-radius:4px;"></div>
+            <div class="sl-sk-circle sk" style="width:52px;height:52px;align-self:center;"></div>
+            <div class="sk" style="height:8px;width:80%;border-radius:4px;"></div>
+            <div class="sk" style="height:8px;width:60%;border-radius:4px;"></div>
+          </div>
+        </div>
+
+      </div><!-- /sl-skeleton-preview -->
+
+      <!-- Progress -->
+      <div class="sl-progress-wrap">
+        <div class="sl-progress-track">
+          <div class="sl-progress-fill" id="sl-fill"></div>
+        </div>
+        <div class="sl-progress-label">
+          <span id="sl-label">Initializing...</span>
+          <span class="sl-progress-pct" id="sl-pct">0%</span>
+        </div>
+      </div>
+
+      <!-- Bounce dots -->
+      <div class="sl-dots" aria-hidden="true">
+        <span class="sl-dot"></span>
+        <span class="sl-dot"></span>
+        <span class="sl-dot"></span>
+      </div>
+
+    </div><!-- /sl-center -->
+
   </div>
 
   <div id="root"></div>
@@ -149,60 +198,71 @@
 
   <script>
     (function(){
-      var loader = document.getElementById('ss-loader');
-      var progressFill = loader ? loader.querySelector('.ss-progress-fill') : null;
-      var progressLabel = loader ? loader.querySelector('.ss-progress-label') : null;
-      var progress = 0;
-      var readyFired = false;
-      var tickTimer = null;
+      var fill   = document.getElementById('sl-fill');
+      var label  = document.getElementById('sl-label');
+      var pct    = document.getElementById('sl-pct');
+      var progress    = 0;
+      var readyFired  = false;
+      var tickTimer   = null;
+
+      var steps = [
+        'Booting engine',
+        'Loading modules',
+        'Syncing sensors',
+        'Calibrating AI',
+        'Connecting nodes',
+        'Rendering dashboard'
+      ];
 
       function setProgress(value, labelText) {
         progress = Math.max(progress, Math.min(100, value));
-        if (progressFill) progressFill.style.width = progress + '%';
-        if (progressLabel && labelText) progressLabel.textContent = labelText;
+        if (fill)  fill.style.width = progress + '%';
+        if (pct)   pct.textContent  = Math.round(progress) + '%';
+        if (label && labelText) label.textContent = labelText;
+      }
+
+      function getStep(p) {
+        return steps[Math.floor((p / 100) * (steps.length - 1))] || steps[steps.length - 1];
       }
 
       function runIdleProgress() {
         clearInterval(tickTimer);
         tickTimer = setInterval(function(){
-          if (readyFired || progress >= 92) {
-            clearInterval(tickTimer);
-            return;
-          }
-          setProgress(progress + 1, 'Loading modules... ' + Math.round(progress) + '%');
-        }, 140);
+          if (readyFired || progress >= 92) { clearInterval(tickTimer); return; }
+          setProgress(progress + 0.8, getStep(progress));
+        }, 110);
       }
 
       function dismissLoader(){
         clearInterval(tickTimer);
-        var l=document.getElementById('ss-loader');
-        if(!l) return;
+        var l = document.getElementById('ss-loader');
+        if (!l) return;
         l.classList.add('ss-hidden');
-        l.addEventListener('transitionend',function(){l.remove();},{once:true});
+        l.addEventListener('transitionend', function(){ l.remove(); }, { once: true });
       }
 
       function onAppReady() {
         if (readyFired) return;
         readyFired = true;
         setProgress(100, 'Ready');
-        setTimeout(dismissLoader, 220);
+        setTimeout(dismissLoader, 320);
       }
 
-      setProgress(10, 'Booting engine... 10%');
+      setProgress(8, 'Booting engine');
 
       if (document.readyState !== 'loading') {
-        setProgress(35, 'DOM initialized... 35%');
+        setProgress(32, 'Loading modules');
       } else {
         document.addEventListener('DOMContentLoaded', function(){
-          setProgress(35, 'DOM initialized... 35%');
+          setProgress(32, 'Loading modules');
         }, { once: true });
       }
 
       if (document.readyState === 'complete') {
-        setProgress(65, 'Assets loaded... 65%');
+        setProgress(64, 'Syncing sensors');
       } else {
         window.addEventListener('load', function(){
-          setProgress(65, 'Assets loaded... 65%');
+          setProgress(64, 'Syncing sensors');
         }, { once: true });
       }
 
@@ -210,12 +270,11 @@
 
       window.addEventListener('sproutsense:ready', onAppReady, { once: true });
 
-      // Fallback: keep UX responsive if app-ready event never fires.
       var fb = setTimeout(function(){
         setProgress(100, 'Ready');
         dismissLoader();
       }, 9000);
-      window.addEventListener('sproutsense:ready',function(){clearTimeout(fb);},{once:true});
+      window.addEventListener('sproutsense:ready', function(){ clearTimeout(fb); }, { once: true });
     })();
   </script>
 

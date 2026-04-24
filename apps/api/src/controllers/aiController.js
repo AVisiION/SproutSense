@@ -787,6 +787,31 @@ export const getAIUsageStats = async (req, res, next) => {
   }
 };
 
+/**
+ * GET /api/ai/usage/all
+ * Return today's AI usage for all devices (Admin tracking)
+ */
+export const getAIUsageAll = async (req, res, next) => {
+  try {
+    const dateKey = AIUsageQuota.getDateKey();
+    const usages = await AIUsageQuota.find({ dateKey }).lean();
+    
+    // We map over them. If we want we could also fetch Device owner, but this works to start.
+    const formatted = usages.map(u => ({
+      deviceId: u.deviceId,
+      usedCount: u.usedCount,
+      dailyLimit: u.dailyLimit,
+      remaining: Math.max(0, u.dailyLimit - u.usedCount),
+      exhausted: u.usedCount >= u.dailyLimit,
+      lastUsedAt: u.lastUsedAt
+    }));
+
+    successResponse(res, formatted);
+  } catch (error) {
+    next(error);
+  }
+};
+
 // ============================================================================
 // DISEASE DETECTION ENDPOINTS (ESP32-CAM)
 // ============================================================================

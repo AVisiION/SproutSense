@@ -245,24 +245,24 @@
 ============================================================ */
 [data-theme="light"] {
 
-  /* ── BACKGROUNDS — soft mint paper for glass to sit on */
-  --bg-gradient        : linear-gradient(145deg, #EBF5EC 0%, #DCF0DF 40%, #C9E6CD 70%, #EBF5EC 100%);
-  --bg-color           : #EBF5EC;
-  --bg-secondary       : #DCF0DF;
-  --bg-tertiary        : #C9E6CD;
+  /* ── BACKGROUNDS — refined paper-glass aesthetic
+     Added subtle mint-to-white gradient for premium depth */
+  --bg-gradient        : linear-gradient(135deg, rgba(248, 252, 249, 0.98) 0%, rgba(240, 248, 242, 0.96) 50%, rgba(216, 236, 220, 0.95) 100%);
+  --bg-color           : #f8fcf9;
+  --bg-secondary       : #f0f8f2;
+  --bg-tertiary        : #d8ecd0;
 
-  /* ── GLASS — liquid glass values
-     Lower opacity so background shows through (real glass effect)
-     Higher saturate to enrich the mint tones behind */
-  --glass-color        : rgb(0 0 0 / 3%);
-  --glass-color-strong : rgb(0 0 0 / 6%);
+  /* ── GLASS — refined liquid glass for light mode
+     High contrast legibility with deep blur and sharp borders */
+  --glass-color        : rgba(255, 255, 255, 0.65);
+  --glass-color-strong : rgba(255, 255, 255, 0.85);
   --glass-blur         : 20px;
-  --glass-saturate     : 180%;
-   --glass-border       : 1px solid rgba(255, 255, 255, 0.72);
-  --glass-border-strong: 1px solid rgba(46, 125, 50, 0.28);
-  --glass-radius       : 18px;
-   --glass-shadow       : 0 10px 36px rgba(10, 40, 15, 0.16), 0 1px 0 rgba(255,255,255,0.90) inset;
-   --glass-highlight    : inset 0 1px 0 rgba(255, 255, 255, 0.92);
+  --glass-saturate     : 160%;
+  --glass-border       : 1px solid rgba(255, 255, 255, 0.9);
+  --glass-border-strong: 1px solid rgba(46, 125, 50, 0.25);
+  --glass-radius       : 20px;
+  --glass-shadow       : 0 8px 32px rgba(15, 45, 20, 0.08), inset 0 1px 0 rgba(255, 255, 255, 1);
+  --glass-highlight    : inset 0 1px 0 rgba(255, 255, 255, 1);
 
   --card-bg     : var(--glass-color);
   --card-border : var(--glass-border);
@@ -309,30 +309,30 @@
   --primary-color      : var(--accent-primary);
 
   /* ── TEXT — dark green-tinted for readability over glass */
-  --text-primary       : #0D1F10;
-  --text-secondary     : rgba(20, 55, 24, 0.80);
-  --text-tertiary      : rgba(30, 75, 34, 0.58);
-  --text-muted         : rgba(50, 100, 55, 0.44);
-  --text-inverse       : #EBF5EC;
+  --text-primary       : #051408;
+  --text-secondary     : rgba(5, 20, 8, 0.85);
+  --text-tertiary      : rgba(5, 20, 8, 0.65);
+  --text-muted         : rgba(5, 20, 8, 0.45);
+  --text-inverse       : #f8fcf9;
   --text-color         : var(--text-primary);
 
   /* ── BORDERS — white-forward for glass edges */
-  --border-color       : rgba(255, 255, 255, 0.70);
-  --border-soft        : rgba(255, 255, 255, 0.50);
-  --border-moss        : rgba(46, 125, 50, 0.18);
-  --divider-color      : rgba(46, 125, 50, 0.09);
+  --border-color       : rgba(46, 125, 50, 0.15);
+  --border-soft        : rgba(46, 125, 50, 0.08);
+  --border-moss        : rgba(46, 125, 50, 0.22);
+  --divider-color      : rgba(46, 125, 50, 0.12);
 
   /* ── GLOW — subtle, doesn't fight the bright bg */
-  --glow-green         : 0 0 18px rgba(46, 125, 50, 0.14);
-  --glow-cyan          : 0 0 18px rgba(0, 137, 123, 0.12);
-  --glow-amber         : 0 0 14px rgba(184, 134, 11, 0.12);
-  --glow-orchid        : 0 0 14px rgba(123, 31, 162, 0.10);
+  --glow-green         : 0 0 18px rgba(46, 125, 50, 0.18);
+  --glow-cyan          : 0 0 18px rgba(0, 137, 123, 0.15);
+  --glow-amber         : 0 0 14px rgba(184, 134, 11, 0.15);
+  --glow-orchid        : 0 0 14px rgba(123, 31, 162, 0.13);
 
   /* ── SURFACES */
-  --surface-1          : rgba(255, 255, 255, 0.40);
-  --surface-2          : rgba(255, 255, 255, 0.62);
-  --surface-hover      : rgba(46, 125, 50, 0.08);
-  --surface-active     : rgba(46, 125, 50, 0.14);
+  --surface-1          : rgba(46, 125, 50, 0.04);
+  --surface-2          : rgba(255, 255, 255, 0.85);
+  --surface-hover      : rgba(46, 125, 50, 0.09);
+  --surface-active     : rgba(46, 125, 50, 0.15);
 
    /* ── SIDEBAR (Light, Uncollapsed) */
    --sidebar-light-unc-bg: linear-gradient(155deg, rgba(255, 255, 255, 0.86) 0%, rgba(255, 255, 255, 0.62) 36%, rgba(232, 246, 236, 0.84) 100%);
@@ -461,6 +461,277 @@
    --sp-card-body-light-bg: transparent;
    --sp-card-body-light-text: var(--text-color);
 
+  /* ── ADDITIONAL SEMANTICS ── */
+  --navbar-bg: var(--glass-color);
+  --navbar-border: var(--glass-border);
+  --sidebar-bg: var(--bg-secondary);
+  --sidebar-link-bg: var(--surface-1);
+  --sidebar-link-active: var(--surface-active);
+
   color-scheme: light;
 }
 
+/* ============================================================
+   MIDNIGHT THEME
+   - Deep space blues and purples
+============================================================ */
+[data-theme="midnight"] {
+  --bg-gradient        : linear-gradient(145deg, #050814 0%, #080d21 50%, #0d1536 80%, #050814 100%);
+  --bg-color           : #050814;
+  --bg-secondary       : #080d21;
+  --bg-tertiary        : #0d1536;
+
+  --glass-color        : rgb(0 0 0 / 12%);
+  --glass-color-strong : rgb(0 0 0 / 24%);
+  --glass-blur         : 24px;
+  --glass-saturate     : 140%;
+  --glass-border       : 1px solid rgba(255, 255, 255, 0.08);
+  --glass-border-strong: 1px solid rgba(139, 92, 246, 0.25);
+  --glass-radius       : 18px;
+  --glass-shadow       : 0 14px 44px rgba(0, 0, 0, 0.7);
+  --glass-highlight    : inset 0 1px 0 rgba(255, 255, 255, 0.05);
+
+  --accent-primary     : #8b5cf6;
+  --accent-hover       : #7c3aed;
+  --accent-secondary   : #3b82f6;
+  --accent-cyan        : #06b6d4;
+  --focus-ring         : 0 0 0 3px rgba(139, 92, 246, 0.22);
+
+  --plant-green        : #10b981;
+  --plant-teal         : #14b8a6;
+  --plant-cyan         : #06b6d4;
+  --plant-moss         : #3b82f6;
+  --plant-canopy       : #6366f1;
+  --plant-mint         : #818cf8;
+  --plant-deep         : #3730a3;
+
+  --success-color      : #10b981;
+  --success-bg         : rgba(16, 185, 129, 0.12);
+  --success-border     : rgba(16, 185, 129, 0.35);
+
+  --text-primary       : #e2e8f0;
+  --text-secondary     : rgba(226, 232, 240, 0.75);
+  --text-tertiary      : rgba(148, 163, 184, 0.6);
+  --text-muted         : rgba(100, 116, 139, 0.4);
+  --text-inverse       : #050814;
+  --text-color         : var(--text-primary);
+
+  --border-color       : rgba(255, 255, 255, 0.06);
+  --border-soft        : rgba(255, 255, 255, 0.03);
+  --border-moss        : rgba(139, 92, 246, 0.15);
+  --divider-color      : rgba(255, 255, 255, 0.05);
+
+  --glow-green         : 0 0 20px rgba(16, 185, 129, 0.16);
+  --glow-cyan          : 0 0 20px rgba(6, 182, 212, 0.14);
+  --glow-amber         : 0 0 16px rgba(245, 158, 11, 0.13);
+  --glow-orchid        : 0 0 16px rgba(139, 92, 246, 0.15);
+
+  --surface-1          : rgba(255, 255, 255, 0.02);
+  --surface-2          : rgba(255, 255, 255, 0.04);
+  --surface-hover      : rgba(139, 92, 246, 0.08);
+  --surface-active     : rgba(139, 92, 246, 0.15);
+
+  --grad-primary       : linear-gradient(135deg, #4c1d95, #8b5cf6);
+  --grad-cyan          : linear-gradient(135deg, #1d4ed8, #3b82f6);
+  --grad-forest        : linear-gradient(135deg, #0d1536, #6366f1, #8b5cf6);
+  --grad-glow          : radial-gradient(ellipse at top left,  rgba(139,92,246,0.08)  0%, transparent 55%),
+                         radial-gradient(ellipse at bottom right, rgba(59,130,246,0.06) 0%, transparent 55%);
+
+  /* ── ADMIN & BADGE COLORS ── */
+  --admin-badge        : #7c3aed;
+  --chart-moisture  : #3b82f6;
+  --chart-temp      : #f59e0b;
+  --chart-humidity  : #06b6d4;
+  --chart-light     : #facc15;
+  --chart-flow      : #6366f1;
+  --chart-disease   : #ef4444;
+  --chart-ph        : #d946ef;
+  --chart-healthy   : #10b981;
+  --chart-neutral   : #0ea5e9;
+
+  --mock-banner-bg-sim : linear-gradient(90deg, #1e3a8a, #312e81);
+  --mock-banner-bg-normal: #451a03;
+  --mock-banner-text-sim  : #bfdbfe;
+  --mock-banner-text-normal: #fde68a;
+
+  color-scheme: dark;
+}
+
+/* ============================================================
+   FOREST THEME
+   - Lush, vibrant greens and earthy undertones
+============================================================ */
+[data-theme="forest"] {
+  --bg-gradient        : linear-gradient(145deg, #020b05 0%, #051a0d 50%, #0a2e16 80%, #020b05 100%);
+  --bg-color           : #020b05;
+  --bg-secondary       : #051a0d;
+  --bg-tertiary        : #0a2e16;
+
+  --glass-color        : rgb(0 0 0 / 10%);
+  --glass-color-strong : rgb(0 0 0 / 20%);
+  --glass-blur         : 20px;
+  --glass-saturate     : 130%;
+  --glass-border       : 1px solid rgba(255, 255, 255, 0.07);
+  --glass-border-strong: 1px solid rgba(34, 197, 94, 0.22);
+  --glass-radius       : 18px;
+  --glass-shadow       : 0 14px 44px rgba(0, 0, 0, 0.65);
+  --glass-highlight    : inset 0 1px 0 rgba(255, 255, 255, 0.06);
+
+  --accent-primary     : #22c55e;
+  --accent-hover       : #16a34a;
+  --accent-secondary   : #10b981;
+  --accent-cyan        : #14b8a6;
+  --focus-ring         : 0 0 0 3px rgba(34, 197, 94, 0.22);
+
+  --plant-green        : #4ade80;
+  --plant-teal         : #2dd4bf;
+  --plant-cyan         : #22d3ee;
+  --plant-moss         : #16a34a;
+  --plant-canopy       : #22c55e;
+  --plant-mint         : #86efac;
+  --plant-deep         : #14532d;
+
+  --success-color      : #22c55e;
+  --success-bg         : rgba(34, 197, 94, 0.15);
+  --success-border     : rgba(34, 197, 94, 0.4);
+
+  --text-primary       : #f0fdf4;
+  --text-secondary     : rgba(220, 252, 231, 0.8);
+  --text-tertiary      : rgba(187, 247, 208, 0.6);
+  --text-muted         : rgba(134, 239, 172, 0.4);
+  --text-inverse       : #020b05;
+  --text-color         : var(--text-primary);
+
+  --border-color       : rgba(255, 255, 255, 0.07);
+  --border-soft        : rgba(255, 255, 255, 0.035);
+  --border-moss        : rgba(34, 197, 94, 0.16);
+  --divider-color      : rgba(255, 255, 255, 0.05);
+
+  --glow-green         : 0 0 20px rgba(34, 197, 94, 0.18);
+  --glow-cyan          : 0 0 20px rgba(20, 184, 166, 0.14);
+  --glow-amber         : 0 0 16px rgba(250, 204, 21, 0.13);
+  --glow-orchid        : 0 0 16px rgba(168, 85, 247, 0.12);
+
+  --surface-1          : rgba(255, 255, 255, 0.025);
+  --surface-2          : rgba(255, 255, 255, 0.05);
+  --surface-hover      : rgba(34, 197, 94, 0.09);
+  --surface-active     : rgba(34, 197, 94, 0.14);
+
+  --grad-primary       : linear-gradient(135deg, #14532d, #22c55e);
+  --grad-cyan          : linear-gradient(135deg, #047857, #10b981);
+  --grad-forest        : linear-gradient(135deg, #0a2e16, #16a34a, #22c55e);
+  --grad-glow          : radial-gradient(ellipse at top left,  rgba(34,197,94,0.09)  0%, transparent 55%),
+                         radial-gradient(ellipse at bottom right, rgba(16,185,129,0.07) 0%, transparent 55%);
+
+  /* ── ADMIN & BADGE COLORS ── */
+  --admin-badge        : #16a34a;
+  --chart-moisture  : #0ea5e9;
+  --chart-temp      : #f59e0b;
+  --chart-humidity  : #14b8a6;
+  --chart-light     : #facc15;
+  --chart-flow      : #3b82f6;
+  --chart-disease   : #ef4444;
+  --chart-ph        : #d946ef;
+  --chart-healthy   : #22c55e;
+  --chart-neutral   : #2dd4bf;
+
+  --mock-banner-bg-sim : linear-gradient(90deg, #1e3a8a, #064e3b);
+  --mock-banner-bg-normal: #451a03;
+  --mock-banner-text-sim  : #6ee7b7;
+  --mock-banner-text-normal: #fde68a;
+
+  color-scheme: dark;
+}
+/* ============================================================
+   PALETTE OVERRIDES
+   Dynamic theme accents for user selection
+============================================================ */
+:root[data-palette="emerald"] {
+  --accent-primary: #10b981;
+  --accent-hover: #059669;
+  --accent-secondary: #064e3b;
+  --aurora-1: #10b981;
+  --aurora-2: #059669;
+  --aurora-3: #34d399;
+  --glow-cyan: 0 0 20px rgba(16, 185, 129, 0.2);
+}
+
+:root[data-palette="violet"] {
+  --accent-primary: #8b5cf6;
+  --accent-hover: #7c3aed;
+  --accent-secondary: #4c1d95;
+  --aurora-1: #8b5cf6;
+  --aurora-2: #6366f1;
+  --aurora-3: #a78bfa;
+  --glow-cyan: 0 0 20px rgba(139, 92, 246, 0.2);
+}
+
+:root[data-palette="sunset"] {
+  --accent-primary: #f59e0b;
+  --accent-hover: #d97706;
+  --accent-secondary: #78350f;
+  --aurora-1: #f59e0b;
+  --aurora-2: #ef4444;
+  --aurora-3: #fbbf24;
+  --glow-cyan: 0 0 20px rgba(245, 158, 11, 0.2);
+}
+
+:root[data-palette="ocean"] {
+  --accent-primary: #0ea5e9;
+  --accent-hover: #0284c7;
+  --accent-secondary: #0c4a6e;
+  --aurora-1: #0ea5e9;
+  --aurora-2: #6366f1;
+  --aurora-3: #7dd3fc;
+  --glow-cyan: 0 0 20px rgba(14, 165, 233, 0.2);
+}
+
+:root[data-palette="rose"] {
+  --accent-primary: #ec4899;
+  --accent-hover: #db2777;
+  --accent-secondary: #831843;
+  --aurora-1: #ec4899;
+  --aurora-2: #f43f5e;
+  --aurora-3: #fda4af;
+  --glow-cyan: 0 0 20px rgba(236, 72, 153, 0.2);
+}
+
+:root[data-palette="harvest"] {
+  --accent-primary: #f59e0b;
+  --accent-hover: #d97706;
+  --accent-secondary: #78350f;
+  --aurora-1: #f59e0b;
+  --aurora-2: #fbbf24;
+  --aurora-3: #fef3c7;
+  --glow-cyan: 0 0 20px rgba(245, 158, 11, 0.2);
+}
+
+:root[data-palette="glacier"] {
+  --accent-primary: #06b6d4;
+  --accent-hover: #0891b2;
+  --accent-secondary: #164e63;
+  --aurora-1: #06b6d4;
+  --aurora-2: #22d3ee;
+  --aurora-3: #cffafe;
+  --glow-cyan: 0 0 20px rgba(6, 182, 212, 0.2);
+}
+
+:root[data-palette="nightshade"] {
+  --accent-primary: #6366f1;
+  --accent-hover: #4f46e5;
+  --accent-secondary: #312e81;
+  --aurora-1: #6366f1;
+  --aurora-2: #818cf8;
+  --aurora-3: #e0e7ff;
+  --glow-cyan: 0 0 20px rgba(99, 102, 241, 0.2);
+}
+
+:root[data-palette="bloom"] {
+  --accent-primary: #f43f5e;
+  --accent-hover: #e11d48;
+  --accent-secondary: #881337;
+  --aurora-1: #f43f5e;
+  --aurora-2: #fb7185;
+  --aurora-3: #ffe4e6;
+  --glow-cyan: 0 0 20px rgba(244, 63, 94, 0.2);
+}

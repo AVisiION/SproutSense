@@ -13,6 +13,7 @@ import {
   addAdminAIKey,
   deleteAdminAIKey,
   toggleAdminAIKey,
+  getAIUsageAll,
 } from '../controllers/aiController.js';
 import { validateHistoryQuery, validateDiseaseDetection } from '../validators/requestValidator.js';
 import { aiLimiter } from '../middleware/rateLimiter.js';
@@ -43,6 +44,17 @@ router.post('/disease/device',
 // ============================================================================
 
 router.use(authenticate, requireAccountState());
+
+// ============================================================================
+// ADMIN-ONLY: AI API KEY MANAGEMENT
+// These routes require admin auth but NOT a linked device (they're global config)
+// ============================================================================
+router.get('/keys',              requirePermissions([PERMISSIONS.CONFIG_UPDATE]), getAdminAIKeys);
+router.post('/keys',             requirePermissions([PERMISSIONS.CONFIG_UPDATE]), addAdminAIKey);
+router.delete('/keys/:index',    requirePermissions([PERMISSIONS.CONFIG_UPDATE]), deleteAdminAIKey);
+router.patch('/keys/:index/toggle', requirePermissions([PERMISSIONS.CONFIG_UPDATE]), toggleAdminAIKey);
+
+// Linked-device guard applies to all routes below
 router.use(requireLinkedDevice());
 
 // Existing routes
@@ -51,6 +63,9 @@ router.get('/recommend', aiLimiter, requirePermissions([PERMISSIONS.AI_INSIGHTS_
 
 // GET /api/ai/insights - Get historical AI insights
 router.get('/insights', aiLimiter, requirePermissions([PERMISSIONS.AI_INSIGHTS_READ]), validateHistoryQuery, getAIInsights);
+
+// GET /api/ai/usage/all - Get AI usage for all users/devices
+router.get('/usage/all', aiLimiter, requirePermissions([PERMISSIONS.CONFIG_UPDATE]), getAIUsageAll);
 
 // GET /api/ai/usage - Get AI usage for current day
 router.get('/usage', aiLimiter, requirePermissions([PERMISSIONS.AI_INSIGHTS_READ]), getAIUsageStats);
@@ -82,14 +97,5 @@ router.get('/disease/all', aiLimiter, requirePermissions([PERMISSIONS.AI_DISEASE
 // But if the frontend drops `/api`, we handle it gracefully here as a fallback.
 // ============================================================================
 
-// ============================================================================
-// ADMIN-ONLY: AI API KEY MANAGEMENT
-// These routes require admin auth but NOT a linked device (they're global config)
-// ============================================================================
-
-router.get('/keys',              authenticate, requireAccountState(), requirePermissions([PERMISSIONS.CONFIG_UPDATE]), getAdminAIKeys);
-router.post('/keys',             authenticate, requireAccountState(), requirePermissions([PERMISSIONS.CONFIG_UPDATE]), addAdminAIKey);
-router.delete('/keys/:index',    authenticate, requireAccountState(), requirePermissions([PERMISSIONS.CONFIG_UPDATE]), deleteAdminAIKey);
-router.patch('/keys/:index/toggle', authenticate, requireAccountState(), requirePermissions([PERMISSIONS.CONFIG_UPDATE]), toggleAdminAIKey);
 
 export default router;

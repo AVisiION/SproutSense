@@ -8,7 +8,6 @@ export const SECTIONS = [
   { id: 'users',     label: 'Users',         icon: 'fa-users' },
   { id: 'ui',        label: 'UI',            icon: 'fa-palette' },
   { id: 'sensors',   label: 'Plant Sensors', icon: 'fa-seedling' },
-  { id: 'limits',    label: 'Limits',        icon: 'fa-gauge-high' },
   { id: 'config',    label: 'Config',        icon: 'fa-sliders' },
   { id: 'data',      label: 'Raw Data',      icon: 'fa-database' },
   { id: 'logs',      label: 'Logs',          icon: 'fa-terminal' },
@@ -80,10 +79,78 @@ export const DEFAULT_UI_PREFERENCES = {
     esp32: true,
     settings: true,
   },
+  sidebarLabels: {
+    home: 'Home',
+    sensors: 'Sensors',
+    analytics: 'Analytics',
+    alerts: 'Alerts',
+    controls: 'Controls',
+    ai: 'AI Intelligence',
+    insights: 'Insights',
+    backend: 'Backend Config',
+    esp32: 'IoT Devices',
+    settings: 'Settings',
+  },
+  sidebarIcons: {
+    home: 'fa-house',
+    sensors: 'fa-microchip',
+    analytics: 'fa-chart-pie',
+    alerts: 'fa-bell',
+    controls: 'fa-sliders',
+    ai: 'fa-brain',
+    insights: 'fa-lightbulb',
+    backend: 'fa-server',
+    esp32: 'fa-rss',
+    settings: 'fa-gear',
+  },
+  dashboardSections: {
+    sensors: true,
+    analytics: true,
+    alerts: true,
+    controls: true,
+    ai: true,
+    insights: true,
+  },
+  dashboardLabels: {
+    sensors: 'Real-time Sensors',
+    analytics: 'Data Analytics',
+    alerts: 'System Alerts',
+    controls: 'Device Controls',
+    ai: 'AI Insights',
+    insights: 'Expert Tips',
+  },
+  dashboardIcons: {
+    sensors: 'fa-temperature-half',
+    analytics: 'fa-chart-line',
+    alerts: 'fa-triangle-exclamation',
+    controls: 'fa-toggle-on',
+    ai: 'fa-robot',
+    insights: 'fa-seedling',
+  },
   widgets: {
     showAlertBadge: true,
     showStatusDots: true,
     showSystemStatusPanel: true,
+  },
+  appearance: {
+    theme: 'liquid-glass', // dark, light, liquid-glass
+    animationsEnabled: true,
+    glassIntensity: 'medium', // low, medium, high
+    compactMode: false,
+  },
+  notifications: {
+    soundEnabled: true,
+    browserNotifications: false,
+    toastPosition: 'top-right',
+  },
+  dataDisplay: {
+    autoRefresh: true,
+    refreshInterval: 30, // seconds
+    defaultTimeRange: '7d', // 24h, 7d, 30d
+  },
+  accessibility: {
+    highContrast: false,
+    largeText: false,
   }
 };
 

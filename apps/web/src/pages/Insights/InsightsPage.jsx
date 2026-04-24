@@ -16,9 +16,8 @@
  */
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { formatDiseaseName } from '../../utils/formatters';
+import { aiAPI } from '../../utils/api';
 import './InsightsPage.css';
-
-const API_BASE = (import.meta.env.VITE_API_BASE_URL || '/api').replace(/\/$/, '');
 
 // ─── helpers ──────────────────────────────────────────────────────────────────
 const SEV_META = {
@@ -331,8 +330,47 @@ function LineChart({ data, unit, color, label }) {
 // ─── Loading skeleton ─────────────────────────────────────────────────────────
 function Skeleton() {
   return (
-    <div className="ip-skeleton">
-      {[1,2,3,4].map(i => <div key={i} className="ip-skel-block" />)}
+    <div className="ss-sk-insights-fallback">
+      {/* Stats row */}
+      <div className="ss-sk-insights-stats">
+        {[0, 70, 140, 210].map(d => (
+          <div key={d} className="ss-sk-insights-stat" style={{ animationDelay: `${d}ms` }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
+              <div className="ss-sk" style={{ width: 32, height: 32, borderRadius: 9, flexShrink: 0 }} />
+              <div className="ss-sk" style={{ width: '55%', height: 9, borderRadius: 4 }} />
+            </div>
+            <div className="ss-sk" style={{ width: '70%', height: 22, borderRadius: 6 }} />
+            <div className="ss-sk" style={{ width: '40%', height: 8, borderRadius: 4, marginTop: 8 }} />
+          </div>
+        ))}
+      </div>
+      {/* Main chart */}
+      <div className="ss-sk-card ss-sk-insights-chart">
+        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 14 }}>
+          <div className="ss-sk" style={{ width: '35%', height: 10, borderRadius: 5 }} />
+          <div className="ss-sk" style={{ width: 80, height: 26, borderRadius: 999 }} />
+        </div>
+        <div className="ss-sk-insights-bars">
+          {[45, 68, 52, 82, 60, 74, 48, 90, 56, 72, 65, 80].map((h, i) => (
+            <div key={i} className="ss-sk ss-sk-insights-bar"
+                 style={{ height: `${h}%`, animationDelay: `${i * 45}ms` }} />
+          ))}
+        </div>
+      </div>
+      {/* Two sub-charts */}
+      <div className="ss-sk-insights-sub">
+        {[0, 1].map(i => (
+          <div key={i} className="ss-sk-card" style={{ animationDelay: `${i * 80}ms` }}>
+            <div className="ss-sk" style={{ width: '45%', height: 9, borderRadius: 4, marginBottom: 14 }} />
+            <div className="ss-sk-insights-bars" style={{ height: 90 }}>
+              {[55, 78, 62, 85, 70, 60, 75].map((h, j) => (
+                <div key={j} className="ss-sk ss-sk-insights-bar"
+                     style={{ height: `${h}%`, animationDelay: `${j * 50}ms` }} />
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }
@@ -374,16 +412,12 @@ function InsightsPage({ sensorDeviceId } = {}) {
 
   const fetchInsights = useCallback(async () => {
     try {
-      const params = new URLSearchParams({ days });
-      if (sensorDeviceId) params.set('deviceId', sensorDeviceId);
-      const res  = await fetch(`${API_BASE}/ai/insights?${params.toString()}`);
-      if (!res.ok) throw new Error('Failed to fetch insights');
-      const json = await res.json();
+      const json = await aiAPI.getInsights({ days, deviceId: sensorDeviceId || undefined });
       setInsights(json.data);
       setError(null);
       setLastRefreshed(new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}));
     } catch (e) {
-      setError(e.message);
+      setError(e.response?.data?.message || e.message);
     } finally {
       setLoading(false);
     }

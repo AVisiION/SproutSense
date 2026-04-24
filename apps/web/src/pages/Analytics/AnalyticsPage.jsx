@@ -656,25 +656,20 @@ export default function AnalyticsPage() {
       animate="visible"
       variants={containerVariants}
     >
-      {/* ── Header ── */}
       <div className={styles.header}>
         <div className={styles.headerTop}>
-          <div>
-            <h1 className={styles.title}>Analytics</h1>
-            <p className={styles.subtitle}>System metrics and AI insights</p>
-          </div>
           <WeatherCard />
-        </div>
-        <div className={styles.controls}>
-          {TIME_RANGES.map(tr => (
-            <button
-              key={tr.label}
-              className={`${styles.timeRangeBtn} ${selectedRange.label === tr.label ? styles.active : ''}`}
-              onClick={() => setSelectedRange(tr)}
-            >
-              {tr.label}
-            </button>
-          ))}
+          <div className={styles.controls}>
+            {TIME_RANGES.map(tr => (
+              <button
+                key={tr.label}
+                className={`${styles.timeRangeBtn} ${selectedRange.label === tr.label ? styles.active : ''}`}
+                onClick={() => setSelectedRange(tr)}
+              >
+                {tr.label}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
 

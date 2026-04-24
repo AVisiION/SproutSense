@@ -1,0 +1,449 @@
+/* ============================================================
+   PageSkeleton.css — SproutSense In-App Skeleton Loading
+   Liquid Glass aesthetic matching the app design system
+   ============================================================ */
+
+/* ── Shimmer keyframe ────────────────────────────────────────── */
+@keyframes ss-sk-shimmer {
+  0%   { background-position: -200% 0; }
+  100% { background-position:  200% 0; }
+}
+
+@keyframes ss-sk-fade-in {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ── Root container ─────────────────────────────────────────── */
+.ss-sk-root {
+  width: 100%;
+  min-height: 100%;
+  padding: 0;
+  animation: ss-sk-fade-in 280ms ease both;
+}
+
+/* ── Page layout wrapper ────────────────────────────────────── */
+.ss-sk-page {
+  display        : flex;
+  flex-direction : column;
+  gap            : 12px;
+  padding        : 24px;
+  max-width      : 100%;
+}
+
+.ss-sk-page-center {
+  align-items    : center;
+  justify-content: center;
+  min-height     : 80vh;
+}
+
+/* ── Skeleton atom ──────────────────────────────────────────── */
+.ss-sk {
+  background           : rgba(255, 255, 255, 0.07);
+  background-image     : linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0.04) 0%,
+    rgba(255, 255, 255, 0.13) 40%,
+    rgba(255, 255, 255, 0.04) 80%
+  );
+  background-size      : 200% 100%;
+  background-position  : -200% 0;
+  animation            : ss-sk-shimmer 1.7s ease-in-out infinite;
+  flex-shrink          : 0;
+}
+
+[data-theme='light'] .ss-sk {
+  background      : rgba(0, 0, 0, 0.06);
+  background-image: linear-gradient(
+    90deg,
+    rgba(0, 0, 0, 0.04) 0%,
+    rgba(255, 255, 255, 0.55) 40%,
+    rgba(0, 0, 0, 0.04) 80%
+  );
+  background-size : 200% 100%;
+  animation       : ss-sk-shimmer 1.7s ease-in-out infinite;
+}
+
+/* ── Glass card ─────────────────────────────────────────────── */
+.ss-sk-card {
+  background     : rgba(255, 255, 255, 0.03);
+  border         : 1px solid rgba(255, 255, 255, 0.07);
+  border-radius  : 18px;
+  padding        : 20px;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  box-shadow     :
+    0 8px 32px rgba(0, 0, 0, 0.28),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  animation      : ss-sk-fade-in 300ms ease both;
+}
+
+[data-theme='light'] .ss-sk-card {
+  background  : rgba(255, 255, 255, 0.58);
+  border-color: rgba(255, 255, 255, 0.82);
+  box-shadow  :
+    0 8px 28px rgba(10, 40, 20, 0.10),
+    inset 0 1px 0 rgba(255, 255, 255, 0.92);
+}
+
+/* ── Page header area ────────────────────────────────────────── */
+.ss-sk-page-header {
+  display        : flex;
+  align-items    : center;
+  justify-content: space-between;
+  margin-bottom  : 4px;
+  padding        : 0 0 8px;
+}
+
+/* ── Stats grid (4-up) ───────────────────────────────────────── */
+.ss-sk-stats-grid {
+  display              : grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap                  : 12px;
+}
+
+/* ── Stat tile contents ─────────────────────────────────────── */
+.ss-sk-stat {
+  display       : flex;
+  flex-direction: column;
+  gap           : 10px;
+}
+
+.ss-sk-stat-top {
+  display    : flex;
+  align-items: center;
+  gap        : 10px;
+}
+
+/* ── 2-column layout ────────────────────────────────────────── */
+.ss-sk-two-col {
+  display              : grid;
+  grid-template-columns: 1fr 1fr;
+  gap                  : 12px;
+}
+
+/* ── Bar chart ───────────────────────────────────────────────── */
+.ss-sk-bars {
+  display    : flex;
+  align-items: flex-end;
+  gap        : 5px;
+  padding-top: 8px;
+}
+
+.ss-sk-bar {
+  flex         : 1;
+  border-radius: 4px 4px 0 0;
+  min-height   : 8px;
+}
+
+/* ── Sensors grid ────────────────────────────────────────────── */
+.ss-sk-sensors-grid {
+  display              : grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap                  : 12px;
+}
+
+.ss-sk-sensor-header {
+  display    : flex;
+  align-items: center;
+  gap        : 10px;
+  margin-bottom: 0;
+}
+
+/* ── Alert rows ──────────────────────────────────────────────── */
+.ss-sk-alert-row {
+  display    : flex;
+  align-items: center;
+  gap        : 14px;
+  padding    : 14px 18px;
+  margin-bottom: 4px;
+}
+
+/* ── Table rows ──────────────────────────────────────────────── */
+.ss-sk-table-row {
+  display        : flex;
+  align-items    : center;
+  gap            : 14px;
+  padding        : 12px 0;
+  border-bottom  : 1px solid rgba(255, 255, 255, 0.04);
+  animation      : ss-sk-fade-in 280ms ease both;
+}
+
+[data-theme='light'] .ss-sk-table-row {
+  border-bottom-color: rgba(0, 0, 0, 0.05);
+}
+
+/* ── Chat layout ─────────────────────────────────────────────── */
+.ss-sk-chat-layout {
+  display       : flex;
+  flex-direction: column;
+  gap           : 0;
+  height        : calc(100vh - 220px);
+  min-height    : 400px;
+}
+
+.ss-sk-chat-messages {
+  flex          : 1;
+  display       : flex;
+  flex-direction: column;
+  gap           : 14px;
+  overflow      : hidden;
+  padding       : 4px 0 16px;
+}
+
+.ss-sk-chat-bubble {
+  display   : flex;
+  gap       : 10px;
+  animation : ss-sk-fade-in 300ms ease both;
+}
+
+.ss-sk-chat-left  { align-self: flex-start; flex-direction: row; }
+.ss-sk-chat-right { align-self: flex-end; flex-direction: row-reverse; }
+
+.ss-sk-bubble-body {
+  background    : rgba(255, 255, 255, 0.04);
+  border        : 1px solid rgba(255, 255, 255, 0.06);
+  border-radius : 14px;
+  padding       : 12px 16px;
+  max-width     : 70%;
+  display       : flex;
+  flex-direction: column;
+  gap           : 0;
+}
+
+[data-theme='light'] .ss-sk-bubble-body {
+  background  : rgba(255, 255, 255, 0.60);
+  border-color: rgba(255, 255, 255, 0.80);
+}
+
+.ss-sk-chat-input {
+  padding   : 8px 0 0;
+}
+
+/* ── Hero (public pages) ─────────────────────────────────────── */
+.ss-sk-hero {
+  padding   : 48px 24px 36px;
+  text-align: center;
+}
+
+/* ── Responsive ──────────────────────────────────────────────── */
+@media (max-width: 900px) {
+  .ss-sk-stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .ss-sk-sensors-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 600px) {
+  .ss-sk-page {
+    padding: 16px;
+    gap    : 10px;
+  }
+  .ss-sk-stats-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+  .ss-sk-two-col {
+    grid-template-columns: 1fr;
+  }
+  .ss-sk-sensors-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ── Intelligence Hub (AI) skeleton ─────────────────────────── */
+
+/* Topbar wrapper */
+.ss-sk-ai-topbar {
+  display       : flex;
+  flex-direction: column;
+  gap           : 0;
+  padding       : 20px 24px 0;
+  border-bottom : 1px solid rgba(255, 255, 255, 0.06);
+}
+
+[data-theme='light'] .ss-sk-ai-topbar {
+  border-bottom-color: rgba(46, 125, 50, 0.08);
+}
+
+/* Header row: avatar + title + pills */
+.ss-sk-ai-header {
+  display    : flex;
+  align-items: center;
+  gap        : 14px;
+  padding-bottom: 16px;
+}
+
+/* Sensor badges strip */
+.ss-sk-ai-badges {
+  display    : flex;
+  gap        : 8px;
+  flex-wrap  : wrap;
+  padding-bottom: 14px;
+  overflow   : hidden;
+}
+
+.ss-sk-badge-pill {
+  display      : flex;
+  align-items  : center;
+  gap          : 7px;
+  background   : rgba(255, 255, 255, 0.04);
+  border       : 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 999px;
+  padding      : 6px 12px;
+  animation    : ss-sk-fade-in 300ms ease both;
+}
+
+[data-theme='light'] .ss-sk-badge-pill {
+  background  : rgba(255, 255, 255, 0.55);
+  border-color: rgba(255, 255, 255, 0.80);
+}
+
+/* Tabs row */
+.ss-sk-ai-tabs {
+  display    : flex;
+  gap        : 4px;
+  padding-bottom: 0;
+  padding-top: 2px;
+}
+
+/* Body: flex column fills remaining height */
+.ss-sk-ai-body {
+  display       : flex;
+  flex-direction: column;
+  flex          : 1;
+  padding       : 20px 24px 16px;
+  gap           : 14px;
+  min-height    : 0;
+  overflow      : hidden;
+}
+
+/* Quick prompts grid: 2 columns */
+.ss-sk-ai-prompts {
+  display              : grid;
+  grid-template-columns: 1fr 1fr;
+  gap                  : 8px;
+}
+
+/* Chat bubbles */
+.ss-sk-ai-messages {
+  display       : flex;
+  flex-direction: column;
+  gap           : 12px;
+}
+
+.ss-sk-ai-bubble {
+  display  : flex;
+  gap      : 10px;
+  animation: ss-sk-fade-in 300ms ease both;
+}
+
+.ss-sk-ai-left  { align-self: flex-start; }
+.ss-sk-ai-right { align-self: flex-end; flex-direction: row-reverse; }
+
+.ss-sk-ai-bubble-inner {
+  background   : rgba(255, 255, 255, 0.04);
+  border       : 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 14px;
+  padding      : 12px 16px;
+  max-width    : 72%;
+  display      : flex;
+  flex-direction: column;
+}
+
+[data-theme='light'] .ss-sk-ai-bubble-inner {
+  background  : rgba(255, 255, 255, 0.60);
+  border-color: rgba(255, 255, 255, 0.82);
+}
+
+/* Composer row */
+.ss-sk-ai-composer {
+  display    : flex;
+  align-items: center;
+  gap        : 10px;
+  padding-top: 6px;
+}
+
+/* ── Insights tab fallback skeleton ──────────────────────────── */
+.ss-sk-insights-fallback {
+  display       : flex;
+  flex-direction: column;
+  gap           : 12px;
+  padding       : 20px 24px;
+  animation     : ss-sk-fade-in 280ms ease both;
+}
+
+.ss-sk-insights-stats {
+  display              : grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap                  : 12px;
+}
+
+.ss-sk-insights-stat {
+  background   : rgba(255, 255, 255, 0.03);
+  border       : 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 16px;
+  padding      : 16px;
+  animation    : ss-sk-fade-in 280ms ease both;
+}
+
+[data-theme='light'] .ss-sk-insights-stat {
+  background  : rgba(255, 255, 255, 0.55);
+  border-color: rgba(255, 255, 255, 0.82);
+}
+
+.ss-sk-insights-chart {
+  border-radius: 18px;
+}
+
+.ss-sk-insights-bars {
+  display    : flex;
+  align-items: flex-end;
+  gap        : 4px;
+  height     : 140px;
+}
+
+.ss-sk-insights-bar {
+  flex         : 1;
+  border-radius: 3px 3px 0 0;
+  min-height   : 6px;
+}
+
+.ss-sk-insights-sub {
+  display              : grid;
+  grid-template-columns: 1fr 1fr;
+  gap                  : 12px;
+}
+
+@media (max-width: 900px) {
+  .ss-sk-insights-stats {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .ss-sk-ai-prompts {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 600px) {
+  .ss-sk-insights-stats { grid-template-columns: 1fr 1fr; }
+  .ss-sk-insights-sub   { grid-template-columns: 1fr; }
+  .ss-sk-ai-topbar      { padding: 14px 16px 0; }
+  .ss-sk-ai-body        { padding: 14px 16px 12px; }
+  .ss-sk-ai-prompts     { grid-template-columns: 1fr; }
+}
+
+/* ── Reduced motion ──────────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  .ss-sk,
+  .ss-sk-card,
+  .ss-sk-root,
+  .ss-sk-chat-bubble,
+  .ss-sk-ai-bubble,
+  .ss-sk-badge-pill,
+  .ss-sk-table-row,
+  .ss-sk-insights-fallback {
+    animation: none !important;
+    background-position: 0 0 !important;
+  }
+}

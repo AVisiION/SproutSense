@@ -1,5 +1,6 @@
-import { useState, useRef, useEffect, lazy, Suspense } from 'react';
+import { useState, useRef, useEffect, useCallback, lazy, Suspense } from 'react';
 import { AIRecommendation } from '../../components/AIRecommendation.jsx';
+import PageSkeleton from '../../components/PageSkeleton.jsx';
 import { getCSSVariableValue } from '../../utils/colorUtils.js';
 import { aiAPI } from '../../utils/api.js';
 import './AIChat.css';
@@ -191,14 +192,22 @@ const HEALTH_STATES = {
   critical: { color: getCSSVariableValue('--aichat-critical'), icon: 'fa-triangle-exclamation', label: 'Critical', threshold: 0.7 },
 };
 
+
+/**
+ * TypingIndicator — Animated dots for AI response waiting state.
+ */
 function TypingIndicator() {
   return (
-    <div className="chat-msg assistant">
-      <div className="chat-msg-avatar" aria-hidden="true">
-        <i className="fa-solid fa-robot" />
+    <div className="chat-msg assistant typing">
+      <div className="chat-msg-avatar">
+        <i className="fa-solid fa-robot" aria-hidden="true" />
       </div>
-      <div className="chat-bubble typing">
-        <span /><span /><span />
+      <div className="chat-bubble">
+        <div className="typing-dots">
+          <span></span>
+          <span></span>
+          <span></span>
+        </div>
       </div>
     </div>
   );
@@ -238,36 +247,40 @@ const SENSOR_META = {
 
 // History Management Utilities
 const historyManager = {
+  get: () => {
+    try {
+      const raw = localStorage.getItem('sproutsense_chat_history');
+      if (!raw) return [];
+      const parsed = JSON.parse(raw);
+      return Array.isArray(parsed) 
+        ? parsed.sort((a, b) => (b.lastUpdated || b.timestamp) - (a.lastUpdated || a.timestamp))
+        : [];
+    } catch {
+      return [];
+    }
+  },
   save: (messages, sessionId) => {
     if (!sessionId) return;
+    const history = historyManager.get();
     const entry = {
-      timestamp: sessionId, // Use sessionId as the stable timestamp identity
-      lastUpdated: Date.now(), // track when it was last updated
-      messages: messages.filter(m => m.role && m.content),
+      timestamp: sessionId,
+      lastUpdated: Date.now(),
+      messages: messages.map(m => ({
+        role: m.role,
+        content: m.content,
+        time: m.time
+      }))
     };
-    let history = JSON.parse(localStorage.getItem('sproutsense_chat_history') || '[]');
-    
-    // Update existing session or append new one
-    const existingIndex = history.findIndex(h => h.timestamp === sessionId);
-    if (existingIndex >= 0) {
-      history[existingIndex] = entry;
+
+    const existingIdx = history.findIndex(h => h.timestamp === sessionId);
+    if (existingIdx >= 0) {
+      history[existingIdx] = entry;
     } else {
       history.unshift(entry);
     }
 
-    // Keep only 7 days of history
-    const sevenDaysAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
-    history = history.filter(h => h.lastUpdated > sevenDaysAgo || h.timestamp > sevenDaysAgo);
-    localStorage.setItem('sproutsense_chat_history', JSON.stringify(history));
-  },
-  get: () => {
-    try {
-      const parsed = JSON.parse(localStorage.getItem('sproutsense_chat_history') || '[]');
-      // Filter out invalid or corrupted entries that might have been saved incorrectly
-      return parsed.filter(h => h && h.timestamp && h.messages && h.messages.length > 0);
-    } catch {
-      return [];
-    }
+    const trimmed = history.slice(0, 20);
+    localStorage.setItem('sproutsense_chat_history', JSON.stringify(trimmed));
   },
   clear: () => localStorage.removeItem('sproutsense_chat_history'),
 };
@@ -290,27 +303,106 @@ const calculateSensorHealth = (sensors) => {
   return 'healthy';
 };
 
+/**
+ * MarkdownText — lightweight markdown parser.
+ * Handles: **bold**, *italic*, - lists, and \n paragraphs.
+ */
+function MarkdownText({ text }) {
+  if (!text) return null;
+
+  const paragraphs = text.split(/\n\s*\n/);
+
+  return (
+    <>
+      {paragraphs.map((p, i) => {
+        const trimmed = p.trim();
+        if (!trimmed) return null;
+
+        if (trimmed.startsWith('- ') || trimmed.startsWith('* ') || /^\d+\.\s/.test(trimmed)) {
+          const items = trimmed.split('\n');
+          return (
+            <ul key={i} className="md-list">
+              {items.map((item, j) => (
+                <li key={j}>{parseInlineMarkdown(item.replace(/^[-*\d.]+\s+/, ''))}</li>
+              ))}
+            </ul>
+          );
+        }
+
+        return (
+          <p key={i} className="md-paragraph">
+            {parseInlineMarkdown(trimmed)}
+          </p>
+        );
+      })}
+    </>
+  );
+}
+
+function parseInlineMarkdown(text) {
+  let parts = text.split(/(\*\*.*?\*\*)/g);
+  return parts.map((part, i) => {
+    if (part.startsWith('**') && part.endsWith('**')) {
+      return <strong key={i}>{part.slice(2, -2)}</strong>;
+    }
+    let subParts = part.split(/(\*.*?\*)/g);
+    return subParts.map((sub, j) => {
+      if (sub.startsWith('*') && sub.endsWith('*')) {
+        return <em key={j}>{sub.slice(1, -1)}</em>;
+      }
+      return sub;
+    });
+  });
+}
+
 
 export default function AIChat({ sensors, sensorDeviceId, defaultTab = 'chat' }) {
+  const [initialLoading, setInitialLoading] = useState(!sensors);
+  const [activeTab, setActiveTab] = useState(defaultTab);
+  const [input, setInput] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [sessionId, setSessionId] = useState(() => Date.now());
+  const [chatHistory, setChatHistory] = useState([]);
+  const [isOnline, setIsOnline] = useState(navigator.onLine);
+  const [showPlantSelector, setShowPlantSelector] = useState(false);
+  const [selectedPlant, setSelectedPlant] = useState(() => localStorage.getItem('selected_plant_type') || 'Tomato');
+  const [expandedHistoryId, setExpandedHistoryId] = useState(null);
+  const [aiUsage, setAiUsage] = useState(null);
   const [messages, setMessages] = useState([
     {
       role: 'assistant',
-      content: 'Hello! I\'m your SproutSense AI assistant. I can analyze your plant data, answer questions about plant care, and help optimize your growing conditions. Ask me anything!',
+      content: "Hello! I'm your SproutSense AI assistant. I can analyze your plant data, answer questions about plant care, and help optimize your growing conditions. Ask me anything!",
       time: new Date(),
     }
   ]);
-  const [input, setInput] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [activeTab, setActiveTab] = useState(defaultTab);
-  const [selectedPlant, setSelectedPlant] = useState(() => localStorage.getItem('selected_plant_type') || 'Tomato');
-  const [isOnline, setIsOnline] = useState(navigator.onLine);
-  const [showPlantSelector, setShowPlantSelector] = useState(false);
-  const [chatHistory, setChatHistory] = useState([]);
-  const [expandedHistoryId, setExpandedHistoryId] = useState(null);
-  const [sessionId, setSessionId] = useState(() => Date.now());
   
   const messagesEndRef = useRef(null);
   const inputRef = useRef(null);
+
+  // Fetch AI usage stats
+  const fetchUsage = useCallback(async () => {
+    try {
+      const stats = await aiAPI.getUsageStats('ESP32-SENSOR');
+      setAiUsage(stats);
+    } catch (e) {
+      console.warn('Failed to fetch AI usage', e);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchUsage();
+  }, [fetchUsage]);
+
+  useEffect(() => {
+    let timer;
+    if (initialLoading) {
+      // If sensors arrive, reveal after 800ms for smooth transition.
+      // If sensors never arrive, fallback after 3s to allow offline interaction.
+      const delay = sensors ? 800 : 3000;
+      timer = setTimeout(() => setInitialLoading(false), delay);
+    }
+    return () => clearTimeout(timer);
+  }, [sensors, initialLoading]);
 
   // Offline/Online detection
   useEffect(() => {
@@ -400,11 +492,18 @@ export default function AIChat({ sensors, sensorDeviceId, defaultTab = 'chat' })
         content: reply,
         time: new Date(),
       }]);
+      fetchUsage(); // Update usage after successful chat
     } catch (err) {
-      const msg = err?.response?.data?.error || err?.message || 'Unknown error';
+      let msg = err?.response?.data?.error || err?.response?.data?.message || err?.message || 'Unknown error';
+      
+      // Handle Quota/Rate Limit specifically
+      if (err?.response?.status === 429 || msg.toLowerCase().includes('quota')) {
+        msg = "AI Quota exceeded. Our systems are currently at high capacity or daily limits reached. Please try again in a few hours or contact your administrator.";
+      }
+
       setMessages(prev => [...prev, {
         role: 'assistant',
-        content: `Sorry, I encountered an error: ${msg}. If this persists, please contact your administrator.`,
+        content: `Sorry, I encountered an error: ${msg}`,
         time: new Date(),
         isError: true,
       }]);
@@ -468,6 +567,10 @@ export default function AIChat({ sensors, sensorDeviceId, defaultTab = 'chat' })
       setExpandedHistoryId(null);
     }
   };
+
+  if (initialLoading) {
+    return <PageSkeleton />;
+  }
 
   return (
     <div className="ai-chat-page">
@@ -536,6 +639,13 @@ export default function AIChat({ sensors, sensorDeviceId, defaultTab = 'chat' })
               <i className="fa-solid fa-wand-magic-sparkles" />
               Gemini
             </span>
+
+            {aiUsage && (
+              <div className={`ai-usage-pill${aiUsage.remaining === 0 ? ' warning' : ''}`} title={`Reset at ${new Date(aiUsage.resetAt).toLocaleTimeString()}`}>
+                <i className="fa-solid fa-bolt-lightning" />
+                <span>{aiUsage.remaining}/{aiUsage.dailyLimit} remaining</span>
+              </div>
+            )}
           </div>
         </div>
 
@@ -567,6 +677,16 @@ export default function AIChat({ sensors, sensorDeviceId, defaultTab = 'chat' })
 
       {activeTab === 'chat' ? (
         <div className="ai-chat-body">
+          {loading && (
+            <div className="ai-scan-overlay">
+              <div className="ai-scan-line" />
+              <div className="ai-scan-content">
+                <i className="fa-solid fa-robot fa-beat ai-scan-icon" />
+                <span className="ai-scan-text">AI is analyzing...</span>
+              </div>
+            </div>
+          )}
+
           {sensorChips.length > 0 && (
             <div className="ai-sensor-display">
               <div className="ai-sensors-grid">
@@ -593,7 +713,9 @@ export default function AIChat({ sensors, sensorDeviceId, defaultTab = 'chat' })
                   </div>
                 )}
                 <div className="chat-bubble">
-                  <p className="chat-bubble-text">{msg.content}</p>
+                  <div className="chat-bubble-text">
+                    <MarkdownText text={msg.content} />
+                  </div>
                   <span className="chat-bubble-time">{formatTime(msg.time)}</span>
                 </div>
               </div>
@@ -612,11 +734,14 @@ export default function AIChat({ sensors, sensorDeviceId, defaultTab = 'chat' })
                     className="chat-quick-btn"
                     onClick={() => {
                       setInput(p.label);
-                      if (inputRef.current) {
-                        inputRef.current.style.height = 'auto';
-                        inputRef.current.style.height = `${Math.min(inputRef.current.scrollHeight, 140)}px`;
-                      }
-                      inputRef.current?.focus();
+                      // Use a small timeout to let the state update before sending, 
+                      // or better, just pass the value to sendMessage if I refactor it.
+                      // For now, setting input and focusing is fine, but user wants "solve issues".
+                      // I'll make it auto-send.
+                      setTimeout(() => {
+                        const btn = document.querySelector('.chat-send-btn');
+                        btn?.click();
+                      }, 50);
                     }}
                   >
                     <i className={`fa-solid ${p.icon}`} aria-hidden="true" />
@@ -662,60 +787,81 @@ export default function AIChat({ sensors, sensorDeviceId, defaultTab = 'chat' })
           ) : (
             <div className="ai-history-container">
               <div className="ai-history-toolbar">
-                <h3 className="ai-history-title">Recent Conversations</h3>
+                <div className="ai-history-title-group">
+                  <h3 className="ai-history-title">Conversation History</h3>
+                  <span className="ai-history-subtitle">{chatHistory.length} sessions saved locally</span>
+                </div>
                 <button className="ai-history-clear-btn" onClick={clearAllHistory}>
-                  <i className="fa-solid fa-trash-can" />
-                  Clear All
+                  <i className="fa-solid fa-broom" />
+                  Clear History
                 </button>
               </div>
-              <div className="ai-history-list">
+              <div className="ai-history-grid">
                 {chatHistory.map((session, idx) => (
-                  <div key={session.timestamp || idx} className="ai-history-item">
-                    <button
-                      className="ai-history-header"
-                      onClick={() => setExpandedHistoryId(expandedHistoryId === session.timestamp ? null : session.timestamp)}
-                    >
-                      <div className="ai-history-info">
-                        <span className="ai-history-date">{formatHistoryDate(session.timestamp)}</span>
-                        <span className="ai-history-count">{(session.messages || []).filter(m => m.role === 'user').length} messages</span>
+                  <div key={session.timestamp || idx} className={`ai-history-card ${expandedHistoryId === session.timestamp ? 'expanded' : ''}`}>
+                    <div className="ai-history-card-inner">
+                      <div className="ai-history-card-header">
+                        <div className="ai-history-card-icon">
+                          <i className="fa-solid fa-message" />
+                        </div>
+                        <div className="ai-history-card-info">
+                          <span className="ai-history-card-date">{formatHistoryDate(session.timestamp)}</span>
+                          <span className="ai-history-card-meta">{(session.messages || []).length} messages</span>
+                        </div>
                       </div>
-                      <div className="ai-history-actions">
-                        <i className={`fa-solid fa-chevron-down${expandedHistoryId === session.timestamp ? ' open' : ''}`} />
-                      </div>
-                    </button>
-
-                    {expandedHistoryId === session.timestamp && session.messages && (
-                      <div className="ai-history-preview">
-                        <div className="ai-history-messages">
-                          {session.messages.slice(0, 3).map((msg, i) => (
-                            <div key={i} className={`ai-history-message ${msg.role}`}>
-                              <span className="ai-history-message-content">
-                                {msg.content ? (msg.content.length > 100 ? msg.content.substring(0, 100) + '...' : msg.content) : '...'}
-                              </span>
+                      
+                      <div className="ai-history-card-body">
+                        {session.messages && session.messages.length > 0 ? (
+                          <>
+                            <div className="ai-history-card-title">
+                              {session.messages.find(m => m.role === 'user')?.content.substring(0, 50) || 'AI Analysis Session'}
+                              {(session.messages.find(m => m.role === 'user')?.content.length > 50) ? '...' : ''}
                             </div>
-                          ))}
-                          {session.messages.length > 3 && (
-                            <span className="ai-history-more">+{session.messages.length - 3} more</span>
-                          )}
-                        </div>
-                        <div className="ai-history-footer">
-                          <button 
-                            className="ai-history-load-btn"
-                            onClick={() => loadHistorySession(session)}
-                          >
-                            <i className="fa-solid fa-arrow-up-right-from-square" />
-                            Load Conversation
-                          </button>
-                          <button 
-                            className="ai-history-delete-btn"
-                            onClick={() => deleteHistorySession(session.timestamp)}
-                            title="Delete this conversation"
-                          >
-                            <i className="fa-solid fa-trash-can" />
-                          </button>
-                        </div>
+                            <p className="ai-history-card-preview">
+                              {session.messages[session.messages.length - 1].content.substring(0, 85)}...
+                            </p>
+                            
+                            {expandedHistoryId === session.timestamp && (
+                              <div className="ai-history-card-expanded-content">
+                                <div className="ai-history-msg-list">
+                                  {session.messages.slice(-5).map((m, midx) => (
+                                    <div key={midx} className={`ai-history-msg-item ${m.role}`}>
+                                      <span className="ai-history-msg-role">{m.role === 'user' ? 'You' : 'AI'}:</span>
+                                      <span className="ai-history-msg-text">{m.content.substring(0, 120)}{m.content.length > 120 ? '...' : ''}</span>
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+                          </>
+                        ) : (
+                          <p>Empty conversation</p>
+                        )}
                       </div>
-                    )}
+
+                      <div className="ai-history-card-footer">
+                        <button 
+                          className="ai-history-card-btn load"
+                          onClick={() => loadHistorySession(session)}
+                        >
+                          <i className="fa-solid fa-rotate-left" />
+                          Restore
+                        </button>
+                        <button 
+                          className={`ai-history-card-btn expand${expandedHistoryId === session.timestamp ? ' active' : ''}`}
+                          onClick={() => setExpandedHistoryId(expandedHistoryId === session.timestamp ? null : session.timestamp)}
+                          title={expandedHistoryId === session.timestamp ? "Collapse" : "Expand preview"}
+                        >
+                          <i className={`fa-solid fa-chevron-${expandedHistoryId === session.timestamp ? 'up' : 'down'}`} />
+                        </button>
+                        <button 
+                          className="ai-history-card-btn delete"
+                          onClick={() => deleteHistorySession(session.timestamp)}
+                        >
+                          <i className="fa-solid fa-trash" />
+                        </button>
+                      </div>
+                    </div>
                   </div>
                 ))}
               </div>
@@ -725,16 +871,46 @@ export default function AIChat({ sensors, sensorDeviceId, defaultTab = 'chat' })
       ) : activeTab === 'insights' ? (
         <div className="insights-in-aichat">
           <Suspense fallback={
-            <div style={{
-              flex: 1,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              color: 'var(--text-secondary)',
-            }}>
-              <div style={{ textAlign: 'center' }}>
-                <i className="fa-solid fa-spinner fa-spin" style={{ fontSize: '2rem', marginBottom: '1rem' }} />
-                <p>Loading insights...</p>
+            <div className="ss-sk-insights-fallback">
+              {/* Stats row */}
+              <div className="ss-sk-insights-stats">
+                {[0, 70, 140, 210].map(d => (
+                  <div key={d} className="ss-sk-insights-stat" style={{ animationDelay: `${d}ms` }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
+                      <div className="ss-sk" style={{ width: 32, height: 32, borderRadius: 9, flexShrink: 0 }} />
+                      <div className="ss-sk" style={{ width: '55%', height: 9, borderRadius: 4 }} />
+                    </div>
+                    <div className="ss-sk" style={{ width: '70%', height: 22, borderRadius: 6 }} />
+                    <div className="ss-sk" style={{ width: '40%', height: 8, borderRadius: 4, marginTop: 8 }} />
+                  </div>
+                ))}
+              </div>
+              {/* Main chart */}
+              <div className="ss-sk-card ss-sk-insights-chart">
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 14 }}>
+                  <div className="ss-sk" style={{ width: '35%', height: 10, borderRadius: 5 }} />
+                  <div className="ss-sk" style={{ width: 80, height: 26, borderRadius: 999 }} />
+                </div>
+                <div className="ss-sk-insights-bars">
+                  {[45, 68, 52, 82, 60, 74, 48, 90, 56, 72, 65, 80].map((h, i) => (
+                    <div key={i} className="ss-sk ss-sk-insights-bar"
+                         style={{ height: `${h}%`, animationDelay: `${i * 45}ms` }} />
+                  ))}
+                </div>
+              </div>
+              {/* Two sub-charts */}
+              <div className="ss-sk-insights-sub">
+                {[0, 1].map(i => (
+                  <div key={i} className="ss-sk-card" style={{ animationDelay: `${i * 80}ms` }}>
+                    <div className="ss-sk" style={{ width: '45%', height: 9, borderRadius: 4, marginBottom: 14 }} />
+                    <div className="ss-sk-insights-bars" style={{ height: 90 }}>
+                      {[55, 78, 62, 85, 70, 60, 75].map((h, j) => (
+                        <div key={j} className="ss-sk ss-sk-insights-bar"
+                             style={{ height: `${h}%`, animationDelay: `${j * 50}ms` }} />
+                      ))}
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
           }>

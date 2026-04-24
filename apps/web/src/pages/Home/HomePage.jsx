@@ -2,475 +2,290 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { GlassIcon } from '../../components/bits/GlassIcon';
+import ScrollReveal from '../../components/bits/ScrollReveal';
 import './HomePage.css';
 
 const HomePage = ({ theme, sensors, isConnected }) => {
   const navigate = useNavigate();
   const [isVisible, setIsVisible] = useState(false);
-  const techRef = useRef(null);
-  const [techVisible, setTechVisible] = useState(false);
+  const [isInfoExpanded, setIsInfoExpanded] = useState(false);
 
   useEffect(() => { setIsVisible(true); }, []);
 
-  useEffect(() => {
-    const el = techRef.current;
-    if (!el) return;
-    const obs = new IntersectionObserver(
-      ([entry]) => { if (entry.isIntersecting) setTechVisible(true); },
-      { threshold: 0.15 }
-    );
-    obs.observe(el);
-    return () => obs.disconnect();
-  }, []);
-
   const soilMoisture = sensors?.soilMoisture ?? 0;
-  const temperature  = sensors?.temperature  ?? 0;
-  const humidity     = sensors?.humidity     ?? 0;
-
+  const temperature = sensors?.temperature ?? 0;
+  const humidity = sensors?.humidity ?? 0;
+  const light = sensors?.light ?? 0;
   const flowVolume = sensors?.flowVolume ?? 0;
+
+  // Derived health score
+  const healthScore = Math.min(100, Math.max(0,
+    (soilMoisture > 30 && soilMoisture < 80 ? 40 : 10) +
+    (temperature > 15 && temperature < 30 ? 30 : 10) +
+    (humidity > 40 && humidity < 70 ? 30 : 10)
+  ));
+
   const quickStats = [
-    {
-      label: 'Soil Moisture',
-      value: `${soilMoisture}%`,
-      icon: 'watering',
-      status: soilMoisture < 30 ? 'warning' : soilMoisture < 50 ? 'info' : 'success',
-      hint: soilMoisture < 30 ? 'Needs watering' : soilMoisture < 50 ? 'Acceptable' : 'Optimal',
-    },
-    {
-      label: 'Temperature',
-      value: `${temperature}°C`,
-      icon: 'temperature',
-      status: temperature > 35 ? 'warning' : 'success',
-      hint: temperature > 35 ? 'Heat stress risk' : 'Normal range',
-    },
-    {
-      label: 'Humidity',
-      value: `${humidity}%`,
-      icon: 'humidity',
-      status: humidity < 30 ? 'info' : 'success',
-      hint: humidity < 30 ? 'Low humidity' : 'Good level',
-    },
-    {
-      label: 'Flow Volume',
-      value: `${flowVolume} L/min`,
-      icon: 'tint',
-      status: 'info',
-      hint: 'Current water flow',
-    },
+    { label: 'Soil Moisture', value: `${soilMoisture}%`, icon: 'watering', status: soilMoisture < 30 ? 'warning' : 'success' },
+    { label: 'Temperature', value: `${temperature}°C`, icon: 'temperature', status: temperature > 35 ? 'warning' : 'success' },
+    { label: 'Humidity', value: `${humidity}%`, icon: 'humidity', status: humidity < 30 ? 'info' : 'success' },
+    { label: 'Light Level', value: `${light}%`, icon: 'monitoring', status: 'success' },
   ];
 
-  const features = [
-    {
-      title: 'Smart Sensor Network',
-      description: 'Six parameters monitored simultaneously — soil moisture, temperature, humidity, pH, NPK levels, and light intensity — via a dual ESP32 architecture with sub-second latency.',
-      icon: 'monitoring',
-      path: '/sensors',
-      tag: 'Real-time',
-    },
-    {
-      title: 'Automated Irrigation',
-      description: 'Precision pump control driven by moisture thresholds and daily scheduling windows. Prevents both overwatering and underwatering with configurable safety cutoffs.',
-      icon: 'watering',
-      path: '/controls',
-      tag: 'Automated',
-    },
-    {
-      title: 'On-Device AI Diagnostics',
-      description: 'Edge Impulse TFLite model running directly on ESP32-CAM detects 9 plant disease classes — no cloud round-trip, no latency, no data privacy concerns.',
-      icon: 'disease',
-      path: '/insights',
-      tag: 'Edge AI',
-    },
-    {
-      title: 'Live Analytics Dashboard',
-      description: 'WebSocket data streams power interactive charts, trend analysis, historical logs, and instant threshold alerts — all accessible from any device.',
-      icon: 'bell',
-      path: '/analytics',
-      tag: 'WebSocket',
-    },
+  const activityLog = [
+    { time: '10:24 AM', event: 'Pump activated via auto-schedule', type: 'info' },
+    { time: '09:15 AM', event: 'High temperature alert: 36.2°C', type: 'warning' },
+    { time: '08:00 AM', event: 'AI Health Scan: All parameters optimal', type: 'success' },
+    { time: 'Yesterday', event: 'Firmware updated to v3.1.2', type: 'system' },
   ];
 
-  const techStack = [
-    {
-      category: 'Hardware',
-      color: 'green',
-      items: [
-        { name: 'ESP32-WROOM', note: 'Sensor controller' },
-        { name: 'ESP32-CAM',   note: 'Vision & AI node'  },
-        { name: 'DHT22',       note: 'Temp & humidity'   },
-        { name: 'Capacitive',  note: 'Soil moisture'     },
-        { name: 'pH Probe',    note: 'Soil acidity'      },
-        { name: 'NPK Sensor',  note: 'Nutrient levels'   },
-      ],
-    },
-    {
-      category: 'Backend',
-      color: 'blue',
-      items: [
-        { name: 'Node.js',      note: 'Runtime'           },
-        { name: 'Express',      note: 'REST API'          },
-        { name: 'WebSocket',    note: 'Live data stream'  },
-        { name: 'MongoDB Atlas',note: 'Cloud database'    },
-        { name: 'Render',       note: 'Hosting'           },
-        { name: 'REST API',     note: 'Device bridge'     },
-      ],
-    },
-    {
-      category: 'Frontend',
-      color: 'teal',
-      items: [
-        { name: 'React 18',     note: 'UI framework'      },
-        { name: 'Vite',         note: 'Build tool'        },
-        { name: 'Recharts',     note: 'Data charts'       },
-        { name: 'React Router', note: 'Navigation'        },
-        { name: 'Framer Motion',note: 'Animations'        },
-        { name: 'Netlify',      note: 'CDN deploy'        },
-      ],
-    },
-    {
-      category: 'AI / ML',
-      color: 'orchid',
-      items: [
-        { name: 'Edge Impulse',    note: 'Model training'     },
-        { name: 'TFLite Micro',    note: 'On-device runtime'  },
-        { name: 'Image Classify',  note: '9 disease classes'  },
-        { name: 'ESP32-CAM',       note: 'Inference host'     },
-        { name: 'Gemini API',      note: 'AI diagnosis text'  },
-        { name: 'OpenAI API',      note: 'Advisory analysis'  },
-      ],
-    },
-  ];
-
-  const archNodes = [
-    {
-      icon: 'sensors',
-      title: 'ESP32-SENSOR',
-      desc: 'Reads soil moisture, temperature, humidity, pH and NPK via ADC1. Controls the relay-driven irrigation pump.',
-      accent: 'green',
-    },
-    {
-      icon: 'disease',
-      title: 'ESP32-CAM',
-      desc: 'Captures leaf images every cycle, runs TFLite disease classification on-device, and posts results to the backend.',
-      accent: 'teal',
-    },
-    {
-      icon: 'monitoring',
-      title: 'Node.js Backend',
-      desc: 'Express REST + WebSocket server hosted on Render. Persists all readings, watering events, and AI detections to MongoDB Atlas.',
-      accent: 'blue',
-    },
-    {
-      icon: 'records',
-      title: 'React Dashboard',
-      desc: 'Vite SPA on Netlify. Real-time sensor charts, alert history, AI insight viewer, and full system control panel.',
-      accent: 'orchid',
-    },
-  ];
-
-  const systemStatus = [
-    { label: 'Backend API (Render)' },
-    { label: 'MongoDB Atlas'        },
-    { label: 'ESP32 Devices'        },
-    { label: 'WebSocket Stream'     },
-  ];
+  const latestAI = {
+    class: 'Healthy',
+    confidence: 98.4,
+    date: '2 hours ago',
+    recommendation: 'Maintain current moisture levels. Next scan scheduled for 4:00 PM.'
+  };
 
   return (
     <div className={`hp ${isVisible ? 'hp--visible' : ''}`} data-theme={theme}>
 
       {/* ═══════════════════════════════════════
-          HERO
+          COMMAND HERO
       ═══════════════════════════════════════ */}
-      <section className="hp-hero">
-        <div className="hp-hero__blob hp-hero__blob--1" aria-hidden="true" />
-        <div className="hp-hero__blob hp-hero__blob--2" aria-hidden="true" />
-        <div className="hp-hero__blob hp-hero__blob--3" aria-hidden="true" />
+      <section className="hp-command-hero">
+        <div className="hp-hero-visual">
+          <img
+            src="/assets/dashboard_hero.png"
+            alt="System Visualization"
+            className="hp-hero-img"
+          />
+          <div className="hp-hero-overlay" />
+        </div>
 
-        <div className="hp-hero__inner">
-          <div className="hp-hero__badge">
-            <GlassIcon name="sprout" />
-            <span>IoT + Edge AI · Plant Care System</span>
+        <div className="hp-hero-content">
+          <div className="hp-hero-header">
+            <div className="hp-system-status">
+              <span className={`status-pill ${isConnected ? 'online' : 'offline'}`}>
+                <span className="pulse-dot" />
+                {isConnected ? 'System Live' : 'System Offline'}
+              </span>
+              <span className="health-badge">
+                Health Score: {healthScore}%
+              </span>
+            </div>
+            <h1 className="hp-title">SproutSense Command</h1>
           </div>
 
-          <h1 className="hp-hero__title">
-            SproutSense
-            <span className="hp-hero__title-sub">
-              Precision Plant Care — Powered by Sensors &amp; AI
-            </span>
-          </h1>
+          <div className="hp-hero-stats">
+            <div className="hp-main-stat">
+              <span className="stat-label">Main Controller</span>
+              <span className="stat-value">ESP32-v3.1</span>
+            </div>
+            <div className="hp-main-stat border-l">
+              <span className="stat-label">Active Sensors</span>
+              <span className="stat-value">6 Active</span>
+            </div>
+            <div className="hp-main-stat border-l">
+              <span className="stat-label">Up Time</span>
+              <span className="stat-value">12d 4h</span>
+            </div>
+          </div>
 
-          <p className="hp-hero__desc">
-            A full-stack IoT system built on dual ESP32 microcontrollers with six-parameter
-            soil monitoring, on-device machine learning for plant disease detection, and
-            automated irrigation — all managed from a live cloud dashboard.
-          </p>
-
-          <div className="hp-hero__actions">
-            <button className="hp-btn hp-btn--primary" onClick={() => navigate('/controls')}>
-              <GlassIcon name="controls" />
-              <span>Open Controls</span>
+          <div className="hp-hero-actions">
+            <button className="cmd-btn primary" onClick={() => navigate('/controls')}>
+              <GlassIcon name="watering" /> Quick Water
             </button>
-            <button className="hp-btn hp-btn--ghost" onClick={() => navigate('/sensors')}>
-              <GlassIcon name="sensors" />
-              <span>Live Sensors</span>
+            <button className="cmd-btn secondary" onClick={() => navigate('/insights')}>
+              <GlassIcon name="disease" /> AI Scan
             </button>
           </div>
+        </div>
 
-          <div className={`hp-hero__status ${isConnected ? 'hp-hero__status--on' : 'hp-hero__status--off'}`}>
-            <span className="hp-hero__status-dot" />
-            {isConnected
-              ? 'All systems online · WebSocket active'
-              : 'Attempting to connect to ESP32 network…'}
-          </div>
+        <div className="hp-scroll-hint">
+          <span>SCROLL TO DISCOVER</span>
+          <i className="fa-solid fa-chevron-down" />
         </div>
       </section>
 
       {/* ═══════════════════════════════════════
-          LIVE SENSOR METRICS
+          BENTO DASHBOARD
       ═══════════════════════════════════════ */}
-      <section className="hp-section hp-stats">
-        <div className="hp-section__head">
-          <h2>Live Sensor Readings</h2>
-          <p>Streamed directly from ESP32 over WebSocket in real time</p>
-        </div>
-        <div className="hp-stats__grid">
-          {quickStats.map((s, i) => (
-            <div
-              key={s.label}
-              className={`hp-stat-card hp-stat-card--${s.status}`}
-              style={{ animationDelay: `${i * 90}ms` }}
-            >
-              <div className="hp-stat-card__icon">
-                <GlassIcon name={s.icon} />
-              </div>
-              <div className="hp-stat-card__body">
-                <span className="hp-stat-card__label">{s.label}</span>
-                <span className="hp-stat-card__value">{s.value}</span>
-                <span className="hp-stat-card__hint">{s.hint}</span>
-              </div>
-              <div className={`hp-stat-card__pulse hp-stat-card__pulse--${s.status}`} />
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* ═══════════════════════════════════════
-          QUICK ACTIONS — Device & Settings
-      ═══════════════════════════════════════ */}
-      <section className="hp-section hp-actions">
-        <div className="hp-section__head">
-          <h2>Device Management</h2>
-          <p>Connect and configure your IoT devices</p>
-        </div>
-        <div className="hp-actions__grid">
-          <div
-            className="hp-action-card hp-action-card--device"
-            onClick={() => navigate('/esp32')}
-            role="button"
-            tabIndex={0}
-          >
-            <div className="hp-action-card__icon">
-              <GlassIcon name="esp32" />
-            </div>
-            <h3>Device Connected</h3>
-            <p>View and monitor ESP32 sensor board and camera status</p>
-            <div className="hp-action-card__arrow">
-              <GlassIcon name="arrow-right" />
-            </div>
-          </div>
-          <div
-            className="hp-action-card hp-action-card--settings"
-            onClick={() => navigate('/settings')}
-            role="button"
-            tabIndex={0}
-          >
-            <div className="hp-action-card__icon">
-              <GlassIcon name="settings" />
-            </div>
-            <h3>Device Pairing</h3>
-            <p>Pair new devices, manage authentication, and configure alerts</p>
-            <div className="hp-action-card__arrow">
-              <GlassIcon name="arrow-right" />
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ═══════════════════════════════════════
-          CORE FEATURES — animation preserved
-      ═══════════════════════════════════════ */}
-      <section className="hp-section hp-features">
-        <div className="hp-section__head">
-          <h2>Core Capabilities</h2>
-          <p>Four integrated systems that work together to keep your plants healthy 24 / 7</p>
-        </div>
-        <div className="features-grid-new">
-          {features.map((f, i) => (
-            <div
-              key={f.title}
-              className="feature-card-new"
-              style={{ animationDelay: `${i * 150}ms` }}
-              onClick={() => navigate(f.path)}
-            >
-              <div className="feature-icon-bg">
-                <GlassIcon name={f.icon} className="feature-icon-new" />
-              </div>
-              <span className="hp-feature-tag">{f.tag}</span>
-              <h3 className="feature-title-new">{f.title}</h3>
-              <p className="feature-desc-new">{f.description}</p>
-              <div className="feature-arrow">
-                <GlassIcon name="arrow-right" />
+      <div className="hp-bento-container">
+        
+        {/* Environment Strip (Full Width) */}
+        <ScrollReveal baseOpacity={0} blurStrength={10} baseRotation={-2} scrollOffset={0.1}>
+          <section className="hp-telemetry-strip hp-glass">
+            <div className="hp-telemetry-item">
+              <span className="hp-metric-label">Soil Moisture</span>
+              <span className="hp-metric-val">{sensors?.soilMoisture ?? '--'}%</span>
+              <div className="hp-metric-status hp-status-active">
+                <i className="fa-solid fa-circle" /> Live
               </div>
             </div>
-          ))}
-        </div>
-      </section>
-
-      {/* ═══════════════════════════════════════
-          ABOUT — 3 glass panels
-      ═══════════════════════════════════════ */}
-      <section className="hp-section hp-about">
-        <div className="hp-section__head">
-          <h2>About SproutSense</h2>
-          <p>An end-to-end open-source IoT + AI solution designed for precision horticulture</p>
-        </div>
-        <div className="hp-about__grid">
-          <div className="hp-glass-card">
-            <GlassIcon name="leaf" className="hp-glass-card__icon hp-glass-card__icon--amber" />
-            <h3>The Problem</h3>
-            <p>
-              Inconsistent watering, undetected soil imbalances, and late-stage disease
-              identification account for the majority of avoidable plant losses — both
-              in home gardens and small-scale commercial setups.
-            </p>
-          </div>
-          <div className="hp-glass-card">
-            <GlassIcon name="sprout" className="hp-glass-card__icon hp-glass-card__icon--green" />
-            <h3>Our Approach</h3>
-            <p>
-              SproutSense combines a six-sensor ESP32 node, an on-device AI camera, and
-              a smart irrigation relay — all tied together through a real-time WebSocket
-              dashboard backed by MongoDB Atlas.
-            </p>
-          </div>
-          <div className="hp-glass-card">
-            <GlassIcon name="check" className="hp-glass-card__icon hp-glass-card__icon--teal" />
-            <h3>What You Get</h3>
-            <ul className="hp-check-list">
-              <li>Precision irrigation with configurable thresholds</li>
-              <li>Early disease alerts without cloud dependency</li>
-              <li>Historical trends and actionable soil analytics</li>
-              <li>Full control from any browser, anywhere</li>
-            </ul>
-          </div>
-        </div>
-      </section>
-
-      {/* ═══════════════════════════════════════
-          SYSTEM ARCHITECTURE
-      ═══════════════════════════════════════ */}
-      <section className="hp-section hp-arch">
-        <div className="hp-section__head">
-          <h2>System Architecture</h2>
-          <p>Four tightly coupled layers from physical sensor edge to browser interface</p>
-        </div>
-        <div className="hp-arch__grid">
-          {archNodes.map((n, i) => (
-            <div
-              key={n.title}
-              className={`hp-arch-card hp-arch-card--${n.accent}`}
-              style={{ animationDelay: `${i * 100}ms` }}
-            >
-              <div className="hp-arch-card__num">{String(i + 1).padStart(2, '0')}</div>
-              <div className="hp-arch-card__icon"><GlassIcon name={n.icon} /></div>
-              <h3>{n.title}</h3>
-              <p>{n.desc}</p>
+            <div className="hp-telemetry-item">
+              <span className="hp-metric-label">Air Temp</span>
+              <span className="hp-metric-val">{sensors?.temperature ?? '--'}°C</span>
             </div>
-          ))}
-        </div>
-      </section>
+            <div className="hp-telemetry-item">
+              <span className="hp-metric-label">Humidity</span>
+              <span className="hp-metric-val">{sensors?.humidity ?? '--'}%</span>
+            </div>
+          </section>
+        </ScrollReveal>
 
-      {/* ═══════════════════════════════════════
-          TECHNOLOGY STACK — animated badge grid
-      ═══════════════════════════════════════ */}
-      <section className="hp-section hp-tech" ref={techRef}>
-        <div className="hp-section__head">
-          <h2>Technology Stack</h2>
-          <p>Open-source tools across hardware, cloud infrastructure, and AI layers</p>
-        </div>
-        <div className="hp-tech__grid">
-          {techStack.map((layer, li) => (
-            <div
-              key={layer.category}
-              className={`hp-tech-card hp-tech-card--${layer.color} ${techVisible ? 'hp-tech-card--visible' : ''}`}
-              style={{ transitionDelay: `${li * 80}ms` }}
-            >
-              <div className="hp-tech-card__head">
-                <span className={`hp-tech-card__dot hp-tech-card__dot--${layer.color}`} />
-                <h3>{layer.category}</h3>
-              </div>
-              <div className="hp-tech-card__badges">
-                {layer.items.map((item, ii) => (
-                  <div
-                    key={item.name}
-                    className="hp-tech-badge"
-                    style={{ transitionDelay: techVisible ? `${li * 80 + ii * 45}ms` : '0ms' }}
-                  >
-                    <span className="hp-tech-badge__name">{item.name}</span>
-                    <span className="hp-tech-badge__note">{item.note}</span>
+        <ScrollReveal baseOpacity={0} blurStrength={10} baseRotation={3} scrollOffset={0.2}>
+          {/* Sensor Grid (Top Left) */}
+          <section className="bento-item sensor-grid-area">
+            <div className="bento-header">
+              <h3>Environment Telemetry</h3>
+              <button className="view-all-btn" onClick={() => navigate('/sensors')}>Real-time</button>
+            </div>
+            <div className="sensor-compact-grid">
+              {quickStats.map((s) => (
+                <div key={s.label} className={`sensor-pill ${s.status}`}>
+                  <GlassIcon name={s.icon} />
+                  <div className="sensor-pill-info">
+                    <span className="label">{s.label}</span>
+                    <span className="value">{s.value}</span>
                   </div>
-                ))}
+                </div>
+              ))}
+            </div>
+          </section>
+        </ScrollReveal>
+
+        <ScrollReveal baseOpacity={0} blurStrength={10} baseRotation={-3} scrollOffset={0.25}>
+          {/* AI Insight (Top Right) */}
+          <section className="bento-item ai-insight-area" onClick={() => navigate('/insights')}>
+            <div className="bento-header">
+              <h3>Latest AI Diagnosis</h3>
+              <span className="ai-tag">Edge AI</span>
+            </div>
+            <div className="ai-insight-content">
+              <div className="ai-result">
+                <span className="ai-class">{latestAI.class}</span>
+                <span className="ai-conf">{latestAI.confidence}% confidence</span>
+              </div>
+              <p className="ai-rec">{latestAI.recommendation}</p>
+              <span className="ai-date">{latestAI.date}</span>
+            </div>
+          </section>
+        </ScrollReveal>
+
+        <ScrollReveal baseOpacity={0} blurStrength={5} baseRotation={1} scrollOffset={0.3}>
+          {/* Activity Feed (Bottom Left) */}
+          <section className="bento-item activity-feed-area">
+            <div className="bento-header">
+              <h3>System Activity</h3>
+              <GlassIcon name="history" className="header-icon" />
+            </div>
+            <div className="activity-list">
+              {activityLog.map((log, i) => (
+                <div key={i} className={`activity-row ${log.type}`}>
+                  <span className="activity-time">{log.time}</span>
+                  <span className="activity-event">{log.event}</span>
+                </div>
+              ))}
+            </div>
+          </section>
+        </ScrollReveal>
+
+        <ScrollReveal baseOpacity={0} blurStrength={5} baseRotation={-1} scrollOffset={0.35}>
+          {/* Device Management (Bottom Right) */}
+          <section className="bento-item device-mgmt-area">
+            <div className="bento-header">
+              <h3>Device Hub</h3>
+            </div>
+            <div className="device-buttons">
+              <button className="device-tile" onClick={() => navigate('/esp32')}>
+                <GlassIcon name="esp32" />
+                <span>Monitoring</span>
+              </button>
+              <button className="device-tile" onClick={() => navigate('/settings')}>
+                <GlassIcon name="settings" />
+                <span>Pairing</span>
+              </button>
+            </div>
+          </section>
+        </ScrollReveal>
+
+      </div>
+
+      {/* Philosophical Scroll Reveal */}
+      <section className="hp-quote-section">
+        <ScrollReveal
+          baseOpacity={0.1}
+          enableBlur
+          baseRotation={0}
+          blurStrength={10}
+        >
+          When does a man die? When he is hit by a bullet? No! When he suffers a disease?
+          No! When he ate a soup made out of a poisonous mushroom?
+          No! A man dies when he is forgotten!
+        </ScrollReveal>
+      </section>
+
+      {/* ═══════════════════════════════════════
+          TECHNICAL INFO (Collapsible)
+      ═══════════════════════════════════════ */}
+      <div className="hp-info-footer">
+        <button
+          className={`info-toggle ${isInfoExpanded ? 'expanded' : ''}`}
+          onClick={() => setIsInfoExpanded(!isInfoExpanded)}
+        >
+          <div className="info-toggle-left">
+            <div className="tech-pulse">
+              <div className="tech-pulse-inner" />
+            </div>
+            <div className="info-labels">
+              <span className="main-label">System Intelligence Core</span>
+              <span className="sub-label">v4.0.2 · Edge Node Architecture · Neural Engine Active</span>
+            </div>
+          </div>
+          <div className="info-toggle-right">
+            <span className="expand-hint">{isInfoExpanded ? 'CONSOLIDATE' : 'DECRYPT SYSTEM DATA'}</span>
+            <div className="toggle-chevron-wrap">
+              <GlassIcon name="chevron-right" />
+            </div>
+          </div>
+        </button>
+        {isInfoExpanded && (
+          <div className="expanded-info-grid">
+            <div className="info-card">
+              <h4>System Architecture</h4>
+              <p>Dual ESP32 nodes (Sensor + CAM) connected via WebSocket bridge to a Node.js/MongoDB cloud cluster.</p>
+            </div>
+            <div className="info-card">
+              <h4>Security & Data</h4>
+              <p>Edge AI processing ensures image privacy, while encrypted device tokens secure telemetry streams.</p>
+            </div>
+            <div className="info-card">
+              <h4>Stack Components</h4>
+              <div className="stack-badges">
+                <span>React 18</span><span>Node.js</span><span>TFLite</span><span>WebSocket</span>
               </div>
             </div>
-          ))}
-        </div>
-      </section>
+          </div>
+        )}
+      </div>
 
       {/* ═══════════════════════════════════════
-          QUICK ACTIONS
+          SYSTEM STATUS BAR
       ═══════════════════════════════════════ */}
-      <section className="hp-section hp-actions">
-        <div className="hp-glass-card hp-actions__card">
-          <div className="hp-section__head hp-section__head--left">
-            <h2>Quick Actions</h2>
-            <p>Jump directly to any part of your SproutSense system</p>
-          </div>
-          <div className="hp-actions__grid">
-            {[
-              { icon: 'watering', label: 'Water Now',   path: '/controls'  },
-              { icon: 'sensors',  label: 'Sensors',     path: '/sensors'   },
-              { icon: 'records',  label: 'Analytics',   path: '/analytics' },
-              { icon: 'disease',  label: 'AI Insights', path: '/insights'  },
-              { icon: 'settings', label: 'Settings',    path: '/settings'  },
-            ].map((a) => (
-              <button key={a.label} className="hp-action-btn" onClick={() => navigate(a.path)}>
-                <GlassIcon name={a.icon} className="hp-action-btn__icon" />
-                <span>{a.label}</span>
-              </button>
-            ))}
-          </div>
+      <footer className="hp-status-bar">
+        <div className="status-group">
+          <span className="dot online" /> <span>API: Online</span>
         </div>
-      </section>
-
-      {/* ═══════════════════════════════════════
-          SYSTEM STATUS
-      ═══════════════════════════════════════ */}
-      <section className="hp-section hp-status">
-        <div className="hp-glass-card hp-status__card">
-          <h3>System Status</h3>
-          <div className="hp-status__grid">
-            {systemStatus.map((s) => (
-              <div key={s.label} className="hp-status__item">
-                <span className="hp-status__dot hp-status__dot--online" />
-                <span>{s.label}</span>
-              </div>
-            ))}
-          </div>
-          <p className="hp-status__footer">
-            All systems operational · Last checked: {new Date().toLocaleTimeString()}
-          </p>
+        <div className="status-group">
+          <span className="dot online" /> <span>DB: Connected</span>
         </div>
-      </section>
+        <div className="status-group">
+          <span className="dot online" /> <span>WebSocket: Live</span>
+        </div>
+        <div className="status-timestamp">
+          Last Check: {new Date().toLocaleTimeString()}
+        </div>
+      </footer>
 
     </div>
   );

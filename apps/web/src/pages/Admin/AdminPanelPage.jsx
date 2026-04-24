@@ -14,7 +14,6 @@ import OverviewSection from './sections/overview/OverviewSection';
 import ConnectionsSection from './sections/devices/ConnectionsSection';
 import DeviceKeysSection from './sections/device-keys/DeviceKeysSection';
 import UISection from './sections/ui/UISection';
-import LimitsSection from './sections/limits/LimitsSection';
 import ConfigSection from './sections/config/ConfigSection';
 import RawDataSection from './sections/raw-data/RawDataSection';
 import LogsSection from './sections/LogsSection';
@@ -88,7 +87,6 @@ export default function AdminPanelPage() {
   const [sensorFormErrors, setSensorFormErrors] = useState({});
   const [editingSensorId, setEditingSensorId] = useState(null);
   const [users, setUsers] = useState([]);
-  const [usersLoading, setUsersLoading] = useState(false);
   const [usersQuery, setUsersQuery] = useState('');
   const [userForm, setUserForm] = useState(DEFAULT_USER_FORM);
   const [userFormErrors, setUserFormErrors] = useState({});
@@ -117,7 +115,6 @@ export default function AdminPanelPage() {
   const [lastProvisioningSeed, setLastProvisioningSeed] = useState(null);
   const [lastGeneratedPairingKey, setLastGeneratedPairingKey] = useState(null);
   const [deviceKeys, setDeviceKeys] = useState([]);
-  const [loadingDeviceKeys, setLoadingDeviceKeys] = useState(false);
   const [creatingDeviceKey, setCreatingDeviceKey] = useState(false);
   const [generatedDeviceToken, setGeneratedDeviceToken] = useState(null);
   const [selectedDeviceType, setSelectedDeviceType] = useState('ESP32-SENSOR');
@@ -191,20 +188,50 @@ export default function AdminPanelPage() {
     });
   }, []);
 
+
+
   const hydrateUiPreferences = useCallback((cfgRaw) => {
     const cfg = cfgRaw?.config || cfgRaw || {};
     setUiPreferences({
-      dashboardSections: {
-        ...DEFAULT_UI_PREFERENCES.dashboardSections,
-        ...(cfg?.uiPreferences?.dashboardSections || {}),
-      },
       sidebarVisibility: {
         ...DEFAULT_UI_PREFERENCES.sidebarVisibility,
         ...(cfg?.uiPreferences?.sidebarVisibility || {}),
       },
-      widgets: {
-        ...DEFAULT_UI_PREFERENCES.widgets,
-        ...(cfg?.uiPreferences?.widgets || {}),
+      sidebarLabels: {
+        ...DEFAULT_UI_PREFERENCES.sidebarLabels,
+        ...(cfg?.uiPreferences?.sidebarLabels || {}),
+      },
+      sidebarIcons: {
+        ...DEFAULT_UI_PREFERENCES.sidebarIcons,
+        ...(cfg?.uiPreferences?.sidebarIcons || {}),
+      },
+      dashboardSections: {
+        ...DEFAULT_UI_PREFERENCES.dashboardSections,
+        ...(cfg?.uiPreferences?.dashboardSections || {}),
+      },
+      dashboardLabels: {
+        ...DEFAULT_UI_PREFERENCES.dashboardLabels,
+        ...(cfg?.uiPreferences?.dashboardLabels || {}),
+      },
+      dashboardIcons: {
+        ...DEFAULT_UI_PREFERENCES.dashboardIcons,
+        ...(cfg?.uiPreferences?.dashboardIcons || {}),
+      },
+      appearance: {
+        ...DEFAULT_UI_PREFERENCES.appearance,
+        ...(cfg?.uiPreferences?.appearance || {}),
+      },
+      notifications: {
+        ...DEFAULT_UI_PREFERENCES.notifications,
+        ...(cfg?.uiPreferences?.notifications || {}),
+      },
+      dataDisplay: {
+        ...DEFAULT_UI_PREFERENCES.dataDisplay,
+        ...(cfg?.uiPreferences?.dataDisplay || {}),
+      },
+      accessibility: {
+        ...DEFAULT_UI_PREFERENCES.accessibility,
+        ...(cfg?.uiPreferences?.accessibility || {}),
       },
     });
   }, []);
@@ -301,8 +328,8 @@ export default function AdminPanelPage() {
         configAPI.get(deviceId).catch(() => null),
         wateringAPI.getStatus(deviceId).catch(() => null),
         aiAPI.getUsageStats(deviceId).catch(() => null),
-        usersAPI.list().catch(() => null),
-        deviceAPI.listKeys().catch(() => null),
+        usersAPI.list(200).catch(() => ({ users: [] })),
+        deviceAPI.listKeys().catch(() => ({ devices: [] })),
         configAPI.getSystemStats().catch(() => null)
       ]);
       
@@ -317,8 +344,8 @@ export default function AdminPanelPage() {
       setConfigData(cfg?.data || cfg);
       setWaterStatus(water?.data || water);
       setAIUsageData(aiUsage?.data || aiUsage);
-      setUsers(usersRes?.users || []);
-      setDeviceKeys(keysRes?.devices || []);
+      setUsers(usersRes?.users || usersRes?.data?.users || []);
+      setDeviceKeys(keysRes?.devices || keysRes?.data?.devices || []);
       hydrateLimitsForm(cfg?.data || cfg);
       hydrateUiPreferences(cfg?.data || cfg);
       log('System data refreshed successfully', LOG_TYPES.success);
@@ -342,18 +369,7 @@ export default function AdminPanelPage() {
     hydratePlantWateringConfig(configData);
   }, [configData, hydratePlantWateringConfig]);
 
-  const loadUsers = useCallback(async () => {
-    setUsersLoading(true);
-    try {
-      const res = await usersAPI.list(200);
-      const list = Array.isArray(res?.users) ? res.users : [];
-      setUsers(list);
-    } catch (err) {
-      log(`Failed to load users: ${err.message}`, LOG_TYPES.error);
-    } finally {
-      setUsersLoading(false);
-    }
-  }, [log]);
+
 
   useEffect(() => {
     const handleStorage = () => {
@@ -363,11 +379,10 @@ export default function AdminPanelPage() {
     fetchAllData();
     loadAdminLogs();
     loadSensors();
-    loadUsers();
     return () => {
       window.removeEventListener('storage', handleStorage);
     };
-  }, [fetchAllData, loadAdminLogs, loadSensors, loadUsers]);
+  }, [fetchAllData, loadAdminLogs, loadSensors]);
 
   useEffect(() => {
     const interval = setInterval(() => setUptime(u => u + 1), 1000);
@@ -379,22 +394,10 @@ export default function AdminPanelPage() {
   }, [actionLog]);
 
   useEffect(() => {
-    if (activeSection === 'device-keys') {
-      loadDeviceKeys();
+    if (activeSection === 'device-keys' && deviceKeys.length === 0) {
+      fetchAllData();
     }
-  }, [activeSection]);
-
-  const loadDeviceKeys = async () => {
-    setLoadingDeviceKeys(true);
-    try {
-      const res = await deviceAPI.listKeys();
-      setDeviceKeys(Array.isArray(res?.devices) ? res.devices : []);
-    } catch (error) {
-      log(`Failed to load device keys: ${error?.response?.data?.message || error.message}`, LOG_TYPES.error);
-    } finally {
-      setLoadingDeviceKeys(false);
-    }
-  };
+  }, [activeSection, deviceKeys.length, fetchAllData]);
 
   const handleSelectKey = (deviceId, checked) => {
     if (checked) {
@@ -709,10 +712,7 @@ export default function AdminPanelPage() {
 
   const handleLimitChange = (field, value) => {
     setLimitsForm(prev => {
-      const next = {
-        ...prev,
-        [field]: value
-      };
+      const next = { ...prev, [field]: value };
       setLimitErrors(validateLimits(next));
       return next;
     });
@@ -808,6 +808,33 @@ export default function AdminPanelPage() {
     } catch (err) {
       const message = err?.response?.data?.message || err.message;
       log(`Failed to update limits: ${message}`, LOG_TYPES.error);
+    } finally {
+      setSavingLimits(false);
+    }
+  };
+
+  const handleSaveAiQuota = async () => {
+    try {
+      const limit = Number(limitsForm.aiDailyAnalysisLimit);
+      if (!Number.isFinite(limit) || limit < 1 || limit > 100) {
+        setLimitErrors(prev => ({ ...prev, aiDailyAnalysisLimit: 'Must be between 1 and 100' }));
+        return;
+      }
+
+      if (!canUpdateConfig) {
+        log('Limits update blocked: insufficient permissions', LOG_TYPES.error);
+        return;
+      }
+
+      setSavingLimits(true);
+      const deviceId = getSelectedDeviceId();
+      const payload = { aiConfig: { dailyAnalysisLimit: limit } };
+      await configAPI.update(deviceId, payload);
+      log('AI Quota updated successfully', LOG_TYPES.success, payload);
+      await fetchAllData(true);
+    } catch (err) {
+      const message = err?.response?.data?.message || err.message;
+      log(`Failed to update AI Quota: ${message}`, LOG_TYPES.error);
     } finally {
       setSavingLimits(false);
     }
@@ -964,10 +991,10 @@ export default function AdminPanelPage() {
     if (!userToDelete) return;
     try {
       await usersAPI.delete(userToDelete.id);
-      toast.success('User deleted successfully');
+      log('User deleted successfully', LOG_TYPES.warning);
       loadUsers();
     } catch (err) {
-      toast.error('Failed to delete user: ' + (err.response?.data?.message || err.message));
+      log('Failed to delete user: ' + (err.response?.data?.message || err.message), LOG_TYPES.error);
     } finally {
       setIsDeleteModalOpen(false);
       setUserToDelete(null);
@@ -994,11 +1021,11 @@ export default function AdminPanelPage() {
     setIsBulkActionLoading(true);
     try {
       await usersAPI.bulkAction(selectedUserIds, action, value);
-      toast.success(`Bulk ${action} completed successfully`);
+      log(`Bulk ${action} completed successfully`, LOG_TYPES.success);
       setSelectedUserIds([]);
       loadUsers();
     } catch (err) {
-      toast.error(`Bulk ${action} failed: ` + (err.response?.data?.message || err.message));
+      log(`Bulk ${action} failed: ` + (err.response?.data?.message || err.message), LOG_TYPES.error);
     } finally {
       setIsBulkActionLoading(false);
     }
@@ -1028,6 +1055,33 @@ export default function AdminPanelPage() {
     } catch (err) {
       const message = err?.response?.data?.message || err.message;
       log(`Failed to save UI preferences: ${message}`, LOG_TYPES.error);
+    } finally {
+      setSavingUiPreferences(false);
+    }
+  };
+
+  const handleSaveUserPreferences = async (userIds, targetAll = false) => {
+    if (!canManageUsers) {
+      log('User preference update blocked: insufficient permissions', LOG_TYPES.error);
+      return;
+    }
+
+    try {
+      setSavingUiPreferences(true);
+      if (targetAll) {
+        await usersAPI.bulkUpdatePreferences({ uiPreferences, targetAll: true });
+        log('UI preferences updated for ALL users', LOG_TYPES.success);
+      } else if (userIds.length === 1) {
+        await usersAPI.updatePreferences(userIds[0], uiPreferences);
+        log(`UI preferences updated for specific user: ${userIds[0]}`, LOG_TYPES.success);
+      } else {
+        await usersAPI.bulkUpdatePreferences({ userIds, uiPreferences });
+        log(`UI preferences updated for ${userIds.length} users`, LOG_TYPES.success);
+      }
+      await loadUsers(); // Refresh users to get latest uiPreferences
+    } catch (err) {
+      const message = err?.response?.data?.message || err.message;
+      log(`Failed to save user preferences: ${message}`, LOG_TYPES.error);
     } finally {
       setSavingUiPreferences(false);
     }
@@ -1064,7 +1118,12 @@ export default function AdminPanelPage() {
       showInDashboard: true,
       showInAnalytics: true,
       faIcon: 'fa-microchip',
-      color: '#6366f1'
+      color: '#6366f1',
+      animationEnabled: true,
+      fillOpacity: 10,
+      lineTension: 0.4,
+      showDataPoints: false,
+      yAxisAutoScale: true,
     });
     setSensorRegistry(next);
     log(`Custom sensor added: ${name}`, LOG_TYPES.success);
@@ -1091,6 +1150,11 @@ export default function AdminPanelPage() {
     const next = upsertSensor({ ...sensor, chartType });
     setSensorRegistry(next);
     log(`Chart type updated for ${sensor.name}: ${chartType}`, LOG_TYPES.info);
+  };
+
+  const handleUiSensorPropertyChange = (sensor, field, value) => {
+    const next = upsertSensor({ ...sensor, [field]: value });
+    setSensorRegistry(next);
   };
 
   const handlePlantThresholdChange = (sensorKey, field, value) => {
@@ -1294,8 +1358,11 @@ export default function AdminPanelPage() {
                   deleteLogs={deleteLogs}
                   handleUiSensorAnalyticsToggle={handleUiSensorAnalyticsToggle}
                   handleUiSensorDashboardToggle={handleUiSensorDashboardToggle}
+                  handleUiSensorPropertyChange={handleUiSensorPropertyChange}
                   handleSaveUiPreferences={handleSaveUiPreferences}
+                  handleSaveUserPreferences={handleSaveUserPreferences}
                   savingUiPreferences={savingUiPreferences}
+                  users={users}
                 />
               )}
 
@@ -1348,18 +1415,7 @@ export default function AdminPanelPage() {
                 />
               )}
 
-              {/* Section */}
-              {activeSection === 'limits' && (
-                <LimitsSection
-                  limitsForm={limitsForm}
-                  limitErrors={limitErrors}
-                  aiUsageData={aiUsageData}
-                  savingLimits={savingLimits}
-                  handleLimitChange={handleLimitChange}
-                  handleSaveLimits={handleSaveLimits}
-                  setActiveSection={setActiveSection}
-                />
-              )}
+
 
               {/* Section */}
               {activeSection === 'config' && (
@@ -1400,7 +1456,15 @@ export default function AdminPanelPage() {
 
               {/* Section */}
               {activeSection === 'ai-keys' && (
-                <AIKeysSection log={log} />
+                <AIKeysSection 
+                  log={log}
+                  limitsForm={limitsForm}
+                  limitErrors={limitErrors}
+                  aiUsageData={aiUsageData}
+                  savingLimits={savingLimits}
+                  handleLimitChange={handleLimitChange}
+                  handleSaveLimits={handleSaveAiQuota}
+                />
               )}
             </>
           )}

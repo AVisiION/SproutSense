@@ -31,8 +31,17 @@ function TrashIcon() {
   );
 }
 
-export default function AIKeysSection({ log }) {
+export default function AIKeysSection({ 
+  log,
+  limitsForm,
+  limitErrors,
+  aiUsageData,
+  savingLimits,
+  handleLimitChange,
+  handleSaveLimits 
+}) {
   const [keys, setKeys]           = useState([]);
+  const [allUsage, setAllUsage]   = useState([]);
   const [loading, setLoading]     = useState(true);
   const [saving, setSaving]       = useState(false);
   const [toggling, setToggling]   = useState(null);
@@ -41,33 +50,38 @@ export default function AIKeysSection({ log }) {
   const [formError, setFormError] = useState('');
   const [showKey, setShowKey]     = useState(false);
 
-  const fetchKeys = useCallback(async () => {
+  const fetchKeysAndUsage = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await aiAPI.getAdminKeys();
-      setKeys(res?.keys || []);
+      const [keysRes, usageRes] = await Promise.all([
+        aiAPI.getAdminKeys().catch(() => ({ keys: [] })),
+        aiAPI.getAllUsageStats().catch(() => [])
+      ]);
+      setKeys(keysRes?.keys || []);
+      setAllUsage(usageRes?.data || (Array.isArray(usageRes) ? usageRes : []));
     } catch {
       setKeys([]);
+      setAllUsage([]);
     } finally {
       setLoading(false);
     }
   }, []);
 
-  useEffect(() => { fetchKeys(); }, [fetchKeys]);
+  useEffect(() => { fetchKeysAndUsage(); }, [fetchKeysAndUsage]);
 
   const handleAdd = async (e) => {
     e.preventDefault();
     if (!form.key.trim() || form.key.trim().length < 10) {
-      setFormError('Enter a valid Gemini API key (at least 10 characters).');
+      setFormError('Enter a valid API key (at least 10 characters).');
       return;
     }
     setFormError('');
     setSaving(true);
     try {
-      await aiAPI.addAdminKey({ label: form.label.trim() || 'Gemini Key', key: form.key.trim() });
+      await aiAPI.addAdminKey({ label: form.label.trim() || 'AI API Key', key: form.key.trim() });
       setForm({ label: '', key: '' });
       log?.('AI API key added', 'success');
-      await fetchKeys();
+      await fetchKeysAndUsage();
     } catch (err) {
       setFormError(err?.response?.data?.message || 'Failed to add key');
     } finally {
@@ -80,7 +94,7 @@ export default function AIKeysSection({ log }) {
     try {
       await aiAPI.toggleAdminKey(index);
       log?.(`AI key ${index} status toggled`, 'info');
-      await fetchKeys();
+      await fetchKeysAndUsage();
     } catch (err) {
       log?.(err?.response?.data?.message || 'Failed to toggle key', 'error');
     } finally {
@@ -94,7 +108,7 @@ export default function AIKeysSection({ log }) {
     try {
       await aiAPI.deleteAdminKey(index);
       log?.(`AI key ${index} deleted`, 'warning');
-      await fetchKeys();
+      await fetchKeysAndUsage();
     } catch (err) {
       log?.(err?.response?.data?.message || 'Failed to delete key', 'error');
     } finally {
@@ -108,9 +122,9 @@ export default function AIKeysSection({ log }) {
       <div className="aik-header">
         <span className="aik-header-icon"><KeyIcon /></span>
         <div>
-          <h2 className="aik-title">AI API Keys</h2>
+          <h2 className="aik-title">AI API Keys & Quotas</h2>
           <p className="aik-sub">
-            Manage Gemini API keys used by all AI features. Keys are stored server-side and never exposed to users.
+            Manage API keys (Gemini, OpenAI, etc.) used by all AI features. Keys are stored server-side and never exposed to users.
             The first <strong>active</strong> key in the list is used for requests.
           </p>
         </div>
@@ -122,7 +136,113 @@ export default function AIKeysSection({ log }) {
         <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
           <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
         </svg>
-        Keys added here override the <code>GEMINI_API_KEY</code> environment variable. The env var is used as a final fallback when no active DB key exists.
+        Keys added here override the <code>AI_API_KEY</code> or <code>GEMINI_API_KEY</code> environment variables. The env var is used as a final fallback.
+      </div>
+
+      {/* Quota Section */}
+      <div className="aik-card">
+        <div className="aik-card-head">
+          <span className="aik-card-title">AI Analysis Quota</span>
+        </div>
+        <div className="adm-limits-control" style={{ padding: '1rem' }}>
+          <label className="adm-limits-label" style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-secondary)' }}>Daily Limit (Disease detection & crop health)</label>
+          <div className="adm-limits-input-row" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1rem' }}>
+            <input
+              className="aik-input"
+              type="number"
+              min="1"
+              max="100"
+              style={{ width: '100px' }}
+              value={limitsForm?.aiDailyAnalysisLimit || ''}
+              onChange={(e) => handleLimitChange && handleLimitChange('aiDailyAnalysisLimit', e.target.value)}
+            />
+            <span className="adm-limits-unit" style={{ color: 'var(--text-secondary)' }}>analyses / day</span>
+          </div>
+          {limitErrors?.aiDailyAnalysisLimit && <div className="aik-form-error">{limitErrors.aiDailyAnalysisLimit}</div>}
+          
+          <div className="adm-limits-usage" style={{ background: 'var(--glass-bg)', padding: '1rem', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
+            <div className="adm-limits-usage-header" style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
+              <span>Today's Usage</span>
+              <span className="adm-limits-usage-count" style={{ fontWeight: '500' }}>
+                {aiUsageData ? `${aiUsageData.usedCount} / ${aiUsageData.dailyLimit}` : 'N/A'}
+              </span>
+            </div>
+            <div className="adm-limits-progress-bg" style={{ height: '6px', background: 'var(--glass-border)', borderRadius: '3px', overflow: 'hidden', marginBottom: '0.5rem' }}>
+              <div
+                className="adm-limits-progress-fill"
+                style={{
+                  height: '100%',
+                  width: aiUsageData ? `${Math.min((aiUsageData.usedCount / aiUsageData.dailyLimit) * 100, 100)}%` : '0%',
+                  background: aiUsageData && (aiUsageData.usedCount / aiUsageData.dailyLimit) > 0.8 ? '#ef4444' : '#a78bfa',
+                  transition: 'width 0.3s ease'
+                }}
+              />
+            </div>
+            <div className="adm-limits-usage-footer" style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
+              <span>Remaining: <strong>{aiUsageData ? aiUsageData.remaining : 'N/A'}</strong></span>
+            </div>
+          </div>
+          <div style={{ marginTop: '1rem', textAlign: 'right' }}>
+            <button className="aik-add-btn" onClick={handleSaveLimits} disabled={savingLimits || !!limitErrors?.aiDailyAnalysisLimit}>
+              {savingLimits ? 'Saving...' : 'Save Limits'}
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* AI Usage Tracking */}
+      <div className="aik-card">
+        <div className="aik-card-head">
+          <span className="aik-card-title">User / Device AI Usage</span>
+          <span className="aik-count">{allUsage.length}</span>
+        </div>
+        
+        {loading ? (
+          <div className="aik-loading">
+            <div className="aik-spinner" />
+            Loading usage...
+          </div>
+        ) : allUsage.length === 0 ? (
+          <div className="aik-empty">
+            <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+            </svg>
+            <p>No usage tracked for today.</p>
+          </div>
+        ) : (
+          <table className="aik-table">
+            <thead>
+              <tr>
+                <th>Device ID / User</th>
+                <th>Used</th>
+                <th>Daily Limit</th>
+                <th>Remaining</th>
+                <th>Status</th>
+                <th>Last Used</th>
+              </tr>
+            </thead>
+            <tbody>
+              {allUsage.map((u, i) => (
+                <tr key={u.deviceId || i}>
+                  <td className="aik-label">{u.deviceId}</td>
+                  <td>{u.usedCount}</td>
+                  <td>{u.dailyLimit}</td>
+                  <td>{u.remaining}</td>
+                  <td>
+                    {u.exhausted ? (
+                      <span style={{ color: '#ef4444', fontWeight: 'bold' }}>Exhausted</span>
+                    ) : (
+                      <span style={{ color: '#22c55e' }}>Healthy</span>
+                    )}
+                  </td>
+                  <td className="aik-date">
+                    {u.lastUsedAt ? new Date(u.lastUsedAt).toLocaleString() : 'Never'}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
       </div>
 
       {/* Keys table */}
@@ -210,8 +330,8 @@ export default function AIKeysSection({ log }) {
             </div>
             <div className="aik-field aik-field--key">
               <label className="aik-field-label">
-                Gemini API Key
-                <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener noreferrer" className="aik-link">
+                API Key (OpenAI / Gemini / etc.)
+                <a href="https://platform.openai.com/api-keys" target="_blank" rel="noopener noreferrer" className="aik-link">
                   Get a key ↗
                 </a>
               </label>

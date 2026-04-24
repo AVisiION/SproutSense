@@ -41,28 +41,39 @@
 /* Time-range pill control */
 .controls {
   display: flex;
-  gap: 0.25rem;
-  background: rgb(0 0 0 / 3%);
-  padding: 0.25rem;
-  border-radius: 10px;
-  border: 1px solid rgba(255,255,255,0.06);
-  flex-wrap: wrap;
+  gap: 4px;
+  background: rgba(255, 255, 255, 0.03);
+  padding: 6px;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.03);
+  width: fit-content;
+  backdrop-filter: blur(10px);
 }
 
 .timeRangeBtn {
   background: transparent;
   border: none;
   color: var(--text-secondary);
-  padding: 0.45rem 0.9rem;
-  border-radius: 7px;
+  padding: 0.5rem 1.2rem;
+  border-radius: 10px;
   cursor: pointer;
-  font-weight: 500;
-  font-size: 0.9rem;
-  transition: all 0.18s ease;
+  font-weight: 600;
+  font-size: 0.85rem;
+  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  white-space: nowrap;
 }
 
-.timeRangeBtn:hover { color: var(--text-primary); background: rgb(0 0 0 / 6%); }
-.timeRangeBtn.active { background: var(--accent-primary); color: #000; font-weight: 700; }
+.timeRangeBtn:hover { 
+  color: var(--plant-green); 
+  background: rgba(78, 168, 82, 0.12);
+  transform: translateY(-2px);
+}
+
+.timeRangeBtn.active { 
+  background: var(--plant-green); 
+  color: #fff; 
+  box-shadow: 0 4px 12px rgba(78, 168, 82, 0.3);
+}
 
 /* ── Weather Card ───────────────────────────────────── */
 .weatherCard {

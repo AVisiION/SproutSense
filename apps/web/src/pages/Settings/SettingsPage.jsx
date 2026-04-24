@@ -133,6 +133,9 @@ const DEFAULT_ADVANCED_SETTINGS = {
 
 export default function SettingsPage({
   theme,
+  setTheme,
+  palette,
+  setPalette,
   toggleTheme,
   onNotification,
 }) {
@@ -671,16 +674,60 @@ export default function SettingsPage({
             <div className="sp-row">
               <div className="sp-row-info">
                 <span className="sp-row-label">Interface Theme</span>
-                <span className="sp-row-desc">Toggle between light and dark UI modes</span>
+                <span className="sp-row-desc">Select a curated visual palette</span>
               </div>
-              <button
-                className={`sp-theme-pill ${theme === 'dark' ? 'dark' : 'light'}`}
-                onClick={toggleTheme}
-                aria-label="Toggle theme"
-              >
-                <Icon name={theme === 'dark' ? 'moon' : 'sun'} size={13} />
-                <span>{theme === 'dark' ? 'Dark Mode' : 'Light Mode'}</span>
-              </button>
+              <div className="sp-theme-selector" style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', justifyContent: 'flex-end' }}>
+                {[
+                  { id: 'dark', label: 'Dark', icon: 'moon' },
+                  { id: 'light', label: 'Light', icon: 'sun' },
+                  { id: 'midnight', label: 'Midnight', icon: 'moon' },
+                  { id: 'forest', label: 'Forest', icon: 'moon' },
+                ].map(t => (
+                  <button
+                    key={t.id}
+                    className={`sp-theme-pill ${theme === t.id ? 'active' : ''}`}
+                    onClick={() => setTheme ? setTheme(t.id) : toggleTheme()}
+                    aria-label={`Select ${t.label} theme`}
+                    style={{
+                      background: theme === t.id ? 'var(--accent-primary)' : 'var(--surface-2)',
+                      color: theme === t.id ? '#fff' : 'var(--text-primary)',
+                      border: theme === t.id ? '1px solid transparent' : '1px solid var(--border-color)'
+                    }}
+                  >
+                    <Icon name={t.icon} size={13} />
+                    <span>{t.label}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="sp-field" style={{ marginBottom: '1.5rem' }}>
+              <label className="sp-label">Theme Palette</label>
+              <div className="sp-palette-grid">
+                {[
+                  { id: 'emerald', label: 'Emerald', color: '#10b981' },
+                  { id: 'violet',  label: 'Violet',  color: '#8b5cf6' },
+                  { id: 'sunset',  label: 'Sunset',  color: '#f59e0b' },
+                  { id: 'ocean',   label: 'Ocean',   color: '#0ea5e9' },
+                  { id: 'rose',    label: 'Rose',    color: '#ec4899' },
+                  { id: 'harvest', label: 'Harvest', color: '#f59e0b' },
+                  { id: 'glacier', label: 'Glacier', color: '#06b6d4' },
+                  { id: 'nightshade', label: 'Nightshade', color: '#6366f1' },
+                  { id: 'bloom',   label: 'Bloom',   color: '#f43f5e' },
+                ].map(p => (
+                  <button
+                    key={p.id}
+                    className={`sp-palette-btn ${palette === p.id ? 'active' : ''}`}
+                    onClick={() => setPalette(p.id)}
+                    title={p.label}
+                    type="button"
+                  >
+                    <span className="sp-palette-dot" style={{ background: p.color }} />
+                    <span className="sp-palette-label">{p.label}</span>
+                    {palette === p.id && <Icon name="check" size={10} className="sp-palette-check" />}
+                  </button>
+                ))}
+              </div>
             </div>
 
             <div className="sp-field-grid">

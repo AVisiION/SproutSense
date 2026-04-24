@@ -74,6 +74,10 @@ const userSchema = new mongoose.Schema(
       type: Date,
       default: null,
     },
+    uiPreferences: {
+      type: mongoose.Schema.Types.Mixed,
+      default: null,
+    },
   },
   { timestamps: true }
 );

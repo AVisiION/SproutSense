@@ -53,6 +53,11 @@ body {
   z-index: 90;
 }
 
+.public-shell .sidebar,
+.public-shell .sidebar-overlay {
+  display: none !important;
+}
+
 .container {
   grid-area: main;
   height: 100vh;
@@ -159,6 +164,12 @@ body {
   /* Collapsed sidebar: shrink to 80px icon rail */
   .app-shell.sidebar-collapsed {
     grid-template-columns: 80px minmax(0, 1fr);
+  }
+
+  /* Public landing page: hide sidebar entirely */
+  .app-shell.public-shell {
+    grid-template-columns: 1fr !important;
+    grid-template-areas: "main" !important;
   }
   .sidebar-collapsed .sidebar{
     margin-top: 4rem;

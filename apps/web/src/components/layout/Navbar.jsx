@@ -70,7 +70,7 @@ export function Navbar({
   };
 
   return (
-    <header className="top-navbar" role="banner">
+    <header className={`top-navbar ${isPublicView ? 'public-navbar' : ''} ${!isSidebarCollapsed && isMobile ? 'mobile-menu-open' : ''}`} role="banner">
       <div className="navbar-left">
         <button
           className="navbar-toggle"
@@ -81,14 +81,23 @@ export function Navbar({
           {isMobile && !isSidebarCollapsed ? '✕' : '☰'}
         </button>
 
-        {isSidebarCollapsed && !isMobile && (
-          <Link to="/home" className="navbar-brand" aria-label="SproutSense home">
+        {((isSidebarCollapsed && !isMobile) || isPublicView) && (
+          <Link to="/" className="navbar-brand" aria-label="SproutSense home" onClick={() => { if(isMobile && !isSidebarCollapsed) toggleSidebar(); }}>
             <img src="/assets/icon.png" className="navbar-brand-icon" alt="" />
             <span className="navbar-brand-text">SproutSense</span>
           </Link>
         )}
 
         <h1 className="navbar-title">{currentPage}</h1>
+        {isPublicView && (
+          <nav className={`public-nav-links ${!isSidebarCollapsed && isMobile ? 'open' : ''}`}>
+            <Link to="/about" className={`public-nav-link ${currentPage === 'About' ? 'active' : ''}`} onClick={() => { if(isMobile && !isSidebarCollapsed) toggleSidebar(); }}>About</Link>
+            <Link to="/features" className={`public-nav-link ${currentPage === 'Features' ? 'active' : ''}`} onClick={() => { if(isMobile && !isSidebarCollapsed) toggleSidebar(); }}>Features</Link>
+            <Link to="/plant-library" className={`public-nav-link ${currentPage === 'Plant Library' ? 'active' : ''}`} onClick={() => { if(isMobile && !isSidebarCollapsed) toggleSidebar(); }}>Plant Library</Link>
+            <Link to="/demo" className={`public-nav-link ${currentPage === 'Demo' ? 'active' : ''}`} onClick={() => { if(isMobile && !isSidebarCollapsed) toggleSidebar(); }}>Demo</Link>
+            <Link to="/contact" className={`public-nav-link ${currentPage === 'Contact' ? 'active' : ''}`} onClick={() => { if(isMobile && !isSidebarCollapsed) toggleSidebar(); }}>Contact</Link>
+          </nav>
+        )}
       </div>
 
       <div className="navbar-right">

@@ -32,6 +32,7 @@ function toSafeUser(user, role) {
     role: role?.key,
     accountStatus: user.accountStatus,
     emailVerified: user.emailVerified,
+    uiPreferences: user.uiPreferences || null,
     createdAt: user.createdAt,
     updatedAt: user.updatedAt,
     lastLoginAt: user.lastLoginAt,

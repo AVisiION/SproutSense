@@ -17,6 +17,7 @@ function safeUser(user, roleById) {
     accountStatus: user.accountStatus,
     emailVerified: user.emailVerified,
     lastLoginAt: user.lastLoginAt,
+    uiPreferences: user.uiPreferences || null,
     createdAt: user.createdAt,
     updatedAt: user.updatedAt,
   };
@@ -255,6 +256,61 @@ export async function bulkUserAction(req, res, next) {
     }
 
     return res.status(400).json({ success: false, message: 'Action failed.' });
+  } catch (error) {
+    return next(error);
+  }
+}
+
+export async function updateUserPreferences(req, res, next) {
+  try {
+    const { userId } = req.params;
+    const { uiPreferences } = req.body || {};
+
+    if (!uiPreferences) {
+      return res.status(400).json({ success: false, message: 'uiPreferences is required.' });
+    }
+
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ success: false, message: 'User not found.' });
+    }
+
+    user.uiPreferences = uiPreferences;
+    await user.save();
+
+    return res.json({
+      success: true,
+      message: 'User UI preferences updated successfully.',
+      uiPreferences: user.uiPreferences,
+    });
+  } catch (error) {
+    return next(error);
+  }
+}
+
+export async function bulkUpdateUserPreferences(req, res, next) {
+  try {
+    const { userIds, uiPreferences, targetAll = false } = req.body || {};
+
+    if (!uiPreferences) {
+      return res.status(400).json({ success: false, message: 'uiPreferences is required.' });
+    }
+
+    if (targetAll) {
+      await User.updateMany({}, { $set: { uiPreferences } });
+      return res.json({ success: true, message: 'Successfully updated UI preferences for all users.' });
+    }
+
+    if (!Array.isArray(userIds) || userIds.length === 0) {
+      return res.status(400).json({ success: false, message: 'userIds must be a non-empty array or targetAll must be true.' });
+    }
+
+    await User.updateMany({ _id: { $in: userIds } }, { $set: { uiPreferences } });
+
+    return res.json({
+      success: true,
+      message: `Successfully updated UI preferences for ${userIds.length} users.`,
+    });
   } catch (error) {
     return next(error);
   }

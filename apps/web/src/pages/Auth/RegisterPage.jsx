@@ -42,6 +42,8 @@ export default function RegisterPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [preferredPlant, setPreferredPlant] = useState('tomato');
   const [strength, setStrength] = useState({ level: 'Weak', hints: ['Use at least 8 characters.'] });
   const [error, setError] = useState('');
@@ -141,7 +143,24 @@ export default function RegisterPage() {
               </div>
               <div className="auth-field">
                 <label className="auth-label">Password</label>
-                <input className="auth-input" value={password} onChange={(e) => onPasswordChange(e.target.value)} type="password" required />
+                <div className="auth-input-wrapper">
+                  <input
+                    className="auth-input"
+                    value={password}
+                    onChange={(e) => onPasswordChange(e.target.value)}
+                    type={showPassword ? 'text' : 'password'}
+                    required
+                  />
+                  <button
+                    type="button"
+                    className="auth-password-toggle"
+                    onClick={() => setShowPassword(!showPassword)}
+                    aria-label={showPassword ? 'Hide password' : 'Show password'}
+                    tabIndex="-1"
+                  >
+                    <i className={`fa-solid ${showPassword ? 'fa-eye-slash' : 'fa-eye'}`} />
+                  </button>
+                </div>
                 <div className="strength-wrap">
                   <div className="strength-meter">
                     <div className={`strength-fill ${fillClassByLevel[strength.level] || 'strength-weak'}`} style={{ width: widthByLevel[strength.level] || '25%' }} />
@@ -158,7 +177,24 @@ export default function RegisterPage() {
               </div>
               <div className="auth-field">
                 <label className="auth-label">Confirm password</label>
-                <input className="auth-input" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} type="password" required />
+                <div className="auth-input-wrapper">
+                  <input
+                    className="auth-input"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    type={showConfirmPassword ? 'text' : 'password'}
+                    required
+                  />
+                  <button
+                    type="button"
+                    className="auth-password-toggle"
+                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    aria-label={showConfirmPassword ? 'Hide password' : 'Show password'}
+                    tabIndex="-1"
+                  >
+                    <i className={`fa-solid ${showConfirmPassword ? 'fa-eye-slash' : 'fa-eye'}`} />
+                  </button>
+                </div>
                 {confirmMismatch && <span className="auth-error">Passwords do not match.</span>}
               </div>
               <div className="auth-field">

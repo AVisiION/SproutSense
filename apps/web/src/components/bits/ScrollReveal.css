@@ -1,0 +1,41 @@
+.scroll-reveal {
+  /* Transparent wrapper - don't break parent layouts */
+  width: 100%;
+  position: relative;
+  /* Resetting previous restrictive defaults */
+  margin: 0;
+  padding: 0;
+}
+
+.scroll-reveal--text-mode {
+  margin: 10vh 0;
+  padding: 4rem 2rem;
+  text-align: center;
+  max-width: 900px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.scroll-reveal-text {
+  font-size: clamp(2rem, 5vw, 4.5rem);
+  line-height: 1.1;
+  font-weight: 800;
+  color: var(--text-main);
+  letter-spacing: -0.02em;
+}
+
+.word {
+  display: inline-block;
+  margin-right: 0.25em;
+  white-space: pre;
+}
+
+/* Glass effect for the container if needed */
+.scroll-reveal-glass {
+  background: var(--glass-bg);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid var(--glass-border);
+  border-radius: 2rem;
+  box-shadow: var(--glass-shadow);
+}

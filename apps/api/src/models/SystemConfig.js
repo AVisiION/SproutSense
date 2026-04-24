@@ -307,7 +307,8 @@ systemConfigSchema.statics.getActiveAIKey = async function() {
   // Keys are stored on the global sentinel document (deviceId = '__global__')
   let global = await this.findOne({ deviceId: '__global__' });
   if (!global) global = await this.create({ deviceId: '__global__' });
-  const active = (global.aiApiKeys || []).find(k => k.active && k.key);
+  // Prioritize the most recently added key by searching from the end
+  const active = [...(global.aiApiKeys || [])].reverse().find(k => k.active && k.key);
   return active?.key || null;
 };
 

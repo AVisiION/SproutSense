@@ -57,9 +57,9 @@
   font-weight: 600;
   padding: 5px 12px;
   border-radius: 99px;
-  background: rgba(34,197,94,0.12);
-  border: 1px solid rgba(34,197,94,0.30);
-  color: #22c55e;
+  background: var(--surface-1);
+  border: 1px solid var(--border-moss);
+  color: var(--plant-green);
   letter-spacing: 0.04em;
 }
 
@@ -106,8 +106,8 @@
 /* ── Metric card ─────────────────────────────────────────── */
 .sc-card {
   border-radius: 16px;
-  border: 1px solid rgba(255,255,255,0.07);
-  background: rgb(0 0 0 / 3%);
+  border: 1px solid var(--border-color);
+  background: var(--surface-1);
   overflow: hidden;
   transition: transform 0.22s cubic-bezier(0.4,0,0.2,1),
               border-color 0.22s,
@@ -134,10 +134,10 @@
 }
 
 /* Status-specific border glow */
-.sc-card--good     { border-color: rgba(34,197,94,0.12); }
-.sc-card--warning  { border-color: rgba(245,158,11,0.20); }
+.sc-card--good     { border-color: var(--success-border); }
+.sc-card--warning  { border-color: var(--warning-border); }
 .sc-card--critical {
-  border-color: rgba(239,68,68,0.30);
+  border-color: var(--danger-border);
   animation: sc-critical-pulse 2s ease-in-out infinite;
 }
 
@@ -171,7 +171,7 @@
 }
 
 .sc-card-btn:hover {
-  background: rgba(255,255,255,0.03);
+  background: var(--surface-hover);
   transform: perspective(900px) translateY(-2px) rotateX(4deg) scale(1.01);
   box-shadow: 0 10px 24px rgba(0,0,0,0.16);
 }
@@ -299,7 +299,7 @@
   position: relative;
   height: 6px;
   border-radius: 99px;
-  background: rgba(255,255,255,0.07);
+  background: var(--surface-2);
   overflow: hidden;
 }
 
@@ -335,9 +335,9 @@
 
 /* ── Hardware spec drawer ────────────────────────────────── */
 .sc-drawer {
-  border-top: 1px solid rgba(255,255,255,0.06);
+  border-top: 1px solid var(--divider-color);
   padding: 16px 18px 18px;
-  background: rgba(0,0,0,0.12);
+  background: var(--surface-1);
   animation: sc-drawer-in 0.25s ease both;
 }
 
@@ -352,7 +352,7 @@
   line-height: 1.6;
   margin: 0 0 14px;
   padding-bottom: 12px;
-  border-bottom: 1px solid rgba(255,255,255,0.06);
+  border-bottom: 1px solid var(--divider-color);
 }
 
 .sc-drawer-specs {
@@ -460,36 +460,36 @@
 
 /* ── Light mode overrides ─────────────────────────────────── */
 [data-theme='light'] .sc-card {
-  background: rgba(0,0,0,0.02);
-  border-color: rgba(0,0,0,0.07);
+  background: var(--surface-2);
+  border-color: var(--border-moss);
 }
 [data-theme='light'] .sc-card-btn:hover {
-  background: rgba(0,0,0,0.03);
+  background: var(--surface-hover);
 }
 [data-theme='light'] .sc-drawer {
-  background: rgba(0,0,0,0.03);
+  background: var(--surface-1);
 }
 [data-theme='light'] .sc-range-track {
-  background: rgba(0,0,0,0.08);
+  background: var(--surface-hover);
 }
 [data-theme='light'] .sc-card-value {
   filter: none;
 }
 [data-theme='light'] .sc-header-title {
-  color: #1a3a2a;
+  color: var(--text-primary);
 }
 [data-theme='light'] .sc-header-sub,
 [data-theme='light'] .sc-card-label {
-  color: #4b7060;
+  color: var(--text-secondary);
 }
 [data-theme='light'] .sc-card-model,
 [data-theme='light'] .sc-range-labels,
 [data-theme='light'] .sc-spec-key,
 [data-theme='light'] .sc-footer-hint {
-  color: #6b7280;
+  color: var(--text-tertiary);
 }
-[data-theme='light'] .sc-spec-val  { color: #1a3a2a; }
-[data-theme='light'] .sc-drawer-desc { color: #374151; }
+[data-theme='light'] .sc-spec-val  { color: var(--text-primary); }
+[data-theme='light'] .sc-drawer-desc { color: var(--text-secondary); }
 
 /* ── Responsive ───────────────────────────────────────────── */
 @media (max-width: 900px) {

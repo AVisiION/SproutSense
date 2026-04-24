@@ -1,206 +1,942 @@
+/* ============================================================
+   SproutSense — Public Pages (Liquid Glass V3)
+   Matches the Obsidian-Green dashboard identity
+   ============================================================ */
+
+/* ── Premium animation keyframes ─────────────────────────── */
+@keyframes ppSpotlightSweep {
+  0% {
+    background-position: -120% 0%;
+  }
+
+  100% {
+    background-position: 220% 0%;
+  }
+}
+
+@keyframes ppIconPulseGlow {
+
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(58, 143, 62, 0.0), var(--glow-green);
+  }
+
+  50% {
+    box-shadow: 0 0 0 8px rgba(58, 143, 62, 0.18), var(--glow-green);
+  }
+}
+
+@keyframes ppBorderSpin {
+  to {
+    --pp-border-angle: 360deg;
+  }
+}
+
+@keyframes ppCardReveal {
+  from {
+    opacity: 0;
+    transform: translateY(24px) scale(0.97);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes ppHeroFloat {
+
+  0%,
+  100% {
+    transform: translateY(0) perspective(800px) rotateX(0deg) rotateY(0deg);
+  }
+
+  25% {
+    transform: translateY(-6px) perspective(800px) rotateX(1.5deg) rotateY(-1deg);
+  }
+
+  75% {
+    transform: translateY(4px) perspective(800px) rotateX(-1deg) rotateY(1.2deg);
+  }
+}
+
 .pp-page {
   width: 100%;
-  max-width: 1400px;
+  max-width: 100%;
+  margin: 0;
+  padding: 0 5vw 6rem;
+  font-family: 'Manrope', sans-serif;
+  color: var(--text-primary);
+  position: relative;
+  z-index: 1;
+  box-sizing: border-box;
+  overflow-x: hidden;
+  /* hard clip on the page root */
+  -webkit-overflow-scrolling: touch;
+}
+
+/* ─── Layout Sections ────────────────────────────────────── */
+.pp-section {
+  padding: 8rem 0;
+  opacity: 0;
+  transform: translateY(30px);
+  animation: ppSlideUp 0.9s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes ppSlideUp {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.pp-section-header {
+  text-align: center;
+  margin-bottom: 5rem;
+}
+
+.pp-section-header h2 {
+  font-size: clamp(2.4rem, 5vw, 3.8rem);
+  font-weight: 800;
+  letter-spacing: -0.04em;
+  margin-bottom: 1.4rem;
+  background: linear-gradient(135deg, var(--text-primary), var(--plant-mint));
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.pp-section-header p {
+  color: var(--text-secondary);
+  font-size: 1.25rem;
+  max-width: 720px;
   margin: 0 auto;
-  display: grid;
-  gap: 1rem;
-  padding: 0.35rem 0.15rem 2rem;
+  line-height: 1.7;
+  letter-spacing: -0.01em;
 }
 
-.pp-glass {
-  background: rgba(255, 255, 255, 0.055);
-  border: 1px solid rgba(255, 255, 255, 0.09);
-  border-radius: 18px;
-  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.06);
-  -webkit-backdrop-filter: blur(16px) saturate(150%);
-  backdrop-filter: blur(16px) saturate(150%);
-}
-
-[data-theme='light'] .pp-glass {
-  background: rgba(255, 255, 255, 0.74);
-  border-color: rgba(46, 125, 50, 0.12);
-  box-shadow: 0 6px 24px rgba(10, 40, 15, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.95);
-}
-
+/* ─── Hero Section ───────────────────────────────────────── */
 .pp-hero {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  align-items: center;
+  gap: 4rem;
+  padding: 0;
+  /* Account for public navbar */
+  min-height: calc(100dvh - 5rem);
   position: relative;
   overflow: hidden;
-  padding: 2rem 1.6rem;
 }
 
-.pp-hero-blob {
+.pp-hero-glow {
   position: absolute;
-  border-radius: 50%;
-  filter: blur(70px);
+  top: -20%;
+  right: -10%;
+  width: 60%;
+  height: 80%;
+  background: radial-gradient(circle, rgba(58, 143, 62, 0.12) 0%, transparent 70%);
+  filter: blur(120px);
+  z-index: -1;
   pointer-events: none;
-  opacity: 0.22;
-}
-
-.pp-hero-blob-1 {
-  width: 320px;
-  height: 320px;
-  top: -80px;
-  left: -60px;
-  background: radial-gradient(circle, #43A047 0%, transparent 70%);
-}
-
-.pp-hero-blob-2 {
-  width: 260px;
-  height: 260px;
-  right: -40px;
-  bottom: -70px;
-  background: radial-gradient(circle, #00B4A6 0%, transparent 70%);
-}
-
-.pp-hero-content {
-  position: relative;
-  z-index: 2;
-  max-width: 900px;
 }
 
 .pp-kicker {
   display: inline-flex;
   align-items: center;
-  padding: 0.25rem 0.62rem;
-  border-radius: 999px;
-  font-size: 0.74rem;
+  padding: 0.6rem 1.2rem;
+  background: var(--success-bg);
+  border: 1px solid var(--success-border);
+  color: var(--plant-green);
+  border-radius: 100px;
+  font-size: 0.85rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  margin-bottom: 2.5rem;
   text-transform: uppercase;
-  letter-spacing: 0.04em;
-  color: #7EC880;
-  border: 1px solid rgba(78, 168, 82, 0.35);
-  background: rgba(67, 160, 71, 0.16);
+  box-shadow: var(--glow-green);
 }
 
 .pp-hero h1 {
-  margin: 0.65rem 0 0;
-  font-size: clamp(1.8rem, 4vw, 2.7rem);
-  line-height: 1.18;
-  color: var(--text-color);
+  font-size: clamp(2.4rem, 8vw, 5.2rem);
+  font-weight: 800;
+  line-height: 1.05;
+  letter-spacing: -0.05em;
+  margin-bottom: 2rem;
+  color: var(--text-primary);
 }
 
 .pp-hero p {
-  margin: 0.72rem 0 0;
+  font-size: clamp(1.1rem, 2.5vw, 1.5rem);
+  line-height: 1.5;
   color: var(--text-secondary);
-  line-height: 1.7;
-  max-width: 760px;
+  margin-bottom: 3.5rem;
+  max-width: 600px;
 }
 
-.pp-actions {
-  margin-top: 1rem;
+.pp-hero-visual {
+  position: relative;
+  height: clamp(400px, 70vh, 85vh);
+  /* Take more vertical space on desktop */
+  border-radius: 40px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  background: var(--bg-tertiary);
+  box-shadow:
+    0 40px 100px rgba(0, 0, 0, 0.8),
+    0 0 100px rgba(58, 143, 62, 0.1);
+  transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1),
+    box-shadow 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+  animation: ppHeroFloat 8s ease-in-out infinite;
+  transform-origin: center center;
+  will-change: transform;
+}
+
+.pp-hero-visual:hover {
+  animation-play-state: paused;
+  transform: perspective(900px) rotateX(3deg) rotateY(-3deg) scale(1.03);
+  box-shadow:
+    0 60px 120px rgba(0, 0, 0, 0.7),
+    0 0 0 1px rgba(58, 143, 62, 0.35),
+    0 0 60px rgba(58, 143, 62, 0.15);
+}
+
+.pp-hero-visual img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  opacity: 0.95;
+  /* High visibility as requested */
+  filter: contrast(1.05) brightness(1.02);
+}
+
+.pp-visual-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, transparent 60%, rgba(10, 29, 22, 0.8));
+  pointer-events: none;
+}
+
+/* ─── Ambient Decorative Blobs ───────────────────────────── */
+.pp-ambient-blobs {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: -2;
+  overflow: hidden;
+}
+
+.pp-blob {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(140px);
+  opacity: 0.15;
+  animation: ppBlobFloat 20s infinite alternate ease-in-out;
+}
+
+.pp-blob-1 {
+  width: 600px;
+  height: 600px;
+  background: var(--accent-primary);
+  top: -10%;
+  left: -10%;
+}
+
+.pp-blob-2 {
+  width: 500px;
+  height: 500px;
+  background: var(--plant-mint);
+  bottom: 10%;
+  right: -5%;
+  animation-delay: -5s;
+}
+
+.pp-blob-3 {
+  width: 400px;
+  height: 400px;
+  background: var(--accent-secondary);
+  top: 40%;
+  left: 50%;
+  transform: translateX(-50%);
+  animation-delay: -10s;
+}
+
+@keyframes ppBlobFloat {
+  0% {
+    transform: translate(0, 0) scale(1);
+  }
+
+  33% {
+    transform: translate(30px, -50px) scale(1.1);
+  }
+
+  66% {
+    transform: translate(-20px, 20px) scale(0.9);
+  }
+
+  100% {
+    transform: translate(0, 0) scale(1);
+  }
+}
+
+/* ─── Liquid Glass Cards ─────────────────────────────────── */
+.pp-glass {
+  background: var(--glass-color-strong);
+  backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+  border: var(--glass-border);
+  border-radius: 24px;
+  box-shadow: var(--glass-shadow);
+  transition:
+    transform 0.45s cubic-bezier(0.16, 1, 0.3, 1),
+    box-shadow 0.45s cubic-bezier(0.16, 1, 0.3, 1),
+    border-color 0.3s ease;
+  position: relative;
+  overflow: hidden;
+  animation: ppCardReveal 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
+  will-change: transform;
+}
+
+/* Spotlight sweep layer */
+.pp-glass::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(105deg,
+      transparent 30%,
+      rgba(255, 255, 255, 0.06) 50%,
+      transparent 70%);
+  background-size: 300% 100%;
+  background-position: -120% 0%;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.5s ease;
+  animation: ppSpotlightSweep 1.2s cubic-bezier(0.16, 1, 0.3, 1) 0.6s forwards;
+}
+
+/* Top sheen */
+.pp-glass::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.04) 0%, transparent 55%);
+  pointer-events: none;
+  border-radius: inherit;
+}
+
+.pp-glass:hover {
+  border-color: rgba(58, 143, 62, 0.5);
+  transform: translateY(-10px) scale(1.012);
+  box-shadow:
+    0 40px 80px rgba(0, 0, 0, 0.45),
+    0 0 0 1px rgba(58, 143, 62, 0.25),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+.pp-glass:hover::before {
+  opacity: 0.3;
+}
+
+.pp-bento {
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  grid-auto-rows: minmax(200px, auto);
+  gap: 1.5rem;
+}
+
+.pp-bento-item {
+  grid-column: span 4;
+  padding: 2.5rem;
   display: flex;
-  gap: 0.58rem;
+  flex-direction: column;
+  justify-content: flex-end;
+  min-height: 200px;
+}
+
+.pp-bento-item--large {
+  grid-column: span 8;
+}
+
+.pp-bento-icon {
+  width: 60px;
+  height: 60px;
+  background: var(--surface-2);
+  border-radius: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.8rem;
+  color: var(--accent-primary);
+  margin-bottom: 2.5rem;
+  border: var(--glass-border);
+  box-shadow: var(--glow-green);
+  transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1),
+    box-shadow 0.35s ease;
+}
+
+.pp-glass:hover .pp-bento-icon {
+  transform: scale(1.12) translateY(-3px);
+  animation: ppIconPulseGlow 1.4s ease-in-out infinite;
+}
+
+.pp-bento-item h3 {
+  font-size: 1.6rem;
+  font-weight: 700;
+  margin-bottom: 1rem;
+  color: var(--text-primary);
+}
+
+.pp-bento-item p {
+  font-size: 1.1rem;
+  color: var(--text-secondary);
+  line-height: 1.7;
+}
+
+/* ─── Metrics Section ────────────────────────────────────── */
+.pp-metrics-strip {
+  display: flex;
+  justify-content: space-around;
+  padding: 4rem;
+  margin: 6rem 0;
+  border: 1px solid var(--accent-primary);
+  background: linear-gradient(90deg, transparent, rgba(58, 143, 62, 0.05), transparent);
+}
+
+.pp-metric-item {
+  text-align: center;
+}
+
+.pp-metric-val {
+  display: block;
+  font-size: 3.5rem;
+  font-weight: 800;
+  color: var(--accent-primary);
+  margin-bottom: 0.8rem;
+  text-shadow: var(--glow-green);
+  letter-spacing: -0.04em;
+}
+
+.pp-metric-label {
+  font-size: 0.95rem;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  color: var(--text-tertiary);
+  font-weight: 700;
+}
+
+/* ─── Plant Tags ─────────────────────────────────────────── */
+.pp-tag-wrap {
+  display: flex;
   flex-wrap: wrap;
+  gap: 0.6rem;
+  margin: 1.25rem 0 1.5rem;
+}
+
+.pp-tag {
+  font-size: 0.72rem;
+  font-weight: 800;
+  padding: 0.4rem 0.9rem;
+  border-radius: 20px;
+  background: var(--success-bg);
+  border: 1px solid var(--success-border);
+  color: var(--plant-green);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 8px rgba(34, 197, 94, 0.08);
+}
+
+.pp-tag:hover {
+  background: var(--success-border);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(34, 197, 94, 0.15);
+}
+
+/* ─── Actions & Buttons ──────────────────────────────────── */
+.pp-actions {
+  display: flex;
+  gap: 1.5rem;
 }
 
 .pp-btn {
+  padding: 1.25rem 2.8rem;
+  border-radius: 18px;
+  font-weight: 800;
+  font-size: 1.1rem;
+  text-decoration: none;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
   display: inline-flex;
   align-items: center;
-  gap: 0.42rem;
-  padding: 0.6rem 0.95rem;
-  border-radius: 12px;
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  text-decoration: none;
-  font-weight: 600;
-  font-size: 0.88rem;
+  gap: 1rem;
 }
 
 .pp-btn-primary {
-  background: #43A047;
-  color: #ffffff;
-  border-color: transparent;
+  background: var(--accent-primary);
+  color: #fff;
+  box-shadow: 0 12px 32px rgba(58, 143, 62, 0.3);
+  border: none;
 }
 
 .pp-btn-primary:hover {
-  background: #388E3C;
+  background: var(--accent-hover);
+  transform: translateY(-5px) scale(1.03);
+  box-shadow:
+    0 24px 56px rgba(58, 143, 62, 0.50),
+    0 0 0 1px rgba(58, 143, 62, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.15);
+}
+
+.pp-btn-primary:active {
+  transform: translateY(-2px) scale(0.99);
+  transition-duration: 0.1s;
 }
 
 .pp-btn-ghost {
-  color: var(--text-color);
-  background: rgb(0 0 0 / 3%);
+  background: var(--surface-1);
+  color: var(--text-primary);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(12px);
+  position: relative;
+  overflow: hidden;
 }
 
-.pp-grid {
+.pp-btn-ghost::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(105deg, transparent 30%, rgba(255, 255, 255, 0.06) 50%, transparent 70%);
+  background-size: 300% 100%;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  animation: ppSpotlightSweep 1s cubic-bezier(0.16, 1, 0.3, 1) 0.2s forwards;
+}
+
+.pp-btn-ghost:hover {
+  background: var(--surface-2);
+  border-color: rgba(58, 143, 62, 0.45);
+  transform: translateY(-5px);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.3);
+}
+
+.pp-btn-ghost:hover::before {
+  opacity: 0.4;
+}
+
+.pp-btn-ghost:active {
+  transform: translateY(-2px);
+  transition-duration: 0.1s;
+}
+
+/* ─── Tech Grid ──────────────────────────────────────────── */
+.pp-tech-grid {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 0.78rem;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 2rem;
 }
 
-.pp-grid-2 {
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-}
-
-.pp-card {
-  padding: 0.95rem;
-}
-
-.pp-card h3 {
-  margin: 0;
-  font-size: 0.98rem;
-  color: var(--text-color);
-}
-
-.pp-card h3 i {
-  color: #4EA852;
-  margin-right: 0.32rem;
-}
-
-.pp-card p {
-  margin: 0.44rem 0 0;
-  font-size: 0.87rem;
-  color: var(--text-secondary);
-  line-height: 1.55;
-}
-
-.pp-metric {
-  display: grid;
-  gap: 0.2rem;
-}
-
-.pp-metric span {
-  color: var(--text-tertiary);
-  font-size: 0.78rem;
-}
-
-.pp-metric strong {
-  font-size: 1.4rem;
-  color: var(--text-color);
+.pp-table-wrapper {
+  width: 100%;
+  overflow-x: auto;
+  border-radius: 12px;
+  background: rgba(0, 0, 0, 0.2);
+  margin: 1.5rem 0;
 }
 
 .pp-table {
   width: 100%;
   border-collapse: collapse;
-  margin-top: 0.52rem;
-  font-size: 0.86rem;
+  min-width: 500px;
 }
 
-.pp-table th,
-.pp-table td {
-  text-align: left;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-  padding: 0.48rem;
+.pp-card {
+  padding: 2.5rem;
 }
 
-/* Universal subtle tint across public user sections */
-.pp-page :is(.pp-glass, .pp-btn-ghost) {
-  background-image: linear-gradient(rgb(0 0 0 / 3%), rgb(0 0 0 / 3%));
+.pp-quote-section {
+  padding: 10rem 2rem;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  overflow: hidden;
 }
 
-.pp-page .pp-btn-ghost:hover {
-  background-image: linear-gradient(rgb(0 0 0 / 6%), rgb(0 0 0 / 6%));
-  background-color: rgb(0 0 0 / 6%);
-}
+/* ─── Responsive ──────────────────────────────────── */
 
-@media (max-width: 980px) {
-  .pp-grid,
-  .pp-grid-2 {
-    grid-template-columns: 1fr;
+/* ── Tablet / large portrait ─────────────────────── */
+@keyframes scrollBounce {
+
+  0%,
+  100% {
+    transform: translateY(0);
+    opacity: 0.8;
   }
 
+  50% {
+    transform: translateY(10px);
+    opacity: 1;
+  }
+}
+
+@keyframes hintReveal {
+  from {
+    opacity: 0;
+    transform: translate(-50%, 20px);
+  }
+
+  to {
+    opacity: 0.7;
+    transform: translate(-50%, 0);
+  }
+}
+
+@keyframes textGlow {
+
+  0%,
+  100% {
+    text-shadow: 0 0 10px rgba(255, 255, 255, 0);
+  }
+
+  50% {
+    text-shadow: 0 0 15px rgba(255, 255, 255, 0.4);
+  }
+}
+
+.pp-scroll-hint {
+  position: absolute;
+  bottom: 2rem;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  color: var(--text-secondary);
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.4em;
+  text-transform: uppercase;
+  z-index: 10;
+  pointer-events: none;
+  animation: hintReveal 1.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  animation-delay: 1.8s;
+  opacity: 0;
+}
+
+.pp-scroll-hint span {
+  animation: textGlow 3s ease-in-out infinite;
+}
+
+.pp-scroll-hint i {
+  font-size: 1.6rem;
+  animation: scrollBounce 2s cubic-bezier(0.45, 0.05, 0.55, 0.95) infinite;
+  color: var(--plant-green);
+  filter: drop-shadow(0 0 12px rgba(34, 197, 94, 0.3));
+}
+
+@media (max-width: 1200px) {
   .pp-page {
-    padding: 0.3rem 0 1.6rem;
+    padding: 0 4vw 5rem;
   }
 
   .pp-hero {
-    padding: 1.35rem 1.05rem;
+    grid-template-columns: 1fr;
+    text-align: center;
+    gap: 4rem;
+    padding: 6rem 0 4rem;
+    min-height: auto;
+  }
+
+  .pp-hero-visual {
+    max-width: 90%;
+    margin: 0 auto;
+    height: 50vh;
+  }
+
+  .pp-hero p {
+    margin: 0 auto 3.5rem;
+    max-width: 80%;
+  }
+
+  .pp-actions {
+    justify-content: center;
+  }
+
+  /* bento: 2-up at tablet */
+  .pp-bento {
+    grid-template-columns: repeat(6, 1fr);
+    gap: 1.25rem;
+  }
+
+  .pp-bento-item {
+    grid-column: span 3;
+  }
+
+  .pp-bento-item--large {
+    grid-column: span 6;
+  }
+
+  .pp-tech-grid {
+    grid-template-columns: repeat(2, 1fr);
   }
 }
+
+/* ── Mobile landscape / small tablet ────────────── */
+@media (max-width: 768px) {
+  .pp-page {
+    padding: 0 1.25rem 5rem;
+  }
+
+  /* Hero */
+  .pp-hero {
+    gap: 3rem;
+    padding: 4rem 0 3rem;
+    min-height: auto;
+  }
+
+  .pp-hero h1 {
+    font-size: clamp(2.2rem, 10vw, 3.2rem);
+    line-height: 1.1;
+    letter-spacing: -0.04em;
+  }
+
+  .pp-hero p {
+    font-size: 1.15rem;
+    margin: 0 auto 3rem;
+    max-width: 100%;
+    line-height: 1.5;
+  }
+
+  .pp-hero-visual {
+    max-width: 100%;
+    height: 45vh;
+    border-radius: 32px;
+    /* kill expensive 3D float on mobile */
+    animation: none !important;
+    transform: none !important;
+    box-shadow: 0 20px 50px rgba(0,0,0,0.4);
+  }
+
+  /* disable perspective hover on touch devices */
+  .pp-hero-visual:hover {
+    animation: none !important;
+    transform: scale(1.02) !important;
+    box-shadow: 0 30px 70px rgba(0, 0, 0, 0.5) !important;
+  }
+
+  .pp-scroll-hint {
+    display: none;
+  }
+
+  /* kicker */
+  .pp-kicker {
+    font-size: 0.72rem;
+    padding: 0.5rem 1rem;
+    margin-bottom: 2rem;
+    letter-spacing: 0.1em;
+  }
+
+  /* bento: full-width stacked with better spacing */
+  .pp-bento {
+    grid-template-columns: 1fr;
+    grid-auto-rows: auto;
+    gap: 1.25rem;
+  }
+
+  .pp-bento-item,
+  .pp-bento-item--large {
+    grid-column: span 1;
+    padding: 2.2rem 1.8rem;
+    min-height: 0;
+    border-radius: 28px;
+  }
+
+  .pp-bento-icon {
+    width: 52px;
+    height: 52px;
+    font-size: 1.5rem;
+    margin-bottom: 2rem;
+    border-radius: 16px;
+  }
+
+  .pp-bento-item h3 {
+    font-size: 1.4rem;
+    margin-bottom: 0.75rem;
+    letter-spacing: -0.02em;
+  }
+
+  .pp-bento-item p {
+    font-size: 1.05rem;
+    line-height: 1.6;
+  }
+
+  /* tech grid: 1 col */
+  .pp-tech-grid {
+    grid-template-columns: 1fr;
+    gap: 1.25rem;
+  }
+
+  .pp-card {
+    padding: 2rem 1.75rem;
+    border-radius: 28px;
+  }
+
+  /* metrics */
+  .pp-metrics-strip {
+    flex-direction: column;
+    gap: 2.5rem;
+    padding: 3rem 1.5rem;
+    margin: 4rem 0;
+    border-radius: 32px;
+    background: linear-gradient(180deg, transparent, rgba(58, 143, 62, 0.08), transparent);
+  }
+
+  .pp-metric-val {
+    font-size: 3.2rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .pp-metric-label {
+    font-size: 0.85rem;
+    letter-spacing: 0.25em;
+    opacity: 0.8;
+  }
+
+  .pp-tag {
+    font-size: 0.8rem;
+    padding: 0.5rem 1rem;
+  }
+
+  /* sections */
+  .pp-section {
+    padding: 4rem 0;
+  }
+
+  .pp-section-header {
+    margin-bottom: 3rem;
+    text-align: left;
+  }
+
+  .pp-section-header h2 {
+    font-size: clamp(2rem, 8vw, 2.8rem);
+    text-align: left;
+  }
+
+  .pp-section-header p {
+    font-size: 1.1rem;
+    text-align: left;
+    margin: 0;
+  }
+
+  /* skip card reveal stagger — heavy on mobile */
+  .pp-glass {
+    animation: none;
+  }
+
+  /* buttons */
+  .pp-actions {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 1rem;
+    width: 100%;
+  }
+
+  .pp-btn {
+    width: 100%;
+    justify-content: center;
+    padding: 1.15rem 1.5rem;
+    font-size: 1.05rem;
+    border-radius: 16px;
+  }
+}
+
+/* ── Small mobile ───────────────────────────── */
+@media (max-width: 420px) {
+  .pp-page {
+    padding: 0 0.9rem 3rem;
+  }
+
+  .pp-hero h1 {
+    font-size: clamp(1.65rem, 8vw, 2rem);
+  }
+
+  .pp-bento-item,
+  .pp-bento-item--large {
+    padding: 1.4rem;
+  }
+
+  .pp-card {
+    padding: 1.4rem;
+  }
+
+  .pp-metric-val {
+    font-size: 2rem;
+  }
+
+  .pp-section {
+    padding: 2.5rem 0;
+  }
+
+  .pp-section-header h2 {
+    font-size: 1.6rem;
+  }
+}
+
+/* ── Touch: disable hover transforms ────────────── */
+@media (hover: none) {
+  .pp-glass:hover {
+    transform: none;
+    box-shadow: var(--glass-shadow);
+    border-color: var(--glass-border-color, rgba(255, 255, 255, 0.08));
+  }
+
+  .pp-btn-primary:hover {
+    transform: none;
+  }
+
+  .pp-btn-ghost:hover {
+    transform: none;
+  }
+
+  .pp-glass:hover .pp-bento-icon {
+    transform: none;
+    animation: none;
+  }
+}
+
+
+
+
+/* --- Mobile Enhancements ---------------------------------- */
+@media (max-width: 768px) {
+  .pp-page::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 400px;
+    background: radial-gradient(circle at 50% -20%, rgba(34, 197, 94, 0.12), transparent 70%);
+    pointer-events: none;
+    z-index: -1;
+  }
+
+  .pp-bento-icon {
+    width: 48px;
+    height: 48px;
+    font-size: 1.25rem;
+    background: var(--glass-color-strong);
+    border: 1px solid var(--glass-border-color);
+  }
+
+  .pp-card h3, .pp-bento-item h3 {
+    font-size: 1.4rem;
+    margin-bottom: 0.75rem;
+  }
+
+  .pp-card p, .pp-bento-item p {
+    font-size: 1.05rem;
+    line-height: 1.6;
+    color: var(--text-secondary);
+  }
+}
+
