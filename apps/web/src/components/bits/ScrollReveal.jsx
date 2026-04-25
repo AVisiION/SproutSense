@@ -17,7 +17,8 @@ const ScrollReveal = ({
   textClassName = '',
   rotationEnd = 'bottom bottom',
   wordAnimationEnd = 'bottom bottom',
-  scrollOffset = 0.1 // Percentage of viewport to offset start
+  scrollOffset = 0.1, // Percentage of viewport to offset start
+  delay = 0 // Stagger delay
 }) => {
   const containerRef = useRef(null);
   const isString = typeof children === 'string';
@@ -70,8 +71,7 @@ const ScrollReveal = ({
           trigger: el,
           scroller,
           start: `top bottom-=${scrollOffset * 100}%`,
-          end: rotationEnd,
-          scrub: 1
+          toggleActions: 'play none none none'
         }
       }
     );
@@ -90,13 +90,13 @@ const ScrollReveal = ({
           opacity: 1,
           filter: 'blur(0px)',
           y: 0,
+          delay: delay,
           stagger: isString ? 0.05 : 0.1,
           scrollTrigger: {
             trigger: el,
             scroller,
             start: `top bottom-=${(scrollOffset + 0.1) * 100}%`,
-            end: wordAnimationEnd,
-            scrub: 1
+            toggleActions: 'play none none none'
           }
         }
       );

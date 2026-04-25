@@ -257,7 +257,6 @@ export function PublicAboutPage() {
         </section>
       </ScrollReveal>
 
-      <MobileCta />
     </div>
   );
 }

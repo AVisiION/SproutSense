@@ -18,6 +18,7 @@ import authRoutes from './routes/auth.js';
 import userRoutes from './routes/users.js';
 import roleRoutes from './routes/roles.js';
 import deviceRoutes from './routes/device.js';
+import intelligenceRoutes from './routes/intelligence.routes.js';
 import errorHandler from './middleware/errorHandler.js';
 import { apiLimiter } from './middleware/rateLimiter.js';
 import { requestLogger } from './middleware/commonMiddleware.js';
@@ -165,6 +166,7 @@ app.use('/api/sensors', sensorRoutes);
 app.use('/api/water', wateringRoutes);
 app.use('/api/config', configRoutes);
 app.use('/api/ai', aiRoutes);
+app.use('/api/intelligence', intelligenceRoutes);
 
 // ==========================================
 // 404

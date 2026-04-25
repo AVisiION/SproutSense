@@ -13,23 +13,30 @@
   display          : flex;
   align-items      : center;
   justify-content  : space-between;
-  gap              : 1rem;
-  margin-bottom    : 1.5rem;
-  padding          : 1.25rem var(--layout-horizontal-padding, 1.5rem);
-  min-height       : 5rem;
-  border           : var(--glass-border);
-  border-radius    : 1rem;
-  background       : var(--glass-color);
-  -webkit-backdrop-filter: blur(var(--glass-blur, 18px));
-  backdrop-filter  : blur(var(--glass-blur, 18px));
-  box-shadow       : 0 8px 32px rgba(0,0,0,.10),
-                     inset 0 0 30px var(--surface-1);
-  animation        : navbarSlideIn .1s cubic-bezier(.4,0,.2,1);
+  gap              : 1.5rem;
+  margin           : 1rem 1rem 2rem;
+  padding          : 0.75rem 1.5rem;
+  min-height       : 4.5rem;
+  border           : 1px solid rgba(255, 255, 255, 0.08);
+  border-radius    : 1.25rem;
+  background       : rgba(255, 255, 255, 0.03);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  backdrop-filter  : blur(24px) saturate(180%);
+  box-shadow       : 
+    0 10px 40px rgba(0, 0, 0, 0.15),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.05);
   position         : sticky;
-  top              : 0;
+  top              : 1rem;
   z-index          : 1000;
-  transition       : background .3s, border-color .3s, box-shadow .3s;
-  margin-right     : 0.5rem;
+  transition       : all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.top-navbar:hover {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.12);
+  box-shadow: 
+    0 15px 50px rgba(0, 0, 0, 0.2),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.08);
 }
 
 .top-navbar.public-navbar {
@@ -58,11 +65,11 @@
     0 0 30px var(--surface-active);
 }
 
-.public-navbar .navbar-toggle {
+.public-navbar .navbar-toggle-elite {
   display: none;
 }
 @media (max-width: 768px) {
-  .public-navbar .navbar-toggle {
+  .public-navbar .navbar-toggle-elite {
     display: flex;
   }
 }
@@ -88,45 +95,96 @@
 /* ============================================================
    HAMBURGER TOGGLE
 ============================================================ */
-.navbar-toggle {
-  width         : 2.5rem;
-  height        : 2.5rem;
-  border        : 1px solid var(--border-color);
-  border-radius : 0.65rem;
-  background    : var(--sidebar-hover, rgba(34, 197, 94,.07));
-  color         : var(--text-color);
-  cursor        : pointer;
-  transition    : all .1s cubic-bezier(.4,0,.2,1);
-  display       : flex;
-  align-items   : center;
+/* ============================================================
+   ANTIGRAVITY SPATIAL TOGGLE
+============================================================ */
+.navbar-toggle-spatial {
+  width: 3.2rem;
+  height: 3.2rem;
+  padding: 0;
+  display: flex;
+  align-items: center;
   justify-content: center;
-  font-size     : 1.2rem;
-  position      : relative;
-  overflow      : hidden;
-  margin-left   : 0.2rem;
-  flex-shrink   : 0;
+  cursor: pointer;
+  background: var(--glass-color);
+  border: 1px solid var(--glass-border);
+  border-radius: 1rem;
+  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  position: relative;
+  overflow: visible;
+  perspective: 1000px;
+  transform-style: preserve-3d;
+  -webkit-backdrop-filter: blur(16px);
+  backdrop-filter: blur(16px);
+  box-shadow: 
+    0 10px 20px rgba(0, 0, 0, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
 }
-.navbar-toggle::before {
-  content      : '';
-  position     : absolute;
-  top:50%; left:50%;
-  width:0; height:0;
-  border-radius: 50%;
-  background   : rgba(34, 197, 94,.12);
-  transform    : translate(-50%,-50%);
-  transition   : width .5s, height .5s;
+
+.navbar-toggle-spatial:hover {
+  transform: translateZ(15px) rotateY(-10deg) rotateX(10deg);
+  background: var(--surface-hover);
+  border-color: var(--plant-green);
+  box-shadow: 
+    0 20px 40px rgba(0, 0, 0, 0.2),
+    0 0 15px var(--plant-green-alpha, rgba(34, 197, 94, 0.2));
 }
-.navbar-toggle:hover::before { width:100px; height:100px; }
-.navbar-toggle:hover {
-  border-color: rgba(34, 211, 238, 0.32);
-  background    : rgba(255, 255, 255, 0.04);
-  color       : var(--plant-cyan, #22d3ee);
-  transform   : scale(1.05) rotate(90deg);
-  box-shadow  : 0 8px 22px rgba(34, 197, 94,.12), inset 0 1px 0 var(--border-color);
-  -webkit-backdrop-filter: blur(20px) saturate(180%);
-  backdrop-filter: blur(20px) saturate(180%);
+
+.navbar-toggle-spatial:hover .spatial-glow {
+  opacity: 1;
+  transform: translateZ(-10px) scale(1.2);
 }
-.navbar-toggle:active { transform: scale(0.95); }
+
+.spatial-inner {
+  width: 24px;
+  height: 16px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: center;
+  position: relative;
+  z-index: 2;
+  transform: translateZ(20px); /* Lift bars off the surface */
+}
+
+.navbar-toggle-spatial .bar {
+  width: 100%;
+  height: 2px;
+  background: var(--text-color);
+  border-radius: 10px;
+  display: block;
+  box-shadow: 0 0 8px rgba(0,0,0,0.2);
+  transform-origin: center;
+}
+
+.navbar-toggle-spatial.open .bar {
+  background: var(--plant-cyan);
+  box-shadow: 0 0 12px rgba(34, 211, 238, 0.4);
+}
+
+.spatial-glow {
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: radial-gradient(circle at center, var(--plant-green) 0%, transparent 70%);
+  opacity: 0;
+  filter: blur(15px);
+  transition: all 0.5s ease;
+  z-index: 1;
+  pointer-events: none;
+}
+
+.public-navbar .navbar-toggle-spatial {
+  display: none;
+}
+@media (max-width: 768px) {
+  .public-navbar .navbar-toggle-spatial {
+    display: flex;
+  }
+}
+@media (max-width: 768px) {
+  .navbar-toggle-spatial { margin-left:.5rem; width: 2.8rem; height: 2.8rem; }
+}
+
 
 /* ============================================================
    BRAND
@@ -148,14 +206,14 @@
 }
 .navbar-brand:hover .navbar-brand-icon { transform: scale(1.15); }
 .navbar-brand-text {
-  font-size  : 1.15rem;
+  font-size  : 1.1rem;
   font-weight: 800;
-  background : linear-gradient(135deg,#14b8a6,#22c55e);
-  -webkit-background-clip: text;
-  background-clip        : text;
-  -webkit-text-fill-color: transparent;
-  white-space : nowrap;
-  letter-spacing: -.02em;
+  color: var(--text-color);
+  letter-spacing: -0.02em;
+  opacity: 0.9;
+}
+.navbar-brand-text span {
+  color: var(--plant-green);
 }
 
 /* ============================================================
@@ -231,27 +289,23 @@
 ============================================================ */
 .navbar-alert-btn {
   position      : relative;
-  width         : 2.5rem;
-  height        : 2.5rem;
-  border        : 1px solid var(--border-color);
-  border-radius : 0.65rem;
-  background    : var(--sidebar-hover, rgba(34, 197, 94,.07));
+  width         : 2.8rem;
+  height        : 2.8rem;
+  border        : 1px solid rgba(255, 255, 255, 0.05);
+  border-radius : 0.8rem;
+  background    : rgba(255, 255, 255, 0.02);
   color         : var(--text-color);
   cursor        : pointer;
   display       : flex;
   align-items   : center;
   justify-content: center;
   text-decoration: none;
-  transition    : all .25s;
-  flex-shrink   : 0;
+  transition    : all 0.3s ease;
 }
 .navbar-alert-btn:hover {
-  color       : #fde68a;
-  border-color: rgba(245, 158, 11, 0.28);
-  background  : rgba(255, 255, 255, 0.04);
-  -webkit-backdrop-filter: blur(20px) saturate(180%);
-  backdrop-filter: blur(20px) saturate(180%);
-  box-shadow  : 0 8px 22px rgba(245, 158, 11, 0.10), inset 0 1px 0 rgba(255,255,255,.18);
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.15);
+  transform: translateY(-2px);
 }
 .navbar-alert-btn .glass-icon     { width:1.15rem; height:1.15rem; }
 .navbar-alert-btn .glass-icon svg { width:1.1rem;  height:1.1rem; stroke:currentColor; }
@@ -789,7 +843,7 @@
   .navbar-left  { gap:.75rem; }
   .navbar-right { gap:.6rem; margin-right:.25rem; }
   .navbar-title { font-size:1rem; }
-  .navbar-toggle { margin-left:.5rem; }
+  .navbar-toggle-spatial { margin-left:.5rem; }
   .navbar-connection { font-size:.8rem; padding:.4rem .7rem; }
   .connection-text   { display:none; }
   .navbar-alert-btn  { width:2.25rem; height:2.25rem; }
@@ -810,12 +864,12 @@
     position: static;
   }
 
-  .public-navbar .navbar-toggle {
+  .public-navbar .navbar-toggle-spatial {
     z-index: 10001;
     position: relative;
     border-radius: 50%;
-    width: 3rem;
-    height: 3rem;
+    width: 3.2rem;
+    height: 3.2rem;
     background: var(--success-bg);
     border: 1px solid var(--success-border);
     color: var(--plant-green);
@@ -958,7 +1012,9 @@
 
 @media (max-width: 480px) {
   .top-navbar   { padding:.75rem; min-height:3.75rem; }
-  .navbar-title { font-size:.9rem; }
+  .navbar-title { display: none; }
+  .navbar-brand-text { font-size: 1rem; }
+  .navbar-toggle-spatial { width: 2.8rem; height: 2.8rem; }
   /* Hide connection pill entirely on very small screens */
   .navbar-connection { display:none; }
   .navbar-right { gap:.5rem; }

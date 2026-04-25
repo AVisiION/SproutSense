@@ -420,6 +420,7 @@ const SKELETON_MAP = {
   '/alerts'          : AlertsSkeleton,
   '/controls'        : ControlsSkeleton,
   '/ai'              : AIChatSkeleton,
+  '/intelligence'    : AIChatSkeleton,
   '/esp32'           : ESP32Skeleton,
   '/settings'        : SettingsSkeleton,
   '/admin/panel'     : AdminSkeleton,

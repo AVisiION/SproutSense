@@ -54,8 +54,7 @@ const HomePage = lazy(() => import('./pages/Home/HomePage.jsx'));
 const SettingsPage = lazy(() => import('./pages/Settings/SettingsPage.jsx'));
 const AnalyticsPage = lazy(() => import('./pages/Analytics/AnalyticsPage.jsx'));
 const AlertsPage = lazy(() => import('./pages/Alerts/AlertsPage.jsx'));
-const AIChat = lazy(() => import('./pages/AIChat/AIChat.jsx'));
-const InsightsPage = lazy(() => import('./pages/Insights/InsightsPage.jsx'));
+const IntelligenceHub = lazy(() => import('./pages/Intelligence/IntelligenceHub.jsx'));
 const AdminPanelPage = lazy(() => import('./pages/Admin/AdminPanelPage.jsx'));
 const ViewerReportsPage = lazy(() => import('./pages/Viewer/ViewerReportsPage.jsx'));
 const ESP32StatusPage = lazy(() => import('./pages/ESP32Status/ESP32StatusPage.jsx'));
@@ -124,7 +123,7 @@ const sidebarCategories = [
   {
     label: 'Intelligence',
     items: [
-      { path: '/ai', label: 'Intelligence Hub', icon: 'brain' },
+      { path: '/intelligence', label: 'Intelligence Hub', icon: 'brain' },
     ]
   },
   {
@@ -160,8 +159,7 @@ const routePermissions = {
   '/analytics': [PERMISSION.ANALYTICS_READ],
   '/alerts': [PERMISSION.ANALYTICS_READ],
   '/controls': [PERMISSION.WATERING_START],
-  '/ai': [PERMISSION.AI_CHAT],
-  '/insights': [PERMISSION.AI_INSIGHTS_READ],
+  '/intelligence': [PERMISSION.AI_CHAT],
   '/esp32': [PERMISSION.CONFIG_READ],
   '/settings': [PERMISSION.CONFIG_READ],
   '/viewer/dashboard': [PERMISSION.DASHBOARD_READ],
@@ -214,8 +212,7 @@ const SIDEBAR_KEY_BY_PATH = {
   '/analytics': 'analytics',
   '/alerts': 'alerts',
   '/controls': 'controls',
-  '/ai': 'ai',
-  '/insights': 'insights',
+  '/intelligence': 'ai',
   '/esp32': 'esp32',
   '/settings': 'settings',
 };
@@ -1039,17 +1036,13 @@ function App() {
                 </ProtectedRoute>
               } />
 
-              <Route path="/ai" element={
+              <Route path="/intelligence" element={
                 <ProtectedRoute requiredPermissions={[PERMISSION.AI_CHAT]} requireLinkedDevice>
-                  <PageWrapper><section className="dashboard-section dashboard-section-wide ai-chat-section"><AIChat sensors={sensors} sensorDeviceId={sensorDeviceId} /></section></PageWrapper>
+                  <PageWrapper><section className="dashboard-section dashboard-section-wide"><IntelligenceHub sensors={sensors} sensorDeviceId={sensorDeviceId} /></section></PageWrapper>
                 </ProtectedRoute>
               } />
-
-              <Route path="/insights" element={
-                <ProtectedRoute requiredPermissions={[PERMISSION.AI_CHAT]} requireLinkedDevice>
-                  <PageWrapper><section className="dashboard-section dashboard-section-wide ai-chat-section"><AIChat sensors={sensors} sensorDeviceId={sensorDeviceId} defaultTab="insights" /></section></PageWrapper>
-                </ProtectedRoute>
-              } />
+              <Route path="/ai" element={<Navigate to="/intelligence?tab=chat" replace />} />
+              <Route path="/insights" element={<Navigate to="/intelligence?tab=insights" replace />} />
 
               <Route path="/viewer/dashboard" element={<Navigate to="/sensors" replace />} />
               <Route path="/viewer/analytics" element={<Navigate to="/analytics" replace />} />

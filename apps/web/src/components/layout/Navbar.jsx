@@ -1,5 +1,7 @@
+// apps/web/src/components/layout/Navbar.jsx
 import React, { useMemo, useState, useRef, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import gsap from 'gsap';
 import { GlassIcon } from '../bits/GlassIcon';
 import './styles/Navbar.css';
 
@@ -19,6 +21,8 @@ export function Navbar({
   const [accountPanelOpen, setAccountPanelOpen] = useState(false);
   const accountBtnRef = useRef(null);
   const panelRef = useRef(null);
+  const toggleRef = useRef(null);
+  const barsRef = useRef([]);
 
   // Close panel on outside click
   useEffect(() => {
@@ -63,26 +67,49 @@ export function Navbar({
       await auth.exitImpersonation();
       window.location.assign('/admin/users');
     } catch (error) {
-      // Keep interaction resilient even if session restore fails.
       if (auth?.logout) auth.logout();
       window.location.assign('/login');
     }
   };
 
+  const isMenuOpen = !isSidebarCollapsed && isMobile;
+
+  // GSAP Animation for Toggle
+  useEffect(() => {
+    const bars = barsRef.current;
+    if (!bars.length) return;
+
+    if (isMenuOpen) {
+      gsap.to(bars[0], { y: 6, rotate: 45, duration: 0.4, ease: 'back.out(1.7)' });
+      gsap.to(bars[1], { opacity: 0, scale: 0, duration: 0.3 });
+      gsap.to(bars[2], { y: -6, rotate: -45, duration: 0.4, ease: 'back.out(1.7)' });
+    } else {
+      gsap.to(bars[0], { y: 0, rotate: 0, duration: 0.4, ease: 'elastic.out(1, 0.5)' });
+      gsap.to(bars[1], { opacity: 1, scale: 1, duration: 0.4 });
+      gsap.to(bars[2], { y: 0, rotate: 0, duration: 0.4, ease: 'elastic.out(1, 0.5)' });
+    }
+  }, [isMenuOpen]);
+
   return (
-    <header className={`top-navbar ${isPublicView ? 'public-navbar' : ''} ${!isSidebarCollapsed && isMobile ? 'mobile-menu-open' : ''}`} role="banner">
+    <header className={`top-navbar ${isPublicView ? 'public-navbar' : ''} ${isMenuOpen ? 'mobile-menu-open' : ''}`} role="banner">
       <div className="navbar-left">
         <button
-          className="navbar-toggle"
+          ref={toggleRef}
+          className={`navbar-toggle-spatial ${isMenuOpen ? 'open' : ''}`}
           onClick={toggleSidebar}
           aria-label={isSidebarCollapsed ? 'Open sidebar' : 'Close sidebar'}
-          aria-expanded={!isSidebarCollapsed}
+          aria-expanded={isMenuOpen}
         >
-          {isMobile && !isSidebarCollapsed ? '✕' : '☰'}
+          <div className="spatial-inner">
+            <span ref={el => barsRef.current[0] = el} className="bar top" />
+            <span ref={el => barsRef.current[1] = el} className="bar mid" />
+            <span ref={el => barsRef.current[2] = el} className="bar bot" />
+          </div>
+          <div className="spatial-glow" />
         </button>
 
         {((isSidebarCollapsed && !isMobile) || isPublicView) && (
-          <Link to="/" className="navbar-brand" aria-label="SproutSense home" onClick={() => { if(isMobile && !isSidebarCollapsed) toggleSidebar(); }}>
+          <Link to="/" className="navbar-brand" aria-label="SproutSense home" onClick={() => { if(isMenuOpen) toggleSidebar(); }}>
             <img src="/assets/icon.png" className="navbar-brand-icon" alt="" />
             <span className="navbar-brand-text">SproutSense</span>
           </Link>
@@ -90,12 +117,12 @@ export function Navbar({
 
         <h1 className="navbar-title">{currentPage}</h1>
         {isPublicView && (
-          <nav className={`public-nav-links ${!isSidebarCollapsed && isMobile ? 'open' : ''}`}>
-            <Link to="/about" className={`public-nav-link ${currentPage === 'About' ? 'active' : ''}`} onClick={() => { if(isMobile && !isSidebarCollapsed) toggleSidebar(); }}>About</Link>
-            <Link to="/features" className={`public-nav-link ${currentPage === 'Features' ? 'active' : ''}`} onClick={() => { if(isMobile && !isSidebarCollapsed) toggleSidebar(); }}>Features</Link>
-            <Link to="/plant-library" className={`public-nav-link ${currentPage === 'Plant Library' ? 'active' : ''}`} onClick={() => { if(isMobile && !isSidebarCollapsed) toggleSidebar(); }}>Plant Library</Link>
-            <Link to="/demo" className={`public-nav-link ${currentPage === 'Demo' ? 'active' : ''}`} onClick={() => { if(isMobile && !isSidebarCollapsed) toggleSidebar(); }}>Demo</Link>
-            <Link to="/contact" className={`public-nav-link ${currentPage === 'Contact' ? 'active' : ''}`} onClick={() => { if(isMobile && !isSidebarCollapsed) toggleSidebar(); }}>Contact</Link>
+          <nav className={`public-nav-links ${isMenuOpen ? 'open' : ''}`}>
+            <Link to="/about" className={`public-nav-link ${currentPage === 'About' ? 'active' : ''}`} onClick={() => { if(isMenuOpen) toggleSidebar(); }}>About</Link>
+            <Link to="/features" className={`public-nav-link ${currentPage === 'Features' ? 'active' : ''}`} onClick={() => { if(isMenuOpen) toggleSidebar(); }}>Features</Link>
+            <Link to="/plant-library" className={`public-nav-link ${currentPage === 'Plant Library' ? 'active' : ''}`} onClick={() => { if(isMenuOpen) toggleSidebar(); }}>Plant Library</Link>
+            <Link to="/demo" className={`public-nav-link ${currentPage === 'Demo' ? 'active' : ''}`} onClick={() => { if(isMenuOpen) toggleSidebar(); }}>Demo</Link>
+            <Link to="/contact" className={`public-nav-link ${currentPage === 'Contact' ? 'active' : ''}`} onClick={() => { if(isMenuOpen) toggleSidebar(); }}>Contact</Link>
           </nav>
         )}
       </div>
@@ -129,7 +156,6 @@ export function Navbar({
             </Link>
           </>
         )}
-
 
         <div className="navbar-account-wrap">
           {auth?.isAuthenticated && !isPublicView ? (
@@ -167,7 +193,6 @@ export function Navbar({
             </Link>
           )}
 
-          {/* Account Panel Dropdown */}
           {auth?.isAuthenticated && accountPanelOpen && !isPublicView && (
             <div className="navbar-account-panel" ref={panelRef} tabIndex={-1}>
               <div className="navbar-account-meta">

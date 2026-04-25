@@ -1,289 +1,298 @@
 // apps/web/src/pages/Home/HomePage.jsx
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { GlassIcon } from '../../components/bits/GlassIcon';
-import ScrollReveal from '../../components/bits/ScrollReveal';
+import { motion } from 'framer-motion';
+import gsap from 'gsap';
+import { ScrollTrigger } from 'gsap/ScrollTrigger';
+import { AreaChart, Area, ResponsiveContainer, LineChart, Line, XAxis, YAxis, Tooltip } from 'recharts';
+import { aiAPI, sensorAPI } from '../../utils/api';
 import './HomePage.css';
 
-const HomePage = ({ theme, sensors, isConnected }) => {
+gsap.registerPlugin(ScrollTrigger);
+
+const HomePage = ({ sensors, isConnected }) => {
   const navigate = useNavigate();
-  const [isVisible, setIsVisible] = useState(false);
-  const [isInfoExpanded, setIsInfoExpanded] = useState(false);
+  const heroRef = useRef(null);
+  const [realLogs, setRealLogs] = useState([]);
+  const [historyData, setHistoryData] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [stats, setStats] = useState({ health: 'WAITING', updated: '...' });
 
-  useEffect(() => { setIsVisible(true); }, []);
+  useEffect(() => {
+    const ctx = gsap.context(() => {
+      gsap.from('.hp-v9-title span', {
+        y: 100, opacity: 0, duration: 1.2, stagger: 0.1, ease: 'expo.out'
+      });
+    }, heroRef);
 
-  const soilMoisture = sensors?.soilMoisture ?? 0;
-  const temperature = sensors?.temperature ?? 0;
-  const humidity = sensors?.humidity ?? 0;
-  const light = sensors?.light ?? 0;
-  const flowVolume = sensors?.flowVolume ?? 0;
+    const fetchAllData = async () => {
+      try {
+        setLoading(true);
+        // Fetch Insights and History in parallel
+        const [insRes, histRes] = await Promise.all([
+          aiAPI.getInsights({ days: 1 }),
+          sensorAPI.getHistory(24) // Last 24 hours
+        ]);
 
-  // Derived health score
-  const healthScore = Math.min(100, Math.max(0,
-    (soilMoisture > 30 && soilMoisture < 80 ? 40 : 10) +
-    (temperature > 15 && temperature < 30 ? 30 : 10) +
-    (humidity > 40 && humidity < 70 ? 30 : 10)
-  ));
+        // Process Logs
+        if (insRes.insights) {
+          const logs = insRes.insights.slice(0, 5).map(ins => ({
+            time: new Date(ins.timestamp || Date.now()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+            event: ins.category.replace(/_/g, ' ').toUpperCase(),
+            desc: ins.message,
+            i: ins.category === 'soil_moisture' ? 'droplet' : 
+               ins.category === 'temperature' ? 'temperature-high' : 
+               ins.category === 'light' ? 'sun' : 'leaf',
+            severity: ins.severity
+          }));
+          setRealLogs(logs);
+        }
 
-  const quickStats = [
-    { label: 'Soil Moisture', value: `${soilMoisture}%`, icon: 'watering', status: soilMoisture < 30 ? 'warning' : 'success' },
-    { label: 'Temperature', value: `${temperature}°C`, icon: 'temperature', status: temperature > 35 ? 'warning' : 'success' },
-    { label: 'Humidity', value: `${humidity}%`, icon: 'humidity', status: humidity < 30 ? 'info' : 'success' },
-    { label: 'Light Level', value: `${light}%`, icon: 'monitoring', status: 'success' },
+        // Process History for Chart
+        if (histRes && Array.isArray(histRes)) {
+          const formatted = histRes.map(p => ({
+            time: new Date(p.timestamp).toLocaleTimeString([], { hour: '2-digit' }),
+            moisture: p.soilMoisture,
+            temp: p.temperature
+          }));
+          setHistoryData(formatted);
+
+          // Calculate Health (Example: Average moisture in healthy range 40-70)
+          const avgMoisture = histRes.reduce((acc, curr) => acc + curr.soilMoisture, 0) / histRes.length;
+          const healthStatus = avgMoisture > 40 && avgMoisture < 80 ? 'EXCELLENT' : 'NEEDS_CARE';
+          
+          setStats({
+            health: healthStatus,
+            updated: new Date(histRes[histRes.length - 1].timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+          });
+        }
+
+      } catch (err) {
+        console.error("Failed to fetch data", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchAllData();
+    return () => ctx.revert();
+  }, []);
+
+  const miniTrend = [
+    { v: 10 }, { v: 15 }, { v: 12 }, { v: 18 }, { v: 15 }, { v: 20 }
   ];
 
-  const activityLog = [
-    { time: '10:24 AM', event: 'Pump activated via auto-schedule', type: 'info' },
-    { time: '09:15 AM', event: 'High temperature alert: 36.2°C', type: 'warning' },
-    { time: '08:00 AM', event: 'AI Health Scan: All parameters optimal', type: 'success' },
-    { time: 'Yesterday', event: 'Firmware updated to v3.1.2', type: 'system' },
+  const automationProtocols = [
+    { id: '01', t: 'Sunlight Monitor', d: 'Adjusts light for best growth.', i: 'sun' },
+    { id: '02', t: 'Smart Watering', d: 'Watering when soil gets dry.', i: 'droplet' },
+    { id: '03', t: 'Temp Control', d: 'Keeps plants cozy and safe.', i: 'shield' },
   ];
 
-  const latestAI = {
-    class: 'Healthy',
-    confidence: 98.4,
-    date: '2 hours ago',
-    recommendation: 'Maintain current moisture levels. Next scan scheduled for 4:00 PM.'
+  const expertTips = [
+    { t: 'Morning Care', d: 'Check soil early before sun gets too hot.', i: 'clock' },
+    { t: 'Healthy Leaves', d: 'Stable humidity keeps leaves green and strong.', i: 'leaf' },
+    { t: 'Soil Health', d: 'Adding nutrients every month helps big growth.', i: 'flask' },
+  ];
+
+  const getStatus = () => {
+    const alerts = [];
+    const moisture = sensors?.soilMoisture ?? 0;
+    const temp = sensors?.temperature ?? 0;
+    if (moisture < 35) alerts.push({ type: 'warning', txt: 'Soil is thirsty. Watering soon!' });
+    else alerts.push({ type: 'success', txt: 'Soil moisture is just right.' });
+    if (temp > 32) alerts.push({ type: 'danger', txt: 'It is a bit hot for the plants.' });
+    else alerts.push({ type: 'info', txt: 'Temperature is nice and steady.' });
+    return alerts;
   };
 
+  const statusAlerts = getStatus();
+
   return (
-    <div className={`hp ${isVisible ? 'hp--visible' : ''}`} data-theme={theme}>
-
-      {/* ═══════════════════════════════════════
-          COMMAND HERO
-      ═══════════════════════════════════════ */}
-      <section className="hp-command-hero">
-        <div className="hp-hero-visual">
-          <img
-            src="/assets/dashboard_hero.png"
-            alt="System Visualization"
-            className="hp-hero-img"
-          />
-          <div className="hp-hero-overlay" />
+    <div className="hp-v9" ref={heroRef}>
+      
+      <section className="hp-v9-hero">
+        <div className="hp-v9-header-meta">
+          <span>[ SPROUTSENSE_OS ]</span>
+          <span>EST_LINK: {isConnected ? 'SECURE' : 'LOST'}</span>
         </div>
 
-        <div className="hp-hero-content">
-          <div className="hp-hero-header">
-            <div className="hp-system-status">
-              <span className={`status-pill ${isConnected ? 'online' : 'offline'}`}>
-                <span className="pulse-dot" />
-                {isConnected ? 'System Live' : 'System Offline'}
-              </span>
-              <span className="health-badge">
-                Health Score: {healthScore}%
-              </span>
-            </div>
-            <h1 className="hp-title">SproutSense Command</h1>
+        <div className="hero-content-wrap">
+          <div className="hero-text-side">
+            <h1 className="hp-v9-title">
+              <span className="sprout">Sprout</span>
+              <span className="sense">Sense</span>
+              <span className="accent">Intelligence</span>
+            </h1>
+            <p className="hp-v9-hero-abstract">
+              The future of farming is here. <br />
+              Connected plants. Smarter growth. Simple care.
+            </p>
           </div>
 
-          <div className="hp-hero-stats">
-            <div className="hp-main-stat">
-              <span className="stat-label">Main Controller</span>
-              <span className="stat-value">ESP32-v3.1</span>
-            </div>
-            <div className="hp-main-stat border-l">
-              <span className="stat-label">Active Sensors</span>
-              <span className="stat-value">6 Active</span>
-            </div>
-            <div className="hp-main-stat border-l">
-              <span className="stat-label">Up Time</span>
-              <span className="stat-value">12d 4h</span>
+          <div className="hero-action-side">
+            <div className="hp-v9-hero-cta">
+              <button className="hp-v9-btn-elite" onClick={() => navigate('/intelligence')}>
+                START_MONITORING
+              </button>
+              <div className="hp-v9-sync-pill">
+                <div className={`dot ${isConnected ? 'on' : 'off'}`} />
+                <span>{isConnected ? 'NODE_ACTIVE' : 'OFFLINE_MODE'}</span>
+              </div>
             </div>
           </div>
-
-          <div className="hp-hero-actions">
-            <button className="cmd-btn primary" onClick={() => navigate('/controls')}>
-              <GlassIcon name="watering" /> Quick Water
-            </button>
-            <button className="cmd-btn secondary" onClick={() => navigate('/insights')}>
-              <GlassIcon name="disease" /> AI Scan
-            </button>
-          </div>
-        </div>
-
-        <div className="hp-scroll-hint">
-          <span>SCROLL TO DISCOVER</span>
-          <i className="fa-solid fa-chevron-down" />
         </div>
       </section>
 
-      {/* ═══════════════════════════════════════
-          BENTO DASHBOARD
-      ═══════════════════════════════════════ */}
-      <div className="hp-bento-container">
+      <section className="hp-v9-bento">
         
-        {/* Environment Strip (Full Width) */}
-        <ScrollReveal baseOpacity={0} blurStrength={10} baseRotation={-2} scrollOffset={0.1}>
-          <section className="hp-telemetry-strip hp-glass">
-            <div className="hp-telemetry-item">
-              <span className="hp-metric-label">Soil Moisture</span>
-              <span className="hp-metric-val">{sensors?.soilMoisture ?? '--'}%</span>
-              <div className="hp-metric-status hp-status-active">
-                <i className="fa-solid fa-circle" /> Live
-              </div>
-            </div>
-            <div className="hp-telemetry-item">
-              <span className="hp-metric-label">Air Temp</span>
-              <span className="hp-metric-val">{sensors?.temperature ?? '--'}°C</span>
-            </div>
-            <div className="hp-telemetry-item">
-              <span className="hp-metric-label">Humidity</span>
-              <span className="hp-metric-val">{sensors?.humidity ?? '--'}%</span>
-            </div>
-          </section>
-        </ScrollReveal>
+        {/* GROWTH_GRAPH (REAL TELEMETRY) */}
+        <div className="hp-v9-card AREA_CORE_TELEMETRY">
+          <div className="card-head">
+            <span className="card-label">MOISTURE_TELEMETRY</span>
+            <div className="live-tag">{isConnected ? 'NODE_LIVE' : 'BUFFER_MODE'}</div>
+          </div>
+          <div className="v9-graph">
+            {loading ? (
+              <div className="graph-loader">SYNCING_CHANNELS...</div>
+            ) : (
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart data={historyData}>
+                  <defs>
+                    <linearGradient id="moistureGradient" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="var(--elite-accent)" stopOpacity={0.3}/>
+                      <stop offset="95%" stopColor="var(--elite-accent)" stopOpacity={0}/>
+                    </linearGradient>
+                  </defs>
+                  <Tooltip 
+                    contentStyle={{ background: 'var(--glass-color)', border: 'var(--glass-border)', borderRadius: '12px' }}
+                    itemStyle={{ color: 'var(--elite-accent)' }}
+                  />
+                  <Area type="monotone" dataKey="moisture" stroke="var(--elite-accent)" fillOpacity={1} fill="url(#moistureGradient)" strokeWidth={3} dot={false} />
+                </AreaChart>
+              </ResponsiveContainer>
+            )}
+          </div>
+          <div className="v9-graph-footer">
+            <div className="g-item"><span>VITAL_HEALTH</span><strong>{stats.health}</strong></div>
+            <div className="g-item"><span>LAST_SYNC</span><strong>{stats.updated}</strong></div>
+          </div>
+        </div>
 
-        <ScrollReveal baseOpacity={0} blurStrength={10} baseRotation={3} scrollOffset={0.2}>
-          {/* Sensor Grid (Top Left) */}
-          <section className="bento-item sensor-grid-area">
-            <div className="bento-header">
-              <h3>Environment Telemetry</h3>
-              <button className="view-all-btn" onClick={() => navigate('/sensors')}>Real-time</button>
-            </div>
-            <div className="sensor-compact-grid">
-              {quickStats.map((s) => (
-                <div key={s.label} className={`sensor-pill ${s.status}`}>
-                  <GlassIcon name={s.icon} />
-                  <div className="sensor-pill-info">
-                    <span className="label">{s.label}</span>
-                    <span className="value">{s.value}</span>
+        {/* AI_ASSISTANT */}
+        <div className="hp-v9-card AREA_NEURAL_LINK">
+          <div className="card-head"><span className="card-label">SMART_ALERTS</span></div>
+          <div className="v9-analysis-list">
+            {statusAlerts.map((alert, i) => (
+              <div key={i} className={`analysis-item ${alert.type}`}>
+                <div className="analysis-dot" />
+                <p>{alert.txt}</p>
+              </div>
+            ))}
+          </div>
+          <div className="card-info">
+             <strong>PLANT_HELPER</strong>
+             <span>I am watching your plants!</span>
+          </div>
+        </div>
+
+        {/* METRICS */}
+        <div className="hp-v9-card AREA_REALTIME_METRICS">
+          <div className="card-head">
+            <span className="card-label">SENSORY_DATA</span>
+            <div className="unit-label">SYSTEM_UNITS: SI</div>
+          </div>
+          <div className="v9-pro-metrics">
+            {[
+              { l: 'SOIL_MOISTURE', v: sensors?.soilMoisture ?? 0, u: '%', i: 'droplet' },
+              { l: 'AMBIENT_TEMP', v: sensors?.temperature ?? 0, u: '°C', i: 'temperature-high' },
+              { l: 'AIR_HUMIDITY', v: sensors?.humidity ?? 0, u: '%', i: 'wind' }
+            ].map((m, idx) => (
+              <div key={m.l} className="pro-m-row">
+                <div className="m-meta">
+                  <div className="m-icon"><i className={`fa-solid fa-${m.i}`} /></div>
+                  <div className="m-info">
+                    <span>{m.l}</span>
+                    <strong>{m.v}{m.u}</strong>
                   </div>
                 </div>
-              ))}
-            </div>
-          </section>
-        </ScrollReveal>
-
-        <ScrollReveal baseOpacity={0} blurStrength={10} baseRotation={-3} scrollOffset={0.25}>
-          {/* AI Insight (Top Right) */}
-          <section className="bento-item ai-insight-area" onClick={() => navigate('/insights')}>
-            <div className="bento-header">
-              <h3>Latest AI Diagnosis</h3>
-              <span className="ai-tag">Edge AI</span>
-            </div>
-            <div className="ai-insight-content">
-              <div className="ai-result">
-                <span className="ai-class">{latestAI.class}</span>
-                <span className="ai-conf">{latestAI.confidence}% confidence</span>
-              </div>
-              <p className="ai-rec">{latestAI.recommendation}</p>
-              <span className="ai-date">{latestAI.date}</span>
-            </div>
-          </section>
-        </ScrollReveal>
-
-        <ScrollReveal baseOpacity={0} blurStrength={5} baseRotation={1} scrollOffset={0.3}>
-          {/* Activity Feed (Bottom Left) */}
-          <section className="bento-item activity-feed-area">
-            <div className="bento-header">
-              <h3>System Activity</h3>
-              <GlassIcon name="history" className="header-icon" />
-            </div>
-            <div className="activity-list">
-              {activityLog.map((log, i) => (
-                <div key={i} className={`activity-row ${log.type}`}>
-                  <span className="activity-time">{log.time}</span>
-                  <span className="activity-event">{log.event}</span>
+                <div className="m-spark">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <LineChart data={miniTrend}>
+                      <Line type="monotone" dataKey="v" stroke="var(--elite-accent)" strokeWidth={2} dot={false} />
+                    </LineChart>
+                  </ResponsiveContainer>
                 </div>
-              ))}
-            </div>
-          </section>
-        </ScrollReveal>
+              </div>
+            ))}
+          </div>
+        </div>
 
-        <ScrollReveal baseOpacity={0} blurStrength={5} baseRotation={-1} scrollOffset={0.35}>
-          {/* Device Management (Bottom Right) */}
-          <section className="bento-item device-mgmt-area">
-            <div className="bento-header">
-              <h3>Device Hub</h3>
-            </div>
-            <div className="device-buttons">
-              <button className="device-tile" onClick={() => navigate('/esp32')}>
-                <GlassIcon name="esp32" />
-                <span>Monitoring</span>
-              </button>
-              <button className="device-tile" onClick={() => navigate('/settings')}>
-                <GlassIcon name="settings" />
-                <span>Pairing</span>
-              </button>
-            </div>
-          </section>
-        </ScrollReveal>
+        {/* ACTIVITY */}
+        <div className="hp-v9-card AREA_SYSTEM_LOGS">
+          <div className="card-head"><span className="card-label">SYSTEM_ACTIVITY</span></div>
+          <div className="v9-log-list">
+            {loading ? (
+               <div className="loading-logs">Fetching secure logs...</div>
+            ) : realLogs.length > 0 ? (
+              realLogs.map((act, i) => (
+                <div key={i} className={`log-entry ${act.severity}`}>
+                  <div className="log-time">{act.time}</div>
+                  <div className="log-icon"><i className={`fa-solid fa-${act.i}`} /></div>
+                  <div className="log-txt">
+                    <strong>{act.event}</strong>
+                    <p>{act.desc}</p>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <div className="no-logs">No activity detected.</div>
+            )}
+          </div>
+        </div>
 
-      </div>
+        {/* TIPS */}
+        <div className="hp-v9-card AREA_BIOLOGICAL_TIPS">
+          <div className="card-head"><span className="card-label">EXPERT_TIPS</span></div>
+          <div className="v9-tips-list">
+            {expertTips.map((tip, i) => (
+              <div key={i} className="tip-item">
+                <div className="tip-icon"><i className={`fa-solid fa-${tip.i}`} /></div>
+                <div className="tip-txt">
+                  <strong>{tip.t}</strong>
+                  <p>{tip.d}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
 
-      {/* Philosophical Scroll Reveal */}
-      <section className="hp-quote-section">
-        <ScrollReveal
-          baseOpacity={0.1}
-          enableBlur
-          baseRotation={0}
-          blurStrength={10}
-        >
-          When does a man die? When he is hit by a bullet? No! When he suffers a disease?
-          No! When he ate a soup made out of a poisonous mushroom?
-          No! A man dies when he is forgotten!
-        </ScrollReveal>
+        {/* AUTOMATION */}
+        <div className="hp-v9-card AREA_SYSTEM_PROTOCOLS">
+          <div className="card-head"><span className="card-label">SMART_AUTOMATION</span></div>
+          <div className="v9-protocols">
+            {automationProtocols.map(p => (
+              <div key={p.id} className="p-item">
+                <div className="p-icon"><i className={`fa-solid fa-${p.i}`} /></div>
+                <div className="p-txt">
+                  <span className="p-id">#{p.id}</span>
+                  <h4>{p.t}</h4>
+                  <p>{p.d}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
       </section>
 
-      {/* ═══════════════════════════════════════
-          TECHNICAL INFO (Collapsible)
-      ═══════════════════════════════════════ */}
-      <div className="hp-info-footer">
-        <button
-          className={`info-toggle ${isInfoExpanded ? 'expanded' : ''}`}
-          onClick={() => setIsInfoExpanded(!isInfoExpanded)}
-        >
-          <div className="info-toggle-left">
-            <div className="tech-pulse">
-              <div className="tech-pulse-inner" />
-            </div>
-            <div className="info-labels">
-              <span className="main-label">System Intelligence Core</span>
-              <span className="sub-label">v4.0.2 · Edge Node Architecture · Neural Engine Active</span>
-            </div>
-          </div>
-          <div className="info-toggle-right">
-            <span className="expand-hint">{isInfoExpanded ? 'CONSOLIDATE' : 'DECRYPT SYSTEM DATA'}</span>
-            <div className="toggle-chevron-wrap">
-              <GlassIcon name="chevron-right" />
-            </div>
-          </div>
-        </button>
-        {isInfoExpanded && (
-          <div className="expanded-info-grid">
-            <div className="info-card">
-              <h4>System Architecture</h4>
-              <p>Dual ESP32 nodes (Sensor + CAM) connected via WebSocket bridge to a Node.js/MongoDB cloud cluster.</p>
-            </div>
-            <div className="info-card">
-              <h4>Security & Data</h4>
-              <p>Edge AI processing ensures image privacy, while encrypted device tokens secure telemetry streams.</p>
-            </div>
-            <div className="info-card">
-              <h4>Stack Components</h4>
-              <div className="stack-badges">
-                <span>React 18</span><span>Node.js</span><span>TFLite</span><span>WebSocket</span>
-              </div>
-            </div>
-          </div>
-        )}
-      </div>
-
-      {/* ═══════════════════════════════════════
-          SYSTEM STATUS BAR
-      ═══════════════════════════════════════ */}
-      <footer className="hp-status-bar">
-        <div className="status-group">
-          <span className="dot online" /> <span>API: Online</span>
+      <footer className="hp-v9-footer">
+        <div className="footer-brand">
+          <div className="f-logo">SPROUT<span>SENSE</span></div>
+          <p>Your Digital Garden Partner</p>
         </div>
-        <div className="status-group">
-          <span className="dot online" /> <span>DB: Connected</span>
-        </div>
-        <div className="status-group">
-          <span className="dot online" /> <span>WebSocket: Live</span>
-        </div>
-        <div className="status-timestamp">
-          Last Check: {new Date().toLocaleTimeString()}
+        <div className="footer-meta">
+          <div className="meta-box"><span>SECURITY</span><strong>ACTIVE</strong></div>
+          <div className="meta-box"><span>STATUS</span><strong>ONLINE</strong></div>
         </div>
       </footer>
 
