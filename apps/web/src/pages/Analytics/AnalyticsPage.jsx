@@ -237,6 +237,8 @@ export default function AnalyticsPage() {
   const [activeSensorId, setActiveSensorId] = useState('');
   const [kpi, setKpi] = useState({ waterUsed: 0, avgMoisture: 0, diseaseCount: 0, uptime: 0 });
   const [activeFarmingChart, setActiveFarmingChart] = useState('water');
+  const [isLive, setIsLive] = useState(false);
+  const [lastOnline, setLastOnline] = useState(null);
 
   useEffect(() => {
     const syncVisualPrefs = () => setVisualPrefs(loadVisualPrefs());
@@ -311,6 +313,10 @@ export default function AnalyticsPage() {
       const statusPayload = statusResponse?.data || statusResponse;
       const lastSeenMs = statusPayload?.lastSeen ? new Date(statusPayload.lastSeen).getTime() : 0;
       const isDeviceOnline = Boolean(statusPayload?.online) && Number.isFinite(lastSeenMs) && (Date.now() - lastSeenMs < 5 * 60 * 1000);
+      
+      setIsLive(isDeviceOnline);
+      setLastOnline(statusPayload?.lastSeen || null);
+
       const requestOptions = {
         signal: controller.signal,
         forceLive: isDeviceOnline,
@@ -939,7 +945,27 @@ export default function AnalyticsPage() {
             )}
           </div>
         </motion.div>
+      </div>{/* end .bentoGrid */}
+
+      {/* ── System Status Footer ── */}
+      <div className={styles.statusFooter}>
+        <div className={styles.statusIndicatorWrap}>
+          <div className={`${styles.statusDot} ${isLive ? styles.dotLive : styles.dotOffline}`} />
+          <span className={styles.statusText}>
+            {isLive ? (
+              'SYSTEM_STATUS: REAL-TIME_STREAMING'
+            ) : (
+              `SYSTEM_STATUS: ARCHIVAL_ANALYSIS (Last Seen: ${lastOnline ? format(new Date(lastOnline), 'MMM d, HH:mm') : 'Unknown'})`
+            )}
+          </span>
+        </div>
+        <div className={styles.statusMeta}>
+          <span>SS-PROTOCOL-V9</span>
+          <span className={styles.divider}>|</span>
+          <span>ENCRYPTED_LINK</span>
+        </div>
       </div>
+
     </motion.div>
   );
 }   

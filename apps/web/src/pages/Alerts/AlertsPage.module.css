@@ -304,7 +304,7 @@
 }
 
 .tabBtn:hover   { color: var(--text-primary); }
-.tabActive      { color: var(--text-primary) !important; border-bottom-color: var(--accent-primary); }
+.tabBar .tabActive      { color: var(--text-primary); border-bottom-color: var(--accent-primary); }
 
 .tabBadge {
   background: #ef4444;
@@ -348,7 +348,7 @@
 }
 
 .filterChip:hover  { color: var(--text-primary); background: rgb(0 0 0 / 6%); }
-.filterActive      { background: var(--accent-primary) !important; color: #000 !important; border-color: transparent !important; }
+.filterBar .filterActive      { background: var(--accent-primary); color: #000; border-color: transparent; }
 
 .clearAllBtn {
   margin-left: auto;

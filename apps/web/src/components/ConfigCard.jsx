@@ -233,22 +233,6 @@ export function ConfigCard({ onNotification }) {
   return (
     <div className="cc-root card">
 
-      {/* ══ HEADER ══ */}
-      <div className="cc-header">
-        <span className="cc-header-icon">
-          <Icon name="sliders" />
-        </span>
-        <div className="cc-header-text">
-          <h2 className="cc-title">System Overview</h2>
-          <p className="cc-subtitle">Device settings &amp; historical data</p>
-        </div>
-        {stats.lastUpdate && (
-          <span className="cc-sync-badge">
-            <Icon name="refresh" className="cc-badge-icon" />
-            {format(new Date(stats.lastUpdate), 'HH:mm')}
-          </span>
-        )}
-      </div>
 
       {/* ══ STAT TILES ══ */}
       <div className="cc-stats">

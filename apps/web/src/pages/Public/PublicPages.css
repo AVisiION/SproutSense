@@ -706,21 +706,21 @@
     line-height: 1.5;
   }
 
-  .pp-hero-visual {
+  .pp-page .pp-hero-visual {
     max-width: 100%;
     height: 45vh;
     border-radius: 32px;
     /* kill expensive 3D float on mobile */
-    animation: none !important;
-    transform: none !important;
+    animation: none;
+    transform: none;
     box-shadow: 0 20px 50px rgba(0,0,0,0.4);
   }
 
   /* disable perspective hover on touch devices */
-  .pp-hero-visual:hover {
-    animation: none !important;
-    transform: scale(1.02) !important;
-    box-shadow: 0 30px 70px rgba(0, 0, 0, 0.5) !important;
+  .pp-page .pp-hero-visual:hover {
+    animation: none;
+    transform: scale(1.02);
+    box-shadow: 0 30px 70px rgba(0, 0, 0, 0.5);
   }
 
   .pp-scroll-hint {

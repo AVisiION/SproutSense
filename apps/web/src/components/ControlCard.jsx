@@ -1,19 +1,51 @@
 /**
  * ControlCard.jsx — Redesigned Control Dashboard
- *
- * Sections (each rendered as a panel card):
- *  1. Pump Status Hero   — live ring + Water Now / Stop
- *  2. Timed Watering     — duration slider + start button
- *  3. Auto-Watering      — toggle + moisture threshold slider
- *  4. Daily Schedule     — toggle + time picker
- *  5. Plant & AI         — growth toggle + stage select + AI mode select
- *
- * All GlassIcon usages replaced with Font Awesome 6 icons.
+ * Standardized for "Elite OS" Design System.
  */
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import ElasticSlider from './bits/ElasticSlider';
 import { configAPI, wateringAPI } from '../utils/api';
 import '../styles/controlcard.css';
+
+// ── Smart Tips Data ───────────────────────────────────────────────────
+const TIPS = {
+  general: [
+    "Watering early morning (5-8 AM) reduces fungal risks.",
+    "Consistency is key—automated schedules promote stable growth.",
+    "Soil sensors measure moisture at the root level for accuracy."
+  ],
+  seedling: "Tip: Keep moisture steady (40-60%) for fragile new roots.",
+  vegetative: "Tip: Deeper, less frequent watering encourages robust root depth.",
+  flowering: "Tip: Avoid getting water on blooms to prevent rot.",
+  fruiting: "Tip: Consistent moisture prevents fruit splitting and blossom end rot."
+};
+
+function SmartTip({ text, faIcon = "fa-lightbulb" }) {
+  return (
+    <div className="cc-tip-inline">
+      <i className={`fa-solid ${faIcon} cc-tip-dot`} aria-hidden="true" />
+      <span className="cc-tip-text">{text}</span>
+    </div>
+  );
+}
+
+function IntelligenceGuide({ stage }) {
+  const stageTip = TIPS[stage] || TIPS.general[0];
+  return (
+    <Panel faIcon="fa-brain" title="Intelligence Guide" accent="var(--plant-cyan)" status="Neural Active">
+      <div className="cc-guide-content">
+        <div className="cc-guide-main">
+          <p className="cc-guide-text">{stageTip}</p>
+        </div>
+        <div className="cc-divider" />
+        <div className="cc-guide-footer">
+          <span className="cc-guide-label">Daily Protocol</span>
+          <p className="cc-guide-subtext">{TIPS.general[Math.floor(Math.random() * TIPS.general.length)]}</p>
+        </div>
+      </div>
+    </Panel>
+  );
+}
 
 // ── Reusable toggle ────────────────────────────────────────────────────
 function Toggle({ on, onToggle, disabled, label, hint, faIcon }) {
@@ -43,14 +75,20 @@ function Toggle({ on, onToggle, disabled, label, hint, faIcon }) {
 }
 
 // ── Section panel wrapper ───────────────────────────────────────────
-function Panel({ faIcon, title, accent, children }) {
+function Panel({ faIcon, title, accent, children, status = 'Operational' }) {
   return (
     <div className="cc-panel" style={{ '--cc-accent': accent }}>
       <div className="cc-panel-header">
-        <span className="cc-panel-icon-wrap" aria-hidden="true">
-          <i className={`fa-solid ${faIcon}`} />
-        </span>
-        <h3 className="cc-panel-title">{title}</h3>
+        <div className="cc-panel-header-left">
+          <span className="cc-panel-icon-wrap" aria-hidden="true">
+            <i className={`fa-solid ${faIcon}`} />
+          </span>
+          <h3 className="cc-panel-title">{title}</h3>
+        </div>
+        <div className="cc-panel-status">
+          <span className="cc-status-dot" />
+          {status}
+        </div>
       </div>
       <div className="cc-panel-body">{children}</div>
     </div>
@@ -58,38 +96,22 @@ function Panel({ faIcon, title, accent, children }) {
 }
 
 // ── Pump status ring ───────────────────────────────────────────────
-// Helper to resolve CSS variables for SVG colors
-function getCSSVariableValue(varName) {
-  if (typeof varName !== 'string' || !varName.includes('--')) {
-    return varName; // Return as-is if not a variable
-  }
-  try {
-    const value = getComputedStyle(document.documentElement).getPropertyValue(varName).trim();
-    return value || '#475569'; // fallback
-  } catch {
-    return '#475569'; // fallback
-  }
-}
-
 function PumpRing({ active }) {
-  const color  = getCSSVariableValue(active ? 'var(--control-manual)' : '#475569');
   const R = 38;
   const C = 2 * Math.PI * R;
   return (
-    <div className="cc-pump-ring-wrap">
-      <svg className="cc-pump-ring-svg" viewBox="0 0 96 96" aria-hidden="true">
-        {/* Track */}
-        <circle cx="48" cy="48" r={R} fill="none" strokeWidth="5"
-          stroke="rgba(255,255,255,0.07)" />
-        {/* Arc — always full when active, quarter-arc when idle */}
-        <circle cx="48" cy="48" r={R} fill="none" strokeWidth="5"
-          stroke={color}
+    <div className="cc-pump-ring-wrap" style={{ width: '96px', height: '96px' }}>
+      <svg className="cc-pump-ring-svg" viewBox="0 0 96 96" aria-hidden="true" style={{ width: '96px', height: '96px' }}>
+        <circle cx="48" cy="48" r={R} fill="none" strokeWidth="6"
+          stroke="var(--border-moss)" />
+        <circle cx="48" cy="48" r={R} fill="none" strokeWidth="6"
+          stroke="var(--plant-cyan)"
           strokeLinecap="round"
-          strokeDasharray={active ? `${C} 0` : `${C * 0.25} ${C * 0.75}`}
+          strokeDasharray={active ? `${C} 0` : `${C * 0.3} ${C * 0.7}`}
           strokeDashoffset={C * 0.25}
           style={{
-            filter: active ? `drop-shadow(0 0 8px ${color})` : 'none',
-            transition: 'stroke-dasharray 0.7s cubic-bezier(0.4,0,0.2,1), stroke 0.4s',
+            filter: active ? `drop-shadow(0 0 12px var(--plant-cyan))` : 'none',
+            transition: 'stroke-dasharray 0.8s cubic-bezier(0.16, 1, 0.3, 1)',
           }}
         />
       </svg>
@@ -98,7 +120,9 @@ function PumpRing({ active }) {
           className={`fa-solid fa-water cc-pump-icon${active ? ' cc-pump-icon--on' : ''}`}
           aria-hidden="true"
         />
-        <span className="cc-pump-label">{active ? 'ON' : 'IDLE'}</span>
+        <span className="cc-pump-label">
+          {active ? 'PUMPING' : 'IDLE'}
+        </span>
       </div>
     </div>
   );
@@ -129,6 +153,43 @@ export function ControlCard({
   const [scheduleEnabled,  setScheduleEnabled]  = useState(false);
   const [scheduleTime,     setScheduleTime]     = useState('07:00');
   const [savingSchedule,   setSavingSchedule]   = useState(false);
+  const [wateringLogs,     setWateringLogs]     = useState([]);
+  const [loadingLogs,      setLoadingLogs]      = useState(false);
+
+  const fetchLogs = useCallback(async () => {
+    setLoadingLogs(true);
+    try {
+      const data = await wateringAPI.getLogs(5);
+      setWateringLogs(data || []);
+    } catch (err) {
+      console.error("Failed to fetch watering logs", err);
+    } finally {
+      setLoadingLogs(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchLogs();
+  }, [fetchLogs]);
+
+  useEffect(() => {
+    if (!pumpActive) {
+      fetchLogs();
+    }
+  }, [pumpActive, fetchLogs]);
+
+  const formatDuration = (seconds) => {
+    if (!seconds) return '0s';
+    if (seconds < 60) return `${seconds}s`;
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}m ${secs}s`;
+  };
+
+  const formatLogDate = (dateStr) => {
+    const d = new Date(dateStr);
+    return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  };
 
   const soilMoisture = sensors?.soilMoisture;
   const needsWater   = soilMoisture !== undefined && soilMoisture < moistureThreshold;
@@ -172,23 +233,6 @@ export function ControlCard({
   return (
     <section className="cc-root">
 
-      {/* ===== SECTION HEADER ===== */}
-      <div className="cc-header">
-        <div className="cc-header-left">
-          <i className="fa-solid fa-sliders cc-header-icon" aria-hidden="true" />
-          <div>
-            <h2 className="cc-header-title">Watering Controls</h2>
-            <p className="cc-header-sub">Manual, auto &amp; scheduled irrigation management</p>
-          </div>
-        </div>
-        {/* Pump status badge */}
-        <span className={`cc-pump-badge${pumpActive ? ' cc-pump-badge--on' : ''}`}>
-          <span className="cc-pump-badge-dot" />
-          <i className="fa-solid fa-water" aria-hidden="true" />
-          Pump: {pumpActive ? 'Running' : 'Idle'}
-        </span>
-      </div>
-
       {/* ===== MOISTURE ALERT STRIP ===== */}
       {soilMoisture !== undefined && (
         <div className={`cc-alert${needsWater ? ' cc-alert--warn' : ' cc-alert--ok'}`}>
@@ -205,7 +249,7 @@ export function ControlCard({
       <div className="cc-grid">
 
         {/* 1. Manual Control */}
-        <Panel faIcon="fa-hand" title="Manual Control" accent="var(--control-manual)">
+        <Panel faIcon="fa-hand" title="Manual Control" accent="var(--plant-cyan)">
           <div className="cc-pump-hero">
             <PumpRing active={pumpActive} />
             <div className="cc-pump-btns">
@@ -227,15 +271,18 @@ export function ControlCard({
               </button>
             </div>
           </div>
+          <SmartTip text="Tip: Use for quick soil refreshes." />
         </Panel>
 
         {/* 2. Timed Watering */}
-        <Panel faIcon="fa-hourglass-half" title="Timed Watering" accent="var(--control-timed)">
+        <Panel faIcon="fa-hourglass-half" title="Timed Watering" accent="var(--control-timed, #a78bfa)">
           <div className="cc-field">
-            <div className="cc-field-label">
-              <i className="fa-solid fa-stopwatch" aria-hidden="true" />
-              Duration
-              <span className="cc-field-value-badge">{waterDuration}s</span>
+            <div className="cc-field-row">
+              <div className="cc-field-label">
+                <i className="fa-solid fa-stopwatch" aria-hidden="true" />
+                Duration
+              </div>
+              <span className="cc-field-value">{waterDuration}s</span>
             </div>
             <div className="cc-slider-wrap">
               <ElasticSlider
@@ -249,31 +296,34 @@ export function ControlCard({
               />
             </div>
             <button
-              className="cc-btn cc-btn--primary cc-btn--full"
+              className="cc-btn cc-btn--success cc-btn--full"
               onClick={handleTimedWater}
               disabled={pumpActive}
             >
               <i className="fa-solid fa-hourglass-start" aria-hidden="true" />
-              Start {waterDuration}s Timer
+              Start Timer
             </button>
           </div>
+          <SmartTip text="Auto-shutoff enabled." />
         </Panel>
 
         {/* 3. Auto-Watering */}
-        <Panel faIcon="fa-robot" title="Auto-Watering" accent="var(--control-auto)">
+        <Panel faIcon="fa-robot" title="Auto-Watering" accent="var(--plant-green)">
           <Toggle
             on={autoWater}
             onToggle={handleAutoWaterToggle}
             label="Auto-Water Mode"
-            hint="Triggers pump when soil drops below threshold"
+            hint="Trigger by soil threshold"
             faIcon="fa-droplet"
           />
           <div className="cc-divider" />
           <div className="cc-field">
-            <div className="cc-field-label">
-              <i className="fa-solid fa-ruler-horizontal" aria-hidden="true" />
-              Moisture Threshold
-              <span className="cc-field-value-badge">{moistureThreshold}%</span>
+            <div className="cc-field-row">
+              <div className="cc-field-label">
+                <i className="fa-solid fa-ruler-horizontal" aria-hidden="true" />
+                Threshold
+              </div>
+              <span className="cc-field-value">{moistureThreshold}%</span>
             </div>
             <div className="cc-slider-wrap">
               <ElasticSlider
@@ -296,22 +346,25 @@ export function ControlCard({
                 : <><i className="fa-solid fa-floppy-disk" aria-hidden="true" /> Save Threshold</>}
             </button>
           </div>
+          <SmartTip text="Ideal: 30-40% for most plants." />
         </Panel>
 
         {/* 4. Daily Schedule */}
-        <Panel faIcon="fa-calendar-days" title="Daily Schedule" accent="var(--control-schedule)">
+        <Panel faIcon="fa-calendar-days" title="Daily Schedule" accent="var(--plant-cyan)">
           <Toggle
             on={scheduleEnabled}
             onToggle={() => setScheduleEnabled(s => !s)}
             label="Enable Schedule"
-            hint="Water once daily at the set time"
+            hint="Daily automation"
             faIcon="fa-clock"
           />
           <div className="cc-divider" />
           <div className="cc-field">
-            <div className="cc-field-label">
-              <i className="fa-solid fa-clock" aria-hidden="true" />
-              Schedule Time
+            <div className="cc-field-row">
+              <div className="cc-field-label">
+                <i className="fa-solid fa-clock" aria-hidden="true" />
+                Start Time
+              </div>
             </div>
             <div className="cc-time-row">
               <div className="cc-time-input-wrap">
@@ -330,29 +383,33 @@ export function ControlCard({
                 disabled={savingSchedule || !scheduleEnabled}
               >
                 {savingSchedule
-                  ? <><i className="fa-solid fa-circle-notch fa-spin" aria-hidden="true" /> Saving…</>
-                  : <><i className="fa-solid fa-floppy-disk" aria-hidden="true" /> Save</>}
+                  ? <i className="fa-solid fa-circle-notch fa-spin" aria-hidden="true" />
+                  : <i className="fa-solid fa-floppy-disk" aria-hidden="true" />}
+                Save
               </button>
             </div>
           </div>
+          <SmartTip text="Morning schedule reduces evaporation." />
         </Panel>
 
         {/* 5. Plant & AI Controls */}
-        <Panel faIcon="fa-seedling" title="Plant Growth &amp; AI" accent="var(--control-growth)">
+        <Panel faIcon="fa-seedling" title="Plant & AI" accent="var(--plant-green)">
           <Toggle
             on={!!plantGrowthEnabled}
             onToggle={() => onPlantGrowthEnabledChange?.(!plantGrowthEnabled)}
-            label="Plant Growth Tracking"
-            hint="Enable growth-stage context for automations and AI"
+            label="Growth Tracking"
+            hint="AI optimization"
             faIcon="fa-leaf"
           />
           <div className="cc-divider" />
 
           <div className="cc-field">
-            <label className="cc-field-label" htmlFor="cc-stage-select">
-              <i className="fa-solid fa-seedling" aria-hidden="true" />
-              Growth Stage
-            </label>
+            <div className="cc-field-row">
+              <label className="cc-field-label" htmlFor="cc-stage-select">
+                <i className="fa-solid fa-seedling" aria-hidden="true" />
+                Plant Stage
+              </label>
+            </div>
             <div className="cc-select-wrap">
               <i className="fa-solid fa-chevron-down cc-select-caret" aria-hidden="true" />
               <select
@@ -362,20 +419,22 @@ export function ControlCard({
                 onChange={e => onPlantGrowthStageChange?.(e.target.value)}
                 disabled={!plantGrowthEnabled}
               >
-                <option value="seedling">&#127807; Seedling</option>
-                <option value="vegetative">&#127807; Vegetative</option>
-                <option value="flowering">&#127800; Flowering</option>
-                <option value="fruiting">&#127822; Fruiting</option>
+                <option value="seedling">Seedling</option>
+                <option value="vegetative">Vegetative</option>
+                <option value="flowering">Flowering</option>
+                <option value="fruiting">Fruiting</option>
               </select>
             </div>
           </div>
 
           <div className="cc-field">
-            <label className="cc-field-label" htmlFor="cc-ai-mode-select">
-              <i className="fa-solid fa-brain" aria-hidden="true" />
-              AI Disease Insights Mode
-            </label>
-            <div className="cc-ai-row">
+            <div className="cc-field-row">
+              <label className="cc-field-label" htmlFor="cc-ai-mode-select">
+                <i className="fa-solid fa-brain" aria-hidden="true" />
+                AI Insights
+              </label>
+            </div>
+            <div className="cc-time-row">
               <div className="cc-select-wrap" style={{ flex: 1 }}>
                 <i className="fa-solid fa-chevron-down cc-select-caret" aria-hidden="true" />
                 <select
@@ -384,8 +443,8 @@ export function ControlCard({
                   value={aiInsightsMode}
                   onChange={e => onAiInsightsModeChange?.(e.target.value)}
                 >
-                  <option value="live_feed">&#128247; Live Feed</option>
-                  <option value="snapshots">&#128444; Snapshots</option>
+                  <option value="live_feed">Live Feed</option>
+                  <option value="snapshots">Snapshots</option>
                 </select>
               </div>
               <button
@@ -394,14 +453,52 @@ export function ControlCard({
                 disabled={isAiControlSaving}
               >
                 {isAiControlSaving
-                  ? <><i className="fa-solid fa-circle-notch fa-spin" aria-hidden="true" /> Saving…</>
-                  : <><i className="fa-solid fa-floppy-disk" aria-hidden="true" /> Save</>}
+                  ? <i className="fa-solid fa-circle-notch fa-spin" aria-hidden="true" />
+                  : <i className="fa-solid fa-floppy-disk" aria-hidden="true" />}
+                Save
               </button>
             </div>
           </div>
+          <SmartTip text="AI improves with more data." />
         </Panel>
 
+        {/* 6. Intelligence Guide */}
+        <IntelligenceGuide stage={plantGrowthStage} />
+
       </div>{/* end .cc-grid */}
+
+      {/* ===== WATERING LOGS PANEL ===== */}
+      <div className="cc-panel cc-panel--logs">
+        <div className="cc-panel-header">
+          <div className="cc-panel-header-left">
+            <span className="cc-panel-icon-wrap">
+              <i className="fa-solid fa-clock-rotate-left" />
+            </span>
+            <h3 className="cc-panel-title">Watering History</h3>
+          </div>
+          {loadingLogs && <div className="cc-loading-tag">SYNCING_CHANNELS...</div>}
+        </div>
+
+        <div className="cc-log-list">
+          {wateringLogs.length > 0 ? (
+            wateringLogs.map((log, i) => (
+              <div key={log._id || i} className="cc-log-entry">
+                <div className="cc-log-time">{formatLogDate(log.startedAt)}</div>
+                <div className="cc-log-details">
+                  <div className="cc-log-main">
+                    <span className="cc-log-vol">{log.volumeMl || 0} mL</span>
+                    <span className="cc-log-dur">{formatDuration(log.durationSeconds)}</span>
+                  </div>
+                  <div className="cc-log-status">{log.status?.toUpperCase() || 'COMPLETED'}</div>
+                </div>
+              </div>
+            ))
+          ) : (
+            <div className="cc-no-logs">NO_RECENT_ACTIVITY</div>
+          )}
+        </div>
+      </div>
+
     </section>
   );
 }

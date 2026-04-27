@@ -29,37 +29,35 @@ export function Sidebar({
       </div>
 
       {/* ── Nav links grouped by category ── */}
-      <nav className="sidebar-nav">
-        {sidebarCategories.map((category) => (
-          <div key={category.label} className="sidebar-category">
-            <span className="sidebar-cat-label">{category.label}</span>
+      <div className="sidebar-scroll-area">
+        <nav className="sidebar-nav">
+          {sidebarCategories.map((category) => (
+            <div key={category.label} className="sidebar-category">
+              <span className="sidebar-cat-label">{category.label}</span>
 
-            {category.items.map((item) => (
-              <NavLink
-                key={item.path}
-                to={item.path}
-                className={({ isActive }) =>
-                  `sidebar-link${isActive ? ' active' : ''}`
-                }
-                title={item.label}
-                onClick={closeSidebar}
-              >
-                {/* Icon with optional badge / status dot */}
-                <span className="sidebar-icon-wrap">
-                  <GlassIcon name={item.icon} className="sidebar-icon" />
-
-                  {/* Alert count badge */}
-                  {item.path === '/alerts' && alerts.length > 0 && (
-                    <span className="sidebar-badge">{alerts.length}</span>
-                  )}
-                </span>
-
-                <span className="sidebar-label">{item.label}</span>
-              </NavLink>
-            ))}
-          </div>
-        ))}
-      </nav>
+              {category.items.map((item) => (
+                <NavLink
+                  key={item.path}
+                  to={item.path}
+                  className={({ isActive }) =>
+                    `sidebar-link${isActive ? ' active' : ''}`
+                  }
+                  title={item.label}
+                  onClick={closeSidebar}
+                >
+                  <span className="sidebar-icon-wrap">
+                    <GlassIcon name={item.icon} className="sidebar-icon" />
+                    {item.path === '/alerts' && alerts.length > 0 && (
+                      <span className="sidebar-badge">{alerts.length}</span>
+                    )}
+                  </span>
+                  <span className="sidebar-label">{item.label}</span>
+                </NavLink>
+              ))}
+            </div>
+          ))}
+        </nav>
+      </div>
     </aside>
   );
 }

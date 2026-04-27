@@ -86,10 +86,12 @@ img, picture, video, svg, canvas { max-width:100%; height:auto; display:block; }
    REDUCED MOTION
 ─────────────────────────────────────────────────── */
 @media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
+  html *,
+  html *::before,
+  html *::after {
+    animation-duration: 0.01ms;
+    animation-iteration-count: 1;
+    transition-duration: 0.01ms;
   }
 }
 

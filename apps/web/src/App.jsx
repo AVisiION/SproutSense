@@ -316,6 +316,8 @@ function App() {
   });
   const [notification, setNotification] = useState({ message: '', type: 'info' });
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+  const [isScrolling, setIsScrolling] = useState(false);
+  const scrollTimeoutRef = useRef(null);
   const [moistureThreshold, setMoistureThreshold] = useState(30);
   const [isThresholdSaving, setIsThresholdSaving] = useState(false);
   const [alerts, setAlerts] = useState([]);
@@ -467,6 +469,64 @@ function App() {
 
   const toggleSidebar = () => setIsSidebarCollapsed(prev => !prev);
   const closeSidebar  = () => { if (isMobile) setIsSidebarCollapsed(true); };
+
+  // ── Edge Swipe Support for Mobile ──
+  useEffect(() => {
+    if (!isMobile) return;
+
+    let touchStartX = 0;
+    let touchStartTime = 0;
+
+    const handleTouchStart = (e) => {
+      touchStartX = e.touches[0].clientX;
+      touchStartTime = Date.now();
+    };
+
+    const handleTouchEnd = (e) => {
+      const touchEndX = e.changedTouches[0].clientX;
+      const duration = Date.now() - touchStartTime;
+      const distance = touchEndX - touchStartX;
+
+      // Detect swipe from left edge (within 50px) to right
+      if (touchStartX < 50 && distance > 100 && duration < 300) {
+        if (isSidebarCollapsed) setIsSidebarCollapsed(false);
+      }
+      // Detect swipe to left to close
+      if (!isSidebarCollapsed && distance < -80 && duration < 300) {
+        setIsSidebarCollapsed(true);
+      }
+    };
+
+    document.addEventListener('touchstart', handleTouchStart, { passive: true });
+    document.addEventListener('touchend', handleTouchEnd, { passive: true });
+    return () => {
+      document.removeEventListener('touchstart', handleTouchStart);
+      document.removeEventListener('touchend', handleTouchEnd);
+    };
+  }, [isMobile, isSidebarCollapsed]);
+
+  // ── Scroll Listener for Sidebar Stealth Mode ──
+  useEffect(() => {
+    const handleScroll = () => {
+      if (!isSidebarCollapsed) return;
+      
+      setIsScrolling(true);
+      
+      if (scrollTimeoutRef.current) {
+        clearTimeout(scrollTimeoutRef.current);
+      }
+      
+      scrollTimeoutRef.current = setTimeout(() => {
+        setIsScrolling(false);
+      }, 1000); // Hide for 1s after scroll stops
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+      if (scrollTimeoutRef.current) clearTimeout(scrollTimeoutRef.current);
+    };
+  }, [isSidebarCollapsed]);
 
   const filteredSidebarCategories = sidebarCategories
     .map((category) => ({
@@ -813,14 +873,27 @@ function App() {
         speed={AURORA_SPEED}
       />
 
-      <div className={`app-shell${isSidebarCollapsed ? ' sidebar-collapsed' : ''}${isPublicPage ? ' public-shell' : ''}`} style={{ position: 'relative', zIndex: 1 }}>
+      <div className={`app-shell${isSidebarCollapsed ? ' sidebar-collapsed' : ''}${isPublicPage ? ' public-shell' : ''}${isScrolling ? ' is-scrolling' : ''}`} style={{ position: 'relative', zIndex: 1 }}>
 
         {!isSidebarCollapsed && isMobile && (
           <div className="sidebar-overlay" onClick={closeSidebar} />
         )}
 
+        <Navbar
+          currentPage={pageTitle}
+          isMobile={isMobile}
+          isSidebarCollapsed={isSidebarCollapsed}
+          toggleSidebar={toggleSidebar}
+          theme={theme}
+          toggleTheme={toggleTheme}
+          alertCount={isGuestPublic || uiPreferences?.widgets?.showAlertBadge === false ? 0 : alerts.length}
+          isConnected={isConnected}
+          auth={auth}
+          isPublicView={isGuestPublic}
+        />
+
         {/* ── Fixed sidebar ── */}
-        <aside className="sidebar" role="navigation" aria-label="Main navigation">
+        <aside className={`sidebar ${isScrolling ? 'scrolling-hidden' : ''}`} role="navigation" aria-label="Main navigation">
           <div className="sidebar-brand">
             <img src="/assets/icon.png" className="sidebar-brand-icon" alt="SproutSense logo" />
             <span className="sidebar-brand-text">SproutSense</span>
@@ -859,7 +932,15 @@ function App() {
             ))}
           </nav>
 
-
+          <div className="sidebar-footer">
+            <button className="sidebar-logout-btn" onClick={auth.logout} aria-label="Sign out">
+              <span className="sidebar-icon-wrap">
+                <GlassIcon name="logout" className="sidebar-icon" />
+              </span>
+              <span className="sidebar-label">Sign Out</span>
+              <div className="logout-glow" />
+            </button>
+          </div>
         </aside>
 
         {/* ── Main content area ── */}
@@ -867,18 +948,6 @@ function App() {
           
           <MockBanner />
 
-          <Navbar
-            currentPage={pageTitle}
-            isMobile={isMobile}
-            isSidebarCollapsed={isSidebarCollapsed}
-            toggleSidebar={toggleSidebar}
-            theme={theme}
-            toggleTheme={toggleTheme}
-            alertCount={isGuestPublic || uiPreferences?.widgets?.showAlertBadge === false ? 0 : alerts.length}
-            isConnected={isConnected}
-            auth={auth}
-            isPublicView={isGuestPublic}
-          />
 
           {notification.message && (
             <Notification message={notification.message} type={notification.type} onClose={closeNotification} />

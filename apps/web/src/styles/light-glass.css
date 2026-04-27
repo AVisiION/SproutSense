@@ -11,317 +11,317 @@
    SHARED LIGHT GLASS MIXIN (applied via class)
    Any element with .glass or .card in light mode
 ══════════════════════════════════════════════════════ */
-[data-theme="light"] .card,
-[data-theme="light"] .glass-card,
-[data-theme="light"] .sensor-card,
-[data-theme="light"] .config-card,
-[data-theme="light"] .control-card,
-[data-theme="light"] .chart-card,
-[data-theme="light"] .info-card,
-[data-theme="light"] .stat-card {
-  background: rgba(255, 255, 255, 0.55) !important;
-  border: 1px solid rgba(255, 255, 255, 0.75) !important;
+html[data-theme="light"] .card,
+html[data-theme="light"] .glass-card,
+html[data-theme="light"] .sensor-card,
+html[data-theme="light"] .config-card,
+html[data-theme="light"] .control-card,
+html[data-theme="light"] .chart-card,
+html[data-theme="light"] .info-card,
+html[data-theme="light"] .stat-card {
+  background: rgba(255, 255, 255, 0.55);
+  border: 1px solid rgba(255, 255, 255, 0.75);
   box-shadow:
     0 8px 32px rgba(10, 40, 15, 0.12),
-    inset 0 1px 0 rgba(255, 255, 255, 0.90) !important;
-  -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
-  backdrop-filter: blur(20px) saturate(180%) !important;
+    inset 0 1px 0 rgba(255, 255, 255, 0.90);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  backdrop-filter: blur(20px) saturate(180%);
 }
 
 /* ══════════════════════════════════════════════════════
    NAVBAR / TOPBAR
 ══════════════════════════════════════════════════════ */
-[data-theme="light"] .navbar,
-[data-theme="light"] .topbar,
-[data-theme="light"] nav.main-nav,
-[data-theme="light"] header.app-header {
-  background: rgba(235, 245, 236, 0.72) !important;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.80) !important;
-  box-shadow: 0 2px 16px rgba(10, 40, 15, 0.09), inset 0 -1px 0 rgba(255,255,255,0.60) !important;
-  -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
-  backdrop-filter: blur(20px) saturate(180%) !important;
+html[data-theme="light"] .navbar,
+html[data-theme="light"] .topbar,
+html[data-theme="light"] nav.main-nav,
+html[data-theme="light"] header.app-header {
+  background: rgba(235, 245, 236, 0.72);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.80);
+  box-shadow: 0 2px 16px rgba(10, 40, 15, 0.09), inset 0 -1px 0 rgba(255,255,255,0.60);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  backdrop-filter: blur(20px) saturate(180%);
 }
 
 /* ══════════════════════════════════════════════════════
    SIDEBAR
 ══════════════════════════════════════════════════════ */
-[data-theme="light"] .sidebar,
-[data-theme="light"] aside.sidebar {
-  background: rgba(220, 240, 223, 0.72) !important;
-  border-right: 1px solid rgba(255, 255, 255, 0.75) !important;
-  box-shadow: 2px 0 20px rgba(10, 40, 15, 0.09), inset -1px 0 0 rgba(255,255,255,0.60) !important;
-  -webkit-backdrop-filter: blur(20px) saturate(175%) !important;
-  backdrop-filter: blur(20px) saturate(175%) !important;
+html[data-theme="light"] .sidebar,
+html[data-theme="light"] aside.sidebar {
+  background: rgba(220, 240, 223, 0.72);
+  border-right: 1px solid rgba(255, 255, 255, 0.75);
+  box-shadow: 2px 0 20px rgba(10, 40, 15, 0.09), inset -1px 0 0 rgba(255,255,255,0.60);
+  -webkit-backdrop-filter: blur(20px) saturate(175%);
+  backdrop-filter: blur(20px) saturate(175%);
 }
 
 /* ══════════════════════════════════════════════════════
    MODALS & DIALOGS
 ══════════════════════════════════════════════════════ */
-[data-theme="light"] .modal,
-[data-theme="light"] .dialog,
-[data-theme="light"] .modal-content,
-[data-theme="light"] .dropdown-menu,
-[data-theme="light"] .popup {
-  background: rgba(255, 255, 255, 0.72) !important;
-  border: 1px solid rgba(255, 255, 255, 0.85) !important;
+html[data-theme="light"] .modal,
+html[data-theme="light"] .dialog,
+html[data-theme="light"] .modal-content,
+html[data-theme="light"] .dropdown-menu,
+html[data-theme="light"] .popup {
+  background: rgba(255, 255, 255, 0.72);
+  border: 1px solid rgba(255, 255, 255, 0.85);
   box-shadow:
     0 20px 60px rgba(10, 40, 15, 0.18),
-    inset 0 1px 0 rgba(255, 255, 255, 0.95) !important;
-  -webkit-backdrop-filter: blur(28px) saturate(190%) !important;
-  backdrop-filter: blur(28px) saturate(190%) !important;
+    inset 0 1px 0 rgba(255, 255, 255, 0.95);
+  -webkit-backdrop-filter: blur(28px) saturate(190%);
+  backdrop-filter: blur(28px) saturate(190%);
 }
 
 /* ══════════════════════════════════════════════════════
    INPUT FIELDS
    Frosted white over the mint bg — not opaque white
 ══════════════════════════════════════════════════════ */
-[data-theme="light"] input,
-[data-theme="light"] textarea,
-[data-theme="light"] select,
-[data-theme="light"] .sp-input {
-  background: rgba(255, 255, 255, 0.60) !important;
-  border-color: rgba(255, 255, 255, 0.75) !important;
-  color: var(--text-color) !important;
-  -webkit-backdrop-filter: blur(10px) !important;
-  backdrop-filter: blur(10px) !important;
+html[data-theme="light"] input,
+html[data-theme="light"] textarea,
+html[data-theme="light"] select,
+html[data-theme="light"] .sp-input {
+  background: rgba(255, 255, 255, 0.60);
+  border-color: rgba(255, 255, 255, 0.75);
+  color: var(--text-color);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
 }
-[data-theme="light"] input:focus,
-[data-theme="light"] textarea:focus,
-[data-theme="light"] select:focus,
-[data-theme="light"] .sp-input:focus {
-  background: rgba(255, 255, 255, 0.82) !important;
-  border-color: rgba(46, 125, 50, 0.50) !important;
-  box-shadow: 0 0 0 3px rgba(46, 125, 50, 0.14) !important;
+html[data-theme="light"] input:focus,
+html[data-theme="light"] textarea:focus,
+html[data-theme="light"] select:focus,
+html[data-theme="light"] .sp-input:focus {
+  background: rgba(255, 255, 255, 0.82);
+  border-color: rgba(46, 125, 50, 0.50);
+  box-shadow: 0 0 0 3px rgba(46, 125, 50, 0.14);
 }
 
 /* sp-input-wrap in light mode */
-[data-theme="light"] .sp-input-wrap,
-[data-theme="light"] .aln-input-wrap {
-  background: rgba(255, 255, 255, 0.55) !important;
-  border-color: rgba(255, 255, 255, 0.80) !important;
-  -webkit-backdrop-filter: blur(12px) saturate(160%) !important;
-  backdrop-filter: blur(12px) saturate(160%) !important;
-  box-shadow: inset 0 1px 0 rgba(255,255,255,0.90), 0 1px 4px rgba(10,40,15,0.07) !important;
+html[data-theme="light"] .sp-input-wrap,
+html[data-theme="light"] .aln-input-wrap {
+  background: rgba(255, 255, 255, 0.55);
+  border-color: rgba(255, 255, 255, 0.80);
+  -webkit-backdrop-filter: blur(12px) saturate(160%);
+  backdrop-filter: blur(12px) saturate(160%);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.90), 0 1px 4px rgba(10,40,15,0.07);
 }
-[data-theme="light"] .sp-input-wrap:focus-within,
-[data-theme="light"] .aln-input-wrap:focus-within {
-  background: rgba(255, 255, 255, 0.80) !important;
-  border-color: rgba(46, 125, 50, 0.45) !important;
+html[data-theme="light"] .sp-input-wrap:focus-within,
+html[data-theme="light"] .aln-input-wrap:focus-within {
+  background: rgba(255, 255, 255, 0.80);
+  border-color: rgba(46, 125, 50, 0.45);
   box-shadow:
     0 0 0 3px rgba(46, 125, 50, 0.14),
-    inset 0 1px 0 rgba(255,255,255,0.95) !important;
+    inset 0 1px 0 rgba(255,255,255,0.95);
 }
-[data-theme="light"] .sp-input-icon,
-[data-theme="light"] .aln-input-icon {
-  background: rgba(255, 255, 255, 0.40) !important;
-  border-right-color: rgba(255, 255, 255, 0.65) !important;
-  color: var(--text-tertiary) !important;
+html[data-theme="light"] .sp-input-icon,
+html[data-theme="light"] .aln-input-icon {
+  background: rgba(255, 255, 255, 0.40);
+  border-right-color: rgba(255, 255, 255, 0.65);
+  color: var(--text-tertiary);
 }
 
 /* ══════════════════════════════════════════════════════
    BUTTONS
 ══════════════════════════════════════════════════════ */
-[data-theme="light"] .btn-ghost,
-[data-theme="light"] .btn-secondary,
-[data-theme="light"] .sp-btn--secondary,
-[data-theme="light"] .hp-btn--ghost {
-  background: rgb(0 0 0 / 3%) !important;
-  border: 1px solid rgba(255, 255, 255, 0.80) !important;
-  color: var(--text-color) !important;
-  -webkit-backdrop-filter: blur(12px) !important;
-  backdrop-filter: blur(12px) !important;
-  box-shadow: inset 0 1px 0 rgba(255,255,255,0.90), 0 2px 8px rgba(10,40,15,0.08) !important;
+html[data-theme="light"] .btn-ghost,
+html[data-theme="light"] .btn-secondary,
+html[data-theme="light"] .sp-btn--secondary,
+html[data-theme="light"] .hp-btn--ghost {
+  background: rgb(0 0 0 / 3%);
+  border: 1px solid rgba(255, 255, 255, 0.80);
+  color: var(--text-color);
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.90), 0 2px 8px rgba(10,40,15,0.08);
 }
-[data-theme="light"] .btn-ghost:hover,
-[data-theme="light"] .btn-secondary:hover,
-[data-theme="light"] .sp-btn--secondary:hover,
-[data-theme="light"] .hp-btn--ghost:hover {
-  background: rgb(0 0 0 / 6%) !important;
-  border-color: rgba(46, 125, 50, 0.35) !important;
-  box-shadow: inset 0 1px 0 rgba(255,255,255,1), 0 4px 14px rgba(10,40,15,0.12) !important;
+html[data-theme="light"] .btn-ghost:hover,
+html[data-theme="light"] .btn-secondary:hover,
+html[data-theme="light"] .sp-btn--secondary:hover,
+html[data-theme="light"] .hp-btn--ghost:hover {
+  background: rgb(0 0 0 / 6%);
+  border-color: rgba(46, 125, 50, 0.35);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,1), 0 4px 14px rgba(10,40,15,0.12);
 }
 
 /* ══════════════════════════════════════════════════════
    SETTINGS PAGE — sp-card in light
 ══════════════════════════════════════════════════════ */
-[data-theme="light"] .sp-card {
-  background: var(--sp-card-light-bg) !important;
-  border: var(--sp-card-light-border) !important;
-  box-shadow: var(--sp-card-light-shadow) !important;
-  -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
-  backdrop-filter: blur(20px) saturate(180%) !important;
+html[data-theme="light"] .sp-card {
+  background: var(--sp-card-light-bg);
+  border: var(--sp-card-light-border);
+  box-shadow: var(--sp-card-light-shadow);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  backdrop-filter: blur(20px) saturate(180%);
 }
-[data-theme="light"] .sp-card:hover {
-  border-color: var(--sp-card-light-hover-border) !important;
-  box-shadow: var(--sp-card-light-hover-shadow) !important;
+html[data-theme="light"] .sp-card:hover {
+  border-color: var(--sp-card-light-hover-border);
+  box-shadow: var(--sp-card-light-hover-shadow);
 }
-[data-theme="light"] .sp-card-head {
-  border-bottom-color: var(--sp-card-light-head-border) !important;
+html[data-theme="light"] .sp-card-head {
+  border-bottom-color: var(--sp-card-light-head-border);
 }
-[data-theme="light"] .sp-row {
-  border-bottom-color: rgba(46, 125, 50, 0.08) !important;
+html[data-theme="light"] .sp-row {
+  border-bottom-color: rgba(46, 125, 50, 0.08);
 }
-[data-theme="light"] .sp-toggle:not(.on) {
-  background: rgba(46, 125, 50, 0.12) !important;
+html[data-theme="light"] .sp-toggle:not(.on) {
+  background: rgba(46, 125, 50, 0.12);
 }
-[data-theme="light"] .sp-tab {
-  background: rgba(255,255,255,0.50) !important;
-  border-color: rgba(255,255,255,0.75) !important;
+html[data-theme="light"] .sp-tab {
+  background: rgba(255,255,255,0.50);
+  border-color: rgba(255,255,255,0.75);
 }
-[data-theme="light"] .sp-tab.active {
-  background: rgba(46, 125, 50, 0.12) !important;
-  border-color: rgba(46, 125, 50, 0.30) !important;
-  color: #1B5E20 !important;
+html[data-theme="light"] .sp-tab.active {
+  background: rgba(46, 125, 50, 0.12);
+  border-color: rgba(46, 125, 50, 0.30);
+  color: #1B5E20;
 }
 
 /* ══════════════════════════════════════════════════════
    HOME PAGE glass cards in light
 ══════════════════════════════════════════════════════ */
-[data-theme="light"] .hp-stat-card,
-[data-theme="light"] .feature-card-new,
-[data-theme="light"] .hp-arch-card,
-[data-theme="light"] .hp-tech-card,
-[data-theme="light"] .hp-glass-card {
-  background: rgba(255, 255, 255, 0.55) !important;
-  border: 1px solid rgba(255, 255, 255, 0.80) !important;
-  box-shadow: 0 6px 24px rgba(10,40,15,0.10), inset 0 1px 0 rgba(255,255,255,0.95) !important;
-  -webkit-backdrop-filter: blur(18px) saturate(180%) !important;
-  backdrop-filter: blur(18px) saturate(180%) !important;
+html[data-theme="light"] .hp-stat-card,
+html[data-theme="light"] .feature-card-new,
+html[data-theme="light"] .hp-arch-card,
+html[data-theme="light"] .hp-tech-card,
+html[data-theme="light"] .hp-glass-card {
+  background: rgba(255, 255, 255, 0.55);
+  border: 1px solid rgba(255, 255, 255, 0.80);
+  box-shadow: 0 6px 24px rgba(10,40,15,0.10), inset 0 1px 0 rgba(255,255,255,0.95);
+  -webkit-backdrop-filter: blur(18px) saturate(180%);
+  backdrop-filter: blur(18px) saturate(180%);
 }
-[data-theme="light"] .hp-tech-badge {
-  background: rgba(255, 255, 255, 0.45) !important;
-  border-color: rgba(255, 255, 255, 0.70) !important;
+html[data-theme="light"] .hp-tech-badge {
+  background: rgba(255, 255, 255, 0.45);
+  border-color: rgba(255, 255, 255, 0.70);
 }
-[data-theme="light"] .hp-action-btn {
-  background: rgba(255, 255, 255, 0.55) !important;
-  border-color: rgba(255, 255, 255, 0.80) !important;
-  box-shadow: inset 0 1px 0 rgba(255,255,255,0.90), 0 2px 8px rgba(10,40,15,0.07) !important;
+html[data-theme="light"] .hp-action-btn {
+  background: rgba(255, 255, 255, 0.55);
+  border-color: rgba(255, 255, 255, 0.80);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.90), 0 2px 8px rgba(10,40,15,0.07);
 }
-[data-theme="light"] .hp-action-btn:hover {
-  background: rgba(255,255,255,0.80) !important;
-  border-color: rgba(46,125,50,0.30) !important;
+html[data-theme="light"] .hp-action-btn:hover {
+  background: rgba(255,255,255,0.80);
+  border-color: rgba(46,125,50,0.30);
 }
 
 /* ══════════════════════════════════════════════════════
    ADMIN LOGIN in light
 ══════════════════════════════════════════════════════ */
-[data-theme="light"] .aln-root {
+html[data-theme="light"] .aln-root {
   background:
     linear-gradient(145deg, #DCF0DF 0%, #C9E6CD 45%, #B8DABD 75%, #DCF0DF 100%);
 }
-[data-theme="light"] .aln-card {
-  background: rgba(255, 255, 255, 0.65) !important;
-  border: 1px solid rgba(255, 255, 255, 0.85) !important;
+html[data-theme="light"] .aln-card {
+  background: rgba(255, 255, 255, 0.65);
+  border: 1px solid rgba(255, 255, 255, 0.85);
   box-shadow:
     0 20px 60px rgba(10, 40, 15, 0.18),
-    inset 0 1px 0 rgba(255, 255, 255, 0.95) !important;
-  -webkit-backdrop-filter: blur(28px) saturate(190%) !important;
-  backdrop-filter: blur(28px) saturate(190%) !important;
+    inset 0 1px 0 rgba(255, 255, 255, 0.95);
+  -webkit-backdrop-filter: blur(28px) saturate(190%);
+  backdrop-filter: blur(28px) saturate(190%);
 }
-[data-theme="light"] .aln-title {
-  background: linear-gradient(90deg, #1B5E20, #00695C) !important;
-  -webkit-background-clip: text !important;
-  -webkit-text-fill-color: transparent !important;
-  background-clip: text !important;
+html[data-theme="light"] .aln-title {
+  background: linear-gradient(90deg, #1B5E20, #00695C);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
-[data-theme="light"] .aln-status-row {
-  background: rgba(46, 125, 50, 0.08) !important;
-  border-color: rgba(46, 125, 50, 0.22) !important;
-  color: #1B5E20 !important;
+html[data-theme="light"] .aln-status-row {
+  background: rgba(46, 125, 50, 0.08);
+  border-color: rgba(46, 125, 50, 0.22);
+  color: #1B5E20;
 }
-[data-theme="light"] .aln-glow--1 { background: radial-gradient(circle, rgba(100,200,105,0.35) 0%, transparent 70%); }
-[data-theme="light"] .aln-glow--2 { background: radial-gradient(circle, rgba(0,180,166,0.28)   0%, transparent 70%); }
-[data-theme="light"] .aln-glow--3 { background: radial-gradient(circle, rgba(56,142,60,0.24)    0%, transparent 70%); }
+html[data-theme="light"] .aln-glow--1 { background: radial-gradient(circle, rgba(100,200,105,0.35) 0%, transparent 70%); }
+html[data-theme="light"] .aln-glow--2 { background: radial-gradient(circle, rgba(0,180,166,0.28)   0%, transparent 70%); }
+html[data-theme="light"] .aln-glow--3 { background: radial-gradient(circle, rgba(56,142,60,0.24)    0%, transparent 70%); }
 
 /* ══════════════════════════════════════════════════════
    ADMIN PANEL in light
 ══════════════════════════════════════════════════════ */
-[data-theme="light"] .adm-root {
+html[data-theme="light"] .adm-root {
   background: linear-gradient(145deg, #DCF0DF 0%, #C9E6CD 50%, #DCF0DF 100%);
 }
-[data-theme="light"] .adm-sidebar {
-  background: rgba(220, 240, 223, 0.72) !important;
-  border-right-color: rgba(255, 255, 255, 0.75) !important;
-  -webkit-backdrop-filter: blur(20px) saturate(175%) !important;
-  backdrop-filter: blur(20px) saturate(175%) !important;
+html[data-theme="light"] .adm-sidebar {
+  background: rgba(220, 240, 223, 0.72);
+  border-right-color: rgba(255, 255, 255, 0.75);
+  -webkit-backdrop-filter: blur(20px) saturate(175%);
+  backdrop-filter: blur(20px) saturate(175%);
 }
-[data-theme="light"] .adm-header {
-  background: rgba(235, 245, 236, 0.75) !important;
-  border-bottom-color: rgba(255, 255, 255, 0.80) !important;
-  -webkit-backdrop-filter: blur(20px) saturate(175%) !important;
-  backdrop-filter: blur(20px) saturate(175%) !important;
-  box-shadow: 0 2px 14px rgba(10,40,15,0.08), inset 0 -1px 0 rgba(255,255,255,0.65) !important;
+html[data-theme="light"] .adm-header {
+  background: rgba(235, 245, 236, 0.75);
+  border-bottom-color: rgba(255, 255, 255, 0.80);
+  -webkit-backdrop-filter: blur(20px) saturate(175%);
+  backdrop-filter: blur(20px) saturate(175%);
+  box-shadow: 0 2px 14px rgba(10,40,15,0.08), inset 0 -1px 0 rgba(255,255,255,0.65);
 }
-[data-theme="light"] .adm-glass-box,
-[data-theme="light"] .adm-stat-card,
-[data-theme="light"] .adm-device-card {
-  background: rgba(255, 255, 255, 0.55) !important;
-  border: 1px solid rgba(255, 255, 255, 0.80) !important;
-  box-shadow: 0 6px 24px rgba(10,40,15,0.10), inset 0 1px 0 rgba(255,255,255,0.92) !important;
-  -webkit-backdrop-filter: blur(18px) saturate(175%) !important;
-  backdrop-filter: blur(18px) saturate(175%) !important;
+html[data-theme="light"] .adm-glass-box,
+html[data-theme="light"] .adm-stat-card,
+html[data-theme="light"] .adm-device-card {
+  background: rgba(255, 255, 255, 0.55);
+  border: 1px solid rgba(255, 255, 255, 0.80);
+  box-shadow: 0 6px 24px rgba(10,40,15,0.10), inset 0 1px 0 rgba(255,255,255,0.92);
+  -webkit-backdrop-filter: blur(18px) saturate(175%);
+  backdrop-filter: blur(18px) saturate(175%);
 }
-[data-theme="light"] .adm-nav-item:hover {
-  background: rgba(46, 125, 50, 0.09) !important;
-  border-color: rgba(46, 125, 50, 0.20) !important;
+html[data-theme="light"] .adm-nav-item:hover {
+  background: rgba(46, 125, 50, 0.09);
+  border-color: rgba(46, 125, 50, 0.20);
 }
-[data-theme="light"] .adm-nav-item.active {
-  background: rgba(46, 125, 50, 0.13) !important;
-  border-color: rgba(46, 125, 50, 0.30) !important;
+html[data-theme="light"] .adm-nav-item.active {
+  background: rgba(46, 125, 50, 0.13);
+  border-color: rgba(46, 125, 50, 0.30);
 }
-[data-theme="light"] .adm-log-terminal {
-  background: rgba(240, 250, 242, 0.75) !important;
-  border-color: rgba(46, 125, 50, 0.18) !important;
-  -webkit-backdrop-filter: blur(14px) !important;
-  backdrop-filter: blur(14px) !important;
+html[data-theme="light"] .adm-log-terminal {
+  background: rgba(240, 250, 242, 0.75);
+  border-color: rgba(46, 125, 50, 0.18);
+  -webkit-backdrop-filter: blur(14px);
+  backdrop-filter: blur(14px);
 }
-[data-theme="light"] .adm-brand-name {
-  background: linear-gradient(90deg, #1B5E20, #00695C) !important;
-  -webkit-background-clip: text !important;
-  -webkit-text-fill-color: transparent !important;
-  background-clip: text !important;
+html[data-theme="light"] .adm-brand-name {
+  background: linear-gradient(90deg, #1B5E20, #00695C);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
-[data-theme="light"] .adm-toggle-btn,
-[data-theme="light"] .adm-refresh-btn,
-[data-theme="light"] .adm-icon-btn {
-  background: rgba(255,255,255,0.55) !important;
-  border-color: rgba(255,255,255,0.80) !important;
-  color: var(--text-secondary) !important;
+html[data-theme="light"] .adm-toggle-btn,
+html[data-theme="light"] .adm-refresh-btn,
+html[data-theme="light"] .adm-icon-btn {
+  background: rgba(255,255,255,0.55);
+  border-color: rgba(255,255,255,0.80);
+  color: var(--text-secondary);
 }
 
 /* ══════════════════════════════════════════════════════
    NOTIFICATION TOASTS in light
 ══════════════════════════════════════════════════════ */
-[data-theme="light"] .notification,
-[data-theme="light"] .toast,
-[data-theme="light"] .alert {
-  background: rgba(255, 255, 255, 0.72) !important;
-  border: 1px solid rgba(255, 255, 255, 0.88) !important;
-  box-shadow: 0 8px 28px rgba(10,40,15,0.14), inset 0 1px 0 rgba(255,255,255,0.95) !important;
-  -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
-  backdrop-filter: blur(20px) saturate(180%) !important;
-  color: var(--text-color) !important;
+html[data-theme="light"] .notification,
+html[data-theme="light"] .toast,
+html[data-theme="light"] .alert {
+  background: rgba(255, 255, 255, 0.72);
+  border: 1px solid rgba(255, 255, 255, 0.88);
+  box-shadow: 0 8px 28px rgba(10,40,15,0.14), inset 0 1px 0 rgba(255,255,255,0.95);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  backdrop-filter: blur(20px) saturate(180%);
+  color: var(--text-color);
 }
 
 /* ══════════════════════════════════════════════════════
    AURORA BACKGROUND (AuroraBackground component)
 ══════════════════════════════════════════════════════ */
-[data-theme="light"] .aurora-bg,
-[data-theme="light"] [class*="aurora"] {
-  opacity: 0.45 !important;
-  filter: saturate(160%) brightness(1.1) !important;
+html[data-theme="light"] .aurora-bg,
+html[data-theme="light"] [class*="aurora"] {
+  opacity: 0.45;
+  filter: saturate(160%) brightness(1.1);
 }
 
 /* ══════════════════════════════════════════════════════
    SCROLLBAR (light)
 ══════════════════════════════════════════════════════ */
-[data-theme="light"] *:not(html):not(body) {
+html[data-theme="light"] *:not(html):not(body) {
   scrollbar-color: rgba(46,125,50,0.28) rgba(255,255,255,0.30);
 }
-[data-theme="light"] *::-webkit-scrollbar-thumb {
+html[data-theme="light"] *::-webkit-scrollbar-thumb {
   background: rgba(46,125,50,0.28);
   border-radius: 99px;
 }
-[data-theme="light"] *::-webkit-scrollbar-track {
+html[data-theme="light"] *::-webkit-scrollbar-track {
   background: rgba(255,255,255,0.25);
 }

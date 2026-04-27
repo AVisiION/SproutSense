@@ -74,37 +74,55 @@ export function Navbar({
 
   const isMenuOpen = !isSidebarCollapsed && isMobile;
 
-  // GSAP Animation for Toggle
+  // GSAP Animation for Toggle (Morphing for Mobile, Rotation for Desktop)
   useEffect(() => {
-    const bars = barsRef.current;
-    if (!bars.length) return;
-
-    if (isMenuOpen) {
-      gsap.to(bars[0], { y: 6, rotate: 45, duration: 0.4, ease: 'back.out(1.7)' });
-      gsap.to(bars[1], { opacity: 0, scale: 0, duration: 0.3 });
-      gsap.to(bars[2], { y: -6, rotate: -45, duration: 0.4, ease: 'back.out(1.7)' });
-    } else {
-      gsap.to(bars[0], { y: 0, rotate: 0, duration: 0.4, ease: 'elastic.out(1, 0.5)' });
-      gsap.to(bars[1], { opacity: 1, scale: 1, duration: 0.4 });
-      gsap.to(bars[2], { y: 0, rotate: 0, duration: 0.4, ease: 'elastic.out(1, 0.5)' });
+    if (isMobile) {
+      const bars = barsRef.current;
+      if (!bars.length) return;
+      if (isMenuOpen) {
+        gsap.to(bars[0], { y: 7, rotate: 45, scaleX: 1.1, duration: 0.5, ease: 'back.out(2)' });
+        gsap.to(bars[1], { opacity: 0, scale: 0.2, x: 20, duration: 0.4, ease: 'power2.in' });
+        gsap.to(bars[2], { y: -7, rotate: -45, scaleX: 1.1, duration: 0.5, ease: 'back.out(2)' });
+      } else {
+        gsap.to(bars[0], { y: 0, rotate: 0, scaleX: 1, duration: 0.6, ease: 'elastic.out(1, 0.6)' });
+        gsap.to(bars[1], { opacity: 1, scale: 1, x: 0, duration: 0.6, ease: 'elastic.out(1, 0.6)' });
+        gsap.to(bars[2], { y: 0, rotate: 0, scaleX: 1, duration: 0.6, ease: 'elastic.out(1, 0.6)' });
+      }
+    } else if (toggleRef.current) {
+      const chevron = toggleRef.current.querySelector('.spatial-chevron');
+      if (chevron) {
+        gsap.to(chevron, {
+          rotate: isSidebarCollapsed ? 180 : 0,
+          duration: 0.5,
+          ease: 'power3.out'
+        });
+      }
     }
-  }, [isMenuOpen]);
+  }, [isMenuOpen, isSidebarCollapsed, isMobile]);
 
   return (
     <header className={`top-navbar ${isPublicView ? 'public-navbar' : ''} ${isMenuOpen ? 'mobile-menu-open' : ''}`} role="banner">
       <div className="navbar-left">
         <button
           ref={toggleRef}
-          className={`navbar-toggle-spatial ${isMenuOpen ? 'open' : ''}`}
+          className={`navbar-toggle-spatial ${isMobile ? 'mode-mobile' : 'mode-desktop'} ${isMenuOpen ? 'open' : ''}`}
           onClick={toggleSidebar}
           aria-label={isSidebarCollapsed ? 'Open sidebar' : 'Close sidebar'}
           aria-expanded={isMenuOpen}
         >
-          <div className="spatial-inner">
-            <span ref={el => barsRef.current[0] = el} className="bar top" />
-            <span ref={el => barsRef.current[1] = el} className="bar mid" />
-            <span ref={el => barsRef.current[2] = el} className="bar bot" />
-          </div>
+          {isMobile ? (
+            <div className="spatial-inner">
+              <span ref={el => barsRef.current[0] = el} className="bar top" />
+              <span ref={el => barsRef.current[1] = el} className="bar mid" />
+              <span ref={el => barsRef.current[2] = el} className="bar bot" />
+            </div>
+          ) : (
+            <div className="spatial-chevron">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="15 18 9 12 15 6"></polyline>
+              </svg>
+            </div>
+          )}
           <div className="spatial-glow" />
         </button>
 
@@ -228,9 +246,11 @@ export function Navbar({
                 </>
               )}
               <div className="navbar-account-auth-actions">
-                <button className="navbar-account-link navbar-account-logout" onClick={() => { if (auth.logout) auth.logout(); setAccountPanelOpen(false); }}>
-                  <i className="fa-solid fa-arrow-right-from-bracket" />
-                  Logout
+                <button className="navbar-account-link logout-link" onClick={() => { if (auth.logout) auth.logout(); setAccountPanelOpen(false); }}>
+                  <div className="logout-icon-wrap">
+                    <i className="fa-solid fa-power-off" />
+                  </div>
+                  <span>Sign Out</span>
                 </button>
               </div>
             </div>

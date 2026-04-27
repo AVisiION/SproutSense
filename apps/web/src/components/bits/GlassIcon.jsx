@@ -57,6 +57,7 @@ import {
   faBook,            // guide
   faBrain,           // brain
   faGaugeHigh,       // sensors
+  faRightFromBracket, // logout
 } from '@fortawesome/free-solid-svg-icons';
 
 const nameToFA = {
@@ -123,6 +124,7 @@ const nameToFA = {
   clock: faClock,
   link: faLink,
   brain: faBrain,
+  logout: faRightFromBracket,
 };
 
 export function GlassIcon({ name, className = '', animated = false, size = 'md' }) {

@@ -337,7 +337,7 @@
 }
 
 .adm-root--collapsed .adm-sidebar-divider {
-  display: none !important;
+  display: none;
 }
 
 .adm-root--collapsed .adm-nav {

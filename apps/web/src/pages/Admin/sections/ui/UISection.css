@@ -195,8 +195,8 @@
 }
 
 .ui-save-btn--targeted {
-  background: linear-gradient(135deg, #0ea5e9 0%, #2563eb 100%) !important;
-  border: none !important;
+  background: linear-gradient(135deg, #0ea5e9 0%, #2563eb 100%);
+  border: none;
 }
 
 .ui-save-btn--targeted:hover:not(:disabled) {

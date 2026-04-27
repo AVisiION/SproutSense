@@ -141,6 +141,13 @@ const HomePage = ({ sensors, isConnected }) => {
             </div>
           </div>
         </div>
+
+        <div className="hp-v9-scroll-hint">
+          <div className="scroll-bar">
+            <div className="scroll-dot" />
+          </div>
+          <span>SCROLL_TO_EXPAND_INTEL</span>
+        </div>
       </section>
 
       <section className="hp-v9-bento">

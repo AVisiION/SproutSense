@@ -15,42 +15,46 @@
   box-shadow: var(--glass-shadow);
   -webkit-backdrop-filter: blur(var(--glass-blur));
   backdrop-filter: blur(var(--glass-blur));
-  transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all 0.6s cubic-bezier(0.16, 1, 0.3, 1);
   display: flex;
   flex-direction: column;
   z-index: 100;
-  overflow-y: auto;
-  overflow-x: visible;
-  scrollbar-width: none;
-  -ms-overflow-style: none;
+  overflow: visible;
+  position: relative;
 }
 
 /* Uncollapsed desktop gets the full liquid-glass treatment */
 @media (min-width: 769px) {
   .app-shell:not(.sidebar-collapsed) .sidebar {
-    background: linear-gradient(145deg, var(--surface-1) 0%, var(--bg-color) 60%);
-    border: 1px solid var(--border-color);
-    box-shadow: var(--glass-shadow);
-    -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
-    backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+    background: linear-gradient(
+      145deg, 
+      rgba(255, 255, 255, 0.04) 0%, 
+      rgba(10, 40, 20, 0.15) 100%
+    );
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    box-shadow: 0 20px 80px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.04);
+    -webkit-backdrop-filter: blur(40px) saturate(200%);
+    backdrop-filter: blur(40px) saturate(200%);
   }
 
   .app-shell:not(.sidebar-collapsed) .sidebar-link {
-    background: var(--surface-1);
-    border: 1px solid var(--border-soft);
-    box-shadow: var(--glass-shadow);
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid rgba(255, 255, 255, 0.04);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   }
 
   .app-shell:not(.sidebar-collapsed) .sidebar-link:hover {
-    background: var(--surface-2);
-    border-color: var(--border-color);
+    background: rgba(58, 143, 62, 0.12);
+    border-color: rgba(58, 143, 62, 0.3);
     color: var(--text-primary);
+    transform: translateX(4px);
   }
 
   .app-shell:not(.sidebar-collapsed) .sidebar-link.active {
-    background: var(--surface-active);
-    border-color: var(--primary-color);
-    color: var(--text-primary);
+    background: linear-gradient(90deg, rgba(58, 143, 62, 0.15), rgba(58, 143, 62, 0.05));
+    border-color: rgba(58, 143, 62, 0.4);
+    color: #fff;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.05);
   }
 
   [data-theme='light'] .app-shell:not(.sidebar-collapsed) .sidebar {
@@ -86,20 +90,83 @@
 }
 
 /* ─────────────────────────────────────────
-   2. COLLAPSED MODE
+   2. COLLAPSED MODE (Desktop Stealth)
    ───────────────────────────────────────── */
 @media (min-width: 769px) {
 
-  /* ── Container: fully invisible, no border, no bg, no shadow ── */
+  /* ── Sidebar Container: Stealth Mode (Idle) ── */
   .app-shell.sidebar-collapsed .sidebar {
-    width: 72px;
-    min-width: 72px;
-    padding: 2rem 0.5rem;
+    width: 80px;
+    min-width: 80px;
+    padding: 2.25rem 0.5rem;
     background: transparent;
     border: none;
     box-shadow: none;
     -webkit-backdrop-filter: none;
     backdrop-filter: none;
+    transform: translateX(-68px); /* Hide 68px, leave 12px peek */
+    opacity: 0.35;
+    pointer-events: auto;
+    transition: 
+      transform 0.6s cubic-bezier(0.16, 1, 0.3, 1),
+      opacity 0.4s ease,
+      background 0.5s ease;
+  }
+
+  /* ── Hover Reveal — liquid slide in ── */
+  .app-shell.sidebar-collapsed .sidebar:hover {
+    transform: translateX(0);
+    opacity: 1;
+    background: var(--glass-color-strong);
+    border-right: 1px solid var(--glass-border-strong);
+    -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(180%);
+    backdrop-filter: blur(var(--glass-blur)) saturate(180%);
+    box-shadow: 15px 0 50px rgba(0, 0, 0, 0.45), var(--glass-highlight);
+  }
+
+  /* ── Stealth Indicator Glow (The Peek) ── */
+  .app-shell.sidebar-collapsed .sidebar::after {
+    content: '';
+    position: absolute;
+    top: 20%;
+    right: 4px;
+    width: 3px;
+    height: 60%;
+    background: linear-gradient(to bottom, 
+      transparent, 
+      var(--plant-green), 
+      var(--plant-cyan), 
+      transparent
+    );
+    opacity: 0.5;
+    border-radius: 10px;
+    transition: opacity 0.3s ease;
+    filter: blur(1.5px);
+    box-shadow: 0 0 12px var(--plant-green);
+  }
+
+  .app-shell.sidebar-collapsed .sidebar:hover::after {
+    opacity: 0;
+  }
+
+  /* ── Scroll Hidden State ── */
+  .sidebar.scrolling-hidden {
+    transform: translateX(-100%);
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .app-shell.sidebar-collapsed .sidebar-nav {
+    background: transparent;
+    border: none;
+    transition: opacity 0.4s cubic-bezier(0.16, 1, 0.3, 1), transform 0.4s ease;
+    opacity: 0;
+    transform: translateX(-10px);
+  }
+
+  .app-shell.sidebar-collapsed .sidebar:hover .sidebar-nav {
+    opacity: 1;
+    transform: translateX(0);
   }
 
   .app-shell.sidebar-collapsed .sidebar-brand,
@@ -108,8 +175,8 @@
   }
 
   .app-shell.sidebar-collapsed .sidebar-nav {
-    padding-top: 1rem;
-    gap: 0.4rem;
+    padding-top: 1.5rem;
+    gap: 0.75rem;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -118,25 +185,22 @@
   /* ── Liquid Glass pill — default (idle) ── */
   .app-shell.sidebar-collapsed .sidebar-link {
     justify-content: center;
-    width: 52px;
-    height: 52px;
+    width: 56px;
+    height: 56px;
     padding: 0;
-    border-radius: 16px;
-    margin-bottom: 0;
+    border-radius: 20px;
+    margin: 0.4rem 0;
 
     /* Liquid glass base */
-    background: var(--surface-1);
-    border: 1px solid var(--border-soft);
-    box-shadow: var(--glass-shadow);
-    -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
-    backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.25);
+    -webkit-backdrop-filter: blur(12px);
+    backdrop-filter: blur(12px);
 
-    transition:
-      background 0.25s ease,
-      border-color 0.25s ease,
-      box-shadow 0.25s ease,
-      transform 0.2s ease;
+    transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
   }
+
 
   /* ── Liquid Glass pill — hover ── */
   .app-shell.sidebar-collapsed .sidebar-link:hover {
@@ -264,8 +328,19 @@
 .sidebar-nav {
   display: flex;
   flex-direction: column;
+}
+
+.sidebar-scroll-area {
   flex: 1;
   overflow-y: auto;
+  overflow-x: visible;
+  padding: 0 10px; /* Bleed space for hover effects */
+  margin: 0 -10px;
+  scrollbar-width: none;
+}
+
+.sidebar-scroll-area::-webkit-scrollbar {
+  display: none;
 }
 
 .sidebar-link {
@@ -390,46 +465,194 @@
    7. MOBILE — Slide-in drawer (≤ 768px)
    ───────────────────────────────────────── */
 @media (max-width: 768px) {
-
-  /* Sidebar becomes a fixed full-height drawer */
   .sidebar {
     position: fixed;
-    top: 0;
-    left: 0;
-    height: 100dvh;
+    top: 1rem;
+    left: 1rem;
+    bottom: 1rem;
+    height: calc(100dvh - 2rem);
     width: 280px;
-    border-radius: 0 1.5rem 1.5rem 0;   /* round only right side on mobile */
-    z-index: 300;
-    transform: translateX(-100%);        /* hidden off-screen by default */
-    transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+    border-radius: 2rem;
+    z-index: 3000;
+    transform: translateX(-120%);
+    transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+    background: var(--glass-color-strong);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 40px 100px rgba(0, 0, 0, 0.5);
+    padding: 2rem 1.5rem;
+    display: flex;
+    flex-direction: column;
     overflow-y: auto;
     overflow-x: hidden;
   }
 
-  /* Open state — parent adds .sidebar-open class */
-  .sidebar-open .sidebar {
+  /* Open state — triggered by parent .app-shell NOT having .sidebar-collapsed */
+  .app-shell:not(.sidebar-collapsed) .sidebar {
     transform: translateX(0);
   }
 
-  /* Overlay — shown when sidebar is open */
-  .sidebar-overlay {
-    display: none;
-    position: fixed;
-    inset: 0;
-    background: rgba(0, 0, 0, 0.55);
-    -webkit-backdrop-filter: blur(4px);
-    backdrop-filter: blur(4px);
-    z-index: 299;
-    animation: fadeIn 0.3s ease;
+  .sidebar-nav {
+    margin-top: 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
   }
 
-  .sidebar-open .sidebar-overlay {
-    display: block;
+  .sidebar-category {
+    background: rgba(255, 255, 255, 0.02);
+    padding: 1.25rem;
+    border-radius: 1.75rem;
+    border: 1px solid rgba(255, 255, 255, 0.04);
+    margin-bottom: 0;
   }
-  .sidebar-brand {
-    display: none;
+
+  .sidebar-link {
+    padding: 0.85rem 1.25rem;
+    border-radius: 1.25rem;
+    background: transparent;
+    border: 1px solid transparent;
+    opacity: 0;
+    transform: translateX(-20px);
+    transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
   }
-  .sidebar-nav {
-    margin-top: 2.5rem;
+
+  .app-shell:not(.sidebar-collapsed) .sidebar-link {
+    opacity: 1;
+    transform: translateX(0);
+  }
+
+  /* Staggered Entrance */
+  .sidebar-link:nth-child(1) { transition-delay: 0.1s; }
+  .sidebar-link:nth-child(2) { transition-delay: 0.15s; }
+  .sidebar-link:nth-child(3) { transition-delay: 0.2s; }
+  .sidebar-link:nth-child(4) { transition-delay: 0.25s; }
+  .sidebar-link:nth-child(5) { transition-delay: 0.3s; }
+
+  .sidebar-link:hover {
+    background: rgba(255, 255, 255, 0.05);
+    transform: scale(1.02);
+  }
+
+  /* Liquid Glow Active State */
+  .sidebar-link.active {
+    background: linear-gradient(135deg, rgba(34, 197, 94, 0.15), rgba(34, 211, 238, 0.05));
+    border-color: rgba(34, 197, 94, 0.3);
+    color: #fff;
+    box-shadow: 
+      0 10px 25px rgba(34, 197, 94, 0.2),
+      inset 0 0 15px rgba(34, 197, 94, 0.1);
+  }
+
+  .sidebar-link.active .sidebar-icon {
+    color: var(--plant-green);
+    filter: drop-shadow(0 0 8px var(--plant-green));
+  }
+
+  .sidebar-cat-label {
+    margin-bottom: 0.5rem;
+    opacity: 0.6;
+    color: var(--plant-cyan);
   }
 }
+
+/* ── Sidebar Footer & Logout ── */
+.sidebar-footer {
+  margin-top: auto;
+  padding: 1.25rem 0.5rem 0.5rem;
+  border-top: 1px solid var(--divider-color);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  transition: all 0.5s ease;
+}
+
+.sidebar-logout-btn {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  width: 100%;
+  padding: 0.9rem 1.25rem;
+  background: var(--surface-1);
+  border: 1px solid var(--border-soft);
+  border-radius: 1.25rem;
+  color: var(--text-secondary);
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  position: relative;
+  overflow: hidden;
+  box-shadow: var(--glass-shadow);
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+  backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+}
+
+.sidebar-logout-btn .sidebar-icon {
+  color: inherit;
+  transition: color 0.3s ease;
+}
+
+.sidebar-logout-btn:hover {
+  background: var(--danger-bg);
+  border-color: var(--danger-border);
+  color: var(--danger-color);
+  transform: translateY(-2px);
+  box-shadow: 0 12px 28px rgba(204, 51, 51, 0.15), var(--glass-highlight);
+}
+
+.sidebar-logout-btn:hover .sidebar-icon {
+  color: var(--danger-color);
+  filter: drop-shadow(0 0 8px var(--danger-color));
+}
+
+.logout-glow {
+  position: absolute;
+  inset: -50%;
+  background: radial-gradient(circle at center, var(--danger-bg) 0%, transparent 70%);
+  opacity: 0;
+  transition: opacity 0.4s ease;
+  pointer-events: none;
+}
+
+.sidebar-logout-btn:hover .logout-glow {
+  opacity: 1;
+}
+
+/* Collapsed Mode Overrides */
+.app-shell.sidebar-collapsed .sidebar-footer {
+  border-top: none;
+  padding: 0.5rem;
+}
+
+.app-shell.sidebar-collapsed .sidebar-logout-btn {
+  width: 52px;
+  height: 52px;
+  padding: 0;
+  justify-content: center;
+  border-radius: 16px;
+  background: var(--surface-1);
+  border: 1px solid var(--border-soft);
+}
+
+.app-shell.sidebar-collapsed .sidebar-logout-btn .sidebar-label {
+  display: none;
+}
+
+.app-shell.sidebar-collapsed .sidebar-logout-btn:hover {
+  background: var(--danger-bg);
+  border-color: var(--danger-border);
+  transform: translateY(-2px) scale(1.05);
+}
+
+/* Light Theme Adjustments */
+[data-theme='light'] .sidebar-logout-btn {
+  background: rgba(255, 255, 255, 0.45);
+  border-color: rgba(46, 125, 50, 0.14);
+  color: var(--text-secondary);
+}
+
+[data-theme='light'] .sidebar-logout-btn:hover {
+  background: var(--danger-bg);
+  border-color: var(--danger-border);
+  color: var(--danger-color);
+}
+

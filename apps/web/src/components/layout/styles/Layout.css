@@ -17,7 +17,6 @@ body {
   width: 100%;
   max-width: 100%;
   min-height: 100vh;
-  /* Mobile stacked layout by default */
   grid-template-columns: 1fr;
   grid-template-rows: auto 1fr;
   grid-template-areas:
@@ -53,9 +52,9 @@ body {
   z-index: 90;
 }
 
-.public-shell .sidebar,
-.public-shell .sidebar-overlay {
-  display: none !important;
+.app-shell.public-shell .sidebar,
+.app-shell.public-shell .sidebar-overlay {
+  display: none;
 }
 
 .container {
@@ -86,7 +85,7 @@ body {
 
 /* Special case: for sections with only one card, ensure it fills the width */
 .dashboard-single {
-  grid-template-columns: 1fr !important;
+  grid-template-columns: 1fr;
 }
 
 /* Status Item (used in Backend/ESP32 status pages) */
@@ -153,35 +152,63 @@ body {
    ───────────────────────────────────────────────── */
 @media (min-width: 1024px) {
   .app-shell {
-    /* Expanded sidebar: explicit 260px column */
-    grid-template-columns: minmax(230px, 260px) minmax(0, 1fr);
-    grid-template-rows: 1fr;
-    grid-template-areas: "sidebar main";
+    grid-template-columns: auto 1fr;
+    grid-template-rows: auto 1fr;
+    grid-template-areas: 
+      "sidebar nav"
+      "sidebar main";
     height: 100vh;
     overflow: hidden;
   }
 
-  /* Collapsed sidebar: shrink to 80px icon rail */
+  /* Collapsed sidebar: Float over content, no grid gap */
   .app-shell.sidebar-collapsed {
-    grid-template-columns: 80px minmax(0, 1fr);
+    grid-template-columns: 1fr;
+    grid-template-areas: 
+      "nav"
+      "main";
+  }
+
+  /* Expanded sidebar: Navbar pushed, Sidebar full height */
+  .app-shell:not(.sidebar-collapsed) {
+    grid-template-columns: minmax(230px, 260px) minmax(0, 1fr);
+    grid-template-areas: 
+      "sidebar nav"
+      "sidebar main";
   }
 
   /* Public landing page: hide sidebar entirely */
   .app-shell.public-shell {
-    grid-template-columns: 1fr !important;
-    grid-template-areas: "main" !important;
-  }
-  .sidebar-collapsed .sidebar{
-    margin-top: 4rem;
+    grid-template-columns: 1fr;
+    grid-template-areas: "main";
   }
 
   .sidebar {
-    position: static;
-    transform: none !important;
-    grid-area: sidebar;
-    width: 95%;
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 1000;
     height: 100vh;
-    
+    width: var(--sidebar-width, 260px);
+    transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1), 
+                width 0.6s cubic-bezier(0.16, 1, 0.3, 1),
+                opacity 0.4s ease;
+  }
+
+  .app-shell:not(.sidebar-collapsed) .sidebar {
+    position: static;
+    transform: none;
+    grid-area: sidebar;
+    width: 100%;
+  }
+
+  .sidebar-collapsed .sidebar {
+    position: fixed;
+    left: 0;
+    top: 6.5rem;
+    margin-top: 0; /* Clear previous margin-top strategy */
+    height: calc(100vh - 7.5rem);
+    border-radius: 0 1.5rem 1.5rem 0;
   }
 
   .sidebar-overlay {

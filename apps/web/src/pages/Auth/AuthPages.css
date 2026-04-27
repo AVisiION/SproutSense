@@ -981,10 +981,10 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .auth-shell--transition-to-register .auth-layout--login,
-  .auth-shell--transition-to-login .auth-layout--login,
-  .auth-card {
-    animation: none !important;
+  html .auth-shell--transition-to-register .auth-layout--login,
+  html .auth-shell--transition-to-login .auth-layout--login,
+  html .auth-card {
+    animation: none;
   }
 }
 

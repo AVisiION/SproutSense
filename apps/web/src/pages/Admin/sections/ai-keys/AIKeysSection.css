@@ -174,9 +174,9 @@
   opacity: 0.45;
 }
 
-.aik-idx {
-  color: var(--text-tertiary, #475569) !important;
-  font-size: 12px !important;
+.aik-table .aik-idx {
+  color: var(--text-tertiary, #475569);
+  font-size: 12px;
   font-weight: 700;
 }
 
@@ -193,9 +193,9 @@
   font-family: 'Courier New', monospace;
 }
 
-.aik-date {
+.aik-table .aik-date {
   font-size: 12px;
-  color: var(--text-tertiary, #475569) !important;
+  color: var(--text-tertiary, #475569);
 }
 
 /* ─── Status button ─────────────────────────────────────────── */

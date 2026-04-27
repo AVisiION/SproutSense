@@ -677,26 +677,26 @@ html[data-theme='light'] .sk-stat-card {
 
 /* ── REDUCED MOTION ──────────────────────────────────────────── */
 @media (prefers-reduced-motion: reduce) {
-  .sl-orb,
-  .sl-leaf,
-  .sl-center,
-  .sl-logo-ring::before,
-  .sl-logo-ring::after,
-  .sl-logo-disc::before,
-  .sl-dot {
-    animation: none !important;
+  html .sl-orb,
+  html .sl-leaf,
+  html .sl-center,
+  html .sl-logo-ring::before,
+  html .sl-logo-ring::after,
+  html .sl-logo-disc::before,
+  html .sl-dot {
+    animation: none;
   }
 
-  .sl-brand-name,
-  .sl-brand-sub,
-  .sl-skeleton-preview,
-  .sl-progress-wrap,
-  .sl-dots {
-    opacity: 1 !important;
-    animation: none !important;
+  html .sl-brand-name,
+  html .sl-brand-sub,
+  html .sl-skeleton-preview,
+  html .sl-progress-wrap,
+  html .sl-dots {
+    opacity: 1;
+    animation: none;
   }
 
-  .sk { animation: none !important; background-position: 0 0 !important; }
+  html .sk { animation: none; background-position: 0 0; }
 
-  .sl-progress-fill { width: 100% !important; }
+  html .sl-progress-fill { width: 100%; }
 }

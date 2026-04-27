@@ -205,31 +205,63 @@ const IntelligenceHub = ({ sensors, sensorDeviceId }) => {
               <section className="ih-card ih-health-card">
                 <HealthRing score={insights?.overallHealth?.score || 0} />
                 <div className="ih-card-body">
-                  <h3>Plant Status: {insights?.overallHealth?.status || 'Unknown'}</h3>
-                  <div className="ih-factors">
+                  <div className="ih-badge"><i className="fa-solid fa-bolt" /> REAL-TIME ANALYSIS</div>
+                  <h3 style={{ fontSize: '2.5rem', marginTop: '0.5rem' }}>
+                    {insights?.overallHealth?.status || 'Active Scan'}
+                  </h3>
+                  <div className="ih-factors" style={{ marginTop: '1.5rem' }}>
                     {Object.entries(insights?.overallHealth?.factors || {}).map(([k, v]) => (
-                      <span key={k} className={`ih-factor ${v}`}><i className={`fa-solid ${v==='good'?'fa-check-circle':'fa-circle-exclamation'}`} /> {k.replace(/_/g,' ')}</span>
+                      <span key={k} className={`ih-factor ${v}`}>
+                        <i className={`fa-solid ${v==='good'?'fa-check-circle':'fa-circle-exclamation'}`} /> 
+                        {k.replace(/_/g,' ')}
+                      </span>
                     ))}
                   </div>
                 </div>
               </section>
+
               <section className="ih-card ih-quick-actions">
-                <h3>AI Consultation</h3>
+                <div className="ih-badge" style={{ background: 'rgba(34, 197, 94, 0.08)', color: 'var(--plant-green)', borderColor: 'rgba(34, 197, 94, 0.2)' }}>
+                  <i className="fa-solid fa-comment-dots" /> AI ASSISTANT
+                </div>
+                <h3 style={{ fontSize: '1.8rem', margin: '1rem 0 1.5rem' }}>Neural Consultation</h3>
                 <div className="ih-prompts-grid">
                   {QUICK_PROMPTS.map(p => (
                     <button key={p.label} className="ih-prompt-btn" onClick={() => { setActiveTab('chat'); handleSendMessage(p.label); }}>
-                      <i className={`fa-solid ${p.icon}`} /> {p.label}
+                      <div className="ih-prompt-icon">
+                        <i className={`fa-solid ${p.icon}`} />
+                      </div>
+                      <span>{p.label}</span>
                     </button>
                   ))}
                 </div>
               </section>
+
+              <section className="ih-card ih-summary-strip">
+                <div className="ih-stat">
+                  <span className="label">Moisture</span>
+                  <span className="val">{sensors?.soilMoisture}%</span>
+                  <div className="ih-mini-bar"><div className="fill" style={{ width: `${sensors?.soilMoisture}%`, background: 'var(--plant-green)' }} /></div>
+                </div>
+                <div className="ih-stat">
+                  <span className="label">Temperature</span>
+                  <span className="val">{sensors?.temperature}°C</span>
+                  <div className="ih-mini-bar"><div className="fill" style={{ width: `${(sensors?.temperature/50)*100}%`, background: '#f59e0b' }} /></div>
+                </div>
+                <div className="ih-stat">
+                  <span className="label">Humidity</span>
+                  <span className="val">{sensors?.humidity}%</span>
+                  <div className="ih-mini-bar"><div className="fill" style={{ width: `${sensors?.humidity}%`, background: '#22d3ee' }} /></div>
+                </div>
+                <div className="ih-stat">
+                  <span className="label">AI Alerts</span>
+                  <span className="val" style={{color: insights?.diseaseAnalysis?.activeAlerts > 0 ? '#ef4444' : 'var(--plant-green)'}}>
+                    {insights?.diseaseAnalysis?.activeAlerts || 0}
+                  </span>
+                  <div className="ih-mini-bar"><div className="fill" style={{ width: insights?.diseaseAnalysis?.activeAlerts > 0 ? '100%' : '0%', background: '#ef4444' }} /></div>
+                </div>
+              </section>
             </div>
-            <section className="ih-card ih-summary-strip">
-              <div className="ih-stat"><span className="label">Moisture</span><span className="val">{sensors?.soilMoisture}%</span></div>
-              <div className="ih-stat"><span className="label">Temp</span><span className="val">{sensors?.temperature}°C</span></div>
-              <div className="ih-stat"><span className="label">Humidity</span><span className="val">{sensors?.humidity}%</span></div>
-              <div className="ih-stat"><span className="label">Alerts</span><span className="val" style={{color:'#ef4444'}}>{insights?.diseaseAnalysis?.activeAlerts || 0}</span></div>
-            </section>
           </div>
         )}
 
@@ -276,19 +308,61 @@ const IntelligenceHub = ({ sensors, sensorDeviceId }) => {
         )}
 
         {activeTab === 'chat' && (
-          <div className="ih-view ih-chat">
-            <div className="ih-chat-messages">
-              {chatMessages.map((m, i) => (
-                <div key={i} className={`ih-msg ${m.role}`}>
-                  <div className="ih-msg-bubble"><MarkdownText text={m.content} /></div>
+          <div className="ih-view ih-chat-container">
+            <div className="ih-chat-header">
+              <div className="ih-chat-header-info">
+                <div className="ih-chat-status-glow"></div>
+                <div>
+                  <h4>Neural Intelligence Assistant</h4>
+                  <p>Powered by SproutSense AI • Multi-model Analysis</p>
                 </div>
-              ))}
-              {chatLoading && <div className="ih-msg assistant"><div className="ih-msg-bubble typing"><span/><span/><span/></div></div>}
-              <div ref={messagesEndRef} />
+              </div>
+              <button className="ih-clear-chat" onClick={() => setChatMessages([{ role: 'assistant', content: "I've cleared our history. How else can I help?", time: new Date() }])}>
+                <i className="fa-solid fa-trash-can" /> Clear
+              </button>
             </div>
-            <div className="ih-chat-input-wrap">
-              <textarea placeholder="Ask about your plants..." value={chatInput} onChange={e => setChatInput(e.target.value)} onKeyDown={e => e.key === 'Enter' && !e.shiftKey && handleSendMessage()} />
-              <button onClick={() => handleSendMessage()} disabled={chatLoading}><i className="fa-solid fa-paper-plane" /></button>
+
+            <div className="ih-chat">
+              <div className="ih-chat-messages">
+                {chatMessages.map((m, i) => (
+                  <div key={i} className={`ih-msg ${m.role}`}>
+                    <div className="ih-msg-bubble">
+                      <MarkdownText text={m.content} />
+                      <span className="ih-msg-time">{new Date(m.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                    </div>
+                  </div>
+                ))}
+                {chatLoading && (
+                  <div className="ih-msg assistant">
+                    <div className="ih-msg-bubble">
+                      <div className="typing">
+                        <span/><span/><span/>
+                      </div>
+                    </div>
+                  </div>
+                )}
+                <div ref={messagesEndRef} />
+              </div>
+              
+              <div className="ih-chat-input-area">
+                <div className="ih-chat-input-wrap">
+                  <textarea 
+                    placeholder="Ask about soil health, lighting, or disease prevention..." 
+                    value={chatInput} 
+                    onChange={e => setChatInput(e.target.value)} 
+                    onKeyDown={e => {
+                      if (e.key === 'Enter' && !e.shiftKey) {
+                        e.preventDefault();
+                        handleSendMessage();
+                      }
+                    }} 
+                  />
+                  <button onClick={() => handleSendMessage()} disabled={chatLoading || !chatInput.trim()}>
+                    <i className="fa-solid fa-paper-plane" />
+                  </button>
+                </div>
+                <p className="ih-chat-disclaimer">AI can make mistakes. Verify critical botanical advice.</p>
+              </div>
             </div>
           </div>
         )}

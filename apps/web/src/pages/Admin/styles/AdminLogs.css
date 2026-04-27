@@ -109,11 +109,11 @@
   color: #0f172a;
 }
 .adm-log-table-empty {
-  text-align: center !important;
-  color: rgba(200,230,203,0.6) !important;
+  text-align: center;
+  color: rgba(200,230,203,0.6);
 }
 .adm-root[data-theme='light'] .adm-log-table-empty {
-  color: rgba(69, 89, 79, 0.65) !important;
+  color: rgba(69, 89, 79, 0.65);
 }
 
 /* ══════════════════════════════════════════════════════

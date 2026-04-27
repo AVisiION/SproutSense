@@ -327,7 +327,7 @@
 .adm-stat-widget {
   display: flex;
   flex-direction: column;
-  padding: 1.5rem !important;
+  padding: 1.5rem;
 }
 
 .adm-widget-header {
