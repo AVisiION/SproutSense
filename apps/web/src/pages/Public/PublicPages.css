@@ -18,11 +18,11 @@
 
   0%,
   100% {
-    box-shadow: 0 0 0 0 rgba(58, 143, 62, 0.0), var(--glow-green);
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--accent-primary) 0%, transparent), var(--glow-green);
   }
 
   50% {
-    box-shadow: 0 0 0 8px rgba(58, 143, 62, 0.18), var(--glow-green);
+    box-shadow: 0 0 0 8px color-mix(in srgb, var(--accent-primary) 18%, transparent), var(--glow-green);
   }
 }
 
@@ -118,14 +118,15 @@
 /* ─── Hero Section ───────────────────────────────────────── */
 .pp-hero {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   align-items: center;
   gap: 4rem;
   padding: 0;
+  padding-bottom: 8rem;
   /* Account for public navbar */
   min-height: calc(100dvh - 5rem);
   position: relative;
-  overflow: hidden;
+  width: 100%;
 }
 
 .pp-hero-glow {
@@ -134,7 +135,7 @@
   right: -10%;
   width: 60%;
   height: 80%;
-  background: radial-gradient(circle, rgba(58, 143, 62, 0.12) 0%, transparent 70%);
+  background: radial-gradient(circle, color-mix(in srgb, var(--accent-primary) 12%, transparent) 0%, transparent 70%);
   filter: blur(120px);
   z-index: -1;
   pointer-events: none;
@@ -175,15 +176,17 @@
 
 .pp-hero-visual {
   position: relative;
+  width: 100%;
+  max-width: 100%;
   height: clamp(400px, 70vh, 85vh);
   /* Take more vertical space on desktop */
   border-radius: 40px;
   overflow: hidden;
-  border: 1px solid rgba(255, 255, 255, 0.15);
+  border: 1px solid color-mix(in srgb, var(--text-primary) 15%, transparent);
   background: var(--bg-tertiary);
   box-shadow:
-    0 40px 100px rgba(0, 0, 0, 0.8),
-    0 0 100px rgba(58, 143, 62, 0.1);
+    0 40px 100px color-mix(in srgb, var(--bg-color) 80%, transparent),
+    0 0 100px color-mix(in srgb, var(--accent-primary) 10%, transparent);
   transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1),
     box-shadow 0.6s cubic-bezier(0.16, 1, 0.3, 1);
   animation: ppHeroFloat 8s ease-in-out infinite;
@@ -195,9 +198,9 @@
   animation-play-state: paused;
   transform: perspective(900px) rotateX(3deg) rotateY(-3deg) scale(1.03);
   box-shadow:
-    0 60px 120px rgba(0, 0, 0, 0.7),
-    0 0 0 1px rgba(58, 143, 62, 0.35),
-    0 0 60px rgba(58, 143, 62, 0.15);
+    0 60px 120px color-mix(in srgb, var(--bg-color) 70%, transparent),
+    0 0 0 1px color-mix(in srgb, var(--accent-primary) 35%, transparent),
+    0 0 60px color-mix(in srgb, var(--accent-primary) 15%, transparent);
 }
 
 .pp-hero-visual img {
@@ -213,7 +216,7 @@
 .pp-visual-overlay {
   position: absolute;
   inset: 0;
-  background: linear-gradient(180deg, transparent 60%, rgba(10, 29, 22, 0.8));
+  background: linear-gradient(180deg, transparent 60%, color-mix(in srgb, var(--bg-tertiary) 80%, transparent));
   pointer-events: none;
 }
 
@@ -304,7 +307,7 @@
   inset: 0;
   background: linear-gradient(105deg,
       transparent 30%,
-      rgba(255, 255, 255, 0.06) 50%,
+      color-mix(in srgb, var(--text-primary) 6%, transparent) 50%,
       transparent 70%);
   background-size: 300% 100%;
   background-position: -120% 0%;
@@ -319,18 +322,18 @@
   content: '';
   position: absolute;
   inset: 0;
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.04) 0%, transparent 55%);
+  background: linear-gradient(135deg, color-mix(in srgb, var(--text-primary) 4%, transparent) 0%, transparent 55%);
   pointer-events: none;
   border-radius: inherit;
 }
 
 .pp-glass:hover {
-  border-color: rgba(58, 143, 62, 0.5);
+  border-color: color-mix(in srgb, var(--accent-primary) 50%, transparent);
   transform: translateY(-10px) scale(1.012);
   box-shadow:
-    0 40px 80px rgba(0, 0, 0, 0.45),
-    0 0 0 1px rgba(58, 143, 62, 0.25),
-    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    0 40px 80px color-mix(in srgb, var(--bg-color) 45%, transparent),
+    0 0 0 1px color-mix(in srgb, var(--accent-primary) 25%, transparent),
+    inset 0 1px 0 color-mix(in srgb, var(--text-primary) 10%, transparent);
 }
 
 .pp-glass:hover::before {
@@ -399,7 +402,7 @@
   padding: 4rem;
   margin: 6rem 0;
   border: 1px solid var(--accent-primary);
-  background: linear-gradient(90deg, transparent, rgba(58, 143, 62, 0.05), transparent);
+  background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--accent-primary) 5%, transparent), transparent);
 }
 
 .pp-metric-item {
@@ -443,19 +446,20 @@
   letter-spacing: 0.05em;
   text-transform: uppercase;
   transition: all 0.3s ease;
-  box-shadow: 0 2px 8px rgba(34, 197, 94, 0.08);
+  box-shadow: 0 2px 8px color-mix(in srgb, var(--success-color) 8%, transparent);
 }
 
 .pp-tag:hover {
   background: var(--success-border);
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(34, 197, 94, 0.15);
+  box-shadow: 0 4px 12px color-mix(in srgb, var(--success-color) 15%, transparent);
 }
 
 /* ─── Actions & Buttons ──────────────────────────────────── */
 .pp-actions {
   display: flex;
   gap: 1.5rem;
+  flex-wrap: wrap;
 }
 
 .pp-btn {
@@ -467,13 +471,16 @@
   transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 1rem;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .pp-btn-primary {
   background: var(--accent-primary);
   color: #fff;
-  box-shadow: 0 12px 32px rgba(58, 143, 62, 0.3);
+  box-shadow: 0 12px 32px color-mix(in srgb, var(--accent-primary) 30%, transparent);
   border: none;
 }
 
@@ -481,9 +488,9 @@
   background: var(--accent-hover);
   transform: translateY(-5px) scale(1.03);
   box-shadow:
-    0 24px 56px rgba(58, 143, 62, 0.50),
-    0 0 0 1px rgba(58, 143, 62, 0.3),
-    inset 0 1px 0 rgba(255, 255, 255, 0.15);
+    0 24px 56px color-mix(in srgb, var(--accent-primary) 50%, transparent),
+    0 0 0 1px color-mix(in srgb, var(--accent-primary) 30%, transparent),
+    inset 0 1px 0 color-mix(in srgb, var(--text-primary) 15%, transparent);
 }
 
 .pp-btn-primary:active {
@@ -494,7 +501,7 @@
 .pp-btn-ghost {
   background: var(--surface-1);
   color: var(--text-primary);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid color-mix(in srgb, var(--text-primary) 10%, transparent);
   backdrop-filter: blur(12px);
   position: relative;
   overflow: hidden;
@@ -504,7 +511,7 @@
   content: '';
   position: absolute;
   inset: 0;
-  background: linear-gradient(105deg, transparent 30%, rgba(255, 255, 255, 0.06) 50%, transparent 70%);
+  background: linear-gradient(105deg, transparent 30%, color-mix(in srgb, var(--text-primary) 6%, transparent) 50%, transparent 70%);
   background-size: 300% 100%;
   opacity: 0;
   transition: opacity 0.3s ease;
@@ -513,9 +520,9 @@
 
 .pp-btn-ghost:hover {
   background: var(--surface-2);
-  border-color: rgba(58, 143, 62, 0.45);
+  border-color: color-mix(in srgb, var(--accent-primary) 45%, transparent);
   transform: translateY(-5px);
-  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 16px 40px color-mix(in srgb, var(--bg-color) 30%, transparent);
 }
 
 .pp-btn-ghost:hover::before {
@@ -538,7 +545,7 @@
   width: 100%;
   overflow-x: auto;
   border-radius: 12px;
-  background: rgba(0, 0, 0, 0.2);
+  background: color-mix(in srgb, var(--bg-color) 20%, transparent);
   margin: 1.5rem 0;
 }
 
@@ -593,11 +600,11 @@
 
   0%,
   100% {
-    text-shadow: 0 0 10px rgba(255, 255, 255, 0);
+    text-shadow: 0 0 10px color-mix(in srgb, var(--text-primary) 0%, transparent);
   }
 
   50% {
-    text-shadow: 0 0 15px rgba(255, 255, 255, 0.4);
+    text-shadow: 0 0 15px color-mix(in srgb, var(--text-primary) 40%, transparent);
   }
 }
 
@@ -630,7 +637,7 @@
   font-size: 1.6rem;
   animation: scrollBounce 2s cubic-bezier(0.45, 0.05, 0.55, 0.95) infinite;
   color: var(--plant-green);
-  filter: drop-shadow(0 0 12px rgba(34, 197, 94, 0.3));
+  filter: drop-shadow(0 0 12px color-mix(in srgb, var(--success-color) 30%, transparent));
 }
 
 @media (max-width: 1200px) {
@@ -713,14 +720,14 @@
     /* kill expensive 3D float on mobile */
     animation: none;
     transform: none;
-    box-shadow: 0 20px 50px rgba(0,0,0,0.4);
+    box-shadow: 0 20px 50px color-mix(in srgb, var(--bg-color) 40%, transparent);
   }
 
   /* disable perspective hover on touch devices */
   .pp-page .pp-hero-visual:hover {
     animation: none;
     transform: scale(1.02);
-    box-shadow: 0 30px 70px rgba(0, 0, 0, 0.5);
+    box-shadow: 0 30px 70px color-mix(in srgb, var(--bg-color) 50%, transparent);
   }
 
   .pp-scroll-hint {
@@ -787,7 +794,7 @@
     padding: 3rem 1.5rem;
     margin: 4rem 0;
     border-radius: 32px;
-    background: linear-gradient(180deg, transparent, rgba(58, 143, 62, 0.08), transparent);
+    background: linear-gradient(180deg, transparent, color-mix(in srgb, var(--accent-primary) 8%, transparent), transparent);
   }
 
   .pp-metric-val {
@@ -886,7 +893,7 @@
   .pp-glass:hover {
     transform: none;
     box-shadow: var(--glass-shadow);
-    border-color: var(--glass-border-color, rgba(255, 255, 255, 0.08));
+    border-color: var(--glass-border-color, color-mix(in srgb, var(--text-primary) 8%, transparent));
   }
 
   .pp-btn-primary:hover {
@@ -915,7 +922,7 @@
     left: 0;
     right: 0;
     height: 400px;
-    background: radial-gradient(circle at 50% -20%, rgba(34, 197, 94, 0.12), transparent 70%);
+    background: radial-gradient(circle at 50% -20%, color-mix(in srgb, var(--success-color) 12%, transparent), transparent 70%);
     pointer-events: none;
     z-index: -1;
   }
@@ -928,12 +935,14 @@
     border: 1px solid var(--glass-border-color);
   }
 
-  .pp-card h3, .pp-bento-item h3 {
+  .pp-card h3,
+  .pp-bento-item h3 {
     font-size: 1.4rem;
     margin-bottom: 0.75rem;
   }
 
-  .pp-card p, .pp-bento-item p {
+  .pp-card p,
+  .pp-bento-item p {
     font-size: 1.05rem;
     line-height: 1.6;
     color: var(--text-secondary);

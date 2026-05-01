@@ -177,10 +177,16 @@ body {
       "sidebar main";
   }
 
-  /* Public landing page: hide sidebar entirely */
+  /* Public landing page: hide sidebar entirely, keep nav row */
   .app-shell.public-shell {
     grid-template-columns: 1fr;
-    grid-template-areas: "main";
+    grid-template-rows: auto 1fr;
+    grid-template-areas:
+      "nav"
+      "main";
+    height: auto;
+    min-height: 100vh;
+    overflow: visible;
   }
 
   .sidebar {
@@ -220,6 +226,14 @@ body {
     height: 100vh;
     width: 100%;
     max-width: 100%;
+  }
+
+  /* Public pages: let body/window scroll, not the container */
+  .public-shell .container {
+    height: auto;
+    min-height: calc(100vh - 5rem);
+    overflow-y: unset;
+    overflow-x: unset;
   }
 
   /* Maintain 2 columns for grids on desktop */

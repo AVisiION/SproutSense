@@ -185,7 +185,6 @@ const IntelligenceHub = ({ sensors, sensorDeviceId }) => {
       <header className="ih-hero">
         <div className="ih-hero-content">
           <div className="ih-badge"><i className="fa-solid fa-microchip" /> NEURAL ENGINE ACTIVE</div>
-          <h1 className="ih-title">Intelligence Hub</h1>
           <p className="ih-subtitle">Advanced botanical diagnostics, predictive trends, and AI plant care assistance.</p>
         </div>
         <nav className="ih-nav">
@@ -238,27 +237,68 @@ const IntelligenceHub = ({ sensors, sensorDeviceId }) => {
               </section>
 
               <section className="ih-card ih-summary-strip">
-                <div className="ih-stat">
-                  <span className="label">Moisture</span>
-                  <span className="val">{sensors?.soilMoisture}%</span>
-                  <div className="ih-mini-bar"><div className="fill" style={{ width: `${sensors?.soilMoisture}%`, background: 'var(--plant-green)' }} /></div>
+                {/* Moisture */}
+                <div className="ih-stat-card" style={{ '--stat-color': 'var(--plant-green)' }}>
+                  <div className="ih-stat-card-top">
+                    <div className="ih-stat-icon"><i className="fa-solid fa-droplet" /></div>
+                    <div className="ih-stat-status-dot" />
+                  </div>
+                  <div className="ih-stat-card-mid">
+                    <span className="ih-stat-label">Soil Moisture</span>
+                    <span className="ih-stat-val">{sensors?.soilMoisture ?? '--'}<small style={{ fontSize: '1rem', opacity: 0.6 }}>%</small></span>
+                  </div>
+                  <div className="ih-stat-card-bot">
+                    <div className="ih-stat-bar-track"><div className="ih-stat-bar-fill" style={{ width: `${sensors?.soilMoisture ?? 0}%` }} /></div>
+                    <span className="ih-stat-sub">Optimal: 55–70%</span>
+                  </div>
                 </div>
-                <div className="ih-stat">
-                  <span className="label">Temperature</span>
-                  <span className="val">{sensors?.temperature}°C</span>
-                  <div className="ih-mini-bar"><div className="fill" style={{ width: `${(sensors?.temperature/50)*100}%`, background: '#f59e0b' }} /></div>
+
+                {/* Temperature */}
+                <div className="ih-stat-card" style={{ '--stat-color': '#f59e0b' }}>
+                  <div className="ih-stat-card-top">
+                    <div className="ih-stat-icon"><i className="fa-solid fa-temperature-half" /></div>
+                    <div className="ih-stat-status-dot" />
+                  </div>
+                  <div className="ih-stat-card-mid">
+                    <span className="ih-stat-label">Temperature</span>
+                    <span className="ih-stat-val">{sensors?.temperature ?? '--'}<small style={{ fontSize: '1rem', opacity: 0.6 }}>°C</small></span>
+                  </div>
+                  <div className="ih-stat-card-bot">
+                    <div className="ih-stat-bar-track"><div className="ih-stat-bar-fill" style={{ width: `${Math.min((sensors?.temperature / 50) * 100, 100) ?? 0}%` }} /></div>
+                    <span className="ih-stat-sub">Optimal: 20–27°C</span>
+                  </div>
                 </div>
-                <div className="ih-stat">
-                  <span className="label">Humidity</span>
-                  <span className="val">{sensors?.humidity}%</span>
-                  <div className="ih-mini-bar"><div className="fill" style={{ width: `${sensors?.humidity}%`, background: '#22d3ee' }} /></div>
+
+                {/* Humidity */}
+                <div className="ih-stat-card" style={{ '--stat-color': '#22d3ee' }}>
+                  <div className="ih-stat-card-top">
+                    <div className="ih-stat-icon"><i className="fa-solid fa-cloud-rain" /></div>
+                    <div className="ih-stat-status-dot" />
+                  </div>
+                  <div className="ih-stat-card-mid">
+                    <span className="ih-stat-label">Humidity</span>
+                    <span className="ih-stat-val">{sensors?.humidity ?? '--'}<small style={{ fontSize: '1rem', opacity: 0.6 }}>%</small></span>
+                  </div>
+                  <div className="ih-stat-card-bot">
+                    <div className="ih-stat-bar-track"><div className="ih-stat-bar-fill" style={{ width: `${sensors?.humidity ?? 0}%` }} /></div>
+                    <span className="ih-stat-sub">Optimal: 50–70%</span>
+                  </div>
                 </div>
-                <div className="ih-stat">
-                  <span className="label">AI Alerts</span>
-                  <span className="val" style={{color: insights?.diseaseAnalysis?.activeAlerts > 0 ? '#ef4444' : 'var(--plant-green)'}}>
-                    {insights?.diseaseAnalysis?.activeAlerts || 0}
-                  </span>
-                  <div className="ih-mini-bar"><div className="fill" style={{ width: insights?.diseaseAnalysis?.activeAlerts > 0 ? '100%' : '0%', background: '#ef4444' }} /></div>
+
+                {/* AI Alerts */}
+                <div className="ih-stat-card" style={{ '--stat-color': insights?.diseaseAnalysis?.activeAlerts > 0 ? '#ef4444' : 'var(--plant-green)' }}>
+                  <div className="ih-stat-card-top">
+                    <div className="ih-stat-icon"><i className="fa-solid fa-triangle-exclamation" /></div>
+                    <div className="ih-stat-status-dot" />
+                  </div>
+                  <div className="ih-stat-card-mid">
+                    <span className="ih-stat-label">AI Alerts</span>
+                    <span className="ih-stat-val">{insights?.diseaseAnalysis?.activeAlerts ?? 0}</span>
+                  </div>
+                  <div className="ih-stat-card-bot">
+                    <div className="ih-stat-bar-track"><div className="ih-stat-bar-fill" style={{ width: insights?.diseaseAnalysis?.activeAlerts > 0 ? '100%' : '0%' }} /></div>
+                    <span className="ih-stat-sub">{insights?.diseaseAnalysis?.activeAlerts > 0 ? 'Action required' : 'All clear'}</span>
+                  </div>
                 </div>
               </section>
             </div>

@@ -50,12 +50,16 @@ const ScrollReveal = ({
       return;
     }
 
-    // Detect scroller: check prop ref -> then global '.container' -> then window
+    // On public pages, window is always the scroller (container has no fixed height/overflow)
+    const isPublicShell = !!document.querySelector('.app-shell.public-shell');
     const containerEl = document.querySelector('.container');
-    const scroller = (scrollContainerRef && scrollContainerRef.current) 
-      ? scrollContainerRef.current 
-      : (containerEl || window);
-    
+    const containerIsScrollable = !isPublicShell && containerEl
+      ? ['auto', 'scroll'].includes(getComputedStyle(containerEl).overflowY)
+      : false;
+    const scroller = (scrollContainerRef && scrollContainerRef.current)
+      ? scrollContainerRef.current
+      : (containerIsScrollable ? containerEl : window);
+
     // Animation target: either the words (if string) or the children container itself
     const targets = isString ? el.querySelectorAll('.word') : el.children;
 
@@ -80,8 +84,8 @@ const ScrollReveal = ({
     if (targets.length > 0) {
       gsap.fromTo(
         targets,
-        { 
-          opacity: isString ? baseOpacity : 0, 
+        {
+          opacity: isString ? baseOpacity : 0,
           filter: enableBlur ? `blur(${blurStrength}px)` : 'none',
           y: isString ? 0 : 20
         },
@@ -102,7 +106,13 @@ const ScrollReveal = ({
       );
     }
 
+    // Refresh after layout settles to get correct positions
+    const rafId = requestAnimationFrame(() => {
+      ScrollTrigger.refresh();
+    });
+
     return () => {
+      cancelAnimationFrame(rafId);
       ScrollTrigger.getAll().forEach(t => {
         if (t.trigger === el) t.kill();
       });

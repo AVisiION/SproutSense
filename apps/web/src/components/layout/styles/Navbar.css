@@ -69,6 +69,11 @@
 .public-navbar .navbar-toggle-elite {
   display: none;
 }
+
+.public-navbar .navbar-toggle-spatial.mode-desktop {
+  display: none;
+}
+
 @media (max-width: 768px) {
   .public-navbar .navbar-toggle-elite {
     display: flex;
