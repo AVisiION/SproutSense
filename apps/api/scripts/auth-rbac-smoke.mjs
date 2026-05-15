@@ -3,13 +3,16 @@ import mongoose from 'mongoose';
 import axios from 'axios';
 import User from '../src/models/User.js';
 import { ACCOUNT_STATUS } from '../src/config/rbac.js';
+import { MongoMemoryServer } from 'mongodb-memory-server';
 
 const API_BASE = process.env.SMOKE_API_BASE || `http://localhost:${process.env.PORT || 5000}/api`;
-const MONGO_URI = process.env.MONGODB_URI;
+let MONGO_URI = process.env.MONGODB_URI;
+let _memoryServer = null;
 
 if (!MONGO_URI) {
-  console.error('[FAIL] MONGODB_URI missing in apps/api/.env');
-  process.exit(1);
+  console.warn('[WARN] MONGODB_URI not set — starting in-memory MongoDB for smoke test');
+  _memoryServer = await MongoMemoryServer.create();
+  MONGO_URI = _memoryServer.getUri();
 }
 
 const runId = Date.now();
@@ -110,5 +113,12 @@ main()
       await mongoose.disconnect();
     } catch {
       // ignore disconnect errors
+    }
+    if (_memoryServer) {
+      try {
+        await _memoryServer.stop();
+      } catch {
+        // ignore
+      }
     }
   });

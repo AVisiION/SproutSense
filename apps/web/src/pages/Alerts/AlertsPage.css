@@ -1,4 +1,15 @@
 /* AlertsPage.css */
+.alerts-page::before {
+  /*
+   * NOTE: This page still uses several rgba/#hex literals for badges,
+   * borders and backgrounds to maintain visual parity with older
+   * themes. When possible replace these with CSS tokens from
+   * `apps/web/src/styles/variables.css` (e.g. --warning-color,
+   * --danger-color) so theme switching is consistent.
+   */
+  content: '';
+  display: none;
+}
 .alerts-page {
   padding: 1.5rem;
   max-width: 1200px;

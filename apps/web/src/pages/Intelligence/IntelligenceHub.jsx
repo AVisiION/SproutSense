@@ -10,11 +10,11 @@ import './IntelligenceHub.css';
 
 // ─── Constants & Meta ────────────────────────────────────────────────────────
 const SEV_META = {
-  critical: { color: '#ef4444', bg: 'rgba(239,68,68,0.10)',  border: 'rgba(239,68,68,0.28)',  fa: 'fa-circle-exclamation',      label: 'Critical' },
-  high:     { color: '#f97316', bg: 'rgba(249,115,22,0.10)', border: 'rgba(249,115,22,0.28)', fa: 'fa-triangle-exclamation',    label: 'High'     },
-  medium:   { color: '#f59e0b', bg: 'rgba(245,158,11,0.10)', border: 'rgba(245,158,11,0.28)', fa: 'fa-circle-info',             label: 'Medium'   },
-  low:      { color: '#22d3ee', bg: 'rgba(34,211,238,0.10)', border: 'rgba(34,211,238,0.28)', fa: 'fa-circle-info',             label: 'Low'      },
-  none:     { color: '#22c55e', bg: 'rgba(34,197,94,0.08)',  border: 'rgba(34,197,94,0.20)',  fa: 'fa-circle-check',            label: 'Healthy'  },
+  critical: { color: 'var(--rec-critical)', bg: 'var(--alert-error-bg)',  border: 'var(--alert-error-border)',  fa: 'fa-circle-exclamation',      label: 'Critical' },
+  high:     { color: 'var(--rec-high)',     bg: 'var(--alert-warning-bg)', border: 'var(--alert-warning-border)', fa: 'fa-triangle-exclamation',    label: 'High'     },
+  medium:   { color: 'var(--rec-medium)',   bg: 'var(--alert-warning-bg)', border: 'var(--alert-warning-border)', fa: 'fa-circle-info',             label: 'Medium'   },
+  low:      { color: 'var(--rec-medium)',   bg: 'var(--alert-info-bg)',    border: 'var(--alert-info-border)',    fa: 'fa-circle-info',             label: 'Low'      },
+  none:     { color: 'var(--health-healthy)', bg: 'var(--success-bg)',     border: 'var(--success-border)',      fa: 'fa-circle-check',            label: 'Healthy'  },
 };
 
 const CAT_FA = {
@@ -73,14 +73,17 @@ const MarkdownText = ({ text }) => {
 
 const HealthRing = ({ score = 0 }) => {
   const R = 58, C = 2 * Math.PI * R;
-  const color = score >= 80 ? '#22c55e' : score >= 60 ? '#f59e0b' : '#ef4444';
+  // Resolve health/severity tokens to concrete colors for the SVG ring.
+  // We use the resulting color for stroke and drop-shadow filters so the
+  // ring matches the active theme visually.
+  const color = score >= 80 ? getCSSVariableValue('--health-healthy') : score >= 60 ? getCSSVariableValue('--rec-high') : getCSSVariableValue('--rec-critical');
   return (
     <div className="ih-ring-wrap">
       <svg viewBox="0 0 140 140" width="100%" height="100%">
         <circle cx="70" cy="70" r={R} fill="none" stroke="rgba(255,255,255,0.05)" strokeWidth="10" />
         <circle cx="70" cy="70" r={R} fill="none" stroke={color} strokeWidth="10" strokeLinecap="round"
           strokeDasharray={`${(score / 100) * C} ${C}`} strokeDashoffset={C * 0.25}
-          style={{ filter: `drop-shadow(0 0 8px ${color}60)`, transition: 'stroke-dasharray 1s ease-out' }} />
+          style={{ filter: `drop-shadow(0 0 8px ${color})`, transition: 'stroke-dasharray 1s ease-out' }} />
       </svg>
       <div className="ih-ring-inner">
         <span className="ih-ring-score" style={{ color }}>{score}</span>
@@ -220,7 +223,7 @@ const IntelligenceHub = ({ sensors, sensorDeviceId }) => {
               </section>
 
               <section className="ih-card ih-quick-actions">
-                <div className="ih-badge" style={{ background: 'rgba(34, 197, 94, 0.08)', color: 'var(--plant-green)', borderColor: 'rgba(34, 197, 94, 0.2)' }}>
+                <div className="ih-badge" style={{ background: 'var(--success-bg)', color: 'var(--plant-green)', borderColor: 'var(--success-border)' }}>
                   <i className="fa-solid fa-comment-dots" /> AI ASSISTANT
                 </div>
                 <h3 style={{ fontSize: '1.8rem', margin: '1rem 0 1.5rem' }}>Neural Consultation</h3>
@@ -238,7 +241,7 @@ const IntelligenceHub = ({ sensors, sensorDeviceId }) => {
 
               <section className="ih-card ih-summary-strip">
                 {/* Moisture */}
-                <div className="ih-stat-card" style={{ '--stat-color': 'var(--plant-green)' }}>
+                <div className="ih-stat-card" style={{ '--stat-color': 'var(--chart-moisture)' }}>
                   <div className="ih-stat-card-top">
                     <div className="ih-stat-icon"><i className="fa-solid fa-droplet" /></div>
                     <div className="ih-stat-status-dot" />
@@ -254,7 +257,7 @@ const IntelligenceHub = ({ sensors, sensorDeviceId }) => {
                 </div>
 
                 {/* Temperature */}
-                <div className="ih-stat-card" style={{ '--stat-color': '#f59e0b' }}>
+                <div className="ih-stat-card" style={{ '--stat-color': 'var(--chart-temp)' }}>
                   <div className="ih-stat-card-top">
                     <div className="ih-stat-icon"><i className="fa-solid fa-temperature-half" /></div>
                     <div className="ih-stat-status-dot" />
@@ -270,7 +273,7 @@ const IntelligenceHub = ({ sensors, sensorDeviceId }) => {
                 </div>
 
                 {/* Humidity */}
-                <div className="ih-stat-card" style={{ '--stat-color': '#22d3ee' }}>
+                <div className="ih-stat-card" style={{ '--stat-color': 'var(--chart-humidity)' }}>
                   <div className="ih-stat-card-top">
                     <div className="ih-stat-icon"><i className="fa-solid fa-cloud-rain" /></div>
                     <div className="ih-stat-status-dot" />
@@ -286,7 +289,7 @@ const IntelligenceHub = ({ sensors, sensorDeviceId }) => {
                 </div>
 
                 {/* AI Alerts */}
-                <div className="ih-stat-card" style={{ '--stat-color': insights?.diseaseAnalysis?.activeAlerts > 0 ? '#ef4444' : 'var(--plant-green)' }}>
+                <div className="ih-stat-card" style={{ '--stat-color': insights?.diseaseAnalysis?.activeAlerts > 0 ? 'var(--rec-critical)' : 'var(--health-healthy)' }}>
                   <div className="ih-stat-card-top">
                     <div className="ih-stat-icon"><i className="fa-solid fa-triangle-exclamation" /></div>
                     <div className="ih-stat-status-dot" />
@@ -337,7 +340,7 @@ const IntelligenceHub = ({ sensors, sensorDeviceId }) => {
             <div className="ih-trends-grid">
               <div className="ih-card ih-chart-card">
                  <h3>Sensor History (Last 40 Points)</h3>
-                 <LineChart data={insights?.graphData?.soilMoisture} color="#22c55e" unit="%" label="Moisture" />
+                 <LineChart data={insights?.graphData?.soilMoisture} color={getCSSVariableValue('--chart-moisture')} unit="%" label="Moisture" />
               </div>
               <div className="ih-card ih-python-card">
                  <h3>Python Predictive Modeling</h3>

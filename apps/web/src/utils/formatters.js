@@ -50,6 +50,10 @@ export const getDiseaseSeverity = (disease, confidence) => {
  * Get disease severity color
  */
 export const getDiseaseSeverityColor = (severity) => {
+  // NOTE: these color literals are legacy fallbacks used by non-theme-aware
+  // helpers. Prefer mapping severities to CSS tokens (e.g. --alert-error)
+  // so themes can override colors globally. This helper remains for
+  // quick lookups and backward compatibility.
   const colors = {
     'critical': '#ef4444',
     'warning': '#f59e0b',

@@ -1,11 +1,5 @@
 ﻿# Packages
 
-Workspace for shared packages and reusable modules.
+Shared packages and utilities consumed by multiple apps (contracts, validation schemas, helpers).
 
-Typical candidates:
-
-- shared API contracts
-- shared validation schemas
-- shared utility libraries used by apps/api and apps/web
-
-Keep package APIs stable and versioned when consumed across apps.
+If you add or change a package used by `apps/api` or `apps/web`, update its version and consumers accordingly. See `docs/backend/backend-guide.md` for guidance on package versioning and publishing.

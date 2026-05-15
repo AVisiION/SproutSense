@@ -87,6 +87,7 @@ export default function AdminPanelPage() {
   const [sensorFormErrors, setSensorFormErrors] = useState({});
   const [editingSensorId, setEditingSensorId] = useState(null);
   const [users, setUsers] = useState([]);
+  const [usersLoading, setUsersLoading] = useState(false);
   const [usersQuery, setUsersQuery] = useState('');
   const [userForm, setUserForm] = useState(DEFAULT_USER_FORM);
   const [userFormErrors, setUserFormErrors] = useState({});
@@ -115,6 +116,7 @@ export default function AdminPanelPage() {
   const [lastProvisioningSeed, setLastProvisioningSeed] = useState(null);
   const [lastGeneratedPairingKey, setLastGeneratedPairingKey] = useState(null);
   const [deviceKeys, setDeviceKeys] = useState([]);
+  const [loadingDeviceKeys, setLoadingDeviceKeys] = useState(false);
   const [creatingDeviceKey, setCreatingDeviceKey] = useState(false);
   const [generatedDeviceToken, setGeneratedDeviceToken] = useState(null);
   const [selectedDeviceType, setSelectedDeviceType] = useState('ESP32-SENSOR');
@@ -357,6 +359,32 @@ export default function AdminPanelPage() {
     }
   }, [hydrateLimitsForm, hydrateUiPreferences, log]);
 
+  const loadDeviceKeys = useCallback(async () => {
+    setLoadingDeviceKeys(true);
+    try {
+      const keysRes = await deviceAPI.listKeys().catch(() => ({ devices: [] }));
+      setDeviceKeys(keysRes?.devices || keysRes?.data?.devices || []);
+    } catch (err) {
+      log(`Device keys load error: ${err.message}`, LOG_TYPES.error);
+    } finally {
+      setLoadingDeviceKeys(false);
+    }
+  }, [log]);
+
+  const loadUsers = useCallback(async () => {
+    setUsersLoading(true);
+    try {
+      const res = await usersAPI.list(200).catch(() => ({ users: [] }));
+      const list = res?.users || res?.data?.users || [];
+      setUsers(list);
+      log('User list refreshed', LOG_TYPES.info);
+    } catch (err) {
+      log(`Failed to load users: ${err.message}`, LOG_TYPES.error);
+    } finally {
+      setUsersLoading(false);
+    }
+  }, [log]);
+
   const loadSensors = useCallback(() => {
     setSensorRegistry(getSensorRegistry());
   }, []);
@@ -395,9 +423,9 @@ export default function AdminPanelPage() {
 
   useEffect(() => {
     if (activeSection === 'device-keys' && deviceKeys.length === 0) {
-      fetchAllData();
+      loadDeviceKeys();
     }
-  }, [activeSection, deviceKeys.length, fetchAllData]);
+  }, [activeSection, deviceKeys.length, loadDeviceKeys]);
 
   const handleSelectKey = (deviceId, checked) => {
     if (checked) {
@@ -1292,7 +1320,7 @@ export default function AdminPanelPage() {
           ) : (
             <>
               {isViewerReadOnly && (
-                <div style={{ marginBottom: '1rem', padding: '0.9rem 1rem', borderRadius: '0.85rem', background: 'rgba(14, 165, 233, 0.12)', border: '1px solid rgba(56, 189, 248, 0.25)', color: '#c7f2ff', fontSize: '0.92rem', fontWeight: 500 }}>
+                <div style={{ marginBottom: '1rem', padding: '0.9rem 1rem', borderRadius: '0.85rem', background: 'var(--info-bg)', border: 'var(--info-border)', color: 'var(--text-color)', fontSize: '0.92rem', fontWeight: 500 }}>
                   Viewer mode is read only. Data can be inspected, but admin controls are disabled.
                 </div>
               )}
@@ -1485,7 +1513,7 @@ export default function AdminPanelPage() {
               </button>
             </div>
             <div className="adm-modal-body">
-              <p style={{ fontSize: '0.85rem', color: '#94a3b8', marginBottom: '1.2rem' }}>
+              <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '1.2rem' }}>
                 Manually link <strong>{targetDeviceIdForForcePair}</strong> to a specific user account. 
                 This will generate a new access token for the device.
               </p>
@@ -1498,10 +1526,10 @@ export default function AdminPanelPage() {
                   style={{
                     width: '100%',
                     padding: '0.8rem',
-                    background: 'rgba(0,0,0,0.3)',
-                    border: '1px solid rgba(255,255,255,0.1)',
+                    background: 'var(--card-bg)',
+                    border: 'var(--card-border)',
                     borderRadius: '0.5rem',
-                    color: '#fff',
+                    color: 'var(--text-color)',
                     outline: 'none'
                   }}
                 >

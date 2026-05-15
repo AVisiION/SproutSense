@@ -218,10 +218,20 @@ export function ConfigCard({ onNotification }) {
     try {
       if (opt.key === 'all') {
         const res = await configAPI.clearAllHistory('ESP32-SENSOR');
-        onNotification?.(`Cleared ${res?.totalRecordsDeleted || 0} records`, 'success');
+        // backend returns { deleted: { sensorReadings: N, wateringLogs: N, diseaseDetections: N } }
+        let total = 0;
+        if (res) {
+          if (res.deleted && typeof res.deleted === 'object') {
+            total = Object.values(res.deleted).reduce((s, v) => s + (Number(v) || 0), 0);
+          } else {
+            total = Number(res.deleted ?? res.deletedCount ?? res.totalRecordsDeleted ?? res.recordsDeleted ?? 0) || 0;
+          }
+        }
+        onNotification?.(`Cleared ${total} records`, 'success');
       } else {
         const res = await opt.fn('ESP32-SENSOR', opt.days);
-        onNotification?.(`Cleared ${res?.recordsDeleted || 0} ${opt.label}`, 'success');
+        const count = Number(res?.deleted ?? res?.deletedCount ?? res?.recordsDeleted ?? 0) || 0;
+        onNotification?.(`Cleared ${count} ${opt.label}`, 'success');
       }
     } catch {
       onNotification?.('Failed to clear history', 'error');

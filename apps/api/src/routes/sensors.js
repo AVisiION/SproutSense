@@ -3,6 +3,7 @@ import {
   getLatestSensors,
   getSensorHistory,
   getHourlyAverages,
+  getLatestSensorsByUser,
   createSensorReading,
   getSensorStats
 } from '../controllers/sensorController.js';
@@ -23,6 +24,9 @@ router.use(authenticate, requireAccountState());
 
 // GET /api/sensors - Get latest sensor readings
 router.get('/', readLimiter, requirePermissions([PERMISSIONS.SENSORS_READ]), getLatestSensors);
+
+// GET /api/sensors/by-user - Get latest sensor readings grouped by user
+router.get('/by-user', readLimiter, requirePermissions([PERMISSIONS.SENSORS_READ]), getLatestSensorsByUser);
 
 // GET /api/sensors/history - Get sensor history
 router.get('/history', readLimiter, requirePermissions([PERMISSIONS.SENSORS_READ]), validateHistoryQuery, getSensorHistory);

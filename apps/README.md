@@ -1,8 +1,8 @@
 ﻿# Apps
 
-This folder contains deployable application units.
+This folder contains the application code for SproutSense.
 
-- apps/api: backend API service
-- apps/web: frontend dashboard
+- `apps/api` — backend service
+- `apps/web` — frontend application
 
-Use this as the canonical app root. Legacy top-level wrappers are retained only for compatibility.
+See the top-level README and the `docs/` folder for setup, development, and deployment instructions.

@@ -13,12 +13,14 @@
 :root {
 
   /* ── BACKGROUNDS */
+  /* Page-level background tokens. Used for the app chrome and meta theme-color. */
   --bg-gradient        : linear-gradient(145deg, #020905 0%, #040e08 50%, #071510 80%, #020905 100%);
   --bg-color           : #020905;
   --bg-secondary       : #040e08;
   --bg-tertiary        : #071510;
 
   /* ── GLASS */
+  /* Glass tokens control translucent card surfaces (blur, border, highlight). */
   --glass-color        : rgb(0 0 0 / 3%);
   --glass-color-strong : rgb(0 0 0 / 6%);
   --glass-blur         : 22px;
@@ -37,6 +39,7 @@
   --card-shadow : var(--glass-shadow);
 
   /* ── BRAND ACCENTS */
+  /* Primary brand and focus ring used for buttons, links and focus outlines. */
   --accent-primary     : #3A8F3E;
   --accent-hover       : #2F7533;
   --accent-secondary   : #0A9E94;
@@ -44,6 +47,7 @@
   --focus-ring         : 0 0 0 3px rgba(58, 143, 62, 0.22);
 
   /* ── PLANT TOKENS */
+  /* Semantic plant-related colors (for UI metaphors like leaves, health). */
   --plant-green        : #4EA852;
   --plant-teal         : #0A9E94;
   --plant-cyan         : #18BCAF;
@@ -53,6 +57,7 @@
   --plant-deep         : #1F5C23;
 
   /* ── STATUS */
+  /* Status palette: use these for badges, alerts and status indicators. */
   --success-color      : #3A8F3E;
   --success-bg         : rgba(58, 143, 62, 0.12);
   --success-border     : rgba(58, 143, 62, 0.35);
@@ -77,6 +82,7 @@
   --primary-color      : var(--accent-primary);
 
   /* ── TEXT */
+  /* Text tokens: prefer semantic `--text-color` in components. */
   --text-primary       : #C8DCC8;
   --text-secondary     : rgba(170, 200, 170, 0.72);
   --text-tertiary      : rgba(120, 160, 122, 0.52);
@@ -85,24 +91,28 @@
   --text-color         : var(--text-primary);
 
   /* ── BORDERS */
+  /* Border & divider tokens used across cards, tables and grids. */
   --border-color       : rgba(255, 255, 255, 0.055);
   --border-soft        : rgba(255, 255, 255, 0.035);
   --border-moss        : rgba(58, 143, 62, 0.13);
   --divider-color      : rgba(255, 255, 255, 0.04);
 
   /* ── GLOW */
+  /* Box-shadow glows used for focus, ambient effects and hero accents. */
   --glow-green         : 0 0 20px rgba(58, 143, 62, 0.16);
   --glow-cyan          : 0 0 20px rgba(10, 158, 148, 0.14);
   --glow-amber         : 0 0 16px rgba(230, 172, 0, 0.13);
   --glow-orchid        : 0 0 16px rgba(200, 110, 196, 0.11);
 
   /* ── SURFACES */
+  /* Surface tokens represent layered UI surfaces (hover/active states). */
   --surface-1          : rgba(255, 255, 255, 0.015);
   --surface-2          : rgba(255, 255, 255, 0.030);
   --surface-hover      : rgba(58, 143, 62, 0.07);
   --surface-active     : rgba(58, 143, 62, 0.12);
 
   /* ── SEMANTIC SENSOR COLORS (Dark Mode - Vibrant) */
+  /* Sensor colors map to sensor types and appear in charts/gauges. */
   --sensor-moisture    : #22c55e;    /* Success Green */
   --sensor-temperature : #f59e0b;    /* Warm Amber */
   --sensor-humidity    : #22d3ee;    /* Bright Cyan */
@@ -110,6 +120,7 @@
   --sensor-light       : #fbbf24;    /* Golden Yellow */
 
   /* ── CONTROL ACCENT COLORS (Dark Mode) */
+  /* Control accents used for toggles and mode chips (manual/auto/etc). */
   --control-manual     : #22d3ee;    /* Cyan */
   --control-timed      : #a78bfa;    /* Purple */
   --control-auto       : #22c55e;    /* Green */
@@ -117,6 +128,7 @@
   --control-growth     : #34d399;    /* Emerald */
 
   /* ── HEALTH STATUS COLORS */
+  /* Health and recommendation severity colors used by AI and alerts. */
   --health-healthy     : #22c55e;    /* Vibrant Green */
   --health-disease     : #ef4444;    /* Bright Red */
   --health-neutral     : #14b8a6;    /* Teal */
@@ -133,6 +145,7 @@
   --gauge-safe         : #00ff00;    /* Pure Green */
 
   /* ── AURORA ANIMATION COLORS */
+  /* Colors for the animated Aurora background; kept in tokens for palette swaps. */
   --aurora-primary     : #06b6d4;    /* Cyan */
   --aurora-secondary   : #14b8a6;    /* Teal */
   --aurora-tertiary    : #22c55e;    /* Green */
@@ -152,6 +165,7 @@
   --admin-badge        : #43a047;    /* Admin green badge */
 
   /* ── MOCK MODE BANNER COLORS (Dark) */
+  /* Temporary UI used when `ENABLE_TEST_MODE` is active. */
   --mock-banner-bg-sim : linear-gradient(90deg, #dbeafe, #d1fae5);
   --mock-banner-bg-normal: #fef3c7;
   --mock-banner-border-sim: 1px solid #60a5fa;
@@ -167,6 +181,7 @@
   --mock-banner-button-border: 1px solid rgba(34, 211, 238, 0.3);
 
   /* ── ANALYTICS CHART COLORS (Dark) */
+  /* Chart series colors. Prefer using `getCSSVariableValue()` in JS when a concrete color string is required. */
   --chart-moisture  : #00f2fe;
   --chart-temp      : #f59e0b;
   --chart-humidity  : #22d3ee;
@@ -191,6 +206,7 @@
   --admin-avatar-text: #fff;
 
   /* ── ALERT STATUS COLORS (Dark) */
+  /* Alert colors: use `--alert-*-bg` and `--alert-*-border` for panels and list items. */
   --alert-error  : #ef4444;
   --alert-warning: #f59e0b;
   --alert-info   : #3b82f6;
@@ -207,6 +223,7 @@
   --sensor-ec           : #34d399;
 
   /* ── GRADIENTS */
+  /* Reusable gradients for hero, admin panels and badges. */
   --grad-primary       : linear-gradient(135deg, #1F5C23, #3A8F3E);
   --grad-cyan          : linear-gradient(135deg, #0A9E94, #18BCAF);
   --grad-forest        : linear-gradient(135deg, #071510, #3A8F3E, #0A9E94);
@@ -214,6 +231,7 @@
                          radial-gradient(ellipse at bottom right, rgba(10,158,148,0.05) 0%, transparent 55%);
 
   /* ── TOGGLES */
+  /* Toggle dimensions and tokenized visual states for the switch component. */
   --toggle-width       : 44px;
   --toggle-height      : 24px;
   --toggle-knob-size   : 18px;
@@ -223,6 +241,7 @@
   --toggle-shadow      : 0 2px 10px rgba(58, 143, 62, 0.20);
 
   /* ── LAYOUT */
+  /* Layout tokens control top-level dimensions like sidebar and navbar. */
   --sidebar-width      : 240px;
   --navbar-height      : 64px;
   --transition-speed   : 0.25s ease;

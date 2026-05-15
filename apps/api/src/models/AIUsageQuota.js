@@ -116,7 +116,7 @@ aiUsageQuotaSchema.statics.consumeTodayQuota = async function(deviceId = 'ESP32-
       $inc: { usedCount: 1 },
       $set: { lastUsedAt: now }
     },
-    { new: true }
+    { returnDocument: 'after' }
   ).lean();
 
   if (!quotaDoc) {

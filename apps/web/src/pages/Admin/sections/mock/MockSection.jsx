@@ -46,27 +46,27 @@ export default function MockSection({ mockEnabled, handleMockToggle }) {
         <div style={{ 
           marginBottom: '1.5rem', 
           padding: '1rem 1.5rem', 
-          background: 'linear-gradient(135deg, rgba(34, 211, 238, 0.08), rgba(16, 185, 129, 0.05))',
+          background: 'var(--grad-glow)',
           borderRadius: '0.75rem',
-          border: '1px solid rgba(34, 211, 238, 0.2)',
+          border: 'var(--info-border)',
           display: 'grid',
           gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))',
           gap: '1rem',
           alignItems: 'center'
         }}>
           <div style={{ textAlign: 'center' }}>
-            <div style={{ fontSize: '0.75rem', color: '#94a3b8', textTransform: 'uppercase', fontWeight: 600 }}>Current Scenario</div>
-            <div style={{ fontSize: '1.1rem', color: '#22d3ee', fontWeight: 700, textTransform: 'capitalize' }}>{currentScenario}</div>
+            <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 600 }}>Current Scenario</div>
+            <div style={{ fontSize: '1.1rem', color: 'var(--chart-humidity)', fontWeight: 700, textTransform: 'capitalize' }}>{currentScenario}</div>
           </div>
 
           <div style={{ textAlign: 'center' }}>
-            <div style={{ fontSize: '0.75rem', color: '#94a3b8', textTransform: 'uppercase', fontWeight: 600 }}>Sensors Active</div>
-            <div style={{ fontSize: '1.1rem', color: '#10b981', fontWeight: 700 }}>{sensorCount}</div>
+            <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 600 }}>Sensors Active</div>
+            <div style={{ fontSize: '1.1rem', color: 'var(--plant-green)', fontWeight: 700 }}>{sensorCount}</div>
           </div>
 
           <div style={{ textAlign: 'center' }}>
-            <div style={{ fontSize: '0.75rem', color: '#94a3b8', textTransform: 'uppercase', fontWeight: 600 }}>Alerts</div>
-            <div style={{ fontSize: '1.1rem', color: alertCount > 0 ? '#f59e0b' : '#6b7280', fontWeight: 700 }}>{alertCount}</div>
+            <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 600 }}>Alerts</div>
+            <div style={{ fontSize: '1.1rem', color: alertCount > 0 ? 'var(--rec-high)' : 'var(--sensor-card-fallback)', fontWeight: 700 }}>{alertCount}</div>
           </div>
 
           <div style={{ textAlign: 'center' }}>
@@ -78,9 +78,9 @@ export default function MockSection({ mockEnabled, handleMockToggle }) {
               alignItems: 'center',
               justifyContent: 'center',
               gap: '0.5rem',
-              color: isSimulating ? '#22d3ee' : '#6b7280'
+              color: isSimulating ? 'var(--chart-humidity)' : 'var(--sensor-card-fallback)'
             }}>
-              {isSimulating && <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#22d3ee', animation: 'pulse 2s infinite' }} />}
+              {isSimulating && <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: 'var(--chart-humidity)', animation: 'pulse 2s infinite' }} />}
               {isSimulating ? 'ON' : 'OFF'}
             </div>
           </div>
@@ -97,17 +97,17 @@ export default function MockSection({ mockEnabled, handleMockToggle }) {
             Turn on the switch above to reveal the control panel and inject mock scenarios into the dashboard.
           </p>
 
-          <div style={{
+            <div style={{
             marginTop: '1.5rem',
             padding: '1rem',
-            background: 'rgba(34, 211, 238, 0.05)',
+            background: 'var(--card-bg)',
             borderRadius: '0.5rem',
-            border: '1px solid rgba(34, 211, 238, 0.15)',
+            border: 'var(--border-color)',
             fontSize: '0.85rem',
-            color: '#cbd5e1',
+            color: 'var(--text-muted)',
             lineHeight: 1.6
           }}>
-            <strong style={{ color: '#22d3ee' }}>💡 Quick Start:</strong>
+            <strong style={{ color: 'var(--chart-humidity)' }}>💡 Quick Start:</strong>
             <ol style={{ margin: '0.5rem 0 0', paddingLeft: '1.5rem' }}>
               <li>Enable the switch above</li>
               <li>Go to the <strong>Preset Scenarios</strong> tab</li>

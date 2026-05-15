@@ -224,8 +224,13 @@ export function getSensorValue(reading, sensor) {
 }
 
 export function getStatusForValue(sensor, value) {
+  // Returns a status object for a sensor reading.
+  // NOTE: `color` values are CSS custom property strings (e.g. 'var(--rec-critical)').
+  // Components should prefer using the CSS token directly, or resolve it via
+  // `getCSSVariableValue()` in JS when a concrete color string is required
+  // (for concatenation or drop-shadow usage).
   if (!sensor || value == null || !Number.isFinite(Number(value))) {
-    return { level: 'offline', color: '#94a3b8', label: 'No data' };
+    return { level: 'offline', color: 'var(--text-muted)', label: 'No data' };
   }
 
   const numberValue = Number(value);
@@ -235,14 +240,14 @@ export function getStatusForValue(sensor, value) {
   const critical = Number(sensor.criticalThreshold);
 
   if (numberValue < min || numberValue > max || numberValue >= critical) {
-    return { level: 'critical', color: '#ef4444', label: 'Critical' };
+    return { level: 'critical', color: 'var(--rec-critical)', label: 'Critical' };
   }
 
   if (numberValue >= warn || numberValue <= min) {
-    return { level: 'warning', color: '#f59e0b', label: 'Warning' };
+    return { level: 'warning', color: 'var(--warning-color)', label: 'Warning' };
   }
 
-  return { level: 'normal', color: '#22c55e', label: 'Normal' };
+  return { level: 'normal', color: 'var(--chart-healthy)', label: 'Normal' };
 }
 
 export { SENSOR_REGISTRY_KEY, CHART_TYPES };

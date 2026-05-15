@@ -1,16 +1,5 @@
-﻿# API Docs
+﻿# API
 
-Use this category for API-level documentation.
+API-level documentation: endpoint inventories, request/response shapes, auth and permission notes, and error models.
 
-Suggested content:
-
-- endpoint inventories
-- request and response shapes
-- auth and permission requirements
-- error model and status-code behavior
-
-Primary source code references:
-
-- apps/api/src/routes
-- apps/api/src/controllers
-- apps/api/src/validators
+Primary source: `apps/api/src`. See `docs/backend/backend-guide.md` for API design and usage patterns.

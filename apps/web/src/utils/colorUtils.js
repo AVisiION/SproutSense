@@ -33,8 +33,14 @@ export function getCSSVariableValue(varName) {
 }
 
 /**
- * Fallback color palette for when CSS variables cannot be resolved
- * Dark mode colors
+ * Fallback color palette for when CSS variables cannot be resolved.
+ *
+ * Notes:
+ * - Many parts of the app read CSS variables at runtime (SVG strokes,
+ *   inline styles, chart colors). If the document styles are not yet
+ *   available (server-side rendering, early mount, or CSP restrictions),
+ *   we fall back to these values so UI remains visually consistent.
+ * - Grouped by semantic purpose to make the mapping easy to follow.
  */
 function getFallbackColor(varName) {
   const fallbacks = {
@@ -79,9 +85,11 @@ function getFallbackColor(varName) {
     '--mock-banner-border-normal': '1px solid #fbbf24',
     '--mock-banner-text-sim': '#164e63',
     '--mock-banner-text-normal': '#92400e',
+    // Mock banner / panel fallbacks (used in admin mock UI)
     '--mock-banner-panel-bg': 'rgba(30, 41, 59, 0.95)',
     '--mock-banner-panel-border': '1px solid rgba(148, 163, 184, 0.2)',
     '--mock-banner-panel-text': '#cbd5e1',
+    // Analytics / chart color fallbacks
     '--chart-moisture': '#00f2fe',
     '--chart-temp': '#f59e0b',
     '--chart-humidity': '#22d3ee',
@@ -103,12 +111,14 @@ function getFallbackColor(varName) {
     '--alert-error': '#ef4444',
     '--alert-warning': '#f59e0b',
     '--alert-info': '#3b82f6',
+    // Alert / notification colors
     '--alert-error-bg': 'rgba(239,68,68,0.12)',
     '--alert-warning-bg': 'rgba(245,158,11,0.12)',
     '--alert-info-bg': 'rgba(59,130,246,0.12)',
     '--alert-error-border': 'rgba(239,68,68,0.3)',
     '--alert-warning-border': 'rgba(245,158,11,0.3)',
     '--alert-info-border': 'rgba(59,130,246,0.3)',
+    // Misc fallbacks
     '--sensor-card-fallback': '#475569',
     '--sensor-flow': '#38bdf8',
     '--sensor-ec': '#34d399',

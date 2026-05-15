@@ -741,6 +741,24 @@
   gap: 0.75rem;
 }
 
+/* Data Tools - raw payload viewer */
+.sp-raw-data { margin-top: 0.6rem; }
+.sp-raw-data-head { display:flex; align-items:center; justify-content:space-between; gap:0.6rem; }
+.sp-raw-data-head h3 { margin:0; font-size:0.95rem; font-weight:700; }
+.sp-raw-data-body { margin-top:0.6rem; }
+.sp-raw-pre {
+  background: rgba(0,0,0,0.06);
+  padding: 0.9rem;
+  border-radius: 8px;
+  font-size: 0.78rem;
+  max-height: 220px;
+  overflow: auto;
+  color: var(--text-secondary);
+  white-space: pre-wrap;
+}
+
+.sp-data-tools .sp-about-tile { min-height: 84px; }
+
 .sp-about-tile {
   display: flex;
   flex-direction: column;

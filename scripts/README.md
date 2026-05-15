@@ -1,12 +1,5 @@
 ﻿# Scripts
 
-Repository-level helper scripts.
+Helper scripts used for development, CI, deployment, and maintenance. Document inputs, outputs, and side effects in each script's header comment.
 
-Recommended contents:
-
-- developer automation
-- CI helper scripts
-- deployment wrappers
-- maintenance and migration helpers
-
-Keep scripts idempotent and document expected input and output in script headers.
+Run scripts from the repository root. Prefer cross-platform (Node.js or PowerShell) implementations where practical.

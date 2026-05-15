@@ -1,11 +1,5 @@
-﻿# Issue Templates
+﻿# Issue templates
 
-Place GitHub issue templates in this folder.
+GitHub issue templates live here. Include `bug_report.yml`, `feature_request.yml`, and `documentation.yml`.
 
-Recommended files:
-
-- bug_report.yml
-- feature_request.yml
-- documentation.yml
-
-Keep templates focused on reproducible steps, expected behavior, and environment details.
+Keep templates focused on reproducible steps, expected behavior, environment details, and minimal reproduction cases.

@@ -1,44 +1,15 @@
-﻿# SproutSense Documentation
+﻿# Docs
 
-Table of contents and quick links to all guides.
+High-level documentation and guides for SproutSense. Use the links below to find onboarding steps, architecture, and module-specific guides.
 
-## Table of Contents
+Primary guides:
 
-- [Setup Guide](onboarding/setup.md)
-- [Architecture Overview](architecture/overview.md)
-- [Frontend Guide](frontend/frontend-guide.md)
-- [Backend Guide](backend/backend-guide.md)
-- [ESP32 Firmware Guide](firmware/firmware-guide.md)
-- [Authentication and RBAC](backend/authentication-rbac.md)
-- [Analytics System](frontend/analytics-system.md)
-- [Sensor Management](firmware/sensor-management.md)
-- [Admin Panel](frontend/admin-panel.md)
-- [Mock Mode Guide](MOCK_MODE_GUIDE.md)
-- [Mock Mode Implementation](MOCK_MODE_IMPLEMENTATION.md)
-- [Public Website](frontend/public-pages.md)
-- [AI Features](backend/ai-features.md)
-- [Contributor Guide](onboarding/contributor-guide.md)
-- [Project Report Dossier Scaffold](details.md)
+- Onboarding: `docs/onboarding/setup.md`
+- Architecture: `docs/architecture/overview.md`
+- Backend: `docs/backend/backend-guide.md`
+- Frontend: `docs/frontend/frontend-guide.md`
+- Firmware: `docs/firmware/firmware-guide.md`
 
-## Recommended Reading Order
+Deployment and operations: `docs/operations/deployment-checklist.md` and `docs/operations/render-deployment.md`.
 
-1. [onboarding/setup.md](onboarding/setup.md)
-2. [architecture/overview.md](architecture/overview.md)
-3. [backend/backend-guide.md](backend/backend-guide.md) and [frontend/frontend-guide.md](frontend/frontend-guide.md)
-4. [firmware/firmware-guide.md](firmware/firmware-guide.md)
-5. [backend/authentication-rbac.md](backend/authentication-rbac.md)
-6. [frontend/analytics-system.md](frontend/analytics-system.md) and [backend/ai-features.md](backend/ai-features.md)
-7. [frontend/admin-panel.md](frontend/admin-panel.md) and [frontend/public-pages.md](frontend/public-pages.md)
-8. [onboarding/contributor-guide.md](onboarding/contributor-guide.md)
-
-## Quick Reference
-
-- Root overview: [../README.md](../README.md)
-- Deployment docs: [operations/deployment-checklist.md](operations/deployment-checklist.md)
-- Render deployment: [operations/render-deployment.md](operations/render-deployment.md)
-
-## Firmware Config Sync Highlights
-
-- Wi-Fi credentials are managed from the web settings flow and written for both ESP32-SENSOR and ESP32-CAM.
-- Current firmware expects config payload values under nested config fields from API responses.
-- ESP32-CAM disease classes are normalized to backend-compatible labels before storage.
+If a document here looks out of date, open an issue or submit a PR with proposed updates.

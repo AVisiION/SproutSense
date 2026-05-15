@@ -2,7 +2,10 @@ import React, { useMemo } from 'react';
 import { getCSSVariableValue } from '../utils/colorUtils';
 
 const SproutSenseLogo = ({ className = '', width = '185px', height = '236px' }) => {
-  // Resolve color variables for the gradient
+  // Resolve color variables for the SVG gradient.
+  // SVG gradients are defined in markup and need concrete color strings
+  // so theme changes are reflected visually; `getCSSVariableValue()`
+  // reads the computed token at runtime.
   const colors = useMemo(() => {
     return {
       primary: getCSSVariableValue('--aurora-primary'),

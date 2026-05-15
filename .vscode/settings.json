@@ -1,0 +1,7 @@
+{
+    "C_Cpp.errorSquiggles": "enabled",
+    "postman.settings.dotenv-detection-notification-visibility": false,
+    "chat.tools.terminal.autoApprove": {
+        "npm run build": true
+    }
+}

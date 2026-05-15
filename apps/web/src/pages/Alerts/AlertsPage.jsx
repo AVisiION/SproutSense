@@ -82,7 +82,11 @@ function generateMockSystemAlerts(sensors) {
   return base;
 }
 
-// ─── Severity config ──────────────────────────────────────────────────────────
+// ─── Severity config
+// Build runtime severity colors from CSS tokens so alert rows and panels
+// match the active theme. Use `getCSSVariableValue()` to obtain concrete
+// color strings for inline styles and chart tooltips where needed.
+// ───────────────────────────────────────────────────────────────────────────
 const getSeverityConfig = () => ({
   error  : { 
     label: 'Critical', 
@@ -493,10 +497,10 @@ export default function AlertsPage({ alerts = [], sensors, onClearAlert, onClear
           {loading ? <SkeletonLoader height="100%" /> : (
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={chartData} barSize={28}>
-                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
-                <XAxis dataKey="date"  stroke="rgba(255,255,255,0.4)" fontSize={12} tickLine={false} axisLine={false} />
-                <YAxis allowDecimals={false} stroke="rgba(255,255,255,0.4)" fontSize={12} tickLine={false} axisLine={false} />
-                <Tooltip content={<CustomTooltip />} cursor={{ fill: 'rgba(255,255,255,0.05)' }} />
+                <CartesianGrid strokeDasharray="3 3" stroke={getCSSVariableValue('--divider-color') || 'rgba(255,255,255,0.05)'} vertical={false} />
+                <XAxis dataKey="date"  stroke={getCSSVariableValue('--text-muted') || 'rgba(255,255,255,0.4)'} fontSize={12} tickLine={false} axisLine={false} />
+                <YAxis allowDecimals={false} stroke={getCSSVariableValue('--text-muted') || 'rgba(255,255,255,0.4)'} fontSize={12} tickLine={false} axisLine={false} />
+                <Tooltip content={<CustomTooltip />} cursor={{ fill: getCSSVariableValue('--tooltip-cursor') || 'rgba(255,255,255,0.05)' }} />
                 <Bar dataKey="count" name="Detections" radius={[6, 6, 0, 0]}>
                   {chartData.map((entry, i) => {
                     const healthyColor = getCSSVariableValue('--chart-healthy');

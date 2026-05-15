@@ -36,6 +36,39 @@ api.interceptors.request.use((requestConfig) => {
   return requestConfig;
 });
 
+// Automatic retry for 429 responses (exponential backoff + jitter)
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+const MAX_RETRIES = parseInt(import.meta.env.VITE_API_RETRY_MAX || '4', 10);
+
+api.interceptors.response.use(null, async (error) => {
+  const { config, response } = error || {};
+  if (!config || !response) return Promise.reject(error);
+
+  config.__retryCount = config.__retryCount || 0;
+
+  // Only retry on 429 Too Many Requests
+  if (response.status === 429 && config.__retryCount < MAX_RETRIES) {
+    config.__retryCount += 1;
+
+    // Use Retry-After header if provided (seconds), else exponential backoff
+    const ra = parseInt(response.headers['retry-after'], 10);
+    const backoffMs = ra && !Number.isNaN(ra) ? ra * 1000 : Math.min(1000 * 2 ** config.__retryCount, 30000);
+    const jitter = Math.floor(Math.random() * 250);
+    const delay = backoffMs + jitter;
+
+    // Optional: log retry attempts in development
+    if (import.meta.env.DEV) {
+      // eslint-disable-next-line no-console
+      console.warn(`[API] 429 received. Retrying request (${config.__retryCount}/${MAX_RETRIES}) after ${delay}ms.`);
+    }
+
+    await sleep(delay);
+    return api(config);
+  }
+
+  return Promise.reject(error);
+});
+
 // ─── MOCK HELPER ─────────────────────────────────────────────────────────────
 // Simulates network delay and returns data in the same format Axios does
 const mockResponse = (data, delay = 300) => {

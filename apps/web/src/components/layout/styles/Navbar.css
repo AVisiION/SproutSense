@@ -251,7 +251,7 @@
 .navbar-brand:hover .navbar-brand-icon { transform: scale(1.15); }
 .navbar-brand-text {
   font-size  : 1.1rem;
-  font-weight: 800;
+  font-weight: 100;
   color: var(--text-color);
   letter-spacing: -0.02em;
   opacity: 0.9;

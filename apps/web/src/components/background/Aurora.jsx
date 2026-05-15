@@ -109,7 +109,9 @@ export default function Aurora({
     const gl = canvas.getContext('webgl', { antialias: false });
     if (!gl) return;
 
-    // Resolve CSS variable colors
+    // Resolve CSS variable colors for the WebGL shader.
+    // Shaders require concrete RGB colors (not `var(...)`) so we read
+    // the computed CSS custom properties at runtime here.
     const resolvedStops = colorStops.map(stop => {
       // If it's a CSS variable name, resolve it
       if (typeof stop === 'string' && stop.startsWith('--')) {

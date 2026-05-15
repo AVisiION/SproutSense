@@ -87,10 +87,24 @@ export const readLimiter = rateLimit({
 // AI recommendation rate limiter (computationally expensive)
 export const aiLimiter = rateLimit({
   windowMs: 60 * 1000, // 1 minute
-  max: 30, // Max 30 AI requests per minute
+  max: parseInt(process.env.AI_RATE_LIMIT_MAX, 10) || 60, // Max AI requests per minute (default 60)
+  skip: (req) => isActiveAdminRequest(req),
   message: {
     success: false,
     message: 'AI recommendation request limit exceeded'
+  },
+  standardHeaders: true, // Send RateLimit-* headers
+  legacyHeaders: false,
+  handler: (req, res) => {
+    const retryAfterSec = Math.ceil(60); // 60 seconds window
+    const clientIp = getClientIp(req) || 'unknown';
+    console.warn(`[RATE] aiLimiter: blocked request from ${clientIp}`);
+    res.set('Retry-After', String(retryAfterSec));
+    res.status(HTTP_STATUS.TOO_MANY_REQUESTS).json({
+      success: false,
+      message: 'Too many AI requests, please try again later',
+      retryAfter: retryAfterSec
+    });
   }
 });
 

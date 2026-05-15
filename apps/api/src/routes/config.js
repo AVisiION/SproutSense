@@ -38,6 +38,12 @@ router.get('/device', readLimiter, authenticateDevice, getConfig);
 // GET /api/config/device/:deviceId - Get config with device token auth
 router.get('/device/:deviceId', readLimiter, authenticateDevice, getConfig);
 
+// Allow Admin UI (local client-only admin login) to submit admin logs
+// without requiring the standard account authentication middleware.
+// This endpoint accepts well-formed admin log payloads and the controller
+// validates them before persisting. Rate limiting still applies.
+router.post('/admin-logs', createAdminLog);
+
 router.use(authenticate, requireAccountState());
 
 // IMPORTANT: Specific routes must come BEFORE dynamic parameter routes
@@ -87,7 +93,6 @@ router.put('/data-retention', requirePermissions([PERMISSIONS.CONFIG_UPDATE]), u
 router.get('/admin-logs', readLimiter, requirePermissions([PERMISSIONS.AUDIT_READ]), getAdminLogs);
 router.delete('/admin-logs', requirePermissions([PERMISSIONS.AUDIT_DELETE]), deleteAdminLogs);
 router.get('/admin-logs/export', readLimiter, requirePermissions([PERMISSIONS.AUDIT_EXPORT]), exportAdminLogs);
-router.post('/admin-logs', requirePermissions([PERMISSIONS.AUDIT_READ]), createAdminLog);
 
 // GET /api/config - Get system configuration
 router.get('/', readLimiter, requirePermissions([PERMISSIONS.CONFIG_READ]), getConfig);

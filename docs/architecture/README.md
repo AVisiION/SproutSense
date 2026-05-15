@@ -1,16 +1,5 @@
-﻿# Architecture Docs
+﻿# Architecture
 
-Use this category for architecture views and system modeling artifacts.
+Architecture guides and diagrams for system-level design (container/component diagrams, data flows, and deployment views).
 
-Suggested content:
-
-- context, container, and component diagrams
-- data-flow and event-flow narratives
-- boundary definitions between apps and firmware
-
-See also:
-
-- docs/architecture/overview.md
-- docs/architecture/dual-esp32-architecture.md
-- docs/architecture/mern-architecture.md
-- docs/architecture/react-architecture.md
+Start with `docs/architecture/overview.md` and the ESP32-specific architecture `docs/architecture/dual-esp32-architecture.md`.

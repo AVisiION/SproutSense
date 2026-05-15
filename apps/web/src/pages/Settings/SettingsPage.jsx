@@ -8,6 +8,7 @@ import './SettingsPage.css';
 import { configAPI, sensorAPI, deviceAPI } from '../../utils/api';
 import { useAuth } from '../../context/AuthContext';
 import BleProvisioning from '../../components/BleProvisioning';
+import DataTools from '../../components/DataTools';
 
 /* ──── Inline SVG icons ───────────────────────────────────────── */
 const SVG = {
@@ -165,6 +166,8 @@ export default function SettingsPage({
   const [rotatedTokens, setRotatedTokens] = useState({});
   const [exporting, setExporting] = useState(false);
   const [clearing, setClearing] = useState(false);
+  const [latestRaw, setLatestRaw] = useState(null);
+  const [loadingLatestRaw, setLoadingLatestRaw] = useState(false);
   const [advancedSettings, setAdvancedSettings] = useState(DEFAULT_ADVANCED_SETTINGS);
   const [savingAdvanced, setSavingAdvanced] = useState(false);
 
@@ -228,6 +231,26 @@ export default function SettingsPage({
   useEffect(() => {
     loadDevices();
   }, []);
+
+  useEffect(() => {
+    // load latest raw payload when device selection changes
+    loadLatestRaw(selectedDeviceId);
+  }, [selectedDeviceId]);
+
+  async function loadLatestRaw(deviceIdParam) {
+    try {
+      setLoadingLatestRaw(true);
+      const dev = deviceIdParam || selectedDeviceId || 'ESP32-SENSOR';
+      const res = await sensorAPI.getLatest(dev).catch(() => null);
+      const payload = res?.data || res || null;
+      setLatestRaw(payload);
+    } catch {
+      setLatestRaw(null);
+      onNotification?.('Failed to load latest payload', 'error');
+    } finally {
+      setLoadingLatestRaw(false);
+    }
+  }
 
   const applyAdvancedColors = (colors) => {
     if (typeof document === 'undefined') return;
@@ -450,7 +473,8 @@ export default function SettingsPage({
     setClearing(true);
     try {
       const res = await configAPI.clearSensorHistory(selectedDeviceId || 'ESP32-SENSOR', 90);
-      onNotification?.(`Cleared ${res?.recordsDeleted || 0} sensor records`, 'success');
+      const deleted = res?.deleted ?? res?.deletedCount ?? res?.recordsDeleted ?? (res?.data?.deleted) ?? 0;
+      onNotification?.(`Cleared ${deleted} sensor records`, 'success');
     } catch {
       onNotification?.('Failed to clear sensor history', 'error');
     } finally {
@@ -1160,35 +1184,7 @@ export default function SettingsPage({
             <h2>Data Tools</h2>
           </div>
           <div className="sp-card-body">
-            <div className="sp-about-grid sp-data-stats-grid">
-              <div className="sp-about-tile">
-                <span className="sp-about-tile-icon"><Icon name="database" size={14} /></span>
-                <span className="sp-about-tile-label">24h Readings</span>
-                <span className="sp-about-tile-value">{stats.totalReadings}</span>
-              </div>
-              <div className="sp-about-tile">
-                <span className="sp-about-tile-icon"><Icon name="calendar" size={14} /></span>
-                <span className="sp-about-tile-label">Today</span>
-                <span className="sp-about-tile-value">{stats.todayReadings}</span>
-              </div>
-              <div className="sp-about-tile">
-                <span className="sp-about-tile-icon"><Icon name="timer" size={14} /></span>
-                <span className="sp-about-tile-label">Last Sync</span>
-                <span className="sp-about-tile-value">
-                  {stats.lastUpdate ? format(new Date(stats.lastUpdate), 'HH:mm') : '--'}
-                </span>
-              </div>
-            </div>
-            <div className="sp-action-row">
-              <button className="sp-btn sp-btn--secondary" onClick={handleExportCsv} disabled={exporting}>
-                <Icon name={exporting ? 'spinner' : 'download'} size={14} />
-                {exporting ? 'Exporting...' : 'Export CSV'}
-              </button>
-              <button className="sp-btn sp-btn--danger" onClick={handleClearSensorHistory} disabled={clearing}>
-                <Icon name={clearing ? 'spinner' : 'trash'} size={14} />
-                {clearing ? 'Clearing...' : 'Clear Old Sensor History'}
-              </button>
-            </div>
+            <DataTools selectedDeviceId={selectedDeviceId || 'ESP32-SENSOR'} stats={stats} onNotification={onNotification} />
           </div>
         </div>
 

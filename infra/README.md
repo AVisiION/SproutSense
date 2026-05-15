@@ -1,11 +1,10 @@
 ﻿# Infrastructure
 
-Infrastructure and deployment configuration artifacts.
+Deployment and infrastructure configuration (Render, Netlify, Docker, and provisioning notes).
 
-Examples:
+Key files:
 
-- platform descriptors
-- environment templates
-- provisioning notes
+- `render/` — Render service descriptors
+- `netlify/` — Netlify configuration and publish settings
 
-Current root deployment configs include render.yaml and netlify.toml.
+See `docs/operations/deployment-checklist.md` and `infra/render/README.md` for deployment procedures.

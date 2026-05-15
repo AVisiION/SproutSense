@@ -8,10 +8,10 @@ function detectModel(deviceId = '') {
 
 function statusTone(value) {
   const status = String(value || '').toLowerCase();
-  if (status.includes('online') || status.includes('connected') || status.includes('healthy')) return '#4ade80';
-  if (status.includes('degraded') || status.includes('warning')) return '#facc15';
-  if (status.includes('offline') || status.includes('error') || status.includes('down')) return '#f87171';
-  return '#94a3b8';
+  if (status.includes('online') || status.includes('connected') || status.includes('healthy')) return 'var(--chart-healthy)';
+  if (status.includes('degraded') || status.includes('warning')) return 'var(--rec-high)';
+  if (status.includes('offline') || status.includes('error') || status.includes('down')) return 'var(--rec-critical)';
+  return 'var(--text-muted)';
 }
 
 export default function ConnectionsSection({ deviceKeys = [], loadingDeviceKeys = false, systemInfo = {} }) {
@@ -101,7 +101,7 @@ export default function ConnectionsSection({ deviceKeys = [], loadingDeviceKeys 
         </div>
       )}
 
-      <p style={{ marginTop: '0.75rem', color: '#94a3b8', fontSize: '0.8rem' }}>
+      <p style={{ marginTop: '0.75rem', color: 'var(--text-muted)', fontSize: '0.8rem' }}>
         Online count is based on device activity within the last 5 minutes.
       </p>
     </div>

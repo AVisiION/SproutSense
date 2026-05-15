@@ -160,7 +160,7 @@ export default function AIKeysSection({
           </div>
           {limitErrors?.aiDailyAnalysisLimit && <div className="aik-form-error">{limitErrors.aiDailyAnalysisLimit}</div>}
           
-          <div className="adm-limits-usage" style={{ background: 'var(--glass-bg)', padding: '1rem', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
+          <div className="adm-limits-usage" style={{ background: 'var(--card-bg)', padding: '1rem', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
             <div className="adm-limits-usage-header" style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
               <span>Today's Usage</span>
               <span className="adm-limits-usage-count" style={{ fontWeight: '500' }}>
@@ -173,7 +173,7 @@ export default function AIKeysSection({
                 style={{
                   height: '100%',
                   width: aiUsageData ? `${Math.min((aiUsageData.usedCount / aiUsageData.dailyLimit) * 100, 100)}%` : '0%',
-                  background: aiUsageData && (aiUsageData.usedCount / aiUsageData.dailyLimit) > 0.8 ? '#ef4444' : '#a78bfa',
+                  background: aiUsageData && (aiUsageData.usedCount / aiUsageData.dailyLimit) > 0.8 ? 'var(--rec-critical)' : 'var(--orchid-color)',
                   transition: 'width 0.3s ease'
                 }}
               />
@@ -230,9 +230,9 @@ export default function AIKeysSection({
                   <td>{u.remaining}</td>
                   <td>
                     {u.exhausted ? (
-                      <span style={{ color: '#ef4444', fontWeight: 'bold' }}>Exhausted</span>
+                      <span style={{ color: 'var(--rec-critical)', fontWeight: 'bold' }}>Exhausted</span>
                     ) : (
-                      <span style={{ color: '#22c55e' }}>Healthy</span>
+                      <span style={{ color: 'var(--health-healthy)' }}>Healthy</span>
                     )}
                   </td>
                   <td className="aik-date">

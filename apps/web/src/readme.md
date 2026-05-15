@@ -1,13 +1,12 @@
-﻿# Frontend Source Map
+﻿# Frontend source overview
 
-apps/web/src
+Quick orientation for `apps/web/src`:
 
-- main.jsx: app bootstrap
-- App.jsx: route graph and layout shell
-- components: reusable UI modules
-- pages: screen-level route components
-- hooks: data and websocket hooks
-- services and utils: API wrappers and helpers
-- stores and context: shared state containers
+- `main.jsx` — app bootstrap
+- `App.jsx` — routing and shell
+- `components` — reusable UI modules
+- `pages` — route-level screens
+- `hooks` — data and websocket hooks
+- `services` / `utils` — API wrappers and helpers
 
-This file is a lightweight orientation guide for contributors.
+Use `apps/web/README.md` and `docs/frontend/frontend-guide.md` for development and contribution instructions.

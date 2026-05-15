@@ -288,6 +288,8 @@ function formatDiseaseName(name) {
 // ───────────────────────────────────────────────────────────────────────────
 // APP COMPONENT
 // ───────────────────────────────────────────────────────────────────────────
+import { getCSSVariableValue } from './utils/colorUtils';
+
 function App() {
   const location = useLocation();
   const auth = useAuth();
@@ -425,6 +427,13 @@ function App() {
     return () => clearInterval(interval);
   }, [fetchDiseaseAlerts]);
 
+  /*
+   * changeTheme(newTheme)
+   * - Applies a short visual transition using CSS custom properties
+   * - Persists `data-theme` via `setTheme()` and updates runtime tokens
+   * - Updates mobile `meta[name="theme-color"]` using the computed
+   *   `--bg-color` token so the browser UI matches the selected theme.
+   */
   const changeTheme = (newTheme) => {
     if (newTheme === theme) return;
     const root = document.documentElement;
@@ -457,6 +466,11 @@ function App() {
     void root.offsetWidth;
     root.classList.add('theme-transitioning');
     setTheme(newTheme);
+    // Update mobile browser theme color meta tags to match chosen theme
+    try {
+      const metaColor = getCSSVariableValue('--bg-color') || (newTheme === 'dark' ? '#050d14' : '#f0f8ff');
+      document.querySelectorAll('meta[name="theme-color"]').forEach(m => m.setAttribute('content', metaColor));
+    } catch (e) { /* ignore */ }
     if (themeTransitionTimeoutRef.current) clearTimeout(themeTransitionTimeoutRef.current);
     themeTransitionTimeoutRef.current = setTimeout(() => {
       root.classList.remove('theme-transitioning');
@@ -958,31 +972,25 @@ function App() {
             position="top-right"
             toastOptions={{
               style: {
-                background: theme === 'dark'
-                  ? 'rgba(4, 14, 9, 0.88)'
-                  : 'rgba(255, 255, 255, 0.90)',
+                background: 'var(--toast-bg)',
                 backdropFilter: 'blur(18px)',
                 WebkitBackdropFilter: 'blur(18px)',
-                color: theme === 'dark' ? '#C8DCC8' : '#132016',
-                border: theme === 'dark'
-                  ? '1px solid rgba(255,255,255,0.07)'
-                  : '1px solid rgba(46,125,50,0.14)',
+                color: 'var(--toast-text)',
+                border: '1px solid var(--border-soft)',
                 borderRadius: '12px',
-                boxShadow: theme === 'dark'
-                  ? '0 8px 32px rgba(0,0,0,0.55)'
-                  : '0 6px 24px rgba(10,40,15,0.12)',
+                boxShadow: 'var(--toast-shadow)',
                 fontSize: '0.88rem',
               },
               success: {
                 iconTheme: {
-                  primary: theme === 'dark' ? '#3A8F3E' : '#388E3C',
-                  secondary: theme === 'dark' ? '#020905' : '#F3FBF4',
+                  primary: 'var(--success-primary)',
+                  secondary: 'var(--success-secondary)',
                 },
               },
               error: {
                 iconTheme: {
-                  primary: theme === 'dark' ? '#CC3333' : '#C62828',
-                  secondary: theme === 'dark' ? '#020905' : '#F3FBF4',
+                  primary: 'var(--error-primary)',
+                  secondary: 'var(--error-secondary)',
                 },
               },
             }}

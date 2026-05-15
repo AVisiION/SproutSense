@@ -1,15 +1,5 @@
-﻿# Backend Docs
+﻿# Backend
 
-Use this category for backend implementation, API behavior, and operational guidance.
+Backend implementation and API guides. Include architecture notes, data model rationale, middleware/RBAC behavior, and endpoint contracts.
 
-Suggested content:
-
-- service architecture notes
-- data model rationale
-- middleware and RBAC behavior
-- endpoint inventories and contract notes
-- operational tuning and deployment notes
-
-Primary source code references:
-
-- apps/api/src
+Start with `docs/backend/backend-guide.md` for setup and common patterns. Primary source: `apps/api/src`.

@@ -22,7 +22,77 @@ const TIME_RANGES = [
   { label: '30d', hours: 720 },
 ];
 
-// Helper function to get chart colors from CSS variables
+const ANALYTICS_MODES = [
+  { id: 'realtime', label: 'Real Time' },
+  { id: 'comprehensive', label: 'Comprehensive' },
+];
+
+const AVERAGE_SERIES_KEYS = [
+  'soilMoisture',
+  'temperature',
+  'humidity',
+  'light',
+  'flowVolume',
+  'flowRate',
+  'pH',
+  'vpd',
+  'diseaseRisk',
+  'et',
+  'dli',
+];
+
+const getAggregationBucketMs = (hours) => {
+  if (hours <= 1) return 5 * 60 * 1000;
+  if (hours <= 24) return 60 * 60 * 1000;
+  if (hours <= 168) return 6 * 60 * 60 * 1000;
+  return 24 * 60 * 60 * 1000;
+};
+
+const buildAggregatedSeries = (rows, hours) => {
+  if (!Array.isArray(rows) || rows.length <= 1) return rows;
+
+  const bucketMs = getAggregationBucketMs(hours);
+  const buckets = new Map();
+
+  rows.forEach((row) => {
+    const timestampMs = Number.isFinite(Number(row.timestampMs))
+      ? Number(row.timestampMs)
+      : new Date(row.timestamp || Date.now()).getTime();
+    const bucketKey = Math.floor(timestampMs / bucketMs);
+    if (!buckets.has(bucketKey)) buckets.set(bucketKey, []);
+    buckets.get(bucketKey).push({ ...row, timestampMs });
+  });
+
+  return [...buckets.entries()]
+    .sort((a, b) => a[0] - b[0])
+    .map(([, items]) => {
+      const aggregate = { ...items[items.length - 1] };
+
+      AVERAGE_SERIES_KEYS.forEach((key) => {
+        const values = items
+          .map((item) => Number(item[key]))
+          .filter((value) => Number.isFinite(value));
+
+        if (values.length) {
+          aggregate[key] = values.reduce((sum, value) => sum + value, 0) / values.length;
+        }
+      });
+
+      aggregate.timestampMs = items[0].timestampMs;
+      aggregate.timestamp = new Date(items[0].timestampMs).toISOString();
+      aggregate.timeLabel = format(
+        new Date(items[0].timestampMs),
+        hours <= 24 ? 'HH:mm' : 'MMM d'
+      );
+      aggregate.sampleCount = items.length;
+
+      return aggregate;
+    });
+};
+
+// Helper function to get chart colors from CSS variables.
+// Charts render inside JS (Recharts) and therefore need concrete color
+// strings at runtime — use `getCSSVariableValue()` so themes apply.
 const getChartColors = () => ({
   moisture : getCSSVariableValue('--chart-moisture'),
   temp     : getCSSVariableValue('--chart-temp'),
@@ -89,6 +159,25 @@ function formatTooltipLabel(label) {
   if (Number.isNaN(date.getTime())) return 'Unknown time';
 
   return format(date, 'MMM d, HH:mm');
+}
+
+function getSensorValues(rows, sensor) {
+  if (!Array.isArray(rows) || !sensor) return [];
+  return rows
+    .map((row) => getSensorValue(row, sensor))
+    .filter((value) => Number.isFinite(value));
+}
+
+function summarizeValues(values) {
+  if (!values.length) {
+    return { min: 0, max: 0, avg: 0, delta: 0 };
+  }
+
+  const min = Math.min(...values);
+  const max = Math.max(...values);
+  const avg = values.reduce((sum, value) => sum + value, 0) / values.length;
+  const delta = values[values.length - 1] - values[0];
+  return { min, max, avg, delta };
 }
 
 const CustomTooltip = ({ active, payload, label }) => {
@@ -230,6 +319,7 @@ export default function AnalyticsPage() {
   const [visualPrefs, setVisualPrefs] = useState(() => loadVisualPrefs());
   
   const [selectedRange, setSelectedRange] = useState(TIME_RANGES[1]);
+  const [analyticsMode, setAnalyticsMode] = useState('realtime');
   const [sensorData,    setSensorData]    = useState([]);
   const [diseaseData,   setDiseaseData]   = useState([]);
   const [wateringData,  setWateringData]  = useState([]);
@@ -277,6 +367,8 @@ export default function AnalyticsPage() {
     animate: visualPrefs?.charts?.animate ?? true,
     lineType: visualPrefs?.charts?.chartStyle === 'straight' ? 'linear' : 'monotone',
   }), [visualPrefs]);
+
+  const viewMode = analyticsMode === 'realtime' && isLive ? 'realtime' : 'comprehensive';
 
   // Get selected deviceId from localStorage
   const getSelectedDeviceId = () => localStorage.getItem('selectedDeviceId') || 'ESP32-SENSOR';
@@ -409,12 +501,17 @@ export default function AnalyticsPage() {
     };
   }), [sensorData, selectedRange]);
 
+  const analyticsViewData = useMemo(() => {
+    if (viewMode === 'realtime') return timeFormattedData;
+    return buildAggregatedSeries(timeFormattedData, selectedRange.hours);
+  }, [timeFormattedData, selectedRange.hours, viewMode]);
+
   // Thin-out for 30d to prevent chart clutter
   const chartData = useMemo(() => {
-    if (timeFormattedData.length <= 200) return timeFormattedData;
-    const step = Math.ceil(timeFormattedData.length / 200);
-    return timeFormattedData.filter((_, i) => i % step === 0);
-  }, [timeFormattedData]);
+    if (analyticsViewData.length <= 200) return analyticsViewData;
+    const step = Math.ceil(analyticsViewData.length / 200);
+    return analyticsViewData.filter((_, i) => i % step === 0);
+  }, [analyticsViewData]);
 
   const selectedSensor = useMemo(() => {
     if (!sensorConfigs.length) return null;
@@ -434,26 +531,33 @@ export default function AnalyticsPage() {
     };
   }, [selectedSensor, sensorConfigs, palette, chartPalette]);
 
+  const rawSensorValues = useMemo(
+    () => getSensorValues(timeFormattedData, selectedSensor),
+    [timeFormattedData, selectedSensor]
+  );
+
+  const displayedSensorValues = useMemo(
+    () => getSensorValues(chartData, selectedSensor),
+    [chartData, selectedSensor]
+  );
+
   const trendStats = useMemo(() => {
-    const values = chartData
-      .map(d => getSensorValue(d, selectedSensor))
-      .filter(v => Number.isFinite(v));
-
-    if (!values.length) {
-      return { min: 0, max: 0, avg: 0, delta: 0 };
-    }
-
-    const min = Math.min(...values);
-    const max = Math.max(...values);
-    const avg = values.reduce((sum, v) => sum + v, 0) / values.length;
-    const delta = values[values.length - 1] - values[0];
-    return { min, max, avg, delta };
-  }, [chartData, selectedSensor]);
+    return viewMode === 'realtime'
+      ? summarizeValues(displayedSensorValues)
+      : summarizeValues(rawSensorValues);
+  }, [displayedSensorValues, rawSensorValues, viewMode]);
 
   const currentSensorValue = useMemo(() => {
-    if (!selectedSensor || !sensorData.length) return null;
-    return getSensorValue(sensorData[sensorData.length - 1], selectedSensor);
-  }, [sensorData, selectedSensor]);
+    if (!selectedSensor) return null;
+
+    if (viewMode === 'realtime') {
+      return rawSensorValues.length ? rawSensorValues[rawSensorValues.length - 1] : null;
+    }
+
+    return rawSensorValues.length
+      ? rawSensorValues.reduce((sum, value) => sum + value, 0) / rawSensorValues.length
+      : null;
+  }, [rawSensorValues, selectedSensor, viewMode]);
 
   const selectedSensorStatus = useMemo(
     () => getStatusForValue(selectedSensor, currentSensorValue),
@@ -462,13 +566,12 @@ export default function AnalyticsPage() {
 
   const sensorAnomalyCount = useMemo(() => {
     if (!selectedSensor) return 0;
-    return chartData.reduce((count, row) => {
-      const value = getSensorValue(row, selectedSensor);
-      if (value == null) return count;
+    const sourceValues = viewMode === 'realtime' ? displayedSensorValues : rawSensorValues;
+    return sourceValues.reduce((count, value) => {
       const outOfRange = value < Number(selectedSensor.minThreshold) || value > Number(selectedSensor.maxThreshold);
       return outOfRange ? count + 1 : count;
     }, 0);
-  }, [chartData, selectedSensor]);
+  }, [displayedSensorValues, rawSensorValues, selectedSensor, viewMode]);
 
   // Soil status distribution for pie
   const soilPie = useMemo(() => {
@@ -484,8 +587,8 @@ export default function AnalyticsPage() {
 
   // Radar — latest reading
   const radarData = useMemo(() => {
-    if (!sensorData.length) return [];
-    const l = sensorData[sensorData.length - 1];
+    if (!analyticsViewData.length) return [];
+    const l = analyticsViewData[analyticsViewData.length - 1];
     return [
       { subject: 'Moisture', A: l.soilMoisture || 0,                              fullMark: 100 },
       { subject: 'pH',       A: Math.min(100, ((l.pH || 7) / 14) * 100),          fullMark: 100 },
@@ -493,7 +596,7 @@ export default function AnalyticsPage() {
       { subject: 'Temp',     A: Math.min(100, ((l.temperature || 0) / 50) * 100), fullMark: 100 },
       { subject: 'Humidity', A: l.humidity || 0,                                  fullMark: 100 },
     ];
-  }, [sensorData]);
+  }, [analyticsViewData]);
 
   // Last 30 points for sparklines
   const sparkTail = chartData.slice(-30);
@@ -564,9 +667,9 @@ export default function AnalyticsPage() {
       return (
         <ResponsiveContainer width="100%" height="100%">
           <BarChart data={selectedSeriesData}>
-            {chartPrefs.showGrid && <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />}
-            <XAxis dataKey="timeLabel" stroke="rgba(255,255,255,0.35)" fontSize={11} tickLine={false} axisLine={false} />
-            <YAxis stroke="rgba(255,255,255,0.35)" fontSize={11} tickLine={false} axisLine={false} />
+            {chartPrefs.showGrid && <CartesianGrid strokeDasharray="3 3" stroke={getCSSVariableValue('--divider-color') || 'rgba(255,255,255,0.05)'} vertical={false} />}
+            <XAxis dataKey="timeLabel" stroke={getCSSVariableValue('--text-muted') || 'rgba(255,255,255,0.35)'} fontSize={11} tickLine={false} axisLine={false} />
+            <YAxis stroke={getCSSVariableValue('--text-muted') || 'rgba(255,255,255,0.35)'} fontSize={11} tickLine={false} axisLine={false} />
             <Tooltip content={<CustomTooltip />} />
             <Bar dataKey="metricValue" name={selectedSeries.label} fill={selectedSeries.color} radius={[6, 6, 0, 0]} unit={unitSuffix} isAnimationActive={chartPrefs.animate} />
           </BarChart>
@@ -625,9 +728,9 @@ export default function AnalyticsPage() {
       return (
         <ResponsiveContainer width="100%" height="100%">
           <LineChart data={selectedSeriesData}>
-            {chartPrefs.showGrid && <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />}
-            <XAxis dataKey="timeLabel" stroke="rgba(255,255,255,0.35)" fontSize={11} tickLine={false} axisLine={false} />
-            <YAxis stroke="rgba(255,255,255,0.35)" fontSize={11} tickLine={false} axisLine={false} />
+            {chartPrefs.showGrid && <CartesianGrid strokeDasharray="3 3" stroke={getCSSVariableValue('--divider-color') || 'rgba(255,255,255,0.05)'} vertical={false} />}
+            <XAxis dataKey="timeLabel" stroke={getCSSVariableValue('--text-muted') || 'rgba(255,255,255,0.35)'} fontSize={11} tickLine={false} axisLine={false} />
+            <YAxis stroke={getCSSVariableValue('--text-muted') || 'rgba(255,255,255,0.35)'} fontSize={11} tickLine={false} axisLine={false} />
             <Tooltip content={<CustomTooltip />} />
             <Line type={chartPrefs.lineType} dataKey="metricValue" name={selectedSeries.label} stroke={selectedSeries.color} strokeWidth={2.7} dot={false} unit={unitSuffix} isAnimationActive={chartPrefs.animate} />
           </LineChart>
@@ -644,9 +747,9 @@ export default function AnalyticsPage() {
               <stop offset="95%" stopColor={selectedSeries.color} stopOpacity={0} />
             </linearGradient>
           </defs>
-          {chartPrefs.showGrid && <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />}
-          <XAxis dataKey="timeLabel" stroke="rgba(255,255,255,0.35)" fontSize={11} tickLine={false} axisLine={false} />
-          <YAxis stroke="rgba(255,255,255,0.35)" fontSize={11} tickLine={false} axisLine={false} />
+            {chartPrefs.showGrid && <CartesianGrid strokeDasharray="3 3" stroke={getCSSVariableValue('--divider-color') || 'rgba(255,255,255,0.05)'} vertical={false} />}
+            <XAxis dataKey="timeLabel" stroke={getCSSVariableValue('--text-muted') || 'rgba(255,255,255,0.35)'} fontSize={11} tickLine={false} axisLine={false} />
+            <YAxis stroke={getCSSVariableValue('--text-muted') || 'rgba(255,255,255,0.35)'} fontSize={11} tickLine={false} axisLine={false} />
           <Tooltip content={<CustomTooltip />} />
           <Area type={chartPrefs.lineType} dataKey="metricValue" name={selectedSeries.label} stroke={selectedSeries.color} strokeWidth={2.7} fill="url(#gradActiveSensor)" dot={false} unit={unitSuffix} isAnimationActive={chartPrefs.animate} />
         </AreaChart>
@@ -665,16 +768,29 @@ export default function AnalyticsPage() {
       <div className={styles.header}>
         <div className={styles.headerTop}>
           <WeatherCard />
-          <div className={styles.controls}>
-            {TIME_RANGES.map(tr => (
-              <button
-                key={tr.label}
-                className={`${styles.timeRangeBtn} ${selectedRange.label === tr.label ? styles.active : ''}`}
-                onClick={() => setSelectedRange(tr)}
-              >
-                {tr.label}
-              </button>
-            ))}
+          <div className={styles.headerActions}>
+            <div className={styles.controls}>
+              {ANALYTICS_MODES.map((mode) => (
+                <button
+                  key={mode.id}
+                  className={`${styles.sensorSwitchBtn} ${analyticsMode === mode.id ? styles.activeSensorBtn : ''}`}
+                  onClick={() => setAnalyticsMode(mode.id)}
+                >
+                  {mode.label}
+                </button>
+              ))}
+            </div>
+            <div className={styles.controls}>
+              {TIME_RANGES.map(tr => (
+                <button
+                  key={tr.label}
+                  className={`${styles.timeRangeBtn} ${selectedRange.label === tr.label ? styles.active : ''}`}
+                  onClick={() => setSelectedRange(tr)}
+                >
+                  {tr.label}
+                </button>
+              ))}
+            </div>
           </div>
         </div>
       </div>
@@ -715,7 +831,11 @@ export default function AnalyticsPage() {
           <div className={styles.chartHeader}>
             <div>
               <h3 className={styles.chartTitle}>Sensor Analysis</h3>
-              <p className={styles.chartSubtitle}>Chart and thresholds are driven by Admin sensor configuration</p>
+              <p className={styles.chartSubtitle}>
+                {viewMode === 'realtime'
+                  ? 'Live readings and thresholds are driven by Admin sensor configuration'
+                  : 'Offline or comprehensive view uses averaged readings from collected sensor data'}
+              </p>
             </div>
             <div className={styles.sensorSwitcher}>
               {sensorConfigs.map((sensor, index) => {
@@ -741,7 +861,7 @@ export default function AnalyticsPage() {
           {!loading && selectedSensor && (
             <>
               <div className={styles.sensorStatsRow}>
-                <div className={styles.sensorStatTile}><span>Current</span><strong>{currentSensorValue != null ? `${currentSensorValue.toFixed(1)} ${selectedSeries.unit}` : '--'}</strong></div>
+                <div className={styles.sensorStatTile}><span>{viewMode === 'comprehensive' ? 'Average' : 'Current'}</span><strong>{currentSensorValue != null ? `${currentSensorValue.toFixed(1)} ${selectedSeries.unit}` : '--'}</strong></div>
                 <div className={styles.sensorStatTile}><span>Status</span><strong style={{ color: selectedSensorStatus.color }}>{selectedSensorStatus.label}</strong></div>
                 <div className={styles.sensorStatTile}><span>Anomalies</span><strong>{sensorAnomalyCount}</strong></div>
                 <div className={styles.sensorStatTile}><span>Net Trend</span><strong className={trendStats.delta >= 0 ? styles.positiveTrend : styles.negativeTrend}>{trendStats.delta >= 0 ? '+' : ''}{trendStats.delta.toFixed(1)} {selectedSeries.unit}</strong></div>
@@ -859,9 +979,9 @@ export default function AnalyticsPage() {
             {activeFarmingChart === 'water' && (
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={chartData}>
-                  {chartPrefs.showGrid && <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />}
-                  <XAxis dataKey="timeLabel" stroke="rgba(255,255,255,0.35)" fontSize={11} tickLine={false} axisLine={false} />
-                  <YAxis stroke="rgba(255,255,255,0.35)" fontSize={11} tickLine={false} axisLine={false} />
+                  {chartPrefs.showGrid && <CartesianGrid strokeDasharray="3 3" stroke={getCSSVariableValue('--divider-color') || 'rgba(255,255,255,0.05)'} vertical={false} />}
+                  <XAxis dataKey="timeLabel" stroke={getCSSVariableValue('--text-muted') || 'rgba(255,255,255,0.35)'} fontSize={11} tickLine={false} axisLine={false} />
+                  <YAxis stroke={getCSSVariableValue('--text-muted') || 'rgba(255,255,255,0.35)'} fontSize={11} tickLine={false} axisLine={false} />
                   <Tooltip content={<CustomTooltip />} />
                   <Bar dataKey="flowVolume" name="Water Used" fill={palette.flow} radius={[4, 4, 0, 0]} unit=" L" isAnimationActive={chartPrefs.animate} />
                 </BarChart>
@@ -877,9 +997,9 @@ export default function AnalyticsPage() {
                       <stop offset="95%" stopColor={palette.temp} stopOpacity={0} />
                     </linearGradient>
                   </defs>
-                  {chartPrefs.showGrid && <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />}
-                  <XAxis dataKey="timeLabel" stroke="rgba(255,255,255,0.35)" fontSize={11} tickLine={false} axisLine={false} />
-                  <YAxis stroke="rgba(255,255,255,0.35)" fontSize={11} tickLine={false} axisLine={false} />
+                  {chartPrefs.showGrid && <CartesianGrid strokeDasharray="3 3" stroke={getCSSVariableValue('--divider-color') || 'rgba(255,255,255,0.05)'} vertical={false} />}
+                  <XAxis dataKey="timeLabel" stroke={getCSSVariableValue('--text-muted') || 'rgba(255,255,255,0.35)'} fontSize={11} tickLine={false} axisLine={false} />
+                  <YAxis stroke={getCSSVariableValue('--text-muted') || 'rgba(255,255,255,0.35)'} fontSize={11} tickLine={false} axisLine={false} />
                   <Tooltip content={<CustomTooltip />} />
                   <Area type="monotone" dataKey="vpd" name="VPD" stroke={palette.temp} strokeWidth={2} fill="url(#gradVpd)" unit=" kPa" isAnimationActive={chartPrefs.animate} />
                 </AreaChart>
@@ -953,9 +1073,11 @@ export default function AnalyticsPage() {
           <div className={`${styles.statusDot} ${isLive ? styles.dotLive : styles.dotOffline}`} />
           <span className={styles.statusText}>
             {isLive ? (
-              'SYSTEM_STATUS: REAL-TIME_STREAMING'
+              viewMode === 'realtime'
+                ? 'SYSTEM_STATUS: REAL-TIME_STREAMING'
+                : 'SYSTEM_STATUS: COMPREHENSIVE_AVERAGE_VIEW'
             ) : (
-              `SYSTEM_STATUS: ARCHIVAL_ANALYSIS (Last Seen: ${lastOnline ? format(new Date(lastOnline), 'MMM d, HH:mm') : 'Unknown'})`
+              `SYSTEM_STATUS: CALCULATED_AVERAGE_VIEW (Last Seen: ${lastOnline ? format(new Date(lastOnline), 'MMM d, HH:mm') : 'Unknown'})`
             )}
           </span>
         </div>

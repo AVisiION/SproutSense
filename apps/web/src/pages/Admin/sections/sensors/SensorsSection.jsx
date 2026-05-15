@@ -52,7 +52,7 @@ export default function SensorsSection({
 
       <div className="adm-watering-grid">
         <div className="adm-watering-card">
-          <div className="adm-watering-card-icon" style={{ background: 'rgba(59, 130, 246, 0.1)', color: '#60a5fa' }}>
+          <div className="adm-watering-card-icon" style={{ background: 'var(--surface-1)', color: 'var(--chart-moisture)' }}>
             <i className="fa-solid fa-droplet" />
           </div>
           <div className="adm-watering-card-body">
@@ -72,7 +72,7 @@ export default function SensorsSection({
         </div>
 
         <div className="adm-watering-card">
-          <div className="adm-watering-card-icon" style={{ background: 'rgba(34, 197, 94, 0.1)', color: '#4ade80' }}>
+          <div className="adm-watering-card-icon" style={{ background: 'var(--surface-1)', color: 'var(--chart-healthy)' }}>
             <i className="fa-solid fa-arrows-rotate" />
           </div>
           <div className="adm-watering-card-body">
@@ -92,7 +92,7 @@ export default function SensorsSection({
         </div>
 
         <div className="adm-watering-card">
-          <div className="adm-watering-card-icon" style={{ background: 'rgba(245, 158, 11, 0.1)', color: '#fbbf24' }}>
+          <div className="adm-watering-card-icon" style={{ background: 'var(--surface-1)', color: 'var(--rec-high)' }}>
             <i className="fa-solid fa-clock" />
           </div>
           <div className="adm-watering-card-body">
@@ -112,7 +112,7 @@ export default function SensorsSection({
         </div>
 
         <div className="adm-watering-card">
-          <div className="adm-watering-card-icon" style={{ background: 'rgba(167, 139, 250, 0.1)', color: '#a78bfa' }}>
+          <div className="adm-watering-card-icon" style={{ background: 'var(--surface-1)', color: 'var(--orchid-color)' }}>
             <i className="fa-solid fa-calendar-day" />
           </div>
           <div className="adm-watering-card-body">
@@ -167,22 +167,22 @@ export default function SensorsSection({
                     <div className="adm-threshold-field">
                       <label>Min</label>
                       <input className="adm-input" type="number" value={sensorThresholds.minThreshold} onChange={(e) => handlePlantThresholdChange(sensor.key, 'minThreshold', e.target.value)} />
-                      <div className="adm-threshold-bar" style={{ background: '#3b82f6' }} />
+                      <div className="adm-threshold-bar" style={{ background: 'var(--chart-moisture)' }} />
                     </div>
                     <div className="adm-threshold-field">
                       <label>Max</label>
                       <input className="adm-input" type="number" value={sensorThresholds.maxThreshold} onChange={(e) => handlePlantThresholdChange(sensor.key, 'maxThreshold', e.target.value)} />
-                      <div className="adm-threshold-bar" style={{ background: '#22c55e' }} />
+                      <div className="adm-threshold-bar" style={{ background: 'var(--chart-healthy)' }} />
                     </div>
                     <div className="adm-threshold-field">
                       <label>Warning</label>
                       <input className="adm-input" type="number" value={sensorThresholds.warningThreshold} onChange={(e) => handlePlantThresholdChange(sensor.key, 'warningThreshold', e.target.value)} />
-                      <div className="adm-threshold-bar" style={{ background: '#f59e0b' }} />
+                      <div className="adm-threshold-bar" style={{ background: 'var(--rec-high)' }} />
                     </div>
                     <div className="adm-threshold-field">
                       <label>Critical</label>
                       <input className="adm-input" type="number" value={sensorThresholds.criticalThreshold} onChange={(e) => handlePlantThresholdChange(sensor.key, 'criticalThreshold', e.target.value)} />
-                      <div className="adm-threshold-bar" style={{ background: '#ef4444' }} />
+                      <div className="adm-threshold-bar" style={{ background: 'var(--rec-critical)' }} />
                     </div>
                   </div>
                 </div>

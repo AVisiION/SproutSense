@@ -4,6 +4,13 @@
  * Dark default · Light mode via .light-theme / [data-theme='light']
  */
 
+/* NOTE: This stylesheet contains a mix of CSS custom properties and
+ * legacy hard-coded color literals. The canonical token source is
+ * `apps/web/src/styles/variables.css`. Prefer adding new tokens
+ * there and using `var(--token)` across components. Existing literals
+ * remain for backward compatibility and can be migrated incrementally.
+ */
+
 /* ============================================================
    COLOUR PALETTE
    Cyan  : #06b6d4  →  #22d3ee  →  #67e8f9

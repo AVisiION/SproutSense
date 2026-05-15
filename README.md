@@ -1,7 +1,6 @@
 ﻿# SproutSense
 
 ![Build Status](https://img.shields.io/badge/build-passing-brightgreen)
-![Version](https://img.shields.io/badge/version-2.0.0-blue)
 ![License](https://img.shields.io/badge/license-MIT-green)
 
 ## Table of Contents
@@ -79,23 +78,25 @@ legacy compatibility wrappers
 
 ## Quick Start
 
-1. Clone and enter repository
+1. Clone and enter the repository
 
-powershell
-- git clone https://github.com/AV-iot-ai/SproutSense.git
-- cd SproutSense
+```bash
+git clone https://github.com/AVisiION/SproutSense.git
+cd SproutSense
+```
 
 2. Install dependencies
 
-powershell
-- cd apps/api; npm install
-- cd ../web; npm install
+```bash
+cd apps/api && npm install
+cd ../web && npm install
+```
 
 3. Run local development
 
-powershell
-- cd ../../
-- powershell -ExecutionPolicy ByPass -File .\start.ps1
+```powershell
+powershell -ExecutionPolicy ByPass -File .\start.ps1
+```
 
 ## Development Setup
 
@@ -175,7 +176,7 @@ powershell
 - [Admin Panel](docs/frontend/admin-panel.md)
 - [Public Website](docs/frontend/public-pages.md)
 - [AI Features](docs/backend/ai-features.md)
-- [Project Dossier Scaffold](docs/details.md)
+*Removed: `Project Dossier Scaffold` (no `docs/details.md` found)
 
 ## Firmware and Device Config Notes
 

@@ -9,7 +9,9 @@ export default function MockBanner() {
   const isSimulating = mockDataStore.simulationActive;
   const sensorCount = (mockDataStore.sensors || []).length;
   
-  // Resolve CSS variables for styling
+  // Resolve CSS variables for styling.
+  // This banner uses inline styles (sticky header) so it reads computed
+  // tokens at runtime to remain theme-aware across light/dark modes.
   const iconColor = getCSSVariableValue('--mock-banner-icon-bg');
   const accentColor = getCSSVariableValue('--mock-banner-accent');
   const bgSim = getCSSVariableValue('--mock-banner-bg-sim');

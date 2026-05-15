@@ -1,4 +1,11 @@
 import React, { useState } from 'react';
+import '../SectionStyles.css';
+
+// Note: this section relies heavily on CSS custom properties for colors
+// (e.g. `var(--chart-humidity)`, `var(--card-bg)`). Most inline styles
+// intentionally reference tokens so the admin UI follows the selected
+// theme. Some legacy literals remain (see `color: '#cbd5e1'`) and can be
+// migrated to tokens in a follow-up cleanup.
 
 export default function DeviceKeysSection({
   DEVICE_KEY_PRESETS,
@@ -38,30 +45,30 @@ export default function DeviceKeysSection({
     <div className="adm-section">
       <div className="adm-section-header" style={{ marginBottom: '2rem' }}>
         <div>
-          <h2 style={{ fontSize: '1.75rem', margin: '0 0 0.5rem 0', fontWeight: '700', letterSpacing: '-0.02em', display: 'flex', alignItems: 'center', gap: '0.75rem', color: '#f8fafc' }}>
-            <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '40px', height: '40px', borderRadius: '10px', background: 'linear-gradient(135deg, rgba(34,211,238,0.2), rgba(14,165,233,0.1))', color: '#22d3ee' }}>
+          <h2 style={{ fontSize: '1.75rem', margin: '0 0 0.5rem 0', fontWeight: '700', letterSpacing: '-0.02em', display: 'flex', alignItems: 'center', gap: '0.75rem', color: 'var(--text-color)' }}>
+            <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '40px', height: '40px', borderRadius: '10px', background: 'var(--admin-gradient-sky-blue)', color: 'var(--chart-humidity)' }}>
               <i className="fa-solid fa-key" style={{ fontSize: '1.2rem' }} />
             </span>
             Device Authentication Keys
           </h2>
-          <p style={{ margin: '0', color: '#94a3b8', fontSize: '0.95rem' }}>
+          <p style={{ margin: '0', color: 'var(--text-muted)', fontSize: '0.95rem' }}>
             Use the device ID for hardware identity and the pairing key for website registration.
           </p>
         </div>
       </div>
 
-      <div style={{ display: 'flex', gap: '1rem', borderBottom: '1px solid rgba(148, 163, 184, 0.2)', marginBottom: '2rem', paddingBottom: '0.5rem' }}>
+      <div style={{ display: 'flex', gap: '1rem', borderBottom: '1px solid var(--border-soft)', marginBottom: '2rem', paddingBottom: '0.5rem' }}>
         <button
           onClick={() => setActiveTab('generate')}
           style={{
             background: 'none',
             border: 'none',
             padding: '0.5rem 1rem',
-            color: activeTab === 'generate' ? '#22d3ee' : '#94a3b8',
+            color: activeTab === 'generate' ? 'var(--chart-humidity)' : 'var(--text-muted)',
             fontWeight: activeTab === 'generate' ? '600' : '500',
             fontSize: '1rem',
             cursor: 'pointer',
-            borderBottom: activeTab === 'generate' ? '2px solid #22d3ee' : '2px solid transparent',
+            borderBottom: activeTab === 'generate' ? '2px solid var(--chart-humidity)' : '2px solid transparent',
             display: 'flex',
             alignItems: 'center',
             gap: '0.5rem',
@@ -75,11 +82,11 @@ export default function DeviceKeysSection({
             background: 'none',
             border: 'none',
             padding: '0.5rem 1rem',
-            color: activeTab === 'manage' ? '#22d3ee' : '#94a3b8',
+            color: activeTab === 'manage' ? 'var(--chart-humidity)' : 'var(--text-muted)',
             fontWeight: activeTab === 'manage' ? '600' : '500',
             fontSize: '1rem',
             cursor: 'pointer',
-            borderBottom: activeTab === 'manage' ? '2px solid #22d3ee' : '2px solid transparent',
+            borderBottom: activeTab === 'manage' ? '2px solid var(--chart-humidity)' : '2px solid transparent',
             display: 'flex',
             alignItems: 'center',
             gap: '0.5rem',
@@ -91,19 +98,19 @@ export default function DeviceKeysSection({
 
       {activeTab === 'generate' && (
         <div style={{ display: 'grid', gridTemplateColumns: 'minmax(340px, 1fr) minmax(400px, 1fr)', gap: '2rem', alignItems: 'start' }}>
-          <div className="adm-glass-box" style={{ padding: '2rem', borderRadius: '1rem', border: '1px solid rgba(148, 163, 184, 0.1)' }}>
+          <div className="adm-glass-box" style={{ padding: '2rem', borderRadius: '1rem', border: '1px solid var(--border-color)' }}>
             <div style={{ marginBottom: '1.5rem' }}>
-              <h3 style={{ fontSize: '1.25rem', margin: '0 0 0.5rem 0', color: '#e2e8f0', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <i className="fa-solid fa-microchip" style={{ color: '#22d3ee' }} /> New Device Pair
+              <h3 style={{ fontSize: '1.25rem', margin: '0 0 0.5rem 0', color: 'var(--text-color)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <i className="fa-solid fa-microchip" style={{ color: 'var(--chart-humidity)' }} /> New Device Pair
               </h3>
-                <p style={{ margin: 0, fontSize: '0.85rem', color: '#64748b' }}>
+                <p style={{ margin: 0, fontSize: '0.85rem', color: 'var(--text-muted)' }}>
                 Generate a unique device ID and a separate pairing key for the website.
               </p>
             </div>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
               <div>
-                <label style={{ color: '#cbd5e1', fontSize: '0.85rem', fontWeight: '600', marginBottom: '0.5rem', display: 'block' }}>
+                <label style={{ color: 'var(--text-muted)', fontSize: '0.85rem', fontWeight: '600', marginBottom: '0.5rem', display: 'block' }}>
                   Device Type
                 </label>
                 <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
@@ -115,9 +122,9 @@ export default function DeviceKeysSection({
                         type="button"
                         onClick={() => setSelectedDeviceType(preset.deviceId)}
                         style={{
-                          background: isActive ? 'rgba(34, 211, 238, 0.16)' : 'rgba(51, 65, 85, 0.45)',
-                          border: isActive ? '1px solid rgba(34, 211, 238, 0.45)' : '1px solid rgba(71, 85, 105, 0.45)',
-                          color: isActive ? '#67e8f9' : '#cbd5e1',
+                          background: isActive ? 'var(--admin-active-bg)' : 'var(--card-bg)',
+                          border: isActive ? '1px solid var(--chart-humidity)' : '1px solid var(--border-color)',
+                          color: isActive ? 'var(--chart-humidity)' : 'var(--text-muted)',
                           padding: '0.65rem 0.9rem',
                           borderRadius: '0.75rem',
                           fontSize: '0.82rem',
@@ -137,7 +144,7 @@ export default function DeviceKeysSection({
               </div>
 
               <div>
-                <label style={{ color: '#cbd5e1', fontSize: '0.85rem', fontWeight: '600', marginBottom: '0.5rem', display: 'block' }}>
+                <label style={{ color: 'var(--text-muted)', fontSize: '0.85rem', fontWeight: '600', marginBottom: '0.5rem', display: 'block' }}>
                   Device ID
                 </label>
                 <div style={{ display: 'flex', gap: '0.75rem' }}>
@@ -150,10 +157,10 @@ export default function DeviceKeysSection({
                     style={{
                       flex: 1,
                       padding: '0.9rem 1rem',
-                      background: 'rgba(15, 23, 42, 0.45)',
-                      border: '1px solid rgba(148, 163, 184, 0.2)',
+                      background: 'var(--card-bg)',
+                      border: '1px solid var(--border-color)',
                       borderRadius: '0.75rem',
-                      color: '#f8fafc',
+                      color: 'var(--text-color)',
                       fontFamily: 'monospace',
                       fontSize: '0.98rem',
                       outline: 'none',
@@ -164,7 +171,7 @@ export default function DeviceKeysSection({
                     onClick={() => handleGenerateDeviceId(selectedDeviceType)}
                     style={{
                       background: 'var(--admin-gradient-sky-blue)',
-                      color: '#fff',
+                      color: 'var(--text-on-accent)',
                       border: 'none',
                       borderRadius: '0.75rem',
                       padding: '0.9rem 1rem',
@@ -176,13 +183,13 @@ export default function DeviceKeysSection({
                     <i className="fa-solid fa-wand-magic-sparkles" /> Generate
                   </button>
                 </div>
-                <p style={{ fontSize: '0.75rem', color: '#94a3b8', margin: '0.5rem 0 0 0' }}>
+                <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', margin: '0.5rem 0 0 0' }}>
                   This identifier is used to track the hardware in the registry and firmware.
                 </p>
               </div>
 
               <div>
-                <label style={{ color: '#cbd5e1', fontSize: '0.85rem', fontWeight: '600', marginBottom: '0.5rem', display: 'block' }}>
+                <label style={{ color: 'var(--text-muted)', fontSize: '0.85rem', fontWeight: '600', marginBottom: '0.5rem', display: 'block' }}>
                   Pairing Key
                 </label>
                 <div style={{ display: 'flex', gap: '0.75rem' }}>
@@ -195,33 +202,20 @@ export default function DeviceKeysSection({
                     style={{
                       flex: 1,
                       padding: '0.9rem 1rem',
-                      background: 'rgba(15, 23, 42, 0.45)',
-                      border: '1px solid rgba(148, 163, 184, 0.2)',
+                      background: 'var(--card-bg)',
+                      border: '1px solid var(--border-color)',
                       borderRadius: '0.75rem',
-                      color: '#f8fafc',
+                      color: 'var(--text-color)',
                       fontFamily: 'monospace',
                       fontSize: '0.98rem',
                       outline: 'none',
                     }}
                   />
-                  <button
-                    type="button"
-                    onClick={() => handleGeneratePairingKey(selectedDeviceType)}
-                    style={{
-                      background: 'var(--admin-gradient-teal-cyan)',
-                      color: '#fff',
-                      border: 'none',
-                      borderRadius: '0.75rem',
-                      padding: '0.9rem 1rem',
-                      fontWeight: '700',
-                      cursor: 'pointer',
-                      whiteSpace: 'nowrap',
-                    }}
-                  >
+                  <button type="button" onClick={() => handleGeneratePairingKey(selectedDeviceType)} style={{ background: 'var(--admin-gradient-teal-cyan)', color: 'var(--text-on-accent)', border: 'none', borderRadius: '0.75rem', padding: '0.9rem 1rem', fontWeight: '700', cursor: 'pointer', whiteSpace: 'nowrap' }}>
                     <i className="fa-solid fa-wand-magic-sparkles" /> Generate
                   </button>
                 </div>
-                <p style={{ fontSize: '0.75rem', color: '#94a3b8', margin: '0.5rem 0 0 0' }}>
+                <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', margin: '0.5rem 0 0 0' }}>
                   This key is entered by the user on the website to start pairing.
                 </p>
               </div>
@@ -239,10 +233,10 @@ export default function DeviceKeysSection({
                   style={{
                     width: '100%',
                     padding: '0.9rem 1rem',
-                    background: 'rgba(15, 23, 42, 0.45)',
-                    border: '1px solid rgba(148, 163, 184, 0.2)',
+                    background: 'var(--card-bg)',
+                    border: '1px solid var(--border-color)',
                     borderRadius: '0.75rem',
-                    color: '#f8fafc',
+                    color: 'var(--text-color)',
                     fontSize: '0.95rem',
                     outline: 'none',
                   }}
@@ -272,8 +266,8 @@ export default function DeviceKeysSection({
                 {creatingDeviceKey ? <><i className="fa-solid fa-spinner fa-spin" /> Generating Pair</> : <><i className="fa-solid fa-bolt" /> Create Device Pair</>}
               </button>
 
-              <div style={{ marginTop: '0.5rem', paddingTop: '1rem', borderTop: '1px dashed rgba(148, 163, 184, 0.2)' }}>
-                <p style={{ fontSize: '0.8rem', color: '#94a3b8', margin: '0 0 0.75rem 0', fontWeight: '500' }}>Quick Start Presets</p>
+              <div style={{ marginTop: '0.5rem', paddingTop: '1rem', borderTop: '1px dashed var(--border-soft)' }}>
+                <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', margin: '0 0 0.75rem 0', fontWeight: '500' }}>Quick Start Presets</p>
                 <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
                   {DEVICE_KEY_PRESETS.map((preset) => (
                     <button
@@ -281,10 +275,10 @@ export default function DeviceKeysSection({
                       type="button"
                       onClick={() => handleCreatePresetDeviceKey(preset)}
                       disabled={creatingDeviceKey}
-                      style={{
-                        background: 'rgba(51, 65, 85, 0.4)',
-                        border: '1px solid rgba(71, 85, 105, 0.4)',
-                        color: '#cbd5e1',
+                        style={{
+                        background: 'var(--card-bg)',
+                        border: '1px solid var(--border-color)',
+                        color: 'var(--text-muted)',
                         padding: '0.45rem 0.8rem',
                         borderRadius: '0.6rem',
                         fontSize: '0.8rem',
@@ -304,12 +298,12 @@ export default function DeviceKeysSection({
             </div>
           </div>
 
-          <div className="adm-glass-box" style={{ padding: '0', borderRadius: '1rem', border: '1px solid rgba(34, 211, 238, 0.2)', overflow: 'hidden' }}>
-            <div style={{ background: 'rgba(34, 211, 238, 0.05)', padding: '1.5rem 2rem', borderBottom: '1px solid rgba(34, 211, 238, 0.1)' }}>
-              <h3 style={{ fontSize: '1.1rem', margin: '0 0 0.35rem 0', color: '#22d3ee', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+          <div className="adm-glass-box" style={{ padding: '0', borderRadius: '1rem', border: '1px solid var(--border-color)', overflow: 'hidden' }}>
+            <div style={{ background: 'var(--card-bg)', padding: '1.5rem 2rem', borderBottom: '1px solid var(--border-soft)' }}>
+              <h3 style={{ fontSize: '1.1rem', margin: '0 0 0.35rem 0', color: 'var(--chart-humidity)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                 <i className="fa-solid fa-shield-halved" /> Generated Pair
               </h3>
-              <p style={{ margin: 0, fontSize: '0.85rem', color: '#94a3b8' }}>
+              <p style={{ margin: 0, fontSize: '0.85rem', color: 'var(--text-muted)' }}>
                 Use the device ID to identify the hardware and the pairing key to register it on the website.
               </p>
             </div>
@@ -317,93 +311,47 @@ export default function DeviceKeysSection({
             <div style={{ padding: '2rem', display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
               <div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
-                  <span style={{ fontSize: '0.85rem', fontWeight: '600', color: '#22d3ee', textTransform: 'uppercase', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                  <span style={{ fontSize: '0.85rem', fontWeight: '600', color: 'var(--chart-humidity)', textTransform: 'uppercase', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
                     <i className="fa-solid fa-globe" /> Pairing Key for Website
                   </span>
                   {lastGeneratedPairingKey && (
-                    <button
-                      type="button"
-                      onClick={handleCopyPairingKey}
-                      style={{
-                        background: 'rgba(34, 211, 238, 0.12)',
-                        border: '1px solid rgba(34, 211, 238, 0.25)',
-                        color: '#67e8f9',
-                        borderRadius: '0.55rem',
-                        padding: '0.45rem 0.75rem',
-                        cursor: 'pointer',
-                        fontSize: '0.8rem',
-                        fontWeight: '600',
-                      }}
-                    >
+                    <button type="button" onClick={handleCopyPairingKey} style={{ background: 'var(--admin-bubble-bg)', border: '1px solid var(--chart-humidity)', color: 'var(--chart-humidity)', borderRadius: '0.55rem', padding: '0.45rem 0.75rem', cursor: 'pointer', fontSize: '0.8rem', fontWeight: '600' }}>
                       <i className="fa-solid fa-copy" /> Copy
                     </button>
                   )}
                 </div>
-                <div style={{
-                  padding: '0.9rem 1rem',
-                  background: 'rgba(15, 23, 42, 0.8)',
-                  border: '1px solid rgba(34, 211, 238, 0.25)',
-                  borderRadius: '0.75rem',
-                  fontFamily: 'monospace',
-                  color: '#67e8f9',
-                  fontSize: '0.98rem',
-                  fontWeight: '700',
-                  letterSpacing: '0.5px',
-                  wordBreak: 'break-all',
-                }}>
+                <div style={{ padding: '0.9rem 1rem', background: 'var(--code-bg)', border: '1px solid var(--chart-humidity)', borderRadius: '0.75rem', fontFamily: 'monospace', color: 'var(--chart-humidity)', fontSize: '0.98rem', fontWeight: '700', letterSpacing: '0.5px', wordBreak: 'break-all' }}>
                   {lastGeneratedPairingKey || 'Generate a pairing key to display it here'}
                 </div>
-                <p style={{ fontSize: '0.75rem', color: '#94a3b8', margin: '0.45rem 0 0 0' }}>
+                <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', margin: '0.45rem 0 0 0' }}>
                   User enters this value during registration.
                 </p>
               </div>
 
               <div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
-                  <span style={{ fontSize: '0.85rem', fontWeight: '600', color: '#ef4444', textTransform: 'uppercase', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                  <span style={{ fontSize: '0.85rem', fontWeight: '600', color: 'var(--rec-critical)', textTransform: 'uppercase', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
                     <i className="fa-solid fa-microchip" /> Device Secret for .ino
                   </span>
                   {generatedDeviceToken && (
-                    <button
-                      type="button"
-                      onClick={handleCopyDeviceToken}
-                      style={{
-                        background: 'rgba(239, 68, 68, 0.12)',
-                        border: '1px solid rgba(239, 68, 68, 0.25)',
-                        color: '#f87171',
-                        borderRadius: '0.55rem',
-                        padding: '0.45rem 0.75rem',
-                        cursor: 'pointer',
-                        fontSize: '0.8rem',
-                        fontWeight: '600',
-                      }}
-                    >
+                    <button type="button" onClick={handleCopyDeviceToken} style={{ background: 'var(--admin-bubble-bg)', border: '1px solid var(--rec-critical)', color: 'var(--rec-critical)', borderRadius: '0.55rem', padding: '0.45rem 0.75rem', cursor: 'pointer', fontSize: '0.8rem', fontWeight: '600' }}>
                       <i className="fa-solid fa-copy" /> Copy
                     </button>
                   )}
                 </div>
-                <div style={{
-                  padding: '0.9rem 1rem',
-                  background: 'rgba(15, 23, 42, 0.8)',
-                  border: '1px solid rgba(239, 68, 68, 0.25)',
-                  borderRadius: '0.75rem',
-                  fontFamily: 'monospace',
-                  color: '#f87171',
-                  fontSize: '0.92rem',
-                  wordBreak: 'break-all',
-                }}>
+                <div style={{ padding: '0.9rem 1rem', background: 'var(--code-bg)', border: '1px solid var(--rec-critical)', borderRadius: '0.75rem', fontFamily: 'monospace', color: 'var(--rec-critical)', fontSize: '0.92rem', wordBreak: 'break-all' }}>
                   {generatedDeviceToken || 'Generate a device secret to display it here'}
                 </div>
-                <p style={{ fontSize: '0.75rem', color: '#ef4444', margin: '0.45rem 0 0 0', display: 'flex', gap: '0.35rem', alignItems: 'center' }}>
+                <p style={{ fontSize: '0.75rem', color: 'var(--rec-critical)', margin: '0.45rem 0 0 0', display: 'flex', gap: '0.35rem', alignItems: 'center' }}>
                   <i className="fa-solid fa-triangle-exclamation" /> Paste this into the ESP32 .ino file or firmware secret storage.
                 </p>
               </div>
 
-              <div style={{ padding: '1rem', borderRadius: '0.85rem', background: 'rgba(15, 23, 42, 0.55)', border: '1px solid rgba(148, 163, 184, 0.12)' }}>
-                <p style={{ margin: 0, color: '#cbd5e1', fontSize: '0.9rem', fontWeight: '600' }}>
+              <div style={{ padding: '1rem', borderRadius: '0.85rem', background: 'var(--card-bg)', border: '1px solid var(--border-color)' }}>
+                <p style={{ margin: 0, color: 'var(--text-muted)', fontSize: '0.9rem', fontWeight: '600' }}>
                   Provisioning flow
                 </p>
-                <p style={{ margin: '0.4rem 0 0 0', color: '#94a3b8', fontSize: '0.82rem', lineHeight: 1.6 }}>
+                <p style={{ margin: '0.4rem 0 0 0', color: 'var(--text-muted)', fontSize: '0.82rem', lineHeight: 1.6 }}>
                   1. Generate a unique device ID for the hardware.
                   <br />
                   2. Generate a separate pairing key for the website.
@@ -419,23 +367,23 @@ export default function DeviceKeysSection({
       {activeTab === 'manage' && (
         <div className="adm-glass-box" style={{ borderRadius: '1rem', padding: '1.5rem' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '1rem' }}>
-            <div className="adm-search-container" style={{ flex: '1', minWidth: '250px', background: 'rgba(15, 23, 42, 0.4)', borderRadius: '0.5rem', border: '1px solid rgba(148, 163, 184, 0.2)' }}>
-              <i className="fa-solid fa-magnifying-glass" style={{ color: '#94a3b8', marginLeft: '1rem' }} />
+            <div className="adm-search-container" style={{ flex: '1', minWidth: '250px', background: 'var(--card-bg)', borderRadius: '0.5rem', border: '1px solid var(--border-color)' }}>
+              <i className="fa-solid fa-magnifying-glass" style={{ color: 'var(--text-muted)', marginLeft: '1rem' }} />
               <input
                 type="text"
                 className="adm-search-input"
                 placeholder="Search by Pairing Key, Name or Assignee..."
                 value={keySearch}
                 onChange={(e) => setKeySearch(e.target.value)}
-                style={{ background: 'transparent', border: 'none', color: '#f8fafc', padding: '0.75rem 1rem', flex: 1, outline: 'none' }}
+                style={{ background: 'transparent', border: 'none', color: 'var(--text-color)', padding: '0.75rem 1rem', flex: 1, outline: 'none' }}
               />
             </div>
             <button
               onClick={loadDeviceKeys}
               style={{
-                background: 'rgba(51, 65, 85, 0.6)',
-                border: '1px solid rgba(148, 163, 184, 0.2)',
-                color: '#f8fafc',
+                background: 'var(--card-bg)',
+                border: '1px solid var(--border-color)',
+                color: 'var(--text-color)',
                 padding: '0.75rem 1.25rem',
                 borderRadius: '0.5rem',
                 cursor: 'pointer',
@@ -446,14 +394,14 @@ export default function DeviceKeysSection({
                 fontWeight: '500',
               }}
             >
-              <i className={`fa-solid fa-rotate ${loadingDeviceKeys ? 'fa-spin' : ''}`} style={{ color: '#22d3ee' }} />
+              <i className={`fa-solid fa-rotate ${loadingDeviceKeys ? 'fa-spin' : ''}`} style={{ color: 'var(--chart-humidity)' }} />
               {loadingDeviceKeys ? 'Syncing...' : 'Refresh Register'}
             </button>
           </div>
 
           {loadingDeviceKeys ? (
-            <div style={{ padding: '3rem', textAlign: 'center', color: '#94a3b8' }}>
-              <i className="fa-solid fa-circle-notch fa-spin" style={{ fontSize: '2rem', color: '#22d3ee', marginBottom: '1rem' }} />
+            <div style={{ padding: '3rem', textAlign: 'center', color: 'var(--text-muted)' }}>
+              <i className="fa-solid fa-circle-notch fa-spin" style={{ fontSize: '2rem', color: 'var(--chart-humidity)', marginBottom: '1rem' }} />
               <p>Retrieving secure registry...</p>
             </div>
           ) : (
@@ -476,8 +424,8 @@ export default function DeviceKeysSection({
                       style={{
                         display: 'flex',
                         alignItems: 'center',
-                        background: selectedKeys.includes(key.deviceId) ? 'rgba(34, 211, 238, 0.05)' : 'rgba(30, 41, 59, 0.5)',
-                        border: selectedKeys.includes(key.deviceId) ? '1px solid rgba(34, 211, 238, 0.3)' : '1px solid rgba(148, 163, 184, 0.1)',
+                        background: selectedKeys.includes(key.deviceId) ? 'color-mix(in srgb, var(--chart-humidity) 6%, var(--card-bg))' : 'var(--card-bg)',
+                        border: selectedKeys.includes(key.deviceId) ? '1px solid color-mix(in srgb, var(--chart-humidity) 30%, var(--border-color))' : '1px solid var(--border-color)',
                         padding: '1rem 1.25rem',
                         borderRadius: '0.75rem',
                         gap: '1.25rem',
@@ -492,19 +440,19 @@ export default function DeviceKeysSection({
                           e.stopPropagation();
                           handleSelectKey(key.deviceId, e.target.checked);
                         }}
-                        style={{ width: '18px', height: '18px', cursor: 'pointer', accentColor: '#22d3ee' }}
+                        style={{ width: '18px', height: '18px', cursor: 'pointer', accentColor: 'var(--chart-humidity)' }}
                       />
 
                       <div style={{ flex: '1', display: 'flex', flexDirection: 'column', gap: '0.2rem' }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                          <span style={{ fontFamily: 'monospace', fontWeight: '700', fontSize: '1.05rem', color: '#f8fafc', letterSpacing: '0.5px' }}>
+                          <span style={{ fontFamily: 'monospace', fontWeight: '700', fontSize: '1.05rem', color: 'var(--text-color)', letterSpacing: '0.5px' }}>
                             {key.deviceId}
                           </span>
-                          <span style={{ fontSize: '0.75rem', padding: '0.15rem 0.5rem', background: 'rgba(148, 163, 184, 0.1)', color: '#94a3b8', borderRadius: '1rem', fontWeight: '600' }}>
+                          <span style={{ fontSize: '0.75rem', padding: '0.15rem 0.5rem', background: 'color-mix(in srgb, var(--text-muted) 10%, var(--card-bg))', color: 'var(--text-muted)', borderRadius: '1rem', fontWeight: '600' }}>
                             PAIRING KEY
                           </span>
                         </div>
-                        <span style={{ fontSize: '0.85rem', color: '#94a3b8' }}>
+                        <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
                           {key.displayName || 'Unnamed Hardware Entry'}
                         </span>
                       </div>
@@ -516,15 +464,15 @@ export default function DeviceKeysSection({
                               {key.linkedUser?.fullName?.charAt(0).toUpperCase() || '?'}
                             </div>
                             <div style={{ display: 'flex', flexDirection: 'column' }}>
-                              <span style={{ fontSize: '0.85rem', color: '#f8fafc', fontWeight: '500' }}>{key.linkedUser?.fullName}</span>
-                              <span style={{ fontSize: '0.75rem', color: '#64748b' }}>{key.linkedUser?.email}</span>
+                              <span style={{ fontSize: '0.85rem', color: 'var(--text-color)', fontWeight: '500' }}>{key.linkedUser?.fullName}</span>
+                              <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{key.linkedUser?.email}</span>
                             </div>
                             <button
                               onClick={(e) => {
                                 e.stopPropagation();
                                 handleForceUnpair(key.deviceId);
                               }}
-                              style={{ marginLeft: 'auto', background: 'rgba(239, 68, 68, 0.1)', border: '1px solid rgba(239, 68, 68, 0.2)', padding: '0.4rem 0.75rem', borderRadius: '0.4rem', color: '#ef4444', fontSize: '0.8rem', cursor: 'pointer', fontWeight: '600' }}
+                              style={{ marginLeft: 'auto', background: 'color-mix(in srgb, var(--rec-critical) 10%, var(--card-bg))', border: '1px solid color-mix(in srgb, var(--rec-critical) 30%, var(--border-color))', padding: '0.4rem 0.75rem', borderRadius: '0.4rem', color: 'var(--rec-critical)', fontSize: '0.8rem', cursor: 'pointer', fontWeight: '600' }}
                               title="Force Unpair User"
                             >
                               Unpair
@@ -532,19 +480,19 @@ export default function DeviceKeysSection({
                           </>
                         ) : (
                           <>
-                            <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: 'rgba(148, 163, 184, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#64748b', border: '1px dashed rgba(148, 163, 184, 0.3)' }}>
+                            <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: 'color-mix(in srgb, var(--text-muted) 10%, var(--card-bg))', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-muted)', border: '1px dashed color-mix(in srgb, var(--text-muted) 30%, var(--border-color))' }}>
                               <i className="fa-solid fa-unlink" style={{ fontSize: '0.7rem' }} />
                             </div>
                             <div style={{ display: 'flex', flexDirection: 'column' }}>
-                              <span style={{ fontSize: '0.85rem', color: '#94a3b8', fontStyle: 'italic' }}>Unassigned</span>
-                              <span style={{ fontSize: '0.75rem', color: '#64748b' }}>Ready for pairing</span>
+                              <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)', fontStyle: 'italic' }}>Unassigned</span>
+                              <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Ready for pairing</span>
                             </div>
                             <button
                               onClick={(e) => {
                                 e.stopPropagation();
                                 handleOpenForcePairModal(key.deviceId);
                               }}
-                              style={{ marginLeft: 'auto', background: 'rgba(34, 211, 238, 0.1)', border: '1px solid rgba(34, 211, 238, 0.2)', padding: '0.4rem 0.75rem', borderRadius: '0.4rem', color: '#22d3ee', fontSize: '0.8rem', cursor: 'pointer', fontWeight: '600' }}
+                              style={{ marginLeft: 'auto', background: 'color-mix(in srgb, var(--chart-humidity) 10%, var(--card-bg))', border: '1px solid color-mix(in srgb, var(--chart-humidity) 30%, var(--border-color))', padding: '0.4rem 0.75rem', borderRadius: '0.4rem', color: 'var(--chart-humidity)', fontSize: '0.8rem', cursor: 'pointer', fontWeight: '600' }}
                             >
                               Assign
                             </button>
@@ -555,9 +503,9 @@ export default function DeviceKeysSection({
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', width: '120px', alignItems: 'flex-end', borderLeft: '1px solid rgba(148, 163, 184, 0.1)', paddingLeft: '1rem' }}>
                         <span style={{
                           padding: '0.2rem 0.6rem',
-                          background: key.isActive ? 'rgba(34, 197, 94, 0.1)' : 'rgba(100, 116, 139, 0.1)',
-                          color: key.isActive ? '#4ade80' : '#94a3b8',
-                          border: key.isActive ? '1px solid rgba(34, 197, 94, 0.3)' : '1px solid rgba(100, 116, 139, 0.3)',
+                          background: key.isActive ? 'color-mix(in srgb, var(--success-bg) 10%, var(--card-bg))' : 'color-mix(in srgb, var(--text-muted) 10%, var(--card-bg))',
+                          color: key.isActive ? 'var(--success-primary)' : 'var(--text-muted)',
+                          border: key.isActive ? '1px solid color-mix(in srgb, var(--success-primary) 30%, var(--border-color))' : '1px solid color-mix(in srgb, var(--text-muted) 30%, var(--border-color))',
                           borderRadius: '1rem',
                           fontSize: '0.7rem',
                           fontWeight: '700',
@@ -571,7 +519,7 @@ export default function DeviceKeysSection({
                               e.stopPropagation();
                               handleToggleDeviceKeyStatus(key.deviceId);
                             }}
-                            style={{ background: 'none', border: 'none', color: key.isActive ? '#eab308' : '#94a3b8', cursor: 'pointer', fontSize: '1rem', padding: '0.2rem' }}
+                            style={{ background: 'none', border: 'none', color: key.isActive ? 'var(--warning-color)' : 'var(--text-muted)', cursor: 'pointer', fontSize: '1rem', padding: '0.2rem' }}
                             title={key.isActive ? 'Disable Key' : 'Enable Key'}
                           >
                             <i className={`fa-solid ${key.isActive ? 'fa-toggle-on' : 'fa-toggle-off'}`} />
@@ -581,7 +529,7 @@ export default function DeviceKeysSection({
                               e.stopPropagation();
                               handleDeleteDeviceKey(key.deviceId);
                             }}
-                            style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer', fontSize: '0.9rem', padding: '0.2rem' }}
+                            style={{ background: 'none', border: 'none', color: 'var(--rec-critical)', cursor: 'pointer', fontSize: '0.9rem', padding: '0.2rem' }}
                             title="Delete Key"
                           >
                             <i className="fa-solid fa-trash-can" />
@@ -593,9 +541,9 @@ export default function DeviceKeysSection({
               </div>
 
               {deviceKeys.length === 0 && (
-                <div style={{ padding: '4rem 2rem', textAlign: 'center', border: '1px dashed rgba(148, 163, 184, 0.2)', borderRadius: '1rem', marginTop: '1rem', color: '#94a3b8' }}>
+                <div style={{ padding: '4rem 2rem', textAlign: 'center', border: '1px dashed var(--border-color)', borderRadius: '1rem', marginTop: '1rem', color: 'var(--text-muted)' }}>
                   <i className="fa-solid fa-key" style={{ fontSize: '2.5rem', marginBottom: '1rem', opacity: 0.5 }} />
-                  <h4 style={{ margin: '0 0 0.5rem 0', color: '#e2e8f0', fontSize: '1.1rem' }}>No Authentication Keys</h4>
+                  <h4 style={{ margin: '0 0 0.5rem 0', color: 'var(--text-color)', fontSize: '1.1rem' }}>No Authentication Keys</h4>
                   <p style={{ margin: 0, fontSize: '0.9rem' }}>Generate the first pair to provision a device.</p>
                 </div>
               )}
@@ -608,9 +556,9 @@ export default function DeviceKeysSection({
               bottom: '2rem',
               left: '50%',
               transform: 'translateX(-50%)',
-              background: 'rgba(15, 23, 42, 0.95)',
+              background: 'var(--card-bg)',
               backdropFilter: 'blur(10px)',
-              border: '1px solid rgba(148, 163, 184, 0.2)',
+              border: '1px solid var(--border-color)',
               boxShadow: '0 10px 25px rgba(0,0,0,0.5)',
               padding: '1rem 1.5rem',
               borderRadius: '3rem',
@@ -620,22 +568,22 @@ export default function DeviceKeysSection({
               zIndex: 100,
             }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                <div style={{ width: '28px', height: '28px', borderRadius: '50%', background: '#22d3ee', color: '#0f172a', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold' }}>
+                <div style={{ width: '28px', height: '28px', borderRadius: '50%', background: 'var(--chart-humidity)', color: 'var(--admin-avatar-text)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold' }}>
                   {selectedKeys.length}
                 </div>
-                <span style={{ color: '#f8fafc', fontWeight: '500' }}>Keys Selected</span>
+                <span style={{ color: 'var(--text-color)', fontWeight: '500' }}>Keys Selected</span>
               </div>
-              <div style={{ display: 'flex', gap: '0.75rem', borderLeft: '1px solid rgba(148, 163, 184, 0.2)', paddingLeft: '1.5rem' }}>
+              <div style={{ display: 'flex', gap: '0.75rem', borderLeft: '1px solid var(--border-color)', paddingLeft: '1.5rem' }}>
                 <button
                   onClick={() => setSelectedKeys([])}
-                  style={{ background: 'transparent', border: '1px solid rgba(148, 163, 184, 0.3)', color: '#cbd5e1', padding: '0.5rem 1rem', borderRadius: '2rem', cursor: 'pointer', fontWeight: '500' }}
+                  style={{ background: 'transparent', border: '1px solid var(--border-color)', color: 'var(--text-muted)', padding: '0.5rem 1rem', borderRadius: '2rem', cursor: 'pointer', fontWeight: '500' }}
                 >
                   Clear
                 </button>
                 <button
                   onClick={handleBatchRevoke}
                   disabled={isBatchRevoking}
-                  style={{ background: '#ef4444', border: 'none', color: '#fff', padding: '0.5rem 1.25rem', borderRadius: '2rem', cursor: isBatchRevoking ? 'not-allowed' : 'pointer', fontWeight: '600', opacity: isBatchRevoking ? 0.7 : 1 }}
+                  style={{ background: 'var(--rec-critical)', border: 'none', color: 'var(--text-on-accent)', padding: '0.5rem 1.25rem', borderRadius: '2rem', cursor: isBatchRevoking ? 'not-allowed' : 'pointer', fontWeight: '600', opacity: isBatchRevoking ? 0.7 : 1 }}
                 >
                   {isBatchRevoking ? 'Revoking...' : 'Revoke Access'}
                 </button>

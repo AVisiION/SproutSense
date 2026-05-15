@@ -1,6 +1,7 @@
 ﻿import SensorReading from '../models/SensorReading.js';
 import DeviceStatus from '../models/DeviceStatus.js';
 import UserDevice from '../models/UserDevice.js';
+import User from '../models/User.js';
 import { successResponse, errorResponse } from '../utils/helpers.js';
 import { HTTP_STATUS } from '../config/constants.js';
 import wsService from '../utils/websocketService.js';
@@ -55,6 +56,67 @@ export const getHourlyAverages = async (req, res, next) => {
     successResponse(res, averages);
   } catch (error) {
     next(error);
+  }
+};
+
+// Get latest sensor reading for each user's linked devices
+export const getLatestSensorsByUser = async (req, res, next) => {
+  try {
+    // Find active user devices
+    const devices = await UserDevice.find({ isActive: true }).lean();
+    if (!devices || devices.length === 0) {
+      return successResponse(res, { users: [] });
+    }
+
+    const deviceIds = devices.map((d) => d.deviceId);
+
+    // Aggregate latest reading per deviceId
+    const latestAgg = await SensorReading.aggregate([
+      { $match: { deviceId: { $in: deviceIds } } },
+      { $sort: { timestamp: -1 } },
+      { $group: { _id: '$deviceId', latest: { $first: '$$ROOT' } } },
+    ]);
+
+    const readingByDevice = new Map(latestAgg.map((r) => [r._id, r.latest]));
+
+    // Fetch users referenced by devices
+    const userIds = Array.from(new Set(devices.map((d) => String(d.userId))));
+    const users = await User.find({ _id: { $in: userIds } }).lean();
+    const userById = new Map(users.map((u) => [String(u._id), u]));
+
+    // Build result grouping by user
+    const resultByUser = new Map();
+
+    for (const device of devices) {
+      const uid = String(device.userId);
+      const user = userById.get(uid) || { id: uid, fullName: null, email: null };
+      const reading = readingByDevice.get(device.deviceId) || null;
+
+      if (!resultByUser.has(uid)) {
+        resultByUser.set(uid, {
+          user: {
+            id: uid,
+            fullName: user.fullName || null,
+            email: user.email || null,
+          },
+          devices: [],
+        });
+      }
+
+      resultByUser.get(uid).devices.push({
+        deviceId: device.deviceId,
+        displayName: device.displayName || device.deviceId,
+        firmwareVersion: device.firmwareVersion || null,
+        lastSeenAt: device.lastSeenAt || null,
+        latestReading: reading,
+      });
+    }
+
+    const usersArray = Array.from(resultByUser.values());
+
+    return successResponse(res, { users: usersArray });
+  } catch (error) {
+    return next(error);
   }
 };
 

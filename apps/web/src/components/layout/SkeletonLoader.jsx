@@ -6,6 +6,9 @@ import { motion } from 'framer-motion';
  * Provides a glassmorphism shimmer effect for async data loading states.
  */
 export const SkeletonLoader = ({ width = '100%', height = '150px', borderRadius = '16px', className = '' }) => {
+  // SkeletonLoader uses CSS tokens for its glass surface and highlight.
+  // The shimmer reads `--glass-highlight` which keeps the loading UI
+  // consistent with the active theme without hard-coded colors.
   return (
     <motion.div
       className={`skeleton-loader ${className}`}
@@ -13,9 +16,9 @@ export const SkeletonLoader = ({ width = '100%', height = '150px', borderRadius 
         width,
         height,
         borderRadius,
-        background: 'rgba(255, 255, 255, 0.03)',
-        backdropFilter: 'blur(16px)',
-        border: '1px solid rgba(255, 255, 255, 0.05)',
+        background: 'var(--card-bg)',
+        backdropFilter: 'blur(var(--glass-blur))',
+        border: 'var(--card-border)',
         position: 'relative',
         overflow: 'hidden'
       }}
@@ -35,7 +38,7 @@ export const SkeletonLoader = ({ width = '100%', height = '150px', borderRadius 
           left: 0,
           width: '100%',
           height: '100%',
-          background: 'linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.08), transparent)'
+          background: 'linear-gradient(90deg, transparent, var(--glass-highlight), transparent)'
         }}
       />
     </motion.div>

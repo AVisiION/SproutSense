@@ -71,6 +71,10 @@ function TypingDots() {
 function MessageBubble({ msg }) {
   const [copied, setCopied] = useState(false);
   const pm = priorityMeta(msg.priority);
+  // Resolve CSS variable to a concrete color string before concatenation.
+  // Some style expressions below append alpha hex ('1a', '40'); resolving
+  // ensures we have a usable color string (e.g. '#22c55e') rather than 'var(...)'.
+  const pmResolvedColor = getCSSVariableValue(pm.color) || pm.color;
 
   const copy = () => {
     navigator.clipboard?.writeText(msg.text).then(() => {
@@ -90,7 +94,7 @@ function MessageBubble({ msg }) {
         {msg.confidence !== undefined && (
           <ConfidenceRing pct={msg.confidence} />
         )}
-        <span className="ai-priority-pill" style={{ background: `${pm.color}1a`, color: pm.color, borderColor: `${pm.color}40` }}>
+        <span className="ai-priority-pill" style={{ background: `${pmResolvedColor}1a`, color: pmResolvedColor, borderColor: `${pmResolvedColor}40` }}>
           <i className={`fa-solid ${pm.fa}`} aria-hidden="true" />
           {pm.label}
         </span>

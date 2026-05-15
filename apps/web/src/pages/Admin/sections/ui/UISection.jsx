@@ -169,7 +169,7 @@ export default function UISection({
             {/* Appearance Settings */}
             <div className="ui-card">
               <div className="ui-card-header">
-                <div className="ui-card-icon" style={{ background: 'rgba(236, 72, 153, 0.1)', color: '#ec4899' }}>
+                <div className="ui-card-icon" style={{ background: 'var(--surface-1)', color: 'var(--orchid-color)' }}>
                   <i className="fa-solid fa-wand-magic-sparkles" />
                 </div>
                 <div>
@@ -230,7 +230,7 @@ export default function UISection({
             {/* Accessibility Controls */}
             <div className="ui-card">
               <div className="ui-card-header">
-                <div className="ui-card-icon" style={{ background: 'rgba(251, 146, 60, 0.1)', color: '#fb923c' }}>
+                <div className="ui-card-icon" style={{ background: 'var(--surface-1)', color: 'var(--warning-color)' }}>
                   <i className="fa-solid fa-universal-access" />
                 </div>
                 <div>
@@ -269,7 +269,7 @@ export default function UISection({
             {/* Dashboard Sections */}
             <div className="ui-card">
               <div className="ui-card-header">
-                <div className="ui-card-icon" style={{ background: 'rgba(56, 189, 248, 0.1)', color: '#38bdf8' }}>
+                <div className="ui-card-icon" style={{ background: 'var(--surface-1)', color: 'var(--chart-humidity)' }}>
                   <i className="fa-solid fa-layer-group" />
                 </div>
                 <div>
@@ -316,7 +316,7 @@ export default function UISection({
             {/* Sidebar Visibility */}
             <div className="ui-card">
               <div className="ui-card-header">
-                <div className="ui-card-icon" style={{ background: 'rgba(250, 204, 21, 0.1)', color: '#facc15' }}>
+                <div className="ui-card-icon" style={{ background: 'var(--surface-1)', color: 'var(--chart-light)' }}>
                   <i className="fa-solid fa-table-columns" />
                 </div>
                 <div>
@@ -367,7 +367,7 @@ export default function UISection({
             {/* Widget Controls */}
             <div className="ui-card">
               <div className="ui-card-header">
-                <div className="ui-card-icon" style={{ background: 'rgba(74, 222, 128, 0.1)', color: '#4ade80' }}>
+                <div className="ui-card-icon" style={{ background: 'var(--surface-1)', color: 'var(--chart-healthy)' }}>
                   <i className="fa-solid fa-puzzle-piece" />
                 </div>
                 <div>
@@ -394,7 +394,7 @@ export default function UISection({
             {/* Notifications Controls */}
             <div className="ui-card">
               <div className="ui-card-header">
-                <div className="ui-card-icon" style={{ background: 'rgba(239, 68, 68, 0.1)', color: '#ef4444' }}>
+                <div className="ui-card-icon" style={{ background: 'var(--surface-1)', color: 'var(--rec-critical)' }}>
                   <i className="fa-solid fa-bell" />
                 </div>
                 <div>
@@ -444,7 +444,7 @@ export default function UISection({
             {/* Data Display Controls */}
             <div className="ui-card">
               <div className="ui-card-header">
-                <div className="ui-card-icon" style={{ background: 'rgba(59, 130, 246, 0.1)', color: '#3b82f6' }}>
+                <div className="ui-card-icon" style={{ background: 'var(--surface-1)', color: 'var(--chart-moisture)' }}>
                   <i className="fa-solid fa-database" />
                 </div>
                 <div>
@@ -496,8 +496,8 @@ export default function UISection({
 
         {activeTab === 'sensors' && (
           <div className="ui-card">
-            <div className="ui-card-header">
-              <div className="ui-card-icon" style={{ background: 'rgba(99, 102, 241, 0.1)', color: '#6366f1' }}>
+              <div className="ui-card-header">
+                <div className="ui-card-icon" style={{ background: 'var(--surface-1)', color: 'var(--sensor-card-fallback)' }}>
                 <i className="fa-solid fa-chart-line" />
               </div>
               <div>
@@ -513,7 +513,7 @@ export default function UISection({
             
             <div style={{ padding: '20px' }}>
               {sensorRegistry.length === 0 ? (
-                <div style={{ textAlign: 'center', padding: '40px 20px', color: '#94a3b8' }}>
+                <div style={{ textAlign: 'center', padding: '40px 20px', color: 'var(--text-muted)' }}>
                   <i className="fa-solid fa-chart-area" style={{ fontSize: '32px', marginBottom: '12px', opacity: 0.5 }} />
                   <p style={{ margin: 0 }}>No sensors configured for UI graph control.</p>
                 </div>
@@ -522,7 +522,7 @@ export default function UISection({
                   {sensorRegistry.map((sensor) => (
                     <div key={`ui-graph-${sensor.id}`} className="ui-sensor-card">
                       <div className="ui-sensor-header">
-                        <div className="ui-sensor-color-preview" style={{ background: sensor.color || '#6366f1' }} />
+                        <div className="ui-sensor-color-preview" style={{ background: sensor.color || 'var(--sensor-card-fallback)' }} />
                         <div className="ui-sensor-name">
                           <h4>{sensor.name}</h4>
                           <span>{sensor.key}</span>
@@ -558,7 +558,7 @@ export default function UISection({
                         </div>
                       </div>
 
-                      <div className="ui-field-group" style={{ marginTop: '16px', borderTop: '1px solid rgba(255, 255, 255, 0.08)', paddingTop: '16px' }}>
+                      <div className="ui-field-group" style={{ marginTop: '16px', borderTop: '1px solid var(--border-soft)', paddingTop: '16px' }}>
                         <div className="ui-field">
                           <label>Fill Opacity (%)</label>
                           <input 
@@ -581,7 +581,7 @@ export default function UISection({
                         </div>
                       </div>
 
-                      <div className="ui-list" style={{ borderTop: '1px solid rgba(255, 255, 255, 0.08)', margin: '8px -16px -16px', padding: '8px 0' }}>
+                      <div className="ui-list" style={{ borderTop: '1px solid var(--border-soft)', margin: '8px -16px -16px', padding: '8px 0' }}>
                         
                         <label className="ui-item">
                           <div className="ui-item-info">
